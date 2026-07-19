@@ -40,6 +40,31 @@ final class RedundantReturnTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantReturn)
     }
 
+    func testNoRemoveRedundantSwitchReturnsInFlatMapClosures() {
+        let input = """
+        let foo = bar.flatMap { value in
+            switch value {
+            case 0:
+                return Set([value])
+            default:
+                return [value]
+            }
+        }
+
+        let baz = bar.flatMap({ value in
+            switch value {
+            case 0:
+                return Set([value])
+            default:
+                return [value]
+            }
+        })
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rules: [.redundantReturn, .conditionalAssignment],
+                       options: options, exclude: [.trailingClosures])
+    }
+
     func testNoRemoveReturnInComputedVar() {
         let input = """
         var foo: Int { return 5 }

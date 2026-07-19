@@ -129,6 +129,26 @@ public extension FormatRule {
             // Closures always supported implicit returns, but other types of scopes
             // only support implicit return in Swift 5.1+ (SE-0255)
             let isClosure = formatter.isStartOfClosure(at: startOfScopeIndex)
+            if isClosure {
+                var precedingIdentifierIndex = formatter.index(
+                    of: .nonSpaceOrCommentOrLinebreak,
+                    before: startOfScopeIndex
+                )
+                if let parentScopeIndex = precedingIdentifierIndex,
+                   formatter.tokens[parentScopeIndex] == .startOfScope("("),
+                   formatter.startOfScope(at: startOfScopeIndex) == parentScopeIndex
+                {
+                    precedingIdentifierIndex = formatter.index(
+                        of: .nonSpaceOrCommentOrLinebreak,
+                        before: parentScopeIndex
+                    )
+                }
+                if let precedingIdentifierIndex,
+                   formatter.tokens[precedingIdentifierIndex] == .identifier("flatMap")
+                {
+                    return
+                }
+            }
             if formatter.options.swiftVersion < "5.1", !isClosure {
                 return
             }

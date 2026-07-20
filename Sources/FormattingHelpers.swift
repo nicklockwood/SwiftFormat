@@ -1484,11 +1484,10 @@ extension Formatter {
         atStartOfScope startOfScopeIndex: Int,
         includingConditionalStatements: Bool,
         includingReturnStatements: Bool,
-        includingReturnInConditionalStatements: Bool? = nil,
-        bodyStartIndex: Int? = nil
+        includingReturnInConditionalStatements: Bool? = nil
     ) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
-        let startOfBody = bodyStartIndex ?? startOfBody(atStartOfScope: startOfScopeIndex)
+        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
 
         // The body should contain exactly one expression.
         // We can confirm this by parsing the body with `parseExpressionRange`,
@@ -1552,7 +1551,7 @@ extension Formatter {
     func startOfBody(atStartOfScope startOfScopeIndex: Int) -> Int {
         // If this is a closure that has an `in` clause, the body scope starts after that
         if isStartOfClosure(at: startOfScopeIndex),
-           let inKeywordIndex = parseClosureArgumentList(at: startOfScopeIndex)?.inKeywordIndex
+           let inKeywordIndex = parseClosureArguments(at: startOfScopeIndex)?.inKeywordIndex
         {
             return inKeywordIndex
         } else {

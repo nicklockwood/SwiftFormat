@@ -129,32 +129,15 @@ public extension FormatRule {
             // Closures always supported implicit returns, but other types of scopes
             // only support implicit return in Swift 5.1+ (SE-0255)
             let isClosure = formatter.isStartOfClosure(at: startOfScopeIndex)
-            var closureBodyStartIndex: Int?
-            if isClosure {
-                var precedingIdentifierIndex = formatter.index(
-                    of: .nonSpaceOrCommentOrLinebreak,
-                    before: startOfScopeIndex
-                )
-                if let parentScopeIndex = precedingIdentifierIndex,
-                   formatter.tokens[parentScopeIndex] == .startOfScope("("),
-                   formatter.startOfScope(at: startOfScopeIndex) == parentScopeIndex
-                {
-                    precedingIdentifierIndex = formatter.index(
-                        of: .nonSpaceOrCommentOrLinebreak,
-                        before: parentScopeIndex
-                    )
-                }
-                if let precedingIdentifierIndex,
-                   formatter.tokens[precedingIdentifierIndex] == .identifier("flatMap")
-                {
-                    guard let closureArguments = formatter.parseClosureArguments(at: startOfScopeIndex),
-                          closureArguments.returnTypeRange != nil
-                    else {
-                        return
-                    }
-                    closureBodyStartIndex = closureArguments.inKeywordIndex
-                }
+
+            // Removing the return from a single-statement `switch`/`if` inside a `flatMap`
+            // closure with an inferred return type can break compilation, since the branches
+            // may produce different `Sequence`-conforming types (e.g. `Set` vs `Array`).
+            // (https://github.com/nicklockwood/SwiftFormat/issues/2605)
+            if isClosure, formatter.isFlatMapClosureWithInferredReturnType(at: startOfScopeIndex) {
+                return
             }
+
             if formatter.options.swiftVersion < "5.1", !isClosure {
                 return
             }
@@ -188,8 +171,7 @@ public extension FormatRule {
                 atStartOfScope: startOfScopeIndex,
                 includingConditionalStatements: true,
                 includingReturnStatements: true,
-                includingReturnInConditionalStatements: stripConditionalReturn,
-                bodyStartIndex: closureBodyStartIndex
+                includingReturnInConditionalStatements: stripConditionalReturn
             ) else {
                 return
             }
@@ -206,11 +188,7 @@ public extension FormatRule {
 
             // Find all of the return keywords to remove before we remove any of them,
             // so we can apply additional validation first.
-            guard let returnKeywordRangesToRemove = formatter.returnKeywordRangesToRemove(
-                atStartOfScope: startOfScopeIndex,
-                returnIndices: &returnIndices,
-                bodyStartIndex: closureBodyStartIndex
-            ) else { return }
+            guard let returnKeywordRangesToRemove = formatter.returnKeywordRangesToRemove(atStartOfScope: startOfScopeIndex, returnIndices: &returnIndices) else { return }
 
             for returnKeywordRangeToRemove in returnKeywordRangesToRemove.sorted(by: { $0.startIndex > $1.startIndex }) {
                 formatter.removeTokens(in: returnKeywordRangeToRemove)
@@ -242,16 +220,33 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    func returnKeywordRangesToRemove(
-        atStartOfScope startOfScopeIndex: Int,
-        returnIndices: inout [Int],
-        bodyStartIndex: Int? = nil
-    ) -> [Range<Int>]? {
+    /// Whether the closure starting at the given index is the argument to a `flatMap`
+    /// call and has an inferred (rather than explicit) return type. An explicit return
+    /// type pins the closure's type, so removing `return` from its body remains safe.
+    func isFlatMapClosureWithInferredReturnType(at closureStartIndex: Int) -> Bool {
+        // Find the identifier preceding the closure, handling both the trailing-closure
+        // form (`xs.flatMap { ... }`) and the parenthesized form (`xs.flatMap({ ... })`).
+        var precedingIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: closureStartIndex)
+        if let parenIndex = precedingIndex,
+           tokens[parenIndex] == .startOfScope("("),
+           startOfScope(at: closureStartIndex) == parenIndex
+        {
+            precedingIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: parenIndex)
+        }
+
+        guard let precedingIndex, tokens[precedingIndex] == .identifier("flatMap") else {
+            return false
+        }
+
+        return parseClosureArguments(at: closureStartIndex)?.returnTypeRange == nil
+    }
+
+    func returnKeywordRangesToRemove(atStartOfScope startOfScopeIndex: Int, returnIndices: inout [Int]) -> [Range<Int>]? {
         var returnKeywordRangesToRemove = [Range<Int>]()
 
         // If this scope is a single-statement if or switch statement then we have to recursively
         // remove the return from each branch of the if statement
-        let startOfBody = bodyStartIndex ?? startOfBody(atStartOfScope: startOfScopeIndex)
+        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
 
         if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
            let conditionalBranches = conditionalBranches(at: firstTokenInBody)

@@ -109,6 +109,20 @@ final class RedundantReturnTests: XCTestCase {
                        options: options, exclude: [.trailingClosures])
     }
 
+    func testRemoveRedundantReturnInClosureWithExplicitReturnType() {
+        let input = """
+        let closure = { value -> [Int] in
+            return [value]
+        }
+        """
+        let output = """
+        let closure = { value -> [Int] in
+            [value]
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn)
+    }
+
     func testNoRemoveReturnInComputedVar() {
         let input = """
         var foo: Int { return 5 }

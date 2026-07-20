@@ -111,10 +111,14 @@ public extension FormatRule {
             let inKeywordIndex: Int?
             let isAnonymousClosure: Bool
 
-            if let argumentList = formatter.parseClosureArgumentList(at: closureOpenBraceIndex) {
+            if let closureArguments = formatter.parseClosureArguments(at: closureOpenBraceIndex) {
+                // A closure with an explicit but empty argument list (e.g. `{ () in ... }`) has no
+                // element binding to use as the loop variable, so we can't convert it to a for loop.
+                guard !closureArguments.argumentIndices.isEmpty else { return }
+
                 isAnonymousClosure = false
-                forEachValueNames = argumentList.argumentNames
-                inKeywordIndex = argumentList.inKeywordIndex
+                forEachValueNames = closureArguments.argumentIndices.map { formatter.tokens[$0].string }
+                inKeywordIndex = closureArguments.inKeywordIndex
             } else {
                 isAnonymousClosure = true
                 inKeywordIndex = nil

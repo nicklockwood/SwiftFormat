@@ -177,7 +177,7 @@ extension Formatter {
         guard tokens[idx] == .identifier(name) else { return false }
         // Exclude member accesses: `foo.name` (infix dot) and `.name` implicit member (prefix dot).
         if let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: idx),
-           case let .operator(".", _) = tokens[prev]
+           case .operator(".", _) = tokens[prev]
         {
             return false
         }

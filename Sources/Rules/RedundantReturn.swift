@@ -129,6 +129,15 @@ public extension FormatRule {
             // Closures always supported implicit returns, but other types of scopes
             // only support implicit return in Swift 5.1+ (SE-0255)
             let isClosure = formatter.isStartOfClosure(at: startOfScopeIndex)
+
+            // Removing the return from a single-statement `switch`/`if` inside a `flatMap`
+            // closure with an inferred return type can break compilation, since the branches
+            // may produce different `Sequence`-conforming types (e.g. `Set` vs `Array`).
+            // (https://github.com/nicklockwood/SwiftFormat/issues/2605)
+            if isClosure, formatter.isFlatMapClosureWithInferredReturnType(at: startOfScopeIndex) {
+                return
+            }
+
             if formatter.options.swiftVersion < "5.1", !isClosure {
                 return
             }
@@ -211,6 +220,27 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether the closure starting at the given index is the argument to a `flatMap`
+    /// call and has an inferred (rather than explicit) return type. An explicit return
+    /// type pins the closure's type, so removing `return` from its body remains safe.
+    func isFlatMapClosureWithInferredReturnType(at closureStartIndex: Int) -> Bool {
+        // Find the identifier preceding the closure, handling both the trailing-closure
+        // form (`xs.flatMap { ... }`) and the parenthesized form (`xs.flatMap({ ... })`).
+        var precedingIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: closureStartIndex)
+        if let parenIndex = precedingIndex,
+           tokens[parenIndex] == .startOfScope("("),
+           startOfScope(at: closureStartIndex) == parenIndex
+        {
+            precedingIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: parenIndex)
+        }
+
+        guard let precedingIndex, tokens[precedingIndex] == .identifier("flatMap") else {
+            return false
+        }
+
+        return parseClosureArguments(at: closureStartIndex)?.returnTypeRange == nil
+    }
+
     func returnKeywordRangesToRemove(atStartOfScope startOfScopeIndex: Int, returnIndices: inout [Int]) -> [Range<Int>]? {
         var returnKeywordRangesToRemove = [Range<Int>]()
 

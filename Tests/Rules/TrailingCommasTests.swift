@@ -2574,7 +2574,7 @@ final class TrailingCommasTests: XCTestCase {
             foo: String,
             bar: String
         ) in
-            return (foo: "foo", bar: "bar")
+            (foo: "foo", bar: "bar")
         }
         """
 
@@ -2590,7 +2590,7 @@ final class TrailingCommasTests: XCTestCase {
             foo: String,
             bar: String
         ) in
-            return (foo: "foo", bar: "bar")
+            (foo: "foo", bar: "bar")
         }
         """
 
@@ -2606,7 +2606,7 @@ final class TrailingCommasTests: XCTestCase {
             foo: String,
             bar: String
         ) in
-            return (foo: arg, bar: arg)
+            (foo: arg, bar: arg)
         }
         """
 
@@ -2617,7 +2617,7 @@ final class TrailingCommasTests: XCTestCase {
             foo: String,
             bar: String
         ) in
-            return (foo: arg, bar: arg)
+            (foo: arg, bar: arg)
         }
         """
 

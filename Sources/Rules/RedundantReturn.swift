@@ -129,6 +129,7 @@ public extension FormatRule {
             // Closures always supported implicit returns, but other types of scopes
             // only support implicit return in Swift 5.1+ (SE-0255)
             let isClosure = formatter.isStartOfClosure(at: startOfScopeIndex)
+            var closureBodyStartIndex: Int?
             if isClosure {
                 var precedingIdentifierIndex = formatter.index(
                     of: .nonSpaceOrCommentOrLinebreak,
@@ -146,7 +147,12 @@ public extension FormatRule {
                 if let precedingIdentifierIndex,
                    formatter.tokens[precedingIdentifierIndex] == .identifier("flatMap")
                 {
-                    return
+                    guard let closureArguments = formatter.parseClosureArguments(at: startOfScopeIndex),
+                          closureArguments.returnTypeRange != nil
+                    else {
+                        return
+                    }
+                    closureBodyStartIndex = closureArguments.inKeywordIndex
                 }
             }
             if formatter.options.swiftVersion < "5.1", !isClosure {
@@ -182,7 +188,8 @@ public extension FormatRule {
                 atStartOfScope: startOfScopeIndex,
                 includingConditionalStatements: true,
                 includingReturnStatements: true,
-                includingReturnInConditionalStatements: stripConditionalReturn
+                includingReturnInConditionalStatements: stripConditionalReturn,
+                bodyStartIndex: closureBodyStartIndex
             ) else {
                 return
             }
@@ -199,7 +206,11 @@ public extension FormatRule {
 
             // Find all of the return keywords to remove before we remove any of them,
             // so we can apply additional validation first.
-            guard let returnKeywordRangesToRemove = formatter.returnKeywordRangesToRemove(atStartOfScope: startOfScopeIndex, returnIndices: &returnIndices) else { return }
+            guard let returnKeywordRangesToRemove = formatter.returnKeywordRangesToRemove(
+                atStartOfScope: startOfScopeIndex,
+                returnIndices: &returnIndices,
+                bodyStartIndex: closureBodyStartIndex
+            ) else { return }
 
             for returnKeywordRangeToRemove in returnKeywordRangesToRemove.sorted(by: { $0.startIndex > $1.startIndex }) {
                 formatter.removeTokens(in: returnKeywordRangeToRemove)
@@ -231,12 +242,16 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    func returnKeywordRangesToRemove(atStartOfScope startOfScopeIndex: Int, returnIndices: inout [Int]) -> [Range<Int>]? {
+    func returnKeywordRangesToRemove(
+        atStartOfScope startOfScopeIndex: Int,
+        returnIndices: inout [Int],
+        bodyStartIndex: Int? = nil
+    ) -> [Range<Int>]? {
         var returnKeywordRangesToRemove = [Range<Int>]()
 
         // If this scope is a single-statement if or switch statement then we have to recursively
         // remove the return from each branch of the if statement
-        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
+        let startOfBody = bodyStartIndex ?? startOfBody(atStartOfScope: startOfScopeIndex)
 
         if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
            let conditionalBranches = conditionalBranches(at: firstTokenInBody)

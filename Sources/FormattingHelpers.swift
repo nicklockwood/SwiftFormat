@@ -1484,10 +1484,11 @@ extension Formatter {
         atStartOfScope startOfScopeIndex: Int,
         includingConditionalStatements: Bool,
         includingReturnStatements: Bool,
-        includingReturnInConditionalStatements: Bool? = nil
+        includingReturnInConditionalStatements: Bool? = nil,
+        bodyStartIndex: Int? = nil
     ) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
-        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
+        let startOfBody = bodyStartIndex ?? startOfBody(atStartOfScope: startOfScopeIndex)
 
         // The body should contain exactly one expression.
         // We can confirm this by parsing the body with `parseExpressionRange`,

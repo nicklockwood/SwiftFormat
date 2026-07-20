@@ -40,6 +40,89 @@ final class RedundantReturnTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantReturn)
     }
 
+    func testNoRemoveRedundantSwitchReturnsInFlatMapClosures() {
+        let input = """
+        let foo = bar.flatMap { value in
+            switch value {
+            case 0:
+                return Set([value])
+            default:
+                return [value]
+            }
+        }
+
+        let baz = bar.flatMap({ value in
+            switch value {
+            case 0:
+                return Set([value])
+            default:
+                return [value]
+            }
+        })
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rules: [.redundantReturn, .conditionalAssignment],
+                       options: options, exclude: [.trailingClosures])
+    }
+
+    func testRemoveRedundantSwitchReturnsInFlatMapClosuresWithExplicitReturnType() {
+        let input = """
+        let foo = bar.flatMap { value -> [Int] in
+            switch value {
+            case 0:
+                return [value]
+            default:
+                return [value]
+            }
+        }
+
+        let baz = bar.flatMap({ value -> [Int] in
+            switch value {
+            case 0:
+                return [value]
+            default:
+                return [value]
+            }
+        })
+        """
+        let output = """
+        let foo = bar.flatMap { value -> [Int] in
+            switch value {
+            case 0:
+                [value]
+            default:
+                [value]
+            }
+        }
+
+        let baz = bar.flatMap({ value -> [Int] in
+            switch value {
+            case 0:
+                [value]
+            default:
+                [value]
+            }
+        })
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
+                       options: options, exclude: [.trailingClosures])
+    }
+
+    func testRemoveRedundantReturnInClosureWithExplicitReturnType() {
+        let input = """
+        let closure = { value -> [Int] in
+            return [value]
+        }
+        """
+        let output = """
+        let closure = { value -> [Int] in
+            [value]
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn)
+    }
+
     func testNoRemoveReturnInComputedVar() {
         let input = """
         var foo: Int { return 5 }

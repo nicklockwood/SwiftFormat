@@ -545,7 +545,7 @@ final class IndentTests: XCTestCase {
         let input = """
         let closure = { foo, bar ->
             MyReturnType in
-            return MyReturnType(foo, bar)
+            MyReturnType(foo, bar)
         }
         """
         testFormatting(for: input, rule: .indent)
@@ -555,7 +555,7 @@ final class IndentTests: XCTestCase {
         let input = """
         let closure = { foo, bar
             -> MyReturnType in
-            return MyReturnType(foo, bar)
+            MyReturnType(foo, bar)
         }
         """
         testFormatting(for: input, rule: .indent)
@@ -566,7 +566,7 @@ final class IndentTests: XCTestCase {
         let closure = { foo, bar
             -> MyReturnType
             in
-            return MyReturnType(foo, bar)
+            MyReturnType(foo, bar)
         }
         """
         testFormatting(for: input, rule: .indent)

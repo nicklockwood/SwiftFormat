@@ -183,9 +183,12 @@ extension Formatter {
            let endOfParens = endOfScope(at: nextToken)
         {
             // Check for trailing closure after parentheses: Group() { }
+            // Only match if the parens are empty — calls like Group(subviews:) or
+            // Group(sections:) are semantically significant and must not be removed.
             if let afterParens = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfParens),
                tokens[afterParens] == .startOfScope("{"),
-               let endOfClosure = endOfScope(at: afterParens)
+               let endOfClosure = endOfScope(at: afterParens),
+               index(of: .nonSpaceOrCommentOrLinebreak, after: nextToken) == endOfParens
             {
                 return (groupEndIndex: endOfClosure, closureStartIndex: afterParens)
             }

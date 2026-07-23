@@ -557,4 +557,36 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         """
         testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
     }
+
+    func testKeepGroupWithSubviewsArgument() {
+        let input = """
+        struct SeparatedHStack: View {
+            var body: some View {
+                Group(subviews: content) { subviews in
+                    HStack {
+                        ForEach(subviews.indices, id: \\.self) { index in
+                            subviews[index]
+                        }
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSwiftUIGroup)
+    }
+
+    func testKeepGroupWithSectionsArgument() {
+        let input = """
+        struct MyList: View {
+            var body: some View {
+                Group(sections: content) { sections in
+                    ForEach(sections) { section in
+                        Text(section.header)
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSwiftUIGroup)
+    }
 }

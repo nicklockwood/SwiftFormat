@@ -31,6 +31,9 @@ public extension FormatRule {
         // In .noIndent mode, tracks the indent applied to each open #if so that
         // the matching #else/#elseif/#endif can be aligned to the same level
         var noIndentIfdefIndents: [String] = []
+        // Tracks whether each #if on the scope stack already incorporated the
+        // indentCase extra indent (because it directly wraps switch cases)
+        var ifdefHasCaseIndent: [Bool] = []
 
         @discardableResult
         func applyIndent(_ indent: String, at index: Int) -> Int {
@@ -135,10 +138,12 @@ public extension FormatRule {
                     indent += formatter.options.indent
                     if formatter.options.indentCase,
                        scopeStack.count < 2 || scopeStack[scopeStack.count - 2] != .startOfScope("#if")
+                       || !(ifdefHasCaseIndent.last ?? false)
                     {
                         indent += formatter.options.indent
                     }
                 case "#if":
+                    var hasCaseIndent = false
                     if let lineIndex = formatter.index(of: .linebreak, after: i),
                        let nextKeyword = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lineIndex), [
                            .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"),
@@ -147,8 +152,10 @@ public extension FormatRule {
                         indent = indentStack[indentStack.count - indentCount - 1]
                         if formatter.options.indentCase {
                             indent += formatter.options.indent
+                            hasCaseIndent = true
                         }
                     }
+                    ifdefHasCaseIndent.append(hasCaseIndent)
                     switch formatter.options.ifdefIndent {
                     case .indent:
                         i += applyIndent(indent, at: formatter.startOfLine(at: i))
@@ -447,6 +454,9 @@ public extension FormatRule {
                         preserveIfdefDepth = max(preserveIfdefDepth - 1, 0)
                     } else if formatter.options.ifdefIndent == .noIndent, !noIndentIfdefIndents.isEmpty {
                         noIndentIfdefIndents.removeLast()
+                    }
+                    if !ifdefHasCaseIndent.isEmpty {
+                        ifdefHasCaseIndent.removeLast()
                     }
                 }
             }

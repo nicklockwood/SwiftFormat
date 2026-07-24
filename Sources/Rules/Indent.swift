@@ -135,6 +135,7 @@ public extension FormatRule {
                     indent += formatter.options.indent
                     if formatter.options.indentCase,
                        scopeStack.count < 2 || scopeStack[scopeStack.count - 2] != .startOfScope("#if")
+                       || !formatter.isInIfdef(at: i, scopeStack: scopeStack)
                     {
                         indent += formatter.options.indent
                     }

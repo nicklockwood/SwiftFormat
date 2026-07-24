@@ -4723,6 +4723,53 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent, options: options)
     }
 
+    func testSwitchCaseBodyInIfEndifNoIndenting() {
+        let input = """
+        #if DEBUG
+        switch value {
+            case .authorized:
+                handleAuthorized()
+            case .revoked:
+                handleLoggedOut()
+        }
+        #endif
+        """
+        let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testSwitchCaseBodyInIfEndifNoIndenting2() {
+        let input = """
+        func baz(value: Example) -> String {
+            #if DEBUG
+            switch value {
+                case .foo:
+                    return "foo"
+                case .bar:
+                    return "bar"
+            }
+            #endif
+        }
+        """
+        let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testSwitchCaseBodyInIfEndifIndenting() {
+        let input = """
+        #if DEBUG
+            switch value {
+                case .authorized:
+                    handleAuthorized()
+                case .revoked:
+                    handleLoggedOut()
+            }
+        #endif
+        """
+        let options = FormatOptions(indentCase: true, ifdefIndent: .indent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testIfEndifInsideEnumNoIndenting() {
         let input = """
         enum Foo {

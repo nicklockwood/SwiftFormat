@@ -65,13 +65,20 @@ public extension FormatRule {
                 .filter { !$0.isEmpty }
                 .map(\.capitalized)
 
+            // Find ranges of preserved acronyms within the text
+            let preservedRanges = formatter.preservedAcronymRanges(in: updatedText)
+
             // Replace all Titlecase acronyms with UPPERCASE
             // TODO: for comments, should we replace lowercase acronyms too?
             outer: while index < updatedText.endIndex {
                 for acronym in acronyms where updatedText[index] == acronym.first {
                     if let indexAfter = match(acronym) {
-                        updatedText.replaceSubrange(index ..< indexAfter, with: acronym.uppercased())
-                        index = indexAfter
+                        if preservedRanges.contains(where: { $0.contains(index) }) {
+                            index = indexAfter
+                        } else {
+                            updatedText.replaceSubrange(index ..< indexAfter, with: acronym.uppercased())
+                            index = indexAfter
+                        }
                         continue outer
                     } else if let indexAfter = match(acronym.uppercased()) {
                         index = indexAfter
@@ -105,5 +112,23 @@ public extension FormatRule {
         + let entityUUID: UUID
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Returns ranges within `text` that match any of the `preserveAcronyms` values.
+    func preservedAcronymRanges(in text: String) -> [Range<String.Index>] {
+        guard !options.preserveAcronyms.isEmpty else { return [] }
+        var ranges = [Range<String.Index>]()
+        for preserved in options.preserveAcronyms {
+            var searchStart = text.startIndex
+            while searchStart < text.endIndex,
+                  let range = text.range(of: preserved, range: searchStart ..< text.endIndex)
+            {
+                ranges.append(range)
+                searchStart = range.upperBound
+            }
+        }
+        return ranges
     }
 }

@@ -150,4 +150,88 @@ final class GenericExtensionsTests: XCTestCase {
         )
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
     }
+
+    func testUpdatesRangeReplaceableCollectionGenericExtension() {
+        let input = """
+        extension RangeReplaceableCollection where Element == Path {}
+        """
+        let output = """
+        extension RangeReplaceableCollection<Path> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
+    func testUpdatesBidirectionalCollectionGenericExtension() {
+        let input = """
+        extension BidirectionalCollection where Element == Foo {}
+        """
+        let output = """
+        extension BidirectionalCollection<Foo> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
+    func testUpdatesRandomAccessCollectionGenericExtension() {
+        let input = """
+        extension RandomAccessCollection where Element == Foo {}
+        """
+        let output = """
+        extension RandomAccessCollection<Foo> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
+    func testUpdatesMutableCollectionGenericExtension() {
+        let input = """
+        extension MutableCollection where Element == Foo {}
+        """
+        let output = """
+        extension MutableCollection<Foo> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
+    func testUpdatesClosedRangeGenericExtension() {
+        let input = """
+        extension ClosedRange where Bound == Int {}
+        """
+        let output = """
+        extension ClosedRange<Int> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
+    func testUpdatesKeyValuePairsGenericExtension() {
+        let input = """
+        extension KeyValuePairs where Key == String, Value == Int {}
+        """
+        let output = """
+        extension KeyValuePairs<String, Int> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
+    func testUpdatesCollectionDifferenceGenericExtension() {
+        let input = """
+        extension CollectionDifference where ChangeElement == Foo {}
+        """
+        let output = """
+        extension CollectionDifference<Foo> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
 }

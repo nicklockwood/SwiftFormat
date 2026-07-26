@@ -130,4 +130,37 @@ final class AcronymsTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .acronyms, options: FormatOptions(acronyms: ["ID", "DS"]))
     }
+
+    func testPreserveAcronymsAsSubstringOfIdentifier() {
+        let input = """
+        let kMDItemAppStoreAdamID = value
+        """
+
+        let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
+        testFormatting(for: input, rule: .acronyms, options: options)
+    }
+
+    func testPreserveAcronymsDoesNotAffectOtherIdentifiers() {
+        let input = """
+        let kMDItemAppStoreAdamID = value
+        let destinationAdamView = view
+        """
+
+        let output = """
+        let kMDItemAppStoreAdamID = value
+        let destinationADAMView = view
+        """
+
+        let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
+        testFormatting(for: input, output, rule: .acronyms, options: options)
+    }
+
+    func testPreserveAcronymsMatchesSubstringInLongerIdentifier() {
+        let input = """
+        let xkMDItemAppStoreAdamIDy = value
+        """
+
+        let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
+        testFormatting(for: input, rule: .acronyms, options: options)
+    }
 }

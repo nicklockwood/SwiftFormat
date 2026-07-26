@@ -130,4 +130,48 @@ final class AcronymsTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .acronyms, options: FormatOptions(acronyms: ["ID", "DS"]))
     }
+
+    func testPreserveAcronymsInComments() {
+        let input = """
+        /// kMDItemAppStoreAdamID
+        let foo = bar
+        """
+
+        let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
+        testFormatting(for: input, rule: .acronyms, options: options)
+    }
+
+    func testPreserveAcronymsAsSubstringInComment() {
+        let input = """
+        /// AdkMDItemAppStoreAdamIDam
+        let foo = bar
+        """
+
+        let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
+        testFormatting(for: input, rule: .acronyms, options: options)
+    }
+
+    func testPreserveAcronymsDoesNotAffectOtherOccurrences() {
+        let input = """
+        /// kMDItemAppStoreAdamID and destinationAdamId
+        let foo = bar
+        """
+
+        let output = """
+        /// kMDItemAppStoreAdamID and destinationADAMId
+        let foo = bar
+        """
+
+        let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
+        testFormatting(for: input, output, rule: .acronyms, options: options)
+    }
+
+    func testPreserveAcronymsInIdentifierSubstring() {
+        let input = """
+        let kMDItemAppStoreAdamID = value
+        """
+
+        let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
+        testFormatting(for: input, rule: .acronyms, options: options)
+    }
 }

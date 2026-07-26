@@ -86,6 +86,7 @@ public extension FormatRule {
                 (name: "FlattenSequence", genericTypes: ["Base"]),
                 (name: "KeyValuePairs", genericTypes: ["Key", "Value"]),
                 (name: "ClosedRange", genericTypes: ["Bound"]),
+                (name: "Range", genericTypes: ["Bound"]),
                 (name: "Set", genericTypes: ["Element"]),
                 (name: "Dictionary", genericTypes: ["Key", "Value"]),
                 (name: "Optional", genericTypes: ["Wrapped"]),

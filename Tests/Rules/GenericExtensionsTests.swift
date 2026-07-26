@@ -211,6 +211,18 @@ final class GenericExtensionsTests: XCTestCase {
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
     }
 
+    func testUpdatesRangeGenericExtension() {
+        let input = """
+        extension Range where Bound == Int {}
+        """
+        let output = """
+        extension Range<Int> {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
     func testUpdatesKeyValuePairsGenericExtension() {
         let input = """
         extension KeyValuePairs where Key == String, Value == Int {}

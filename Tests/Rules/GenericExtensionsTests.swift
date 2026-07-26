@@ -115,6 +115,18 @@ final class GenericExtensionsTests: XCTestCase {
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
     }
 
+    func testPreservesOtherConstraintsBeforeGenericConstraintInWhereClause() {
+        let input = """
+        extension Collection where Self == [Path], Element == Path {}
+        """
+        let output = """
+        extension Collection<Path> where Self == [Path] {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
+    }
+
     func testSupportsUserProvidedGenericTypes() {
         let input = """
         extension StateStore where State == FooState, Action == FooAction {}

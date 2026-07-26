@@ -116,6 +116,20 @@ public extension FormatRule {
             {
                 formatter.removeTokens(in: whereIndex ..< newOpenBraceIndex)
             }
+            // Otherwise clean up any trailing comma left after removing constraints
+            else if let newOpenBraceIndex = formatter.index(of: .startOfScope("{"), after: whereIndex) {
+                var cleanupIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: newOpenBraceIndex) ?? whereIndex
+                if formatter.tokens[cleanupIndex] == .delimiter(",") {
+                    let removalStart = cleanupIndex
+                    // Also remove any space/linebreak between the comma and the opening brace
+                    if let nextNonSpace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: cleanupIndex),
+                       nextNonSpace <= newOpenBraceIndex
+                    {
+                        cleanupIndex = nextNonSpace - 1
+                    }
+                    formatter.replaceTokens(in: removalStart ... cleanupIndex, with: [.space(" ")])
+                }
+            }
 
             // Replace the extension typename with the fully-qualified generic angle bracket syntax
             let genericSubtypes = providedGenericTypes.map(\.name).joined(separator: ", ")

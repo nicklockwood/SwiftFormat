@@ -34,6 +34,7 @@
 * [hoistAwait](#hoistAwait)
 * [hoistPatternLet](#hoistPatternLet)
 * [hoistTry](#hoistTry)
+* [ifExpressions](#ifExpressions)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
 * [leadingDelimiters](#leadingDelimiters)
@@ -1286,6 +1287,31 @@ Option | Description
 ```diff
 - let foo = String(try await getFoo())
 + let foo = try String(await getFoo())
+```
+
+</details>
+<br/>
+
+## ifExpressions
+
+Prefer if expressions over ternary operators in functions and computed properties.
+
+Option | Description
+--- | ---
+`--single-line-ternary` | Single-line ternary handling: "preserve" (default) or "convert"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func foo(_ condition: Bool) -> String {
+-     condition ? "foo" : "bar"
++     if condition {
++         "foo"
++     } else {
++         "bar"
++     }
+  }
 ```
 
 </details>

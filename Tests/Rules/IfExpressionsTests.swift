@@ -263,6 +263,30 @@ final class IfExpressionsTests: XCTestCase {
         testFormatting(for: input, rule: .ifExpressions, options: options)
     }
 
+    func testDoesNotConvertTernaryWithOpaqueReturnType() {
+        let input = """
+        func foo(_ condition: Bool) -> some View {
+            condition
+                ? Text("foo")
+                : Text("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .ifExpressions, options: options)
+    }
+
+    func testDoesNotConvertTernaryWithOpaqueVarType() {
+        let input = """
+        var body: some View {
+            condition
+                ? Text("foo")
+                : Text("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .ifExpressions, options: options)
+    }
+
     func testMultiLineTernaryWithIndent() {
         let input = """
         func foo(_ condition: Bool) -> String {

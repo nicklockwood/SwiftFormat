@@ -41,7 +41,22 @@ public extension FormatRule {
             // For func/subscript/init, verify there's a return type (-> before the body).
             // Void functions can't use if expressions as their body value.
             if ["func", "subscript", "init"].contains(lastKeyword ?? "") {
-                guard formatter.index(of: .operator("->", .infix), before: startOfScopeIndex) != nil else {
+                guard let arrowIndex = formatter.index(of: .operator("->", .infix), before: startOfScopeIndex) else {
+                    return
+                }
+
+                // Don't apply to opaque return types (`some X`), which have
+                // different type inference behavior with if expressions vs ternaries.
+                if formatter.tokens[arrowIndex ..< startOfScopeIndex].contains(.identifier("some")) {
+                    return
+                }
+            }
+
+            // For computed vars, don't apply if the type annotation is an opaque type (`some X`)
+            if lastKeyword == "var" {
+                if let colonIndex = formatter.index(of: .delimiter(":"), before: startOfScopeIndex),
+                   formatter.tokens[colonIndex ..< startOfScopeIndex].contains(.identifier("some"))
+                {
                     return
                 }
             }

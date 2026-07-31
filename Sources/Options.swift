@@ -209,6 +209,14 @@ public enum TrailingCommas: String, CaseIterable {
     case multiElementLists = "multi-element-lists"
 }
 
+/// How to handle single-line ternary expressions in the preferIfExpression rule
+public enum SingleLineTernary: String, CaseIterable {
+    /// Preserve single-line ternaries as-is
+    case preserve
+    /// Convert single-line ternaries to single-line if expressions
+    case convert
+}
+
 /// Whether to insert, remove, or preserve spaces around operators
 public enum OperatorSpacingMode: String, CaseIterable {
     case insert = "spaced"
@@ -935,6 +943,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var testCaseAccessControl: Visibility
     public var guardLikeIfStatements: Bool
     public var redundantOptionalBinding: RedundantOptionalBindingMode
+    public var singleLineTernary: SingleLineTernary
 
     /// Deprecated
     public var indentComments: Bool
@@ -1087,6 +1096,7 @@ public struct FormatOptions: CustomStringConvertible {
                 testCaseAccessControl: Visibility = .internal,
                 guardLikeIfStatements: Bool = false,
                 redundantOptionalBinding: RedundantOptionalBindingMode = .sameNameOnly,
+                singleLineTernary: SingleLineTernary = .preserve,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1228,6 +1238,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.testCaseAccessControl = testCaseAccessControl
         self.guardLikeIfStatements = guardLikeIfStatements
         self.redundantOptionalBinding = redundantOptionalBinding
+        self.singleLineTernary = singleLineTernary
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

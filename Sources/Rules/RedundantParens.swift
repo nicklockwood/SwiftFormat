@@ -94,7 +94,7 @@ public extension FormatRule {
                 }
                 formatter.removeParen(at: closingIndex)
                 formatter.removeParen(at: i)
-            case let .keyword(name) where !conditionals.contains(name) && !["let", "var", "return"].contains(name):
+            case let .keyword(name) where !conditionals.contains(name) && !["let", "var", "return", "try", "await"].contains(name):
                 return
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
                 if formatter.tokens[previousIndex + 1 ..< i].contains(where: \.isLinebreak) {

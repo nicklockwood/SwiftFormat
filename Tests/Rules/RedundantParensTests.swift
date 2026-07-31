@@ -393,6 +393,26 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, rule: .redundantParens)
     }
 
+    func testRedundantParensAfterTryRemoved() {
+        let input = """
+        try (bar())
+        """
+        let output = """
+        try bar()
+        """
+        testFormatting(for: input, output, rule: .redundantParens)
+    }
+
+    func testRedundantParensAfterAwaitRemoved() {
+        let input = """
+        await (bar())
+        """
+        let output = """
+        await bar()
+        """
+        testFormatting(for: input, output, rule: .redundantParens)
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

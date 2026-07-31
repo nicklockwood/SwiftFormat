@@ -1281,4 +1281,94 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(swiftVersion: "6.2"))
     }
+
+    func testConvertsBacktickedNameWithTestPrefixAndUnderscores() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `test_depart_withNilNavigationProxy_completesWithoutCrash`() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `depart with nil navigation proxy completes without crash`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testConvertsBacktickedNameWithUnderscoresButNoTestPrefix() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `feature_works_well`() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `feature works well`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testPreservesBacktickedNameWithDoubleUnderscores() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `feature__works`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testConvertsBacktickedNameWithTestPrefixOnly() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `testFeatureWorks`() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `feature works`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
 }

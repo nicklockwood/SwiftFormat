@@ -366,4 +366,27 @@ final class RedundantBackticksTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantBackticks)
     }
+
+    func testNoRemoveBackticksFromSwiftTestingTestFunctionName() {
+        let input = """
+        import Testing
+
+        struct MyTests {
+            @Test func `UIKit`() {}
+            @Test func `SwiftUI`() {}
+            @Test func `feature`() {}
+        }
+        """
+        testFormatting(for: input, rule: .redundantBackticks)
+    }
+
+    func testRemoveBackticksFromNonTestFunction() {
+        let input = """
+        func `helper`() {}
+        """
+        let output = """
+        func helper() {}
+        """
+        testFormatting(for: input, output, rule: .redundantBackticks)
+    }
 }

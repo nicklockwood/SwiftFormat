@@ -2100,6 +2100,22 @@ extension Formatter {
             updateDeclarationName(forDeclarationAt: funcKeywordIndex, to: newMethodName)
         }
 
+        // Handle backticked names like `testFeature`, `test_feature_works`
+        // where the "test" prefix is not followed by a space
+        if methodName.hasPrefix("`test"), methodName.hasSuffix("`"),
+           methodName != "`test`",
+           !methodName.lowercased().hasPrefix("`test ")
+        {
+            var newMethodName = String(methodName.dropFirst("`test".count).dropLast())
+            // Strip leading underscores
+            while newMethodName.hasPrefix("_") {
+                newMethodName = String(newMethodName.dropFirst())
+            }
+            guard !newMethodName.isEmpty else { return }
+            newMethodName = newMethodName.first!.lowercased() + newMethodName.dropFirst()
+            updateDeclarationName(forDeclarationAt: funcKeywordIndex, to: newMethodName)
+        }
+
         // Handle names like ``func `test feature`()``, ``func `Test Feature`()``
         if methodName.lowercased().hasPrefix("`test "), methodName.lowercased() != "`test `" {
             var newMethodName = String(methodName.dropFirst("`test ".count))

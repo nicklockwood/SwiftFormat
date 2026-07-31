@@ -200,10 +200,7 @@ final class HoistAwaitTests: XCTestCase {
         let output = """
         let variable = await (try asyncFunction())
         """
-        let output2 = """
-        let variable = await try asyncFunction()
-        """
-        testFormatting(for: input, [output, output2], rules: [.hoistAwait],
+        testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 

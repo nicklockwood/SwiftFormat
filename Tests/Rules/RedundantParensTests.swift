@@ -376,6 +376,23 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantParens)
     }
 
+    func testRedundantParensAroundTryExpressionInReturnRemoved() {
+        let input = """
+        return (try bar())
+        """
+        let output = """
+        return try bar()
+        """
+        testFormatting(for: input, output, rule: .redundantParens)
+    }
+
+    func testRedundantParensAroundTryOptionalExpressionInReturnNotRemoved() {
+        let input = """
+        return (try? bar())
+        """
+        testFormatting(for: input, rule: .redundantParens)
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

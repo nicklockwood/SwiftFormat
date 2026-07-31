@@ -192,7 +192,13 @@ extension String {
 
         // Handle existing raw identifiers: `some name` -> some name
         if baseName.hasPrefix("`"), baseName.hasSuffix("`") {
-            return String(baseName.dropFirst().dropLast())
+            let inner = String(baseName.dropFirst().dropLast())
+            // If the backticked name contains individual underscores but no spaces,
+            // process it through normal camelCase/underscore splitting logic
+            if inner.contains("_"), !inner.contains("__"), !inner.contains(" ") {
+                return inner.camelCaseToWords()
+            }
+            return inner
         }
 
         guard !baseName.isEmpty, baseName.first?.isLetter == true else { return "" }

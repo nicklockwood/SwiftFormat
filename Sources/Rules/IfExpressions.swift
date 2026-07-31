@@ -93,6 +93,12 @@ public extension FormatRule {
                 return
             }
 
+            // Don't convert if the condition contains a trailing closure, because
+            // `if foo.contains { ... } { ... }` is ambiguous / emits a warning.
+            if formatter.conditionContainsTrailingClosure(ternary) {
+                return
+            }
+
             // Determine if the ternary itself was originally single-line
             let ternaryEnd = formatter.falseBranchEnd(of: ternary)
             let isSingleLine = !formatter.tokens[firstTokenIndex ... ternaryEnd]
@@ -406,5 +412,37 @@ extension Formatter {
         }
         guard start <= end else { return }
         output.append(contentsOf: tokens[start ... end])
+    }
+
+    /// Returns true if the condition of the given ternary (or any nested ternary condition)
+    /// contains a trailing closure, which would be ambiguous as an if expression.
+    func conditionContainsTrailingClosure(_ ternary: TernaryExpression) -> Bool {
+        // Check if the condition range contains a `{` that is a closure
+        for i in ternary.conditionRange {
+            if tokens[i] == .startOfScope("{"), isStartOfClosure(at: i) {
+                return true
+            }
+        }
+
+        // Also check nested ternary conditions
+        switch ternary.trueBranch {
+        case .expression:
+            break
+        case let .nestedTernary(nested):
+            if conditionContainsTrailingClosure(nested) {
+                return true
+            }
+        }
+
+        switch ternary.falseBranch {
+        case .expression:
+            break
+        case let .nestedTernary(nested):
+            if conditionContainsTrailingClosure(nested) {
+                return true
+            }
+        }
+
+        return false
     }
 }

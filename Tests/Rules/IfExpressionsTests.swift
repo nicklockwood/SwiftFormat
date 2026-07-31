@@ -308,4 +308,26 @@ final class IfExpressionsTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.ifExpressions, .indent], options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
+
+    func testDoesNotConvertTernaryWithTrailingClosureInCondition() {
+        let input = """
+        func foo(_ channels: [Channel]) -> String {
+            channels.contains { $0.property == .color }
+                ? "has color"
+                : "no color"
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .ifExpressions, options: options)
+    }
+
+    func testDoesNotConvertSingleLineTernaryWithTrailingClosureInCondition() {
+        let input = """
+        func foo(_ channels: [Channel]) -> String {
+            channels.contains { $0.property == .color } ? "has color" : "no color"
+        }
+        """
+        let options = FormatOptions(singleLineTernary: .convert, swiftVersion: "5.9")
+        testFormatting(for: input, rule: .ifExpressions, options: options)
+    }
 }

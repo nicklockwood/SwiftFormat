@@ -214,7 +214,7 @@ extension Formatter {
     }
 
     /// Finds the infix `?` operator at the current scope level, starting search after `index`.
-    private func findTernaryOperator(after startIndex: Int) -> Int? {
+    func findTernaryOperator(after startIndex: Int) -> Int? {
         var scopeDepth = 0
         var i = startIndex
 
@@ -238,7 +238,7 @@ extension Formatter {
 
     /// Finds the matching `:` for a ternary `?` operator.
     /// Handles nested ternaries by tracking `?`/`:` depth.
-    private func findTernaryColon(after questionIndex: Int) -> Int? {
+    func findTernaryColon(after questionIndex: Int) -> Int? {
         var ternaryDepth = 1
         var scopeDepth = 0
         var i = questionIndex + 1
@@ -300,7 +300,7 @@ extension Formatter {
     }
 
     /// Builds tokens for a single-line if expression: `if condition { trueExpr } else { falseExpr }`
-    private func buildSingleLineIfExpression(from ternary: TernaryExpression, into tokens: inout [Token]) {
+    func buildSingleLineIfExpression(from ternary: TernaryExpression, into tokens: inout [Token]) {
         tokens.append(.keyword("if"))
         tokens.append(.space(" "))
 
@@ -340,7 +340,7 @@ extension Formatter {
     }
 
     /// Builds tokens for a multi-line if expression
-    private func buildMultiLineIfExpression(from ternary: TernaryExpression, into tokens: inout [Token], indent: String) {
+    func buildMultiLineIfExpression(from ternary: TernaryExpression, into tokens: inout [Token], indent: String) {
         let bodyIndent = indent + options.indent
         let linebreak = Token.linebreak(options.linebreak, 0)
 
@@ -387,7 +387,7 @@ extension Formatter {
     }
 
     /// Appends tokens from the given range (trimming surrounding whitespace) into the output array
-    private func appendTokens(in range: ClosedRange<Int>, to output: inout [Token]) {
+    func appendTokens(in range: ClosedRange<Int>, to output: inout [Token]) {
         // Find the actual content start and end (skip leading/trailing whitespace and linebreaks)
         var start = range.lowerBound
         while start <= range.upperBound, self.tokens[start].isSpaceOrLinebreak {

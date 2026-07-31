@@ -46,6 +46,7 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferForLoop](#preferForLoop)
+* [preferIfExpression](#preferIfExpression)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
@@ -2046,6 +2047,40 @@ Option | Description
       .filter { $0.style == .fooBar }
       .map { $0.uppercased() }
       .forEach { print($0) }
+```
+
+</details>
+<br/>
+
+## preferIfExpression
+
+Prefer if expressions over ternary operators in functions and computed properties.
+
+Option | Description
+--- | ---
+`--single-line-ternary` | Single-line ternary handling: "preserve" (default) or "convert"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func foo(_ condition: Bool) -> String {
+-     condition ? "foo" : "bar"
++     if condition {
++         "foo"
++     } else {
++         "bar"
++     }
+  }
+
+  var foo: String {
+-     condition ? "foo" : "bar"
++     if condition {
++         "foo"
++     } else {
++         "bar"
++     }
+  }
 ```
 
 </details>

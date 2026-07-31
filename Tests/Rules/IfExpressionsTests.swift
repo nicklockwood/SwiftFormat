@@ -330,4 +330,26 @@ final class IfExpressionsTests: XCTestCase {
         let options = FormatOptions(singleLineTernary: .convert, swiftVersion: "5.9")
         testFormatting(for: input, rule: .ifExpressions, options: options)
     }
+
+    func testConvertsTernaryWithClosureInsideParens() {
+        let input = """
+        func foo(_ channels: [Channel]) -> String {
+            channels.contains(where: { $0.property == .color })
+                ? "has color"
+                : "no color"
+        }
+        """
+        let output = """
+        func foo(_ channels: [Channel]) -> String {
+            if channels.contains(where: { $0.property == .color }) {
+                "has color"
+            } else {
+                "no color"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
+                       exclude: [.wrapIfExpressionBodies])
+    }
 }

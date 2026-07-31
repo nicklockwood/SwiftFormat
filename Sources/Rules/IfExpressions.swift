@@ -415,13 +415,10 @@ extension Formatter {
     }
 
     /// Returns true if the condition of the given ternary (or any nested ternary condition)
-    /// contains a trailing closure, which would be ambiguous as an if expression.
+    /// contains a trailing closure at the root scope level.
     func conditionContainsTrailingClosure(_ ternary: TernaryExpression) -> Bool {
-        // Check if the condition range contains a `{` that is a closure
-        for i in ternary.conditionRange {
-            if tokens[i] == .startOfScope("{"), isStartOfClosure(at: i) {
-                return true
-            }
+        if conditionRangeContainsTrailingClosure(ternary.conditionRange) {
+            return true
         }
 
         // Also check nested ternary conditions
@@ -443,6 +440,27 @@ extension Formatter {
             }
         }
 
+        return false
+    }
+
+    /// Checks whether the given range contains a trailing closure `{ ... }` at the root scope level.
+    /// Skips over inner scopes like `(...)` and `[...]` so that `contains({ ... })` is not flagged.
+    private func conditionRangeContainsTrailingClosure(_ range: ClosedRange<Int>) -> Bool {
+        var i = range.lowerBound
+        while i <= range.upperBound {
+            let token = tokens[i]
+            switch token {
+            case .startOfScope("{"):
+                // A `{` at the root scope level in the condition is a trailing closure
+                return true
+            case .startOfScope:
+                // Skip over inner scopes like (...) and [...]
+                guard let endOfScope = endOfScope(at: i) else { return false }
+                i = endOfScope + 1
+            default:
+                i += 1
+            }
+        }
         return false
     }
 }

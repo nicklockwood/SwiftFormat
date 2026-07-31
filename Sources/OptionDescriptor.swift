@@ -1513,6 +1513,12 @@ struct _Descriptors {
         help: "Bindings to simplify: \"same-name-only\" (default) or \"always\"",
         keyPath: \.redundantOptionalBinding
     )
+    let singleLineTernary = OptionDescriptor(
+        argumentName: "single-line-ternary",
+        displayName: "Single Line Ternary",
+        help: "Single-line ternary handling: \"preserve\" (default) or \"convert\"",
+        keyPath: \.singleLineTernary
+    )
 
     // MARK: - Internal
 

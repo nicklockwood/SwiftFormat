@@ -1,5 +1,5 @@
 //
-//  PreferIfExpressionTests.swift
+//  IfExpressionsTests.swift
 //  SwiftFormatTests
 //
 //  Created by Cal Stephens on 7/31/26.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-final class PreferIfExpressionTests: XCTestCase {
+final class IfExpressionsTests: XCTestCase {
     func testSimpleTernaryInFunction() {
         let input = """
         func foo(_ condition: Bool) -> String {
@@ -28,7 +28,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .preferIfExpression, options: options,
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -50,7 +50,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .preferIfExpression, options: options,
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -72,7 +72,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .preferIfExpression, options: options,
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -94,7 +94,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .preferIfExpression, options: options,
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -120,7 +120,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .preferIfExpression, options: options,
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -152,7 +152,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .preferIfExpression, options: options,
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -163,7 +163,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .preferIfExpression, options: options)
+        testFormatting(for: input, rule: .ifExpressions, options: options)
     }
 
     func testSingleLineTernaryConvertedToSingleLineIfExpression() {
@@ -178,7 +178,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(singleLineTernary: .convert, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .preferIfExpression, options: options,
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -198,7 +198,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(singleLineTernary: .convert, swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [.preferIfExpression, .indent, .wrapIfExpressionBodies],
+        testFormatting(for: input, [output], rules: [.ifExpressions, .indent, .wrapIfExpressionBodies],
                        options: options)
     }
 
@@ -220,7 +220,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [.preferIfExpression, .indent], options: options,
+        testFormatting(for: input, [output], rules: [.ifExpressions, .indent], options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -229,7 +229,7 @@ final class PreferIfExpressionTests: XCTestCase {
         let foo = items.map { $0 > 0 ? "positive" : "negative" }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .preferIfExpression, options: options)
+        testFormatting(for: input, rule: .ifExpressions, options: options)
     }
 
     func testDoesNotConvertTernaryPreSwift5_9() {
@@ -239,7 +239,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.8")
-        testFormatting(for: input, rule: .preferIfExpression, options: options)
+        testFormatting(for: input, rule: .ifExpressions, options: options)
     }
 
     func testDoesNotConvertTernaryInVoidFunction() {
@@ -249,7 +249,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .preferIfExpression, options: options)
+        testFormatting(for: input, rule: .ifExpressions, options: options)
     }
 
     func testDoesNotConvertTernaryInMultiStatementFunction() {
@@ -260,7 +260,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .preferIfExpression, options: options)
+        testFormatting(for: input, rule: .ifExpressions, options: options)
     }
 
     func testMultiLineTernaryWithIndent() {
@@ -281,7 +281,7 @@ final class PreferIfExpressionTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [.preferIfExpression, .indent], options: options,
+        testFormatting(for: input, [output], rules: [.ifExpressions, .indent], options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 }

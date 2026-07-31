@@ -209,7 +209,7 @@ public enum TrailingCommas: String, CaseIterable {
     case multiElementLists = "multi-element-lists"
 }
 
-/// How to handle single-line ternary expressions in the preferIfExpression rule
+/// How to handle single-line ternary expressions in the ifExpressions rule
 public enum SingleLineTernary: String, CaseIterable {
     /// Preserve single-line ternaries as-is
     case preserve

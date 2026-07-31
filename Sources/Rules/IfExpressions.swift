@@ -1,5 +1,5 @@
 //
-//  PreferIfExpression.swift
+//  IfExpressions.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/31/26.
@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     /// Convert ternary expressions to if expressions in functions and computed properties.
-    static let preferIfExpression = FormatRule(
+    static let ifExpressions = FormatRule(
         help: "Prefer if expressions over ternary operators in functions and computed properties.",
         orderAfter: [.redundantReturn],
         options: ["single-line-ternary"],

@@ -46,7 +46,7 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferForLoop](#preferForLoop)
-* [preferIfExpression](#preferIfExpression)
+* [ifExpressions](#ifExpressions)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
@@ -2052,7 +2052,7 @@ Option | Description
 </details>
 <br/>
 
-## preferIfExpression
+## ifExpressions
 
 Prefer if expressions over ternary operators in functions and computed properties.
 

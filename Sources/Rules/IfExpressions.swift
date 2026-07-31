@@ -81,7 +81,7 @@ public extension FormatRule {
             // Determine if the ternary itself was originally single-line
             let ternaryEnd = formatter.falseBranchEnd(of: ternary)
             let isSingleLine = !formatter.tokens[firstTokenIndex ... ternaryEnd]
-                .contains(where: { $0.isLinebreak })
+                .contains(where: \.isLinebreak)
 
             // If it's single-line and we're preserving, skip it
             if isSingleLine, formatter.options.singleLineTernary == .preserve {
@@ -91,7 +91,6 @@ public extension FormatRule {
             // Convert the ternary to an if expression
             formatter.convertTernaryToIfExpression(
                 ternary: ternary,
-                startOfScopeIndex: startOfScopeIndex,
                 firstTokenIndex: firstTokenIndex,
                 hasReturnKeyword: hasReturnKeyword,
                 isSingleLine: isSingleLine && formatter.options.singleLineTernary == .convert
@@ -101,15 +100,6 @@ public extension FormatRule {
         """
         ```diff
           func foo(_ condition: Bool) -> String {
-        -     condition ? "foo" : "bar"
-        +     if condition {
-        +         "foo"
-        +     } else {
-        +         "bar"
-        +     }
-          }
-
-          var foo: String {
         -     condition ? "foo" : "bar"
         +     if condition {
         +         "foo"
@@ -224,7 +214,9 @@ extension Formatter {
             case .startOfScope:
                 scopeDepth += 1
             case .endOfScope:
-                if scopeDepth == 0 { return nil }
+                if scopeDepth == 0 {
+                    return nil
+                }
                 scopeDepth -= 1
             case .operator("?", .infix) where scopeDepth == 0:
                 return i
@@ -249,7 +241,9 @@ extension Formatter {
             case .startOfScope:
                 scopeDepth += 1
             case .endOfScope:
-                if scopeDepth == 0 { return nil }
+                if scopeDepth == 0 {
+                    return nil
+                }
                 scopeDepth -= 1
             case .operator("?", .infix) where scopeDepth == 0:
                 ternaryDepth += 1
@@ -269,7 +263,6 @@ extension Formatter {
     /// Converts a parsed ternary expression to an if expression.
     func convertTernaryToIfExpression(
         ternary: TernaryExpression,
-        startOfScopeIndex: Int,
         firstTokenIndex: Int,
         hasReturnKeyword: Bool,
         isSingleLine: Bool
@@ -388,16 +381,15 @@ extension Formatter {
 
     /// Appends tokens from the given range (trimming surrounding whitespace) into the output array
     func appendTokens(in range: ClosedRange<Int>, to output: inout [Token]) {
-        // Find the actual content start and end (skip leading/trailing whitespace and linebreaks)
         var start = range.lowerBound
-        while start <= range.upperBound, self.tokens[start].isSpaceOrLinebreak {
+        while start <= range.upperBound, tokens[start].isSpaceOrLinebreak {
             start += 1
         }
         var end = range.upperBound
-        while end >= start, self.tokens[end].isSpaceOrLinebreak {
+        while end >= start, tokens[end].isSpaceOrLinebreak {
             end -= 1
         }
         guard start <= end else { return }
-        output.append(contentsOf: self.tokens[start ... end])
+        output.append(contentsOf: tokens[start ... end])
     }
 }

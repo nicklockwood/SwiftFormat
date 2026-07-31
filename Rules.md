@@ -34,6 +34,7 @@
 * [hoistAwait](#hoistAwait)
 * [hoistPatternLet](#hoistPatternLet)
 * [hoistTry](#hoistTry)
+* [ifExpressions](#ifExpressions)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
 * [leadingDelimiters](#leadingDelimiters)
@@ -46,7 +47,6 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferForLoop](#preferForLoop)
-* [ifExpressions](#ifExpressions)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
@@ -1292,6 +1292,31 @@ Option | Description
 </details>
 <br/>
 
+## ifExpressions
+
+Prefer if expressions over ternary operators in functions and computed properties.
+
+Option | Description
+--- | ---
+`--single-line-ternary` | Single-line ternary handling: "preserve" (default) or "convert"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func foo(_ condition: Bool) -> String {
+-     condition ? "foo" : "bar"
++     if condition {
++         "foo"
++     } else {
++         "bar"
++     }
+  }
+```
+
+</details>
+<br/>
+
 ## indent
 
 Indent code in accordance with the scope level.
@@ -2047,40 +2072,6 @@ Option | Description
       .filter { $0.style == .fooBar }
       .map { $0.uppercased() }
       .forEach { print($0) }
-```
-
-</details>
-<br/>
-
-## ifExpressions
-
-Prefer if expressions over ternary operators in functions and computed properties.
-
-Option | Description
---- | ---
-`--single-line-ternary` | Single-line ternary handling: "preserve" (default) or "convert"
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  func foo(_ condition: Bool) -> String {
--     condition ? "foo" : "bar"
-+     if condition {
-+         "foo"
-+     } else {
-+         "bar"
-+     }
-  }
-
-  var foo: String {
--     condition ? "foo" : "bar"
-+     if condition {
-+         "foo"
-+     } else {
-+         "bar"
-+     }
-  }
 ```
 
 </details>

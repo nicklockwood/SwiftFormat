@@ -34,7 +34,6 @@
 * [hoistAwait](#hoistAwait)
 * [hoistPatternLet](#hoistPatternLet)
 * [hoistTry](#hoistTry)
-* [ifExpressions](#ifExpressions)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
 * [leadingDelimiters](#leadingDelimiters)
@@ -125,6 +124,7 @@
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blockComments](#blockComments)
 * [emptyExtensions](#emptyExtensions)
+* [ifExpressions](#ifExpressions)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
@@ -1298,7 +1298,7 @@ Prefer if expressions over ternary operators in functions and computed propertie
 
 Option | Description
 --- | ---
-`--single-line-ternary` | Single-line ternary handling: "preserve" (default) or "convert"
+`--single-line-ternary` | Single-line ternary handling: "convert" (default) or "preserve"
 
 <details>
 <summary>Examples</summary>

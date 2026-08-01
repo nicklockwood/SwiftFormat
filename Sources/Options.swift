@@ -1096,7 +1096,7 @@ public struct FormatOptions: CustomStringConvertible {
                 testCaseAccessControl: Visibility = .internal,
                 guardLikeIfStatements: Bool = false,
                 redundantOptionalBinding: RedundantOptionalBindingMode = .sameNameOnly,
-                singleLineTernary: SingleLineTernary = .preserve,
+                singleLineTernary: SingleLineTernary = .convert,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,

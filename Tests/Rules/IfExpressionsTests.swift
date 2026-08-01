@@ -162,7 +162,22 @@ final class IfExpressionsTests: XCTestCase {
             condition ? "foo" : "bar"
         }
         """
+        let output = """
+        func foo(_ condition: Bool) -> String {
+            if condition { "foo" } else { "bar" }
+        }
+        """
         let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .ifExpressions, options: options)
+    }
+
+    func testSingleLineTernaryPreservedWithPreserveOption() {
+        let input = """
+        func foo(_ condition: Bool) -> String {
+            condition ? "foo" : "bar"
+        }
+        """
+        let options = FormatOptions(singleLineTernary: .preserve, swiftVersion: "5.9")
         testFormatting(for: input, rule: .ifExpressions, options: options)
     }
 

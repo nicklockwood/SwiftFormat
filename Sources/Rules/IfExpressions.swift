@@ -12,6 +12,7 @@ public extension FormatRule {
     /// Convert ternary expressions to if expressions in functions and computed properties.
     static let ifExpressions = FormatRule(
         help: "Prefer if expressions over ternary operators in functions and computed properties.",
+        disabledByDefault: true,
         orderAfter: [.redundantReturn],
         options: ["single-line-ternary"],
         sharedOptions: ["linebreaks", "indent"]

@@ -105,6 +105,33 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames)
     }
 
+    func testPreservesBackticksWhenRemovingTestPrefixFromRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `testInit applies provided highlight state`() {
+                #expect(MyFeature.testInit().highlightState == .highlighted)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `init applies provided highlight state`() {
+                #expect(MyFeature.testInit().highlightState == .highlighted)
+            }
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.swiftTestingTestCaseNames, .redundantBackticks],
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
     func testDoesntUpdateNameToIdentifierRequiringBackTicks() {
         let input = """
         import Testing

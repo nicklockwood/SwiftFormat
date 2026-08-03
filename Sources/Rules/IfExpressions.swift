@@ -65,7 +65,7 @@ public extension FormatRule {
             // Make sure the body is a single statement (the same check redundantReturn uses)
             guard formatter.blockBodyHasSingleStatement(
                 atStartOfScope: startOfScopeIndex,
-                includingConditionalStatements: false,
+                includingConditionalStatements: true,
                 includingReturnStatements: true
             ) else {
                 return
@@ -90,33 +90,35 @@ public extension FormatRule {
             }
 
             // Check if the expression is a ternary
-            guard let ternary = formatter.parseTernaryExpression(startingAt: firstTokenIndex) else {
-                return
+            if let ternary = formatter.parseTernaryExpression(startingAt: firstTokenIndex) {
+                // Don't convert if the condition contains a trailing closure, because
+                // `if foo.contains { ... } { ... }` is ambiguous / emits a warning.
+                if formatter.conditionContainsTrailingClosure(ternary) {
+                    return
+                }
+
+                // Determine if the ternary itself was originally single-line
+                let ternaryEnd = formatter.falseBranchEnd(of: ternary)
+                let isSingleLine = !formatter.tokens[firstTokenIndex ... ternaryEnd]
+                    .contains(where: \.isLinebreak)
+
+                // If it's single-line and we're preserving, skip it
+                if isSingleLine, formatter.options.singleLineTernary == .preserve {
+                    return
+                }
+
+                // Convert the ternary to an if expression
+                formatter.convertTernaryToIfExpression(
+                    ternary: ternary,
+                    firstTokenIndex: firstTokenIndex,
+                    hasReturnKeyword: hasReturnKeyword,
+                    isSingleLine: isSingleLine && formatter.options.singleLineTernary == .convert
+                )
+            } else if formatter.tokens[firstTokenIndex] == .keyword("if") {
+                // The body is already an if expression. Look for ternaries inside its branches
+                // and convert them, regardless of the single-line-ternary option.
+                formatter.convertTernariesInIfExpressionBranches(ifKeywordIndex: firstTokenIndex)
             }
-
-            // Don't convert if the condition contains a trailing closure, because
-            // `if foo.contains { ... } { ... }` is ambiguous / emits a warning.
-            if formatter.conditionContainsTrailingClosure(ternary) {
-                return
-            }
-
-            // Determine if the ternary itself was originally single-line
-            let ternaryEnd = formatter.falseBranchEnd(of: ternary)
-            let isSingleLine = !formatter.tokens[firstTokenIndex ... ternaryEnd]
-                .contains(where: \.isLinebreak)
-
-            // If it's single-line and we're preserving, skip it
-            if isSingleLine, formatter.options.singleLineTernary == .preserve {
-                return
-            }
-
-            // Convert the ternary to an if expression
-            formatter.convertTernaryToIfExpression(
-                ternary: ternary,
-                firstTokenIndex: firstTokenIndex,
-                hasReturnKeyword: hasReturnKeyword,
-                isSingleLine: isSingleLine && formatter.options.singleLineTernary == .convert
-            )
         }
     } examples: {
         """
@@ -442,6 +444,67 @@ extension Formatter {
         }
 
         return false
+    }
+
+    /// Finds ternary expressions inside the branches of an if expression and converts them
+    /// to if expressions. This handles cases like:
+    ///
+    ///     if condition {
+    ///         1.0
+    ///     } else {
+    ///         isMinimized ? 0.0 : 1.0
+    ///     }
+    ///
+    /// The `--single-line-ternary` option is not considered here because these ternaries
+    /// are nested inside an already multi-line if expression.
+    func convertTernariesInIfExpressionBranches(ifKeywordIndex: Int) {
+        let branches = ifStatementBranches(at: ifKeywordIndex)
+
+        // Process branches from last to first so token indices remain valid
+        for branch in branches.reversed() {
+            let startOfBranch = branch.startOfBranch
+            let endOfBranch = branch.endOfBranch
+
+            // Check that the branch body is a single statement
+            guard blockBodyHasSingleStatement(
+                atStartOfScope: startOfBranch,
+                includingConditionalStatements: false,
+                includingReturnStatements: false
+            ) else {
+                continue
+            }
+
+            // Find the first significant token in the branch body
+            guard let firstTokenInBranch = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBranch),
+                  firstTokenInBranch < endOfBranch
+            else {
+                continue
+            }
+
+            // If the branch itself contains a nested if expression, recurse into it
+            if tokens[firstTokenInBranch] == .keyword("if") {
+                convertTernariesInIfExpressionBranches(ifKeywordIndex: firstTokenInBranch)
+                continue
+            }
+
+            // Check if this branch body is a ternary expression
+            guard let ternary = parseTernaryExpression(startingAt: firstTokenInBranch) else {
+                continue
+            }
+
+            // Don't convert if the condition contains a trailing closure
+            if conditionContainsTrailingClosure(ternary) {
+                continue
+            }
+
+            // Convert the ternary (always multi-line, since we're inside a multi-line if expression)
+            convertTernaryToIfExpression(
+                ternary: ternary,
+                firstTokenIndex: firstTokenInBranch,
+                hasReturnKeyword: false,
+                isSingleLine: false
+            )
+        }
     }
 
     /// Checks whether the given range contains a trailing closure `{ ... }` at the root scope level.

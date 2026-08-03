@@ -1539,8 +1539,11 @@ extension Formatter {
             return false
         }
 
-        let unescaped = token.unescaped()
+        return backticksRequired(forName: token.unescaped(), at: i, ignoreLeadingDot: ignoreLeadingDot)
+    }
 
+    /// Detect if the given unescaped identifier name would require backtick escaping at the given index
+    func backticksRequired(forName unescaped: String, at i: Int, ignoreLeadingDot: Bool = false) -> Bool {
         // This identifier may be a raw identifier like ``func `function name with spaces`()``.
         // Validate that the escaped identifier is a valid standard identifier.
         var scalarView = UnicodeScalarView(unescaped.unicodeScalars)
@@ -1594,7 +1597,7 @@ extension Formatter {
             if unescaped == "init" {
                 return true
             }
-            if options.swiftVersion >= "5" || self.token(at: prevIndex - 1)?.isOperator("\\") != true {
+            if options.swiftVersion >= "5" || token(at: prevIndex - 1)?.isOperator("\\") != true {
                 return ignoreLeadingDot
             }
             return true

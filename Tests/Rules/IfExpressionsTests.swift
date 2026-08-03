@@ -367,4 +367,138 @@ final class IfExpressionsTests: XCTestCase {
         testFormatting(for: input, output, rule: .ifExpressions, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
+
+    func testTernaryInsideIfExpressionBranch() {
+        let input = """
+        private var contentOpacity: Double {
+            if screenshotTestsEnabled {
+                1.0
+            } else {
+                isMinimized ? 0.0 : 1.0
+            }
+        }
+        """
+        let output = """
+        private var contentOpacity: Double {
+            if screenshotTestsEnabled {
+                1.0
+            } else {
+                if isMinimized {
+                    0.0
+                } else {
+                    1.0
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testTernaryInsideIfExpressionBranchWithPreserveOption() {
+        let input = """
+        private var contentOpacity: Double {
+            if screenshotTestsEnabled {
+                1.0
+            } else {
+                isMinimized ? 0.0 : 1.0
+            }
+        }
+        """
+        let output = """
+        private var contentOpacity: Double {
+            if screenshotTestsEnabled {
+                1.0
+            } else {
+                if isMinimized {
+                    0.0
+                } else {
+                    1.0
+                }
+            }
+        }
+        """
+        let options = FormatOptions(singleLineTernary: .preserve, swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testTernaryInBothIfExpressionBranches() {
+        let input = """
+        func foo(_ x: Bool, _ y: Bool) -> String {
+            if x {
+                y ? "a" : "b"
+            } else {
+                y ? "c" : "d"
+            }
+        }
+        """
+        let output = """
+        func foo(_ x: Bool, _ y: Bool) -> String {
+            if x {
+                if y {
+                    "a"
+                } else {
+                    "b"
+                }
+            } else {
+                if y {
+                    "c"
+                } else {
+                    "d"
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testTernaryInElseIfBranch() {
+        let input = """
+        func foo(_ x: Int) -> String {
+            if x > 0 {
+                "positive"
+            } else if x == 0 {
+                "zero"
+            } else {
+                x < -10 ? "very negative" : "negative"
+            }
+        }
+        """
+        let output = """
+        func foo(_ x: Int) -> String {
+            if x > 0 {
+                "positive"
+            } else if x == 0 {
+                "zero"
+            } else {
+                if x < -10 {
+                    "very negative"
+                } else {
+                    "negative"
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .ifExpressions, options: options,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testNoConversionForNonTernaryIfBranches() {
+        let input = """
+        var foo: String {
+            if condition {
+                "hello"
+            } else {
+                "world"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .ifExpressions, options: options)
+    }
 }

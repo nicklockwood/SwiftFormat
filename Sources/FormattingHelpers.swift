@@ -2154,6 +2154,12 @@ extension Formatter {
               !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(unescapedName)
         else { return }
 
+        // Escape the new name in backticks if required, e.g. raw identifiers containing spaces
+        var newName = newName
+        if !newName.hasPrefix("`"), backticksRequired(forName: newName, at: nameIndex) {
+            newName = "`\(newName)`"
+        }
+
         replaceToken(at: nameIndex, with: .identifier(newName))
     }
 }

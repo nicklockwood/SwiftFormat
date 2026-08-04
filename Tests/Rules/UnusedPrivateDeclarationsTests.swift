@@ -25,6 +25,422 @@ final class UnusedPrivateDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
+    func testPreservePropertyParticipatingInSynthesizedEquatableConformance() {
+        let input = """
+        struct Token: Equatable {
+            private let uuid: UUID = .init()
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyParticipatingInQualifiedEquatableConformance() {
+        let input = """
+        struct Token: Swift.Equatable {
+            private let uuid: UUID = .init()
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testDoNotPreservePropertyParticipatingInCustomQualifiedEquatableConformance() {
+        let input = """
+        struct Token: MyModule.Equatable {
+            private let uuid: UUID = .init()
+            let value: Int
+        }
+        """
+        let output = """
+        struct Token: MyModule.Equatable {
+            let value: Int
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyParticipatingInSynthesizedEquatableConformanceViaHashable() {
+        let input = """
+        struct Token: Hashable {
+            private let uuid: UUID = .init()
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyParticipatingInSynthesizedHashableConformance() {
+        let input = """
+        struct Token: Hashable {
+            private let uuid: UUID = .init()
+        }
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyParticipatingInQualifiedHashableConformance() {
+        let input = """
+        struct Token: Swift.Hashable {
+            private let uuid: UUID = .init()
+        }
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testDoNotPreservePropertyParticipatingInCustomQualifiedHashableConformance() {
+        let input = """
+        struct Token: MyModule.Hashable {
+            private let uuid: UUID = .init()
+            let value: Int
+        }
+        """
+        let output = """
+        struct Token: MyModule.Hashable {
+            let value: Int
+        }
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testDoNotPreserveEquatablePropertyWithPreserveHashableProperties() {
+        let input = """
+        struct Token: Equatable {
+            private let uuid: UUID = .init()
+            let value: Int
+        }
+        """
+        let output = """
+        struct Token: Equatable {
+            let value: Int
+        }
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservationOptionsDisabledByDefault() {
+        let input = """
+        struct EquatableToken: Equatable {
+            private let equatableUUID: UUID = .init()
+        }
+
+        struct HashableToken: Hashable {
+            private let hashableUUID: UUID = .init()
+        }
+        """
+        let output = """
+        struct EquatableToken: Equatable {
+        }
+
+        struct HashableToken: Hashable {
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, exclude: [.emptyBraces])
+    }
+
+    func testDoNotPreservePropertyOnClass() {
+        let input = """
+        class Token: Equatable {
+            private let uuid: UUID = .init()
+            let value: Int = 0
+        }
+        """
+        let output = """
+        class Token: Equatable {
+            let value: Int = 0
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreserveFileprivateStoredProperty() {
+        let input = """
+        struct Token: Equatable {
+            fileprivate let uuid: UUID = .init()
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyWhenConformanceIsDeclaredInExtension() {
+        let input = """
+        struct Token {
+            private let uuid: UUID = .init()
+        }
+
+        extension Token: Hashable {}
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testDoNotPreserveComputedOrStaticPropertiesForSynthesizedConformance() {
+        let input = """
+        struct Token: Hashable {
+            private static let namespace = UUID()
+            private var description: String { "token" }
+        }
+        """
+        let output = """
+        struct Token: Hashable {
+        }
+        """
+        let options = FormatOptions(
+            preserveEquatableProperties: true,
+            preserveHashableProperties: true
+        )
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, options: options, exclude: [.emptyBraces])
+    }
+
+    func testDoNotPreservePropertyWithManualEquatableImplementation() {
+        let input = """
+        struct Token: Equatable {
+            private let uuid = UUID()
+
+            static func == (lhs: Token, rhs: Token) -> Bool {
+                String(describing: lhs) == String(describing: rhs)
+            }
+        }
+        """
+        let output = """
+        struct Token: Equatable {
+            static func == (lhs: Token, rhs: Token) -> Bool {
+                String(describing: lhs) == String(describing: rhs)
+            }
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyWhenEqualsOverloadDoesNotMatchEquatableRequirement() {
+        let input = """
+        struct Token: Equatable {
+            private let uuid: UUID = .init()
+
+            static func == (lhs: Token, rhs: String) -> Bool {
+                String(describing: lhs) == rhs
+            }
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyWhenEquatableImplementationIsInConstrainedExtension() {
+        let input = """
+        struct Token<Value: Equatable>: Equatable {
+            private let uuid: UUID = .init()
+            let value: Value
+        }
+
+        extension Token where Value == String {
+            static func == (lhs: Self, rhs: Self) -> Bool {
+                lhs.value == rhs.value
+            }
+        }
+        """
+        let options = FormatOptions(preserveEquatableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testDoNotPreservePropertyWithManualHashableImplementation() {
+        let input = """
+        struct Token: Hashable {
+            private let uuid = UUID()
+
+            func hash(into hasher: inout Hasher) {
+                hasher.combine(0)
+            }
+        }
+        """
+        let output = """
+        struct Token: Hashable {
+            func hash(into hasher: inout Hasher) {
+                hasher.combine(0)
+            }
+        }
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyWhenHashOverloadDoesNotMatchHashableRequirement() {
+        let input = """
+        struct Token: Hashable {
+            private let uuid: UUID = .init()
+
+            func hash(into value: inout Int) {
+                value += 1
+            }
+        }
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testPreservePropertyWhenHashableImplementationIsConditionallyCompiled() {
+        let input = """
+        struct Token: Hashable {
+            private let uuid: UUID = .init()
+
+            #if DEBUG
+                func hash(into hasher: inout Hasher) {
+                    hasher.combine(0)
+                }
+            #endif
+        }
+        """
+        let options = FormatOptions(preserveHashableProperties: true)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
+    }
+
+    func testRecognizesSupportedManualEquatableWitnessSignatures() {
+        let input = """
+        struct SelfType: Equatable {
+            static func == (lhs: Self, rhs: Self) -> Swift.Bool { true }
+        }
+
+        struct Outer {
+            struct Nested: Equatable {
+                static func == (lhs: Nested, rhs: Nested) -> Bool { true }
+            }
+        }
+
+        struct Extended: Equatable {}
+
+        extension Extended {
+            static func == (lhs: Extended, rhs: Extended) -> Bool { true }
+        }
+        """
+        let synthesizedTypes = synthesizedConformanceTypes(for: input)
+        XCTAssertEqual(synthesizedTypes.equatable, [])
+    }
+
+    func testRejectsNonEquatableWitnessSignatures() {
+        let input = """
+        struct InstanceMethod: Equatable {
+            func == (lhs: InstanceMethod, rhs: InstanceMethod) -> Bool { true }
+        }
+
+        struct WrongArity: Equatable {
+            static func == (value: WrongArity) -> Bool { true }
+        }
+
+        struct WrongReturn: Equatable {
+            static func == (lhs: WrongReturn, rhs: WrongReturn) -> Int { 0 }
+        }
+        """
+        let synthesizedTypes = synthesizedConformanceTypes(for: input)
+        XCTAssertEqual(
+            synthesizedTypes.equatable,
+            Set(["InstanceMethod", "WrongArity", "WrongReturn"])
+        )
+    }
+
+    func testTreatsAmbiguousEquatableWitnessesAsSynthesized() {
+        let input = """
+        struct Attributed: Equatable {
+            @available(*, deprecated)
+            static func == (lhs: Attributed, rhs: Attributed) -> Bool { true }
+        }
+
+        struct Generic: Equatable {
+            static func == <Value>(lhs: Generic, rhs: Generic) -> Bool { true }
+        }
+
+        struct ConstrainedFunction<Value>: Equatable {
+            static func == (lhs: Self, rhs: Self) -> Bool where Value == String { true }
+        }
+
+        struct Effectful: Equatable {
+            static func == (lhs: Effectful, rhs: Effectful) async -> Bool { true }
+        }
+        """
+        let synthesizedTypes = synthesizedConformanceTypes(for: input)
+        XCTAssertEqual(
+            synthesizedTypes.equatable,
+            Set(["Attributed", "Generic", "ConstrainedFunction", "Effectful"])
+        )
+    }
+
+    func testRecognizesSupportedManualHashableWitnessSignatures() {
+        let input = """
+        struct QualifiedHasher: Hashable {
+            func hash(into hasher: inout Swift.Hasher) {}
+        }
+
+        struct ExplicitVoid: Hashable {
+            func hash(into hasher: inout Hasher) -> Void {}
+        }
+
+        struct QualifiedVoid: Hashable {
+            func hash(into hasher: inout Hasher) -> Swift.Void {}
+        }
+
+        struct TupleVoid: Hashable {
+            func hash(into hasher: inout Hasher) -> () {}
+        }
+        """
+        let synthesizedTypes = synthesizedConformanceTypes(for: input)
+        XCTAssertEqual(synthesizedTypes.hashable, [])
+    }
+
+    func testRejectsNonHashableWitnessSignatures() {
+        let input = """
+        struct StaticMethod: Hashable {
+            static func hash(into hasher: inout Hasher) {}
+        }
+
+        struct MutatingMethod: Hashable {
+            mutating func hash(into hasher: inout Hasher) {}
+        }
+
+        struct ConsumingMethod: Hashable {
+            consuming func hash(into hasher: inout Hasher) {}
+        }
+
+        struct WrongArity: Hashable {
+            func hash(into hasher: inout Hasher, salt: Int) {}
+        }
+
+        struct WrongLabel: Hashable {
+            func hash(_ hasher: inout Hasher) {}
+        }
+
+        struct WrongReturn: Hashable {
+            func hash(into hasher: inout Hasher) -> Int { 0 }
+        }
+        """
+        let synthesizedTypes = synthesizedConformanceTypes(for: input)
+        XCTAssertEqual(
+            synthesizedTypes.hashable,
+            Set(["StaticMethod", "MutatingMethod", "ConsumingMethod", "WrongArity", "WrongLabel", "WrongReturn"])
+        )
+    }
+
+    func testTracksSynthesizedEquatableAndHashableRequirementsIndependently() {
+        let input = """
+        struct ManualEquatable: Hashable {
+            static func == (lhs: ManualEquatable, rhs: ManualEquatable) -> Bool { true }
+        }
+
+        struct ManualHashable: Hashable {
+            func hash(into hasher: inout Hasher) {}
+        }
+        """
+        let synthesizedTypes = synthesizedConformanceTypes(for: input)
+        XCTAssertEqual(synthesizedTypes.equatable, ["ManualHashable"])
+        XCTAssertEqual(synthesizedTypes.hashable, ["ManualEquatable"])
+    }
+
     func testRemoveUnusedFilePrivate() {
         let input = """
         struct Foo {
@@ -417,5 +833,10 @@ final class UnusedPrivateDeclarationsTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.testSuiteAccessControl])
+    }
+
+    private func synthesizedConformanceTypes(for input: String) -> (equatable: Set<String>, hashable: Set<String>) {
+        let formatter = Formatter(tokenize(input))
+        return formatter.synthesizedEquatableAndHashableTypes(in: formatter.parseDeclarations())
     }
 }

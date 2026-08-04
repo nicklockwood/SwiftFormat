@@ -1386,6 +1386,18 @@ struct _Descriptors {
         help: "Comma separated list of declaration names to exclude",
         keyPath: \.preservedPrivateDeclarations
     )
+    let preserveEquatableProperties = OptionDescriptor(
+        argumentName: "preserve-equatable-properties",
+        displayName: "Preserve Equatable properties",
+        help: "Preserve unused private stored properties that participate in synthesized Equatable conformances:",
+        keyPath: \.preserveEquatableProperties
+    )
+    let preserveHashableProperties = OptionDescriptor(
+        argumentName: "preserve-hashable-properties",
+        displayName: "Preserve Hashable properties",
+        help: "Preserve unused private stored properties that participate in synthesized Hashable conformances:",
+        keyPath: \.preserveHashableProperties
+    )
     let preservedPropertyTypes = OptionDescriptor(
         argumentName: "preserved-property-types",
         displayName: "Preserved Property Types",

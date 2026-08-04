@@ -3974,8 +3974,6 @@ Remove unused private and fileprivate declarations.
 Option | Description
 --- | ---
 `--preserve-decls` | Comma separated list of declaration names to exclude
-`--preserve-equatable-properties` | Preserve unused private stored properties that participate in synthesized Equatable conformances: "true" or "false" (default)
-`--preserve-hashable-properties` | Preserve unused private stored properties that participate in synthesized Hashable conformances: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>

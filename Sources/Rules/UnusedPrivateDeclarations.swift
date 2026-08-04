@@ -13,15 +13,12 @@ public extension FormatRule {
     static let unusedPrivateDeclarations = FormatRule(
         help: "Remove unused private and fileprivate declarations.",
         disabledByDefault: true,
-        options: ["preserve-decls", "preserve-equatable-properties", "preserve-hashable-properties"]
+        options: ["preserve-decls"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
         let declarations = formatter.parseDeclarations()
-        var synthesizedConformanceTypes = (equatable: Set<String>(), hashable: Set<String>())
-        if formatter.options.preserveEquatableProperties || formatter.options.preserveHashableProperties {
-            synthesizedConformanceTypes = formatter.synthesizedEquatableAndHashableTypes(in: declarations)
-        }
+        let synthesizedConformanceTypes = formatter.synthesizedEquatableAndHashableTypes(in: declarations)
 
         // Only remove unused properties, functions, or typealiases.
         //  - This rule doesn't currently support removing unused types,
@@ -36,18 +33,16 @@ public extension FormatRule {
             let declarationModifiers = Set(declaration.modifiers)
             let hasDisallowedModifiers = disallowedModifiers.contains(where: { declarationModifiers.contains($0) })
             let parentTypeName = declaration.parentType?.fullyQualifiedName
-            var participatesInPreservedConformance = false
+            var participatesInSynthesizedConformance = false
             if declaration.isStoredInstanceProperty, let parentTypeName {
-                participatesInPreservedConformance =
-                    formatter.options.preserveEquatableProperties && synthesizedConformanceTypes.equatable.contains(parentTypeName)
-                        || formatter.options.preserveHashableProperties && synthesizedConformanceTypes.hashable.contains(parentTypeName)
+                participatesInSynthesizedConformance = synthesizedConformanceTypes.contains(parentTypeName)
             }
 
             guard allowlist.contains(declaration.keyword),
                   let name = declaration.name,
                   !name.isOperator,
                   !formatter.options.preservedPrivateDeclarations.contains(name),
-                  !participatesInPreservedConformance,
+                  !participatesInSynthesizedConformance,
                   !hasDisallowedModifiers
             else { return }
 
@@ -94,7 +89,7 @@ public extension FormatRule {
 
 extension Formatter {
     /// The structs in this file that use compiler-synthesized `Equatable` or `Hashable` requirements.
-    func synthesizedEquatableAndHashableTypes(in declarations: [Declaration]) -> (equatable: Set<String>, hashable: Set<String>) {
+    func synthesizedEquatableAndHashableTypes(in declarations: [Declaration]) -> Set<String> {
         var structNames = Set<String>()
         var equatableConformances = Set<String>()
         var hashableConformances = Set<String>()
@@ -155,10 +150,11 @@ extension Formatter {
             }
         }
 
-        return (
-            equatable: structNames.intersection(equatableConformances).subtracting(manualEquatableImplementations),
-            hashable: structNames.intersection(hashableConformances).subtracting(manualHashableImplementations)
-        )
+        let synthesizedEquatableTypes = structNames.intersection(equatableConformances)
+            .subtracting(manualEquatableImplementations)
+        let synthesizedHashableTypes = structNames.intersection(hashableConformances)
+            .subtracting(manualHashableImplementations)
+        return synthesizedEquatableTypes.union(synthesizedHashableTypes)
     }
 
     /// Whether this function can unambiguously serve as an unconditional protocol witness.

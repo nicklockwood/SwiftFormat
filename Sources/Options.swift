@@ -927,8 +927,6 @@ public struct FormatOptions: CustomStringConvertible {
     public var timeZone: FormatTimeZone
     public var nilInit: NilInitType
     public var preservedPrivateDeclarations: Set<String>
-    public var preserveEquatableProperties: Bool
-    public var preserveHashableProperties: Bool
     public var additionalXCTestSymbols: Set<String>
     public var defaultTestSuiteAttributes: [String]
     public var equatableMacro: EquatableMacro
@@ -1082,8 +1080,6 @@ public struct FormatOptions: CustomStringConvertible {
                 timeZone: FormatTimeZone = .system,
                 nilInit: NilInitType = .remove,
                 preservedPrivateDeclarations: Set<String> = [],
-                preserveEquatableProperties: Bool = false,
-                preserveHashableProperties: Bool = false,
                 additionalXCTestSymbols: Set<String> = [],
                 defaultTestSuiteAttributes: [String] = [],
                 equatableMacro: EquatableMacro = .none,
@@ -1226,8 +1222,6 @@ public struct FormatOptions: CustomStringConvertible {
         self.timeZone = timeZone
         self.nilInit = nilInit
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
-        self.preserveEquatableProperties = preserveEquatableProperties
-        self.preserveHashableProperties = preserveHashableProperties
         self.additionalXCTestSymbols = additionalXCTestSymbols
         self.defaultTestSuiteAttributes = defaultTestSuiteAttributes
         self.equatableMacro = equatableMacro

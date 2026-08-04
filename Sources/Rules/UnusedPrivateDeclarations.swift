@@ -91,6 +91,8 @@ extension Formatter {
     /// The structs in this file that use compiler-synthesized `Equatable` or `Hashable` requirements.
     func synthesizedEquatableAndHashableTypes(in declarations: [Declaration]) -> Set<String> {
         var structNames = Set<String>()
+        var conformancesByTypeName: [String: Set<String>] = [:]
+        var conformanceDependenciesByName: [String: Set<String>] = [:]
         var equatableConformances = Set<String>()
         var hashableConformances = Set<String>()
         var manualEquatableImplementations = Set<String>()
@@ -104,14 +106,25 @@ extension Formatter {
             if let typeDeclaration = declaration.asTypeDeclaration,
                let typeName = typeDeclaration.fullyQualifiedName
             {
-                let conformances = typeDeclaration.conformances.map(\.conformance.string)
-                let hasEquatableConformance = conformances.contains("Equatable") || conformances.contains("Swift.Equatable")
-                let hasHashableConformance = conformances.contains("Hashable") || conformances.contains("Swift.Hashable")
-                if hasEquatableConformance || hasHashableConformance {
-                    equatableConformances.insert(typeName)
+                let conformances = Set(typeDeclaration.conformances.map(\.conformance.string))
+                if declaration.keyword == "protocol" {
+                    conformanceDependenciesByName[typeName, default: []].formUnion(conformances)
+                    if let name = declaration.name {
+                        conformanceDependenciesByName[name, default: []].formUnion(conformances)
+                    }
+                } else {
+                    conformancesByTypeName[typeName, default: []].formUnion(conformances)
                 }
-                if hasHashableConformance {
-                    hashableConformances.insert(typeName)
+            }
+
+            // For the purpose of this function, a typealias is treated as a conformance to the aliased types.
+            if declaration.keyword == "typealias",
+               let typeName = declaration.fullyQualifiedName
+            {
+                let aliasedTypes = aliasedTypes(in: declaration)
+                conformanceDependenciesByName[typeName, default: []].formUnion(aliasedTypes)
+                if let name = declaration.name {
+                    conformanceDependenciesByName[name, default: []].formUnion(aliasedTypes)
                 }
             }
 
@@ -119,6 +132,7 @@ extension Formatter {
                   let parentTypeName = declaration.parentType?.fullyQualifiedName
             else { return }
 
+            // Find manual implementations of `==` that satisfy the `Equatable` conformance.
             if declaration.name == "==",
                declaration.hasModifier("static"),
                let function = parseFunctionDeclaration(keywordIndex: declaration.keywordIndex),
@@ -129,12 +143,13 @@ extension Formatter {
                    let argumentType = argument.type.string
                    return argumentType == "Self"
                        || argumentType == parentTypeName
-                       || parentTypeName.hasSuffix("." + argumentType)
+                       || parentTypeName.hasSuffix("." + argumentType) // Unqualified spelling of a nested type.
                })
             {
                 manualEquatableImplementations.insert(parentTypeName)
             }
 
+            // Find manual implementations of `hash(into:)` that satisfy the `Hashable` conformance.
             if declaration.name == "hash",
                !declaration.hasModifier("static"),
                !declaration.hasModifier("mutating"),
@@ -150,11 +165,57 @@ extension Formatter {
             }
         }
 
+        let equatableProtocols = Set(["Equatable", "Swift.Equatable", "Hashable", "Swift.Hashable"])
+        let hashableProtocols = Set(["Hashable", "Swift.Hashable"])
+
+        // Build sets of types that conform to `Equatable` or `Hashable`, either directly or indirectly.
+        for (typeName, conformances) in conformancesByTypeName {
+            if conformances.contains(where: { conformance in
+                var visitedProtocols = Set<String>()
+                return conformanceNamed(
+                    conformance,
+                    resolvesToAnyOf: equatableProtocols,
+                    in: conformanceDependenciesByName,
+                    visited: &visitedProtocols
+                )
+            }) {
+                equatableConformances.insert(typeName)
+            }
+
+            if conformances.contains(where: { conformance in
+                var visitedProtocols = Set<String>()
+                return conformanceNamed(
+                    conformance,
+                    resolvesToAnyOf: hashableProtocols,
+                    in: conformanceDependenciesByName,
+                    visited: &visitedProtocols
+                )
+            }) {
+                hashableConformances.insert(typeName)
+            }
+        }
+
+        // A type is "synthesized" iff it conforms to `Equatable` without a manual implementation
+        // of `==`, or it conforms to `Hashable` without a manual implementation of `hash(into:)`.
         let synthesizedEquatableTypes = structNames.intersection(equatableConformances)
             .subtracting(manualEquatableImplementations)
         let synthesizedHashableTypes = structNames.intersection(hashableConformances)
             .subtracting(manualHashableImplementations)
         return synthesizedEquatableTypes.union(synthesizedHashableTypes)
+    }
+
+    /// The types referenced by a typealias, split into individual protocol-composition elements.
+    func aliasedTypes(in declaration: Declaration) -> Set<String> {
+        guard let equalsIndex = index(
+            of: .operator("=", .infix),
+            in: declaration.keywordIndex ..< declaration.range.upperBound
+        ) else { return [] }
+
+        let andTokenIndices = parseProtocolCompositionTypealias(at: declaration.keywordIndex)?.andTokenIndices ?? []
+        return Set(([equalsIndex] + andTokenIndices).compactMap { delimiterIndex in
+            guard let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: delimiterIndex) else { return nil }
+            return parseType(at: typeIndex, excludeProtocolCompositions: true)?.string
+        })
     }
 
     /// Whether this function can unambiguously serve as an unconditional protocol witness.
@@ -174,5 +235,31 @@ extension Formatter {
         }
 
         return true
+    }
+
+    /// Whether a conformance resolves to any of the given protocols through typealiases or protocol refinements.
+    func conformanceNamed(
+        _ conformanceName: String,
+        resolvesToAnyOf expectedProtocols: Set<String>,
+        in conformanceDependenciesByName: [String: Set<String>],
+        visited: inout Set<String>
+    ) -> Bool {
+        if expectedProtocols.contains(conformanceName) {
+            return true
+        }
+
+        // Stop if malformed source contains a cyclic chain of aliases or protocol refinements.
+        guard visited.insert(conformanceName).inserted,
+              let dependencies = conformanceDependenciesByName[conformanceName]
+        else { return false }
+
+        return dependencies.contains { dependency in
+            conformanceNamed(
+                dependency,
+                resolvesToAnyOf: expectedProtocols,
+                in: conformanceDependenciesByName,
+                visited: &visited
+            )
+        }
     }
 }

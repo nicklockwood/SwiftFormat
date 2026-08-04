@@ -91,6 +91,71 @@ final class UnusedPrivateDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
+    func testPreservePropertyWhenConformanceUsesTypealiasOrRefiningProtocol() {
+        let input = """
+        typealias ValueEquatable = Swift.Equatable
+        typealias IndirectEquatable = ValueEquatable
+
+        protocol ValueHashable: Swift.Hashable {}
+        protocol IndirectHashable: ValueHashable {}
+
+        struct EquatableToken: IndirectEquatable {
+            private let uuid: UUID = .init()
+        }
+
+        struct HashableToken: IndirectHashable {
+            private let uuid: UUID = .init()
+        }
+        """
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
+    }
+
+    func testPreservePropertyWhenConformanceUsesProtocolCompositionTypealias() {
+        let input = """
+        typealias EquatableValue = Swift.Equatable & Sendable
+        typealias HashableValue = Sendable & Swift.Hashable
+
+        struct EquatableToken: EquatableValue {
+            private let uuid: UUID = .init()
+        }
+
+        struct HashableToken: HashableValue {
+            private let uuid: UUID = .init()
+        }
+        """
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
+    }
+
+    func testDoNotPreservePropertyWhenTypealiasOrRefiningProtocolIsCustomQualified() {
+        let input = """
+        typealias CustomEquatable = MyModule.Equatable
+        protocol CustomHashable: MyModule.Hashable {}
+
+        struct EquatableToken: CustomEquatable {
+            private let equatableUUID: UUID = .init()
+            let value: Int
+        }
+
+        struct HashableToken: CustomHashable {
+            private let hashableUUID: UUID = .init()
+            let value: Int
+        }
+        """
+        let output = """
+        typealias CustomEquatable = MyModule.Equatable
+        protocol CustomHashable: MyModule.Hashable {}
+
+        struct EquatableToken: CustomEquatable {
+            let value: Int
+        }
+
+        struct HashableToken: CustomHashable {
+            let value: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
+    }
+
     func testDoNotPreservePropertyOnClass() {
         let input = """
         class Token: Equatable {

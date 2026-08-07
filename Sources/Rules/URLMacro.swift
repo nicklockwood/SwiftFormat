@@ -20,7 +20,6 @@ public extension FormatRule {
             return
         }
         var didMakeChanges = false
-
         formatter.forEach(.identifier("URL")) { i, _ in
             // Match `URL(string: "...")` with a simple string literal
             guard let openParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
@@ -75,7 +74,6 @@ public extension FormatRule {
             }
         }
 
-        // Add the configured module import if any modifications were made
         if didMakeChanges {
             formatter.addImports([module])
         }

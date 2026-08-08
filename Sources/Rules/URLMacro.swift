@@ -113,7 +113,7 @@ extension Formatter {
     /// Check if `URL(string:)` at the given indices is wrapped in `try #require(...)`
     func isWrappedInTryRequire(urlIndex: Int, openParenIndex _: Int, closeParenIndex: Int) -> Bool {
         tryRequireIndices(around: urlIndex) != nil
-            && index(of: .nonSpaceOrCommentOrLinebreak, after: closeParenIndex).map({ tokens[$0] == .endOfScope(")") }) == true
+            && index(of: .nonSpaceOrCommentOrLinebreak, after: closeParenIndex).map { tokens[$0] == .endOfScope(")") } == true
     }
 
     /// Returns `(tryIndex, requireIndex, outerCloseParenIndex)` if URL is wrapped in `try #require(URL(...))`

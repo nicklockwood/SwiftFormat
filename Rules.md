@@ -4010,6 +4010,11 @@ With `--url-macro "#URL,URLFoundation"`:
 + let url = #URL("https://example.com")
 ```
 
+```diff
+- let url = try #require(URL(string: "https://example.com"))
++ let url = #URL("https://example.com")
+```
+
 </details>
 <br/>
 

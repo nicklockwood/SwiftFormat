@@ -223,6 +223,40 @@ final class URLMacroTests: XCTestCase {
         testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
+    func testTryRequireURLConverted() {
+        let input = """
+        let url = try #require(URL(string: "https://example.com"))
+        """
+        let output = """
+        import URLFoundation
+
+        let url = #URL("https://example.com")
+        """
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+    }
+
+    func testTryRequireURLWithComplexString() {
+        let input = """
+        let url = try #require(URL(string: "https://a0.muscache.com/profile.jpg?quality=original"))
+        """
+        let output = """
+        import URLFoundation
+
+        let url = #URL("https://a0.muscache.com/profile.jpg?quality=original")
+        """
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+    }
+
+    func testTryRequireURLWithInterpolationNotConverted() {
+        let input = """
+        let url = try #require(URL(string: "https://\\(domain)/path"))
+        """
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+    }
+
     func testStringConcatenationNotConverted() {
         let input = """
         let baseURL = "https://api.example.com"

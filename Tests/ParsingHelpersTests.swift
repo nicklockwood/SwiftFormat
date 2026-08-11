@@ -3450,6 +3450,52 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertThrowsError(try parseCodeBlocks(fromMarkdown: input, language: "swift"))
     }
 
+    func testParseMarkdownWithHTMLCommentNoFormat() throws {
+        let input = """
+        <!-- no-format -->
+        ```swift
+        func example()
+        {
+            doSomething()
+        }
+        ```
+        """
+
+        let codeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
+        XCTAssertEqual(codeBlocks.count, 1)
+        XCTAssertEqual(codeBlocks[0].options, "no-format")
+    }
+
+    func testParseMarkdownWithHTMLCommentNoFormatAndInlineOptions() throws {
+        let input = """
+        <!-- no-format -->
+        ```swift --indentstrings true
+        func example()
+        {
+            doSomething()
+        }
+        ```
+        """
+
+        let codeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
+        XCTAssertEqual(codeBlocks.count, 1)
+        XCTAssertEqual(codeBlocks[0].options, "no-format --indentstrings true")
+    }
+
+    func testParseMarkdownWithHTMLCommentNoFormatNotOnPreviousLine() throws {
+        let input = """
+        <!-- no-format -->
+
+        ```swift
+        func example() {}
+        ```
+        """
+
+        let codeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
+        XCTAssertEqual(codeBlocks.count, 1)
+        XCTAssertNil(codeBlocks[0].options)
+    }
+
     func testCommaSeparatedElementsInScope() {
         let input = """
         [

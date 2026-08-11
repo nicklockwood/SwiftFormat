@@ -1461,8 +1461,23 @@ func parseCodeBlocks(fromMarkdown markdown: String, language: String) throws -> 
                   lineIndex != partialBlock.lineStartIndex
             else { continue }
 
-            let options = String(partialBlock.textAfterTicks.dropFirst(language.count))
+            var options = String(partialBlock.textAfterTicks.dropFirst(language.count))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Check for <!-- no-format --> comment on the line before the opening fence
+            let openFenceLineIndex = partialBlock.lineStartIndex - 1
+            if openFenceLineIndex > 0 {
+                let previousLineRange = lines[openFenceLineIndex - 1]
+                let previousLine = markdown[previousLineRange]
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if previousLine == "<!-- no-format -->" {
+                    if options.isEmpty {
+                        options = "no-format"
+                    } else {
+                        options = "no-format \(options)"
+                    }
+                }
+            }
 
             let codeEnd = lines[lineIndex - 1].upperBound
             let range = lines[partialBlock.lineStartIndex].lowerBound ..< codeEnd

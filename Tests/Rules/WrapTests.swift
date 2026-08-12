@@ -539,7 +539,7 @@ final class WrapTests: XCTestCase {
         ) inside
         \"""
         """
-        let options = FormatOptions(maxWidth: 40)
+        let options = FormatOptions(wrapStringInterpolation: .default, maxWidth: 40)
         testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
@@ -742,7 +742,7 @@ final class WrapTests: XCTestCase {
             : "Some other string")"
         \"""
         """
-        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 50)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, wrapStringInterpolation: .default, maxWidth: 50)
         testFormatting(for: input, output, rule: .wrap, options: options)
     }
 

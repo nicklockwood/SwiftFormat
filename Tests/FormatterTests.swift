@@ -215,6 +215,25 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
+    func testDisableNextAppliesToEntireMultilineString() {
+        let input = #"""
+        // swiftformat:disable:next wrap
+        let string = """
+        VERSION=\(ShapeScript.version); curl https://example.com/a/very/long/path
+        """
+        let foo : Int=5;
+        """#
+        let output = #"""
+        // swiftformat:disable:next wrap
+        let string = """
+        VERSION=\(ShapeScript.version); curl https://example.com/a/very/long/path
+        """
+        let foo: Int = 5
+        """#
+        let options = FormatOptions(maxWidth: 40)
+        XCTAssertEqual(try format(input, rules: FormatRules.default, options: options).output, output + "\n")
+    }
+
     func testEnableNext() {
         let input = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"

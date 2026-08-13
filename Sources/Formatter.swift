@@ -201,20 +201,30 @@ public final class Formatter: NSObject {
             return
         }
 
+        var enablementIndex = index
+        var scopeIndex = index
+        while let startIndex = startOfScope(at: scopeIndex) {
+            if tokens[startIndex].isMultilineStringDelimiter {
+                enablementIndex = startIndex
+                break
+            }
+            scopeIndex = startIndex
+        }
+
         let line, tokenIndex: Int
-        switch tokens[index] {
+        switch tokens[enablementIndex] {
         case let .linebreak(_, ln):
             line = ln + 1
             tokenIndex = 0
         default:
-            if let i = tokens[..<index].lastIndex(where: { $0.isLinebreak }),
+            if let i = tokens[..<enablementIndex].lastIndex(where: { $0.isLinebreak }),
                case let .linebreak(_, ln) = tokens[i]
             {
                 line = ln + 1
-                tokenIndex = index - i - 1
+                tokenIndex = enablementIndex - i - 1
             } else {
                 line = 1
-                tokenIndex = index
+                tokenIndex = enablementIndex
             }
         }
 

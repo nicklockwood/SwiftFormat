@@ -201,8 +201,44 @@ public final class Formatter: NSObject {
             return
         }
 
+        // TODO: replace with stricter format for rules (space and/or comma-delimited)
+        func containsRule(_ directive: DirectiveType) -> Bool {
+            guard let rule = currentRule else {
+                return false
+            }
+            switch directive {
+            case let .enable(rules: rules), let .disable(rules: rules):
+                return rules.range(of: "\\b(\(rule.name)|all)\\b", options: [
+                    .regularExpression, .caseInsensitive,
+                ]) != nil
+            case .options:
+                return false
+            }
+        }
+
+        let physicalLine: Int
+        if case let .linebreak(_, line) = tokens[index] {
+            physicalLine = line + 1
+        } else if let linebreakIndex = tokens[..<index].lastIndex(where: { $0.isLinebreak }),
+                  case let .linebreak(_, line) = tokens[linebreakIndex]
+        {
+            physicalLine = line + 1
+        } else {
+            physicalLine = 1
+        }
+        let hasApplicableLineDirective = directives.contains { directive in
+            guard !directive.toggle, directive.line == physicalLine else {
+                return false
+            }
+            if case .options = directive.type {
+                return true
+            }
+            return containsRule(directive.type)
+        }
+
         let enablementIndex: Int
         if tokens[index].isLinebreak,
+           !hasApplicableLineDirective,
            let startIndex = startOfScope(at: index),
            tokens[startIndex].isMultilineStringDelimiter
         {
@@ -225,21 +261,6 @@ public final class Formatter: NSObject {
             } else {
                 line = 1
                 tokenIndex = enablementIndex
-            }
-        }
-
-        // TODO: replace with stricter format for rules (space and/or comma-delimited)
-        func containsRule(_ directive: DirectiveType) -> Bool {
-            guard let rule = currentRule else {
-                return false
-            }
-            switch directive {
-            case let .enable(rules: rules), let .disable(rules: rules):
-                return rules.range(of: "\\b(\(rule.name)|all)\\b", options: [
-                    .regularExpression, .caseInsensitive,
-                ]) != nil
-            case .options:
-                return false
             }
         }
 

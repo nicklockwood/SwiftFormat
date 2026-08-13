@@ -234,6 +234,26 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default, options: options).output, output + "\n")
     }
 
+    func testDisableNextInsideMultilineStringInterpolation() {
+        let input = #"""
+        let string = """
+        value: \(
+            // swiftformat:disable:next spaceAroundOperators
+            foo+bar
+        )
+        """
+        """#
+        let output = #"""
+        let string = """
+        value: \(
+            // swiftformat:disable:next spaceAroundOperators
+            foo+bar
+        )
+        """
+        """#
+        XCTAssertEqual(try format(input, rules: [.spaceAroundOperators]).output, output)
+    }
+
     func testEnableNext() {
         let input = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"

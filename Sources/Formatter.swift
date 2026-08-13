@@ -201,14 +201,14 @@ public final class Formatter: NSObject {
             return
         }
 
-        var enablementIndex = index
-        var scopeIndex = index
-        while let startIndex = startOfScope(at: scopeIndex) {
-            if tokens[startIndex].isMultilineStringDelimiter {
-                enablementIndex = startIndex
-                break
-            }
-            scopeIndex = startIndex
+        let enablementIndex: Int
+        if tokens[index].isLinebreak,
+           let startIndex = startOfScope(at: index),
+           tokens[startIndex].isMultilineStringDelimiter
+        {
+            enablementIndex = startIndex
+        } else {
+            enablementIndex = index
         }
 
         let line, tokenIndex: Int

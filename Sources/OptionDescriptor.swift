@@ -731,7 +731,7 @@ struct _Descriptors {
     let wrapStringInterpolation = OptionDescriptor(
         argumentName: "wrap-string-interpolation",
         displayName: "Wrap String Interpolation",
-        help: "String interpolation wrapping: \"preserve\" (default) or \"default\" (wrap if needed)",
+        help: "String interpolation wrapping: \"preserve\" or \"default\" (wrap if needed)",
         keyPath: \.wrapStringInterpolation
     )
     let closingParenPosition = OptionDescriptor(

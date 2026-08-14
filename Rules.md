@@ -4090,7 +4090,7 @@ Option | Description
 `--no-wrap-operators` | Comma-delimited list of operators that shouldn't be wrapped
 `--asset-literals` | Formatting of color/image literals: "actual-width" or "visual-width" (default)
 `--wrap-ternary` | Ternary expression wrapping: "default" (wrap if needed) or "before-operators"
-`--wrap-string-interpolation` | String interpolation wrapping: "preserve" (default) or "default" (wrap if needed)
+`--wrap-string-interpolation` | String interpolation wrapping: "preserve" or "default" (wrap if needed)
 
 <details>
 <summary>Examples</summary>
@@ -4121,7 +4121,7 @@ Option | Description
 `--wrap-conditions` | Conditional expression wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
 `--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
 `--wrap-effects` | Function effects (throws, async) wrapping: "preserve" (default), "if-multiline" or "never"
-`--wrap-string-interpolation` | String interpolation wrapping: "preserve" (default) or "default" (wrap if needed)
+`--wrap-string-interpolation` | String interpolation wrapping: "preserve" or "default" (wrap if needed)
 `--allow-partial-wrapping` | Allow partial argument wrapping: "true" (default) or "false"
 
 <details>

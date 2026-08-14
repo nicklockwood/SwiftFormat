@@ -3409,7 +3409,8 @@ final class ParsingHelpersTests: XCTestCase {
             """#
         )
 
-        XCTAssertEqual(codeBlocks[1].options, "no-format")
+        XCTAssertTrue(codeBlocks[1].noFormat)
+        XCTAssertNil(codeBlocks[1].options)
 
         XCTAssertEqual(
             codeBlocks[2].text,
@@ -3463,7 +3464,8 @@ final class ParsingHelpersTests: XCTestCase {
 
         let codeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
         XCTAssertEqual(codeBlocks.count, 1)
-        XCTAssertEqual(codeBlocks[0].options, "no-format")
+        XCTAssertTrue(codeBlocks[0].noFormat)
+        XCTAssertNil(codeBlocks[0].options)
     }
 
     func testParseMarkdownWithHTMLCommentNoFormatAndInlineOptions() throws {
@@ -3479,7 +3481,8 @@ final class ParsingHelpersTests: XCTestCase {
 
         let codeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
         XCTAssertEqual(codeBlocks.count, 1)
-        XCTAssertEqual(codeBlocks[0].options, "no-format --indentstrings true")
+        XCTAssertTrue(codeBlocks[0].noFormat)
+        XCTAssertEqual(codeBlocks[0].options, "--indentstrings true")
     }
 
     func testParseMarkdownWithHTMLCommentNoFormatNotOnPreviousLine() throws {
@@ -3493,6 +3496,7 @@ final class ParsingHelpersTests: XCTestCase {
 
         let codeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
         XCTAssertEqual(codeBlocks.count, 1)
+        XCTAssertFalse(codeBlocks[0].noFormat)
         XCTAssertNil(codeBlocks[0].options)
     }
 

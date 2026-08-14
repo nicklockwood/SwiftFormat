@@ -1189,7 +1189,7 @@ func processInput(_ inputURLs: [URL],
                 for swiftCodeBlock in swiftCodeBlocks.reversed() {
                     // Determine the options to use when formatting this block
                     var options = options
-                    if swiftCodeBlock.options?.contains("no-format") == true {
+                    if swiftCodeBlock.noFormat {
                         continue
                     } else if let args = swiftCodeBlock.options?.components(separatedBy: " "), !args.isEmpty {
                         let arguments = try preprocessArguments(args, commandLineArguments)
@@ -1407,6 +1407,7 @@ struct MarkdownCodeBlock {
     let range: Range<String.Index>
     let text: String
     let options: String?
+    let noFormat: Bool
     let lineStartIndex: Int
 }
 
@@ -1464,18 +1465,21 @@ func parseCodeBlocks(fromMarkdown markdown: String, language: String) throws -> 
             var options = String(partialBlock.textAfterTicks.dropFirst(language.count))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
+            // Check for no-format in the inline options
+            var noFormat = options.contains("no-format")
+            if noFormat {
+                options = options.replacingOccurrences(of: "no-format", with: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
             // Check for <!-- no-format --> comment on the line before the opening fence
             let openFenceLineIndex = partialBlock.lineStartIndex - 1
-            if openFenceLineIndex > 0 {
+            if !noFormat, openFenceLineIndex > 0 {
                 let previousLineRange = lines[openFenceLineIndex - 1]
                 let previousLine = markdown[previousLineRange]
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 if previousLine == "<!-- no-format -->" {
-                    if options.isEmpty {
-                        options = "no-format"
-                    } else {
-                        options = "no-format \(options)"
-                    }
+                    noFormat = true
                 }
             }
 
@@ -1489,6 +1493,7 @@ func parseCodeBlocks(fromMarkdown markdown: String, language: String) throws -> 
                 range: range,
                 text: codeText,
                 options: options.isEmpty ? nil : options,
+                noFormat: noFormat,
                 lineStartIndex: partialBlock.lineStartIndex
             ))
         }

@@ -1005,10 +1005,22 @@ SwiftFormat's tokenizer is more permissive than the Swift compiler and typically
 
 **Code block options:**
 
-You can specify options for options for individual code blocks by adding them after the opening delimiter. For example, you can use `no-format` to prevent a code block from being parsed or formatted:
+You can use `no-format` to prevent a code block from being parsed or formatted. This can be specified inline after the opening delimiter:
 
 ````md
 ```swift no-format
+func example()
+{
+    doSomething()
+}
+```
+````
+
+Or as an HTML comment on the line before the code block (useful for markdown renderers that don't support the inline syntax):
+
+````md
+<!-- no-format -->
+```swift
 func example()
 {
     doSomething()

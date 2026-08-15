@@ -173,14 +173,6 @@ public enum TernaryOperatorWrapMode: String, CaseIterable {
     case beforeOperators = "before-operators"
 }
 
-public enum StringInterpolationWrapMode: String, CaseIterable {
-    /// Wraps string interpolation if necessary based on the max line length
-    case `default`
-    /// Preserve existing wrapping for string interpolations,
-    /// and don't insert line breaks.
-    case preserve
-}
-
 /// Whether or not to remove `-> Void` from closures
 public enum ClosureVoidReturn: String, CaseIterable {
     case remove
@@ -836,7 +828,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
     public var wrapTernaryOperators: TernaryOperatorWrapMode
-    public var wrapStringInterpolation: StringInterpolationWrapMode
+    public var wrapStringInterpolation: Bool
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -989,7 +981,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
                 wrapTernaryOperators: TernaryOperatorWrapMode = .default,
-                wrapStringInterpolation: StringInterpolationWrapMode = .preserve,
+                wrapStringInterpolation: Bool = false,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),

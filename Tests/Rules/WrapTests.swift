@@ -539,7 +539,7 @@ final class WrapTests: XCTestCase {
         ) inside
         \"""
         """
-        let options = FormatOptions(maxWidth: 40)
+        let options = FormatOptions(wrapStringInterpolation: true, maxWidth: 40)
         testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
@@ -549,7 +549,7 @@ final class WrapTests: XCTestCase {
         a very long string literal with \\(interpolation) inside
         \"""
         """
-        let options = FormatOptions(wrapArguments: .afterFirst, wrapStringInterpolation: .preserve, maxWidth: 40)
+        let options = FormatOptions(wrapArguments: .afterFirst, wrapStringInterpolation: false, maxWidth: 40)
         testFormatting(for: input, rule: .wrap, options: options)
     }
 
@@ -559,7 +559,7 @@ final class WrapTests: XCTestCase {
         a very long string literal with \\(interpolation) inside
         \"""
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, wrapStringInterpolation: .preserve, maxWidth: 40)
+        let options = FormatOptions(wrapArguments: .beforeFirst, wrapStringInterpolation: false, maxWidth: 40)
         testFormatting(for: input, rule: .wrap, options: options)
     }
 
@@ -569,7 +569,7 @@ final class WrapTests: XCTestCase {
         \(raw: isPublic ? "public " : "")lazy var \(raw: name.trimmed.description): \(raw: typeName)<\(raw: genericName),\(returnType)> = {
         """
         """#
-        let options = FormatOptions(wrapArguments: .beforeFirst, wrapStringInterpolation: .preserve, maxWidth: 40)
+        let options = FormatOptions(wrapArguments: .beforeFirst, wrapStringInterpolation: false, maxWidth: 40)
         testFormatting(for: input, rule: .wrap, options: options)
     }
 
@@ -742,7 +742,7 @@ final class WrapTests: XCTestCase {
             : "Some other string")"
         \"""
         """
-        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 50)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, wrapStringInterpolation: true, maxWidth: 50)
         testFormatting(for: input, output, rule: .wrap, options: options)
     }
 

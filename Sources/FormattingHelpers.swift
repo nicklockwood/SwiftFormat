@@ -1251,7 +1251,7 @@ extension Formatter {
             i = startOfScope
 
             if tokens[startOfScope].isStringDelimiter {
-                if options.wrapStringInterpolation == .preserve {
+                if !options.wrapStringInterpolation {
                     return true
                 } else if !tokens[startOfScope].isMultilineStringDelimiter {
                     // Single line strings can never have line break

@@ -253,6 +253,26 @@ final class BlankLinesBetweenScopesTests: XCTestCase {
         testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.emptyBraces])
     }
 
+    func testNoBlankLineBeforeInfixOperator() {
+        let inputs = [
+            """
+            let x = {
+                nil
+            }()
+                ?? 1
+            """,
+            """
+            let x = {
+                1
+            }()
+                + 1
+            """,
+        ]
+        for input in inputs {
+            testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.redundantClosure])
+        }
+    }
+
     func testNoBlankLineBeforeWhileInRepeatWhile() {
         let input = """
         repeat

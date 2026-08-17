@@ -450,4 +450,43 @@ final class PreferForLoopTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .preferForLoop, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
     }
+
+    func testDollarPrefixedElement() {
+        let input = """
+        @propertyWrapper
+        struct Wrapper<Value> {
+            let wrappedValue: Value
+
+            init(wrappedValue: Value) {
+                self.wrappedValue = wrappedValue
+            }
+
+            init(projectedValue: Wrapper<Value>) {
+                wrappedValue = projectedValue.wrappedValue
+            }
+
+            var projectedValue: Wrapper {
+                self
+            }
+        }
+
+        extension Wrapper: Sequence where Value: Sequence {
+            func makeIterator() -> LazyMapSequence<Value, Wrapper<Value.Element>>.Iterator {
+                wrappedValue.lazy
+                    .map { value in
+                        Wrapper<Value.Element>(wrappedValue: value)
+                    }
+                    .makeIterator()
+            }
+        }
+
+        func run() {
+            @Wrapper var sequence = [1, 2, 3]
+            $sequence.forEach { $element in
+                print($element)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop)
+    }
 }

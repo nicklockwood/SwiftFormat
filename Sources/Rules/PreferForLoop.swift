@@ -119,6 +119,10 @@ public extension FormatRule {
                 isAnonymousClosure = false
                 forEachValueNames = closureArguments.argumentIndices.map { formatter.tokens[$0].string }
                 inKeywordIndex = closureArguments.inKeywordIndex
+
+                // Dollar-prefixed parameters such as `$element` are invalid in
+                // for loop syntax, so we can't convert it to a for loop.
+                guard !forEachValueNames.contains(where: { $0.hasPrefix("$") }) else { return }
             } else {
                 isAnonymousClosure = true
                 inKeywordIndex = nil

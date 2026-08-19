@@ -24,7 +24,7 @@ final class WrapMultilineFunctionChainsTests: XCTestCase {
             .reduce(0, +)
         """
 
-        testFormatting(for: input, [output], rules: [.wrapMultilineFunctionChains, .indent])
+        testFormatting(for: input, [output], rules: [.wrapMultilineFunctionChains, .indent], exclude: [.preferLazyMap])
     }
 
     func testWrapMultipleFunctionCalls() {

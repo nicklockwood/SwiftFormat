@@ -683,7 +683,7 @@ final class PreferContainsTests: XCTestCase {
         let missing = !items.map { $0.name }.joined().contains("x")
         """
 
-        testFormatting(for: input, output, rule: .preferContains)
+        testFormatting(for: input, output, rule: .preferContains, exclude: [.preferLazyMap])
     }
 
     func testRangeNegationInsertedAtOwnStatementNotPriorStatementEndingInScope() {

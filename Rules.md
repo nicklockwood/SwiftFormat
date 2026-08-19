@@ -136,6 +136,7 @@
 * [preferFinalClasses](#preferFinalClasses)
 * [preferFirstWhere](#preferFirstWhere)
 * [preferFlatMap](#preferFlatMap)
+* [preferMinMaxOverMap](#preferMinMaxOverMap)
 * [preferMinOverSorted](#preferMinOverSorted)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
@@ -2090,6 +2091,24 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 
 - let barArray = fooArray.compactMap { $0.optionalBar }
 + let barArray = fooArray.compactMap(\.optionalBar)
+```
+
+</details>
+<br/>
+
+## preferMinMaxOverMap
+
+Prefer `min()`/`max()` over `map { $0.foo }.min()`/`.max()`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let minY = vertices.map { $0.y }.min()!
++ let minY = vertices.min { $0.y < $1.y }!.y
+
+- let floorOffset = amenities.map { $0.box.minY }.min() ?? 0
++ let floorOffset = amenities.min { $0.box.minY < $1.box.minY }?.box.minY ?? 0
 ```
 
 </details>

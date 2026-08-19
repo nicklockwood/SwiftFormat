@@ -61,10 +61,10 @@ public extension FormatRule {
                 guard formatter.options.swiftVersion >= "6" else { return }
                 replacementTokens = tokenize("\\.self")
             } else {
-                let tokens = formatter.tokens[nextIndex + 1 ... lastIndex]
-                guard tokens.allSatisfy({ $0.isSpace || $0.isIdentifier || $0.isOperator(".") }) else {
+                guard formatter.isSimpleMemberAccessChain(in: nextIndex + 1 ... lastIndex) else {
                     return
                 }
+                let tokens = formatter.tokens[nextIndex + 1 ... lastIndex]
                 replacementTokens = [.operator("\\", .prefix)] + tokens
             }
             if let label {

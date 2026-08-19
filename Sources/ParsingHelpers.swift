@@ -1643,6 +1643,13 @@ extension Formatter {
         return false
     }
 
+    /// Returns whether every token in the given range is whitespace, an identifier, or a `.`
+    /// operator — i.e. a plain dotted member-access chain (e.g. `$0.foo.bar`) with no calls,
+    /// subscripts, or other operators.
+    func isSimpleMemberAccessChain(in range: ClosedRange<Int>) -> Bool {
+        tokens[range].allSatisfy { $0.isSpace || $0.isIdentifier || $0.isOperator(".") }
+    }
+
     /// Returns true if the identifier at the specified index is a label
     func isLabel(at i: Int) -> Bool {
         guard case .identifier = token(at: i) else {

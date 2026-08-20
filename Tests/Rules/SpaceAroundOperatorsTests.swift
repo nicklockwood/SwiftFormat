@@ -1208,4 +1208,18 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .spaceAroundOperators)
     }
+
+    func testNoSpaceAroundGenericWithModuleSelector() {
+        let input = """
+        let x: AnyPublisher<ModuleName::EntityName, Never>
+        """
+        testFormatting(for: input, rule: .spaceAroundOperators)
+    }
+
+    func testNoSpaceAroundGenericWithModuleSelectorMultipleParams() {
+        let input = """
+        let x: Result<ModuleName::SuccessType, ModuleName::ErrorType>
+        """
+        testFormatting(for: input, rule: .spaceAroundOperators)
+    }
 }

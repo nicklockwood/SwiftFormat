@@ -235,6 +235,112 @@ final class PreferLazyMapTests: XCTestCase {
         testFormatting(for: input, rule: .preferLazyMap)
     }
 
+    func testInsertsLazyForImplicitSelfInStruct() {
+        let input = """
+        struct Generator {
+            func render(_ value: Int) -> String {
+                "\\(value)"
+            }
+
+            func synthesize() -> String {
+                values.map { render($0) }.joined(separator: ",")
+            }
+        }
+        """
+
+        let output = """
+        struct Generator {
+            func render(_ value: Int) -> String {
+                "\\(value)"
+            }
+
+            func synthesize() -> String {
+                values.lazy.map { render($0) }.joined(separator: ",")
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
+    func testInsertsLazyForImplicitSelfInEnum() {
+        let input = """
+        enum Generator {
+            static func synthesize() -> String {
+                values.map { "\\(indentation)\\($0)" }.joined(separator: ",")
+            }
+        }
+        """
+
+        let output = """
+        enum Generator {
+            static func synthesize() -> String {
+                values.lazy.map { "\\(indentation)\\($0)" }.joined(separator: ",")
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
+    func testInsertsLazyForBareNameOutsideAnyType() {
+        let input = """
+        func synthesize() -> String {
+            values.map { render($0) }.joined(separator: ",")
+        }
+        """
+
+        let output = """
+        func synthesize() -> String {
+            values.lazy.map { render($0) }.joined(separator: ",")
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
+    func testPreservesImplicitSelfInStructNestedInClass() {
+        let input = """
+        final class Outer {
+            struct Inner {
+                func render(_ value: Int) -> String {
+                    "\\(value)"
+                }
+            }
+
+            func synthesize() -> String {
+                values.map { render($0) }.joined(separator: ",")
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testPreservesImplicitSelfInExtension() {
+        let input = """
+        extension Generator {
+            func synthesize() -> String {
+                values.map { render($0) }.joined(separator: ",")
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testPreservesImplicitSelfInActor() {
+        let input = """
+        actor Generator {
+            func synthesize() -> String {
+                values.map { render($0) }.joined(separator: ",")
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
     func testPreservesImplicitSelfPropertyReference() {
         let input = """
         final class Generator {
@@ -247,17 +353,37 @@ final class PreferLazyMapTests: XCTestCase {
         testFormatting(for: input, rule: .preferLazyMap)
     }
 
-    func testPreservesGlobalFunctionCall() {
+    func testInsertsLazyForGlobalFunctionCallOutsideAnyType() {
         let input = """
         let closest = points.map { hypot($0.x, $0.y) }.min()
         """
 
-        testFormatting(for: input, rule: .preferLazyMap)
+        let output = """
+        let closest = points.lazy.map { hypot($0.x, $0.y) }.min()
+        """
+
+        testFormatting(for: input, output, rule: .preferLazyMap)
     }
 
-    func testPreservesTypeConversion() {
+    func testInsertsLazyForTypeConversionOutsideAnyType() {
         let input = """
         let joined = ids.map { String($0) }.joined(separator: ",")
+        """
+
+        let output = """
+        let joined = ids.lazy.map { String($0) }.joined(separator: ",")
+        """
+
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
+    func testPreservesGlobalFunctionCallInClass() {
+        let input = """
+        final class Distances {
+            func closest() -> Double? {
+                points.map { hypot($0.x, $0.y) }.min()
+            }
+        }
         """
 
         testFormatting(for: input, rule: .preferLazyMap)

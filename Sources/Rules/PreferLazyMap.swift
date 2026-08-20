@@ -42,14 +42,14 @@ public extension FormatRule {
                 return
             }
 
-            // `lazy.map` stores its transform, so the closure becomes escaping. Inside a reference
-            // type that turns an implicit `self` reference — legal in the non-escaping closure that
-            // eager `map` takes — into "requires explicit use of 'self'", so the rewrite would not
-            // compile. Whether a bare name is a member of `self` can't be resolved from the tokens,
-            // so bail on any of them.
-            guard formatter.closureBodyOnlyReferencesItsArguments(atStartOfScope: openBraceIndex) else {
-                return
-            }
+            // `lazy.map` stores its transform, so the closure becomes escaping. Where `self` is a
+            // reference that turns an implicit `self` member reference — legal in the non-escaping
+            // closure eager `map` takes — into "requires explicit use of 'self'", so the rewrite
+            // would not compile. A bare name can't be resolved to a member of `self` from the tokens
+            // alone, so unless implicit capture is permitted here, bail on any of them.
+            guard formatter.implicitSelfCaptureIsPermittedInEscapingClosure(at: openBraceIndex)
+                || formatter.closureBodyOnlyReferencesItsArguments(atStartOfScope: openBraceIndex)
+            else { return }
 
             // The mapped sequence must be consumed directly by one of the operations that walks it
             // a single time, since those never need the intermediate array an eager `map` allocates.
@@ -101,6 +101,30 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether a closure at `index` may refer to members of `self` implicitly even once it is
+    /// escaping, which is decided by what `self` is at that point.
+    ///
+    /// Only a reference — a `class` or `actor` — requires an explicit `self.` in an escaping closure,
+    /// so a value type imposes no such requirement, and outside of any type there is no `self` to
+    /// capture at all. The innermost enclosing type wins, since that is what `self` refers to.
+    ///
+    /// `extension` and `protocol` bodies return `false`: the underlying type may well be a class, and
+    /// its declaration is usually in another file, so it can't be resolved from here.
+    func implicitSelfCaptureIsPermittedInEscapingClosure(at index: Int) -> Bool {
+        var scopeIndex = index
+        while let startIndex = startOfScope(at: scopeIndex) {
+            if isStartOfTypeBody(at: startIndex) {
+                guard let keyword = lastSignificantKeyword(at: startIndex, excluding: ["where"]) else {
+                    return false
+                }
+                return keyword == "struct" || keyword == "enum"
+            }
+            scopeIndex = startIndex
+        }
+        // Not inside any type, so there is no `self`.
+        return true
+    }
+
     /// Whether the body of the closure starting at `startOfScopeIndex` refers to nothing but its own
     /// arguments — either the implicit `$0` shorthand or names it declares in its parameter list.
     ///

@@ -113,10 +113,9 @@ extension Formatter {
     func implicitSelfCaptureIsPermittedInEscapingClosure(at index: Int) -> Bool {
         var scopeIndex = index
         while let startIndex = startOfScope(at: scopeIndex) {
-            if isStartOfTypeBody(at: startIndex) {
-                guard let keyword = lastSignificantKeyword(at: startIndex, excluding: ["where"]) else {
-                    return false
-                }
+            if isStartOfTypeBody(at: startIndex),
+               let keyword = lastSignificantKeyword(at: startIndex, excluding: ["where"])
+            {
                 return keyword == "struct" || keyword == "enum"
             }
             scopeIndex = startIndex

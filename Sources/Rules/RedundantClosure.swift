@@ -99,14 +99,12 @@ public extension FormatRule {
                     // if/switch expressions must be exhaustive to be valid expressions.
                     // An `if` without an unconditional `else` is not a valid expression.
                     let startOfBody = formatter.startOfBody(atStartOfScope: closureStartIndex)
-                    if let conditionKeywordIndex = formatter.indexOfConditionalKeywordInClosure(
-                        startOfBody: startOfBody
-                    ),
-                        let branches = formatter.conditionalBranches(at: conditionKeywordIndex),
-                        !formatter.conditionalBranchesAreExhaustive(
-                            conditionKeywordIndex: conditionKeywordIndex,
-                            branches: branches
-                        )
+                    if let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
+                       let branches = formatter.conditionalBranches(at: firstTokenInBody),
+                       !formatter.conditionalBranchesAreExhaustive(
+                           conditionKeywordIndex: firstTokenInBody,
+                           branches: branches
+                       )
                     {
                         return
                     }
@@ -220,42 +218,3 @@ public extension FormatRule {
     }
 }
 
-extension Formatter {
-    /// Finds the `if` or `switch` keyword index inside a closure body,
-    /// skipping over `return`, `try`, `try?`, `try!`, and `await` keywords.
-    func indexOfConditionalKeywordInClosure(startOfBody: Int) -> Int? {
-        guard var index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody) else {
-            return nil
-        }
-
-        // Skip `return`
-        if tokens[index] == .keyword("return"),
-           let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
-        {
-            index = next
-        }
-
-        // Skip `try`, `try?`, `try!`, `await` (in any order)
-        while true {
-            if tokens[index] == .keyword("try") {
-                guard let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) else { return nil }
-                if tokens[next].isUnwrapOperator {
-                    guard let afterOp = self.index(of: .nonSpaceOrCommentOrLinebreak, after: next) else { return nil }
-                    index = afterOp
-                } else {
-                    index = next
-                }
-            } else if tokens[index] == .keyword("await") {
-                guard let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) else { return nil }
-                index = next
-            } else {
-                break
-            }
-        }
-
-        if tokens[index] == .keyword("if") || tokens[index] == .keyword("switch") {
-            return index
-        }
-        return nil
-    }
-}

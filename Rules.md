@@ -136,6 +136,7 @@
 * [preferFinalClasses](#preferFinalClasses)
 * [preferFirstWhere](#preferFirstWhere)
 * [preferFlatMap](#preferFlatMap)
+* [preferLazyMap](#preferLazyMap)
 * [preferMinOverSorted](#preferMinOverSorted)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
@@ -2090,6 +2091,27 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 
 - let barArray = fooArray.compactMap { $0.optionalBar }
 + let barArray = fooArray.compactMap(\.optionalBar)
+```
+
+</details>
+<br/>
+
+## preferLazyMap
+
+Prefer `lazy.map` over `map` before single-pass operations like `min()`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let minY = vertices.map { $0.y }.min()
++ let minY = vertices.lazy.map { $0.y }.min()
+
+- let names = users.map { $0.name }.joined(separator: ", ")
++ let names = users.lazy.map { $0.name }.joined(separator: ", ")
+
+- let hasEmpty = rows.map { $0.title }.contains(where: { $0.isEmpty })
++ let hasEmpty = rows.lazy.map { $0.title }.contains(where: { $0.isEmpty })
 ```
 
 </details>

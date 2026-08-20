@@ -178,7 +178,7 @@ final class TrailingClosuresTests: XCTestCase {
         let output = """
         foo.map { $0.path }.joined()
         """
-        testFormatting(for: input, output, rule: .trailingClosures)
+        testFormatting(for: input, output, rule: .trailingClosures, exclude: [.preferLazyMap])
     }
 
     func testSpaceNotInsertedAfterClosureBeforeUnwrap() {

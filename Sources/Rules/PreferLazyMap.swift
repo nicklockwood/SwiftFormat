@@ -31,6 +31,26 @@ public extension FormatRule {
                 return
             }
 
+            // An identity `map { $0 }` transforms nothing, so making it lazy saves no work while
+            // still requiring `lazy` on the receiver — which only exists on a `Sequence`, and the
+            // receiver's type isn't knowable here. Leave these alone: there is nothing to gain, and
+            // `map` is defined on plenty of non-`Sequence` types.
+            if let onlyBodyIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: openBraceIndex),
+               formatter.tokens[onlyBodyIndex] == .identifier("$0"),
+               formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: onlyBodyIndex) == closeBraceIndex
+            {
+                return
+            }
+
+            // `lazy.map` stores its transform, so the closure becomes escaping. Inside a reference
+            // type that turns an implicit `self` reference — legal in the non-escaping closure that
+            // eager `map` takes — into "requires explicit use of 'self'", so the rewrite would not
+            // compile. Whether a bare name is a member of `self` can't be resolved from the tokens,
+            // so bail on any of them.
+            guard formatter.closureBodyOnlyReferencesItsArguments(atStartOfScope: openBraceIndex) else {
+                return
+            }
+
             // The mapped sequence must be consumed directly by one of the operations that walks it
             // a single time, since those never need the intermediate array an eager `map` allocates.
             guard let dotBeforeConsumer = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeBraceIndex),
@@ -51,6 +71,17 @@ public extension FormatRule {
                 || (callToken == .startOfScope("{") && formatter.isStartOfClosure(at: callIndex))
             else { return }
 
+            // `joined()` has to be passed a separator. Without one it resolves differently on a lazy
+            // sequence — to the overload that flattens a sequence of sequences, rather than the
+            // `StringProtocol` one — so a `String` result silently becomes a lazy sequence, and any
+            // string interpolation of it starts emitting the sequence's description.
+            // `joined(separator:)` returns `String` either way.
+            if consumer == "joined" {
+                guard callToken == .startOfScope("("),
+                      !formatter.parseFunctionCallArguments(startOfScope: callIndex).isEmpty
+                else { return }
+            }
+
             formatter.insert([.identifier("lazy"), .operator(".", .infix)], at: mapIndex)
         }
     } examples: {
@@ -70,6 +101,52 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether the body of the closure starting at `startOfScopeIndex` refers to nothing but its own
+    /// arguments — either the implicit `$0` shorthand or names it declares in its parameter list.
+    ///
+    /// Any other bare name may be an implicit `self` member, which is only legal in a non-escaping
+    /// closure, so callers that make a closure escaping must not rewrite when this returns `false`.
+    /// Names reached through a `.` (`$0.foo`), argument labels, keywords, and literals are all fine.
+    ///
+    /// This is deliberately conservative: a bare name that is really a global function or a type
+    /// (`hypot($0)`, `String($0)`) is indistinguishable from a member of `self` here, so it is
+    /// treated as one.
+    func closureBodyOnlyReferencesItsArguments(atStartOfScope startOfScopeIndex: Int) -> Bool {
+        assert(tokens[startOfScopeIndex] == .startOfScope("{"))
+        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
+
+        let arguments = parseClosureArguments(at: startOfScopeIndex)
+        let argumentNames = Set((arguments?.argumentIndices ?? []).map { tokens[$0].string })
+        let bodyStartIndex = arguments?.inKeywordIndex ?? startOfScopeIndex
+
+        for index in (bodyStartIndex + 1) ..< endOfScopeIndex {
+            guard case let .identifier(name) = tokens[index] else { continue }
+            // Literals, which the tokenizer represents as identifiers rather than keywords.
+            if ["true", "false", "nil", "_"].contains(name) {
+                continue
+            }
+            // `$0` and friends are the closure's own arguments.
+            if name.hasPrefix("$") {
+                continue
+            }
+            // A name declared by the closure's parameter list.
+            if argumentNames.contains(name) {
+                continue
+            }
+            // A member of another value rather than a bare name, as in `$0.foo`.
+            if last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == true {
+                continue
+            }
+            // An argument label, as in `$0.reduce(into: [])`.
+            if isLabel(at: index) {
+                continue
+            }
+            return false
+        }
+
+        return true
+    }
+
     /// `Sequence` operations that consume their receiver in a single pass without materializing it,
     /// so a preceding `map` can be made lazy to avoid allocating an intermediate array.
     ///

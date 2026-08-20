@@ -203,6 +203,78 @@ final class PreferLazyMapTests: XCTestCase {
         testFormatting(for: input, output, rule: .preferLazyMap)
     }
 
+    func testPreservesIdentityMap() {
+        let input = """
+        let smallest = values.map { $0 }.min()
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testPreservesJoinedWithoutSeparator() {
+        let input = """
+        let combined = parts.map { $0.title }.joined()
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testPreservesImplicitSelfMethodCall() {
+        let input = """
+        final class Generator {
+            func render(_ value: Int) -> String {
+                "\\(value)"
+            }
+
+            func synthesize() -> String {
+                values.map { render($0) }.joined(separator: ",")
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testPreservesImplicitSelfPropertyReference() {
+        let input = """
+        final class Generator {
+            func synthesize() -> String {
+                values.map { "\\(indentation)\\($0)" }.joined(separator: ",")
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testPreservesGlobalFunctionCall() {
+        let input = """
+        let closest = points.map { hypot($0.x, $0.y) }.min()
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testPreservesTypeConversion() {
+        let input = """
+        let joined = ids.map { String($0) }.joined(separator: ",")
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testInsertsLazyForArgumentLabelInMemberCall() {
+        let input = """
+        let names = users.map { $0.name(includingMiddle: true) }.joined(separator: ", ")
+        """
+
+        let output = """
+        let names = users.lazy.map { $0.name(includingMiddle: true) }.joined(separator: ", ")
+        """
+
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
     func testPreservesFirstProperty() {
         let input = """
         let firstY = vertices.map { $0.y }.first

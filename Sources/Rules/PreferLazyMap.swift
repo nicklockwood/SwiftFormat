@@ -121,8 +121,9 @@ extension Formatter {
 
         for index in (bodyStartIndex + 1) ..< endOfScopeIndex {
             guard case let .identifier(name) = tokens[index] else { continue }
-            // Literals, which the tokenizer represents as identifiers rather than keywords.
-            if ["true", "false", "nil", "_"].contains(name) {
+            // Literals, which the tokenizer represents as identifiers rather than keywords, and the
+            // wildcard. None of these name anything.
+            if tokens[index].isLiteralIdentifier || name == "_" {
                 continue
             }
             // `$0` and friends are the closure's own arguments.

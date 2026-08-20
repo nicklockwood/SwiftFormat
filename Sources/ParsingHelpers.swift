@@ -1364,7 +1364,7 @@ extension Formatter {
             else {
                 return false
             }
-            if prevToken.isIdentifier, !["true", "false", "nil"].contains(prevToken.string) {
+            if prevToken.isIdentifier, !prevToken.isLiteralIdentifier {
                 return false
             }
             if [.endOfScope(")"), .endOfScope("]")].contains(prevToken),

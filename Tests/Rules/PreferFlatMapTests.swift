@@ -159,4 +159,20 @@ final class PreferFlatMapTests: XCTestCase {
 
         testFormatting(for: input, rule: .preferFlatMap)
     }
+
+    func testPreservesLazyReceiver() {
+        let input = """
+        let allItems = sections.lazy.map { $0.items }.reduce([], +)
+        """
+
+        testFormatting(for: input, rule: .preferFlatMap)
+    }
+
+    func testPreservesLazyReceiverEarlierInTheChain() {
+        let input = """
+        let allItems = sections.lazy.filter { $0.isVisible }.map { $0.items }.reduce([], +)
+        """
+
+        testFormatting(for: input, rule: .preferFlatMap)
+    }
 }

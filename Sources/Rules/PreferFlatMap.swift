@@ -16,6 +16,15 @@ public extension FormatRule {
         formatter.forEach(.identifier("map")) { mapIndex, _ in
             guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: mapIndex) else { return }
 
+            // `reduce([], +)` produces an `Array` whatever it reduces, but `flatMap` on a lazy
+            // receiver produces a lazy sequence, so rewriting one into the other would change the
+            // type of the expression. Leave anything reached through `lazy` alone.
+            if let dotBeforeMapIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: mapIndex),
+               formatter.memberCallReceiverIsLazy(endingAt: dotBeforeMapIndex)
+            {
+                return
+            }
+
             // Parse the `map` call, which takes exactly one closure
             // and is either `map { ... }` or `map({ ... })`
             let endOfMapCall: Int

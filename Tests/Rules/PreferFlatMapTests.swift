@@ -98,7 +98,7 @@ final class PreferFlatMapTests: XCTestCase {
             .reduce([], +)
         """
 
-        testFormatting(for: input, rule: .preferFlatMap)
+        testFormatting(for: input, rule: .preferFlatMap, exclude: [.preferLazyMap])
     }
 
     func testPreservesCommentInsideReduce() {
@@ -109,7 +109,7 @@ final class PreferFlatMapTests: XCTestCase {
         // Exclude `spaceAroundComments`, which would otherwise insert a space
         // after the open paren; the point here is that `preferFlatMap` itself
         // leaves the commented `reduce` call untouched.
-        testFormatting(for: input, rule: .preferFlatMap, exclude: [.spaceAroundComments])
+        testFormatting(for: input, rule: .preferFlatMap, exclude: [.spaceAroundComments, .preferLazyMap])
     }
 
     func testPreservesReduceWithNonEmptySeed() {
@@ -117,7 +117,7 @@ final class PreferFlatMapTests: XCTestCase {
         values.map { $0.count }.reduce(0, +)
         """
 
-        testFormatting(for: input, rule: .preferFlatMap)
+        testFormatting(for: input, rule: .preferFlatMap, exclude: [.preferLazyMap])
     }
 
     func testPreservesReduceWithNonEmptyArraySeed() {
@@ -125,7 +125,7 @@ final class PreferFlatMapTests: XCTestCase {
         sections.map { $0.items }.reduce([defaultItem], +)
         """
 
-        testFormatting(for: input, rule: .preferFlatMap)
+        testFormatting(for: input, rule: .preferFlatMap, exclude: [.preferLazyMap])
     }
 
     func testPreservesReduceWithDifferentOperator() {
@@ -133,7 +133,7 @@ final class PreferFlatMapTests: XCTestCase {
         sets.map { $0.elements }.reduce([], -)
         """
 
-        testFormatting(for: input, rule: .preferFlatMap)
+        testFormatting(for: input, rule: .preferFlatMap, exclude: [.preferLazyMap])
     }
 
     func testPreservesReduceWithClosureCombinator() {
@@ -141,7 +141,7 @@ final class PreferFlatMapTests: XCTestCase {
         sections.map { $0.items }.reduce([]) { $0 + $1 }
         """
 
-        testFormatting(for: input, rule: .preferFlatMap)
+        testFormatting(for: input, rule: .preferFlatMap, exclude: [.preferLazyMap])
     }
 
     func testPreservesStandaloneMap() {

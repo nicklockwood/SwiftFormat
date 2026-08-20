@@ -70,6 +70,7 @@ let ruleRegistry: [String: FormatRule] = [
     "preferFlatMap": .preferFlatMap,
     "preferForLoop": .preferForLoop,
     "preferKeyPath": .preferKeyPath,
+    "preferLazyMap": .preferLazyMap,
     "preferMinOverSorted": .preferMinOverSorted,
     "preferSwiftStringAPI": .preferSwiftStringAPI,
     "preferSwiftTesting": .preferSwiftTesting,

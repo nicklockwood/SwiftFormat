@@ -217,4 +217,3 @@ public extension FormatRule {
         """
     }
 }
-

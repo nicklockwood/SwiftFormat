@@ -595,6 +595,19 @@ extension Formatter {
     /// leading prefix `!` then bounds the receiver on the left (the returned index is the receiver
     /// root just after the `!`) instead of causing a `nil` bail; the caller can find the `!` itself
     /// with `index(of:.nonSpaceOrCommentOrLinebreak, before:)`.
+    /// Whether the receiver of the member call whose dot is at `dotIndex` is reached through `lazy`,
+    /// making it a lazy sequence rather than an eager collection.
+    ///
+    /// The whole receiver chain is checked, because `lazy` need not be adjacent to the call in
+    /// question: `xs.lazy.filter { ... }.map { ... }` is every bit as lazy as `xs.lazy.map { ... }`.
+    func memberCallReceiverIsLazy(endingAt dotIndex: Int) -> Bool {
+        guard tokens[dotIndex] == .operator(".", .infix),
+              let startIndex = startOfMemberCallReceiver(endingAt: dotIndex)
+        else { return false }
+
+        return tokens[startIndex ... dotIndex].contains(.identifier("lazy"))
+    }
+
     func startOfMemberCallReceiver(endingAt dotIndex: Int, stoppingAtLeadingNegation: Bool = false) -> Int? {
         var start = dotIndex
         while let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: start) {

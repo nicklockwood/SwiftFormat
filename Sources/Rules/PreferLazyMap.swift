@@ -24,10 +24,10 @@ public extension FormatRule {
                   let closeBraceIndex = formatter.endOfScope(at: openBraceIndex)
             else { return }
 
-            // Don't insert `.lazy` again if the receiver already has it.
-            if let receiverIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotBeforeMap),
-               formatter.tokens[receiverIndex] == .identifier("lazy")
-            {
+            // Don't insert `.lazy` again if the receiver is already lazy. `lazy` can sit anywhere in
+            // the chain — `xs.lazy.filter { ... }.map { ... }` is already lazy — so checking only the
+            // token before the `map` would append a second, redundant `.lazy`.
+            if formatter.memberCallReceiverIsLazy(endingAt: dotBeforeMap) {
                 return
             }
 

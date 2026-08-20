@@ -1039,4 +1039,18 @@ final class RedundantClosureTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .redundantClosure)
     }
+
+    func testKeepsClosureInAsyncLet() {
+        let input = """
+        func test() async {
+            async let doAsync = {
+                if 1 == 1 {
+                    print()
+                }
+            }()
+            await doAsync
+        }
+        """
+        testFormatting(for: input, rule: .redundantClosure)
+    }
 }

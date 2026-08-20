@@ -149,6 +149,20 @@ public extension FormatRule {
                     return
                 }
 
+                // Don't remove closures in `async let` declarations, since the closure
+                // is necessary to defer execution until the value is awaited.
+                // https://github.com/nicklockwood/SwiftFormat/issues/2658
+                if let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
+                   formatter.token(at: equalsIndex) == .operator("=", .infix),
+                   let letVarIndex = formatter.index(before: equalsIndex, where: {
+                       $0 == .keyword("let") || $0 == .keyword("var")
+                   }),
+                   let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: letVarIndex),
+                   formatter.tokens[prevIndex] == .identifier("async")
+                {
+                    return
+                }
+
                 // First we remove the spaces and linebreaks between the { } and the remainder of the closure body
                 //  - This requires a bit of bookkeeping, but makes sure we don't remove any
                 //    whitespace characters outside of the closure itself

@@ -96,6 +96,21 @@ public extension FormatRule {
                 // Since if/switch expressions are only valid in the `return` position or as an `=` assignment,
                 // these closures can only sometimes be simplified / removed.
                 if hasSingleConditionalExpression {
+                    // if/switch expressions must be exhaustive to be valid expressions.
+                    // An `if` without an unconditional `else` is not a valid expression.
+                    let startOfBody = formatter.startOfBody(atStartOfScope: closureStartIndex)
+                    if let conditionKeywordIndex = formatter.indexOfConditionalKeywordInClosure(
+                        startOfBody: startOfBody
+                    ),
+                        let branches = formatter.conditionalBranches(at: conditionKeywordIndex),
+                        !formatter.conditionalBranchesAreExhaustive(
+                            conditionKeywordIndex: conditionKeywordIndex,
+                            branches: branches
+                        )
+                    {
+                        return
+                    }
+
                     // Find the `{` start of scope or `=` and verify that the entire following expression consists of just this closure.
                     var startOfScopeContainingClosure = formatter.startOfScope(at: startIndex)
                     var assignmentBeforeClosure = formatter.index(of: .operator("=", .infix), before: startIndex)
@@ -145,20 +160,6 @@ public extension FormatRule {
                    let colonIndex = formatter.index(of: .delimiter(":"), before: equalsIndex),
                    let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
                    formatter.endOfVoidType(at: nextIndex) != nil
-                {
-                    return
-                }
-
-                // Don't remove closures in `async let` declarations, since the closure
-                // is necessary to defer execution until the value is awaited.
-                // https://github.com/nicklockwood/SwiftFormat/issues/2658
-                if let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
-                   formatter.token(at: equalsIndex) == .operator("=", .infix),
-                   let letVarIndex = formatter.index(before: equalsIndex, where: {
-                       $0 == .keyword("let") || $0 == .keyword("var")
-                   }),
-                   let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: letVarIndex),
-                   formatter.tokens[prevIndex] == .identifier("async")
                 {
                     return
                 }
@@ -216,5 +217,45 @@ public extension FormatRule {
         + lazy var bar = Bar(baaz: baaz, quux: quux)
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Finds the `if` or `switch` keyword index inside a closure body,
+    /// skipping over `return`, `try`, `try?`, `try!`, and `await` keywords.
+    func indexOfConditionalKeywordInClosure(startOfBody: Int) -> Int? {
+        guard var index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody) else {
+            return nil
+        }
+
+        // Skip `return`
+        if tokens[index] == .keyword("return"),
+           let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
+        {
+            index = next
+        }
+
+        // Skip `try`, `try?`, `try!`, `await` (in any order)
+        while true {
+            if tokens[index] == .keyword("try") {
+                guard let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) else { return nil }
+                if tokens[next].isUnwrapOperator {
+                    guard let afterOp = self.index(of: .nonSpaceOrCommentOrLinebreak, after: next) else { return nil }
+                    index = afterOp
+                } else {
+                    index = next
+                }
+            } else if tokens[index] == .keyword("await") {
+                guard let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) else { return nil }
+                index = next
+            } else {
+                break
+            }
+        }
+
+        if tokens[index] == .keyword("if") || tokens[index] == .keyword("switch") {
+            return index
+        }
+        return nil
     }
 }

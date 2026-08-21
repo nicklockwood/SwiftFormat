@@ -1039,4 +1039,55 @@ final class RedundantClosureTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .redundantClosure)
     }
+
+    func testKeepsClosureWithNonExhaustiveIfExpression() {
+        let input = """
+        func test() async {
+            async let doAsync = {
+                if 1 == 1 {
+                    print()
+                }
+            }()
+            await doAsync
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantClosure, options: options)
+    }
+
+    func testKeepsClosureWithIfElseIfButNoElse() {
+        let input = """
+        let value = {
+            if condition1 {
+                1
+            } else if condition2 {
+                2
+            }
+        }()
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantClosure, options: options)
+    }
+
+    func testRemovesClosureWithExhaustiveIfElse() {
+        let input = """
+        async let doAsync = {
+            if 1 == 1 {
+                print(1)
+            } else {
+                print(2)
+            }
+        }()
+        """
+        let output = """
+        async let doAsync = if 1 == 1 {
+                print(1)
+            } else {
+                print(2)
+            }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .redundantClosure, options: options,
+                       exclude: [.indent, .wrapMultilineConditionalAssignment])
+    }
 }

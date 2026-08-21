@@ -96,6 +96,19 @@ public extension FormatRule {
                 // Since if/switch expressions are only valid in the `return` position or as an `=` assignment,
                 // these closures can only sometimes be simplified / removed.
                 if hasSingleConditionalExpression {
+                    // if/switch expressions must be exhaustive to be valid expressions.
+                    // An `if` without an unconditional `else` is not a valid expression.
+                    let startOfBody = formatter.startOfBody(atStartOfScope: closureStartIndex)
+                    if let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
+                       let branches = formatter.conditionalBranches(at: firstTokenInBody),
+                       !formatter.conditionalBranchesAreExhaustive(
+                           conditionKeywordIndex: firstTokenInBody,
+                           branches: branches
+                       )
+                    {
+                        return
+                    }
+
                     // Find the `{` start of scope or `=` and verify that the entire following expression consists of just this closure.
                     var startOfScopeContainingClosure = formatter.startOfScope(at: startIndex)
                     var assignmentBeforeClosure = formatter.index(of: .operator("=", .infix), before: startIndex)

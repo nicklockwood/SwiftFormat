@@ -481,6 +481,14 @@ final class PreferLazyMapTests: XCTestCase {
         testFormatting(for: input, rule: .preferLazyMap)
     }
 
+    func testPreservesLazyReceiverReachedByOptionalChaining() {
+        let input = """
+        let first = listing.edges?.lazy.map { $0.node }.first(where: { $0.id == target })
+        """
+
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
     func testPreservesReceiverMadeLazyEarlierInTheChain() {
         let input = """
         let minY = vertices.lazy.filter { $0.isVisible }.map { $0.y }.min()

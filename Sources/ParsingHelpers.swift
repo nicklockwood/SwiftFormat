@@ -598,13 +598,22 @@ extension Formatter {
     /// Whether the receiver of the member call whose dot is at `dotIndex` is reached through `lazy`,
     /// making it a lazy sequence rather than an eager collection.
     ///
-    /// The whole receiver chain is checked, because `lazy` need not be adjacent to the call in
-    /// question: `xs.lazy.filter { ... }.map { ... }` is every bit as lazy as `xs.lazy.map { ... }`.
+    /// `lazy` need not be adjacent to the call in question — `xs.lazy.filter { ... }.map { ... }` is
+    /// every bit as lazy as `xs.lazy.map { ... }` — so the receiver chain is checked as well. That
+    /// walk gives up on a receiver it can't read to the end of, notably one using optional chaining,
+    /// so a `false` result means "no `lazy` found", not "definitely eager".
     func memberCallReceiverIsLazy(endingAt dotIndex: Int) -> Bool {
-        guard tokens[dotIndex] == .operator(".", .infix),
-              let startIndex = startOfMemberCallReceiver(endingAt: dotIndex)
-        else { return false }
+        guard tokens[dotIndex] == .operator(".", .infix) else { return false }
 
+        // Check the immediately preceding token first, and without consulting the receiver walk.
+        // `.lazy` directly before the call is the shape a rule inserting it produces, so recognising
+        // that shape unconditionally is what lets such a rule reach a fixed point — including on the
+        // receivers the walk below refuses to read.
+        if last(.nonSpaceOrCommentOrLinebreak, before: dotIndex) == .identifier("lazy") {
+            return true
+        }
+
+        guard let startIndex = startOfMemberCallReceiver(endingAt: dotIndex) else { return false }
         return tokens[startIndex ... dotIndex].contains(.identifier("lazy"))
     }
 

@@ -233,6 +233,17 @@ extension Formatter {
             }
         }
 
+        // In protocol declarations, `associatedtype` declarations must always appear
+        // at the top of the body. The compiler may fail to infer default associated types
+        // for conforming types if `init` or other declarations appear above them.
+        if typeDeclaration.keyword == "protocol" {
+            let associatedTypes = sortedDeclarations.filter { $0.declaration.keyword == "associatedtype" }
+            if !associatedTypes.isEmpty {
+                sortedDeclarations.removeAll { $0.declaration.keyword == "associatedtype" }
+                sortedDeclarations.insert(contentsOf: associatedTypes, at: 0)
+            }
+        }
+
         return sortedDeclarations
     }
 

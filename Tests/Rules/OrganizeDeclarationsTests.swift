@@ -4573,4 +4573,61 @@ final class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testProtocolAssociatedTypesAlwaysSortedToTop() {
+        // Regression test: associatedtype declarations must always appear at the
+        // top of a protocol body, even when --type-order would place other
+        // declaration types (like instanceLifecycle) above nestedType.
+        // See Tests/Fixtures/ProtocolAssociatedTypeEdgeCase.swift.
+        let input = """
+        public protocol Plugin {
+            init?(dependencies: Dependencies, context: Context)
+            func run()
+            associatedtype Dependencies = Void
+            associatedtype Context = Void
+        }
+        """
+
+        let output = """
+        public protocol Plugin {
+            associatedtype Dependencies = Void
+            associatedtype Context = Void
+
+            init?(dependencies: Dependencies, context: Context)
+
+            func run()
+        }
+        """
+
+        let options = FormatOptions(
+            organizeTypes: ["protocol"],
+            typeOrder: ["instanceLifecycle", "nestedType", "instanceProperty", "instanceMethod"]
+        )
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
+    }
+
+    func testProtocolAssociatedTypesAboveInitWithDefaultTypeOrder() {
+        let input = """
+        public protocol Plugin {
+            init?(dependencies: Dependencies, context: Context)
+            associatedtype Dependencies = Void
+            func run()
+            associatedtype Context = Void
+        }
+        """
+
+        let output = """
+        public protocol Plugin {
+            associatedtype Dependencies = Void
+            associatedtype Context = Void
+
+            init?(dependencies: Dependencies, context: Context)
+
+            func run()
+        }
+        """
+
+        let options = FormatOptions(organizeTypes: ["protocol"])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
+    }
 }

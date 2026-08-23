@@ -8,6 +8,7 @@ BUILD_ARGS=(
 	--product swiftformat
 	--configuration release
 	-Xlinker -S
+	-Xlinker -zstack-size=1073741824
 )
 
 if [[ -z "$TARGETPLATFORM" ]]; then

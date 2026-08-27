@@ -250,8 +250,11 @@ extension Declaration {
                 return .instanceLifecycle
 
             // Type-like declarations
-            case "typealias", "associatedtype":
+            case "typealias":
                 return .nestedType
+
+            case "associatedtype":
+                return .beforeMarks
 
             case "case":
                 return .beforeMarks

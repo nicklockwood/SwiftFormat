@@ -142,6 +142,7 @@
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
 * [propertyTypes](#propertyTypes)
+* [redundantExtendedLifetime](#redundantExtendedLifetime)
 * [redundantSendable](#redundantSendable)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
@@ -2474,6 +2475,30 @@ a hand-written Equatable conformance:
 -     static func ==(lhs: Bar, rhs: Bar) -> Bool {
 -         lhs.baaz == rhs.baaz
 -     }
+  }
+```
+
+</details>
+<br/>
+
+## redundantExtendedLifetime
+
+Remove redundant withExtendedLifetime calls in tests.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import Testing
+
+  struct MyFeatureTests {
+      @Test
+      func myFeature() {
+          let observer = Observer()
+          observer.start()
+          #expect(observer.isRunning)
+-         withExtendedLifetime(observer) {}
+      }
   }
 ```
 

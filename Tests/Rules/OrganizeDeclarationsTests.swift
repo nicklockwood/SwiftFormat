@@ -4002,6 +4002,29 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
     }
 
+    func testOrganizesProtocolWithAssociatedTypeBeforeInit() {
+        let input = """
+        protocol Foo {
+            init()
+            associatedtype Bar
+            func baz()
+        }
+        """
+
+        let output = """
+        protocol Foo {
+            associatedtype Bar
+
+            init()
+
+            func baz()
+        }
+        """
+
+        let options = FormatOptions(organizeTypes: ["protocol"])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
+    }
+
     func testBelowCustomStructMarkThreshold() {
         let input = """
         struct SmallStruct {

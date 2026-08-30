@@ -3427,7 +3427,7 @@ extension Formatter {
     }
 }
 
-extension RandomAccessCollection where Element == Token, Index == Int {
+extension RandomAccessCollection<Token> where Index == Int {
     /// The number of trailing newlines in this array of tokens,
     /// taking into account any spaces that may be between the linebreaks.
     func numberOfLeadingLinebreaks() -> Int {

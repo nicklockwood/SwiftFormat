@@ -1066,7 +1066,7 @@ public extension AnyClosedRange {
     }
 }
 
-extension ClosedRange: AnyClosedRange where Bound == Int {
+extension ClosedRange<Int>: AnyClosedRange {
     public var range: ClosedRange<Int> {
         self
     }

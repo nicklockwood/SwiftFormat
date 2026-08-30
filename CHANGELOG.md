@@ -1,5 +1,43 @@
 # Change Log
 
+## [0.63.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.63.0) (2026-08-30)
+
+- Added `ifExpressions` rule to convert ternaries to if expressions
+- Added `preferLazyMap` rule
+- Added `redundantExtendedLifetime` rule
+- Added `<!-- no-format -->` HTML comment syntax for disabling formatting of markdown code blocks
+- Added warning when `--enable` is used for a rule that is already enabled by default
+- Added `--redundant-optional-binding` option, defaulting to `same-name-only`
+- Made `--wrapstringinterpolation preserve` the default
+- Changed default of `--single-line-ternary` to `convert`
+- Distinguished default, opt-in, and deprecated rules in `--rules` and `--rule-info` output
+- Updated `organizeDeclarations` to categorize associatedtype declarations as beforeMarks
+- Updated `hoistAwait` and `hoistTry` to automatically detect and preserve autoclosures within same file as definition
+- Updated `redundantType` and `propertyTypes` to support more `ExpressibleByXLiteral` types
+- Updated `redundantReturn` to preserve bare `return` in closures where removal would create single-expression body
+- Updated `redundantOptionalBinding` to convert `if let x = property` to `if let property`
+- Updated `urlMacro` rule to support `try #require(URL(string:))` pattern
+- Updated `redundantBackticks` to preserve backticks on Swift Testing `@Test` functions
+- Updated `swiftTestingTestCaseNames` to convert backticked names with test prefix or underscores
+- Updated `genericExtensions` rule to support collection types
+- Updated `unusedPrivateDeclarations` to preserve properties used in compiler-generated `Equatable` and `Hashable` conformances
+- Increased stack size to 1MB for Linux release builds
+- Fixed `redundantClosure` false positive for if statements with no else branch
+- Fixed spaces around module selectors in generics
+- Fixed `preferForLoop` incorrectly applying to dollar-prefixed identifiers
+- Fixed blank line before trailing infix operators
+- Fixed `swiftTestingTestCaseNames` not adding backticks when required
+- Fixed `--preserve-acronyms` to work as substring match, not just exact identifier match
+- Fixed `genericExtensions` rule leaving stray comma with additional where conditions
+- Fixed `indent` dropping switch case body indentation inside `#if` with `--ifdef no-indent`
+- Fixed `redundantSwiftUIGroup` removing `Group(subviews:)`
+- Fixed `redundantReturn` removing redundant returns from switch/if inside a flatMap closure
+- Fixed `--ifdef no-indent` indentation for method chains and directives
+- Fixed `environmentEntry` edge cases
+- Fixed `redundantInternal` stripping required internal inside `#if` in non-internal extensions
+- Fixed indent of trailing closure in method chain member inside `#if`
+- Fixed `spaceAroundParens` spurious violations for keyword identifiers after `::` module selector
+
 ## [0.62.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.62.1) (2026-07-07)
 
 - Several rules have been disabled by default: `isEmpty`, `preferContains`, `preferFirstWhere`, `preferCountWhere`, `preferMinOverSorted`, `preferFlatMap`, `emptyExtensions`

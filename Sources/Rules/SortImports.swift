@@ -186,7 +186,7 @@ extension Formatter {
     }
 
     /// Returns true if tokens between start and end are only whitespace
-    private func isOnlyWhitespaceBetween(from start: Int, to end: Int) -> Bool {
+    func isOnlyWhitespaceBetween(from start: Int, to end: Int) -> Bool {
         for i in start ..< end {
             if !tokens[i].isSpaceOrLinebreak {
                 return false
@@ -197,7 +197,7 @@ extension Formatter {
 
     /// Returns true if tokens between start and end contain only whitespace,
     /// comments, import-related attributes, and import statements (no real code)
-    private func isOnlyImportRelatedContent(from start: Int, to end: Int) -> Bool {
+    func isOnlyImportRelatedContent(from start: Int, to end: Int) -> Bool {
         for i in start ..< end {
             let token = tokens[i]
             if token.isSpaceOrCommentOrLinebreak { continue }
@@ -212,7 +212,7 @@ extension Formatter {
     }
 
     /// Whether the token at the given index is inside a `#if` / `#endif` block
-    private func isInsidePreprocessorCondition(at index: Int) -> Bool {
+    func isInsidePreprocessorCondition(at index: Int) -> Bool {
         var depth = 0
         for i in 0 ..< index {
             if tokens[i] == .startOfScope("#if") {
@@ -226,7 +226,7 @@ extension Formatter {
 
     /// Extracts the core import statement tokens, stripping leading comment lines
     /// that parseImports may have attached.
-    private func extractImportStatementTokens(from importRange: ImportRange) -> [Token] {
+    func extractImportStatementTokens(from importRange: ImportRange) -> [Token] {
         let rangeTokens = Array(tokens[importRange.range])
         // Find the import keyword within the range
         guard let importKeywordOffset = rangeTokens.firstIndex(where: { $0 == .keyword("import") }) else {

@@ -3428,6 +3428,15 @@ Option | Description
   #endif
 ```
 
+```diff
+  import Foundation
++ import UIKit
+
+  struct Foo {}
+-
+- import UIKit
+```
+
 </details>
 <br/>
 

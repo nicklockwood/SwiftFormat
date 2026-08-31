@@ -294,44 +294,36 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports)
     }
 
-    func testHoistCodeBetweenImports() {
+    func testNoDeleteCodeBetweenImports() {
         let input = """
         import Foo
         func bar() {}
         import Bar
         """
+        let options = FormatOptions(hoistImports: false)
+        testFormatting(for: input, rule: .sortImports,
+                       options: options, exclude: [.blankLineAfterImports])
+    }
+
+    func testNoDeleteCodeBetweenImports2() {
+        let input = """
+        import Foo
+        import Bar
+        foo = bar
+        import Bar
+        """
         let output = """
         import Bar
         import Foo
-        func bar() {}
+        foo = bar
+        import Bar
         """
+        let options = FormatOptions(hoistImports: false)
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: [.blankLineAfterImports])
+                       options: options, exclude: [.blankLineAfterImports])
     }
 
-    func testHoistCodeBetweenImports2() {
-        let input = """
-        import Foo
-        import Bar
-        foo = bar
-        import Bar
-        """
-        let output = """
-        import Bar
-        import Bar
-        import Foo
-        foo = bar
-        """
-        let output2 = """
-        import Bar
-        import Foo
-        foo = bar
-        """
-        testFormatting(for: input, [output, output2], rules: [.sortImports],
-                       exclude: [.blankLineAfterImports])
-    }
-
-    func testHoistCodeBetweenImports3() {
+    func testNoDeleteCodeBetweenImports3() {
         let input = """
         import Z
 
@@ -343,20 +335,11 @@ final class SortImportsTests: XCTestCase {
 
         import A
         """
-        let output = """
-        import A
-        import Z
-
-        // one
-
-        #if FLAG
-            print("hi")
-        #endif
-        """
-        testFormatting(for: input, output, rule: .sortImports)
+        let options = FormatOptions(hoistImports: false)
+        testFormatting(for: input, rule: .sortImports, options: options)
     }
 
-    func testHoistAndSortContiguousImports() {
+    func testSortContiguousImports() {
         let input = """
         import Foo
         import Bar
@@ -366,13 +349,14 @@ final class SortImportsTests: XCTestCase {
         """
         let output = """
         import Bar
-        import Baz
         import Foo
-        import Quux
         func bar() {}
+        import Baz
+        import Quux
         """
+        let options = FormatOptions(hoistImports: false)
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: [.blankLineAfterImports])
+                       options: options, exclude: [.blankLineAfterImports])
     }
 
     func testNoMangleImportsPrecededByComment() {
@@ -663,7 +647,7 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    // MARK: - Hoist imports
+    // MARK: - hoistImports
 
     func testHoistStrayImport() {
         let input = """
@@ -672,48 +656,74 @@ final class SortImportsTests: XCTestCase {
         struct Foo {}
 
         import UIKit
+
         """
         let output = """
         import Foundation
         import UIKit
 
         struct Foo {}
+
         """
         testFormatting(for: input, output, rule: .sortImports)
     }
 
-    func testHoistStrayTestableImport() {
+    func testHoistStrayImportAndSort() {
         let input = """
-        import Testing
+        import Zebra
 
-        struct FooTests {}
+        struct Foo {}
 
-        @testable import MyModule
+        import Alpha
+
         """
         let output = """
-        @testable import MyModule
-        import Testing
+        import Alpha
+        import Zebra
 
-        struct FooTests {}
+        struct Foo {}
+
+        """
+        testFormatting(for: input, output, rule: .sortImports)
+    }
+
+    func testMergeImportGroupsSeparatedByBlankLine() {
+        let input = """
+        import Zebra
+
+        import Alpha
+
+        """
+        let output = """
+        import Alpha
+        import Zebra
+
         """
         testFormatting(for: input, output, rule: .sortImports)
     }
 
     func testHoistMultipleStrayImports() {
         let input = """
-        import Foundation
+        import Zebra
 
         struct Foo {}
 
-        import UIKit
-        import SwiftUI
+        import Alpha
+
+        struct Bar {}
+
+        import Middle
+
         """
         let output = """
-        import Foundation
-        import SwiftUI
-        import UIKit
+        import Alpha
+        import Middle
+        import Zebra
 
         struct Foo {}
+
+        struct Bar {}
+
         """
         testFormatting(for: input, output, rule: .sortImports)
     }
@@ -731,49 +741,44 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, rule: .sortImports)
     }
 
-    func testHoistStrayImportAndSort() {
+    func testHoistStrayTestableImport() {
         let input = """
-        import Zebra
-        import Alpha
+        import Testing
 
-        struct Foo {}
+        struct FooTests {}
 
-        import Middle
+        @testable import MyModule
+
         """
         let output = """
-        import Alpha
-        import Middle
-        import Zebra
+        @testable import MyModule
+        import Testing
 
-        struct Foo {}
+        struct FooTests {}
+
         """
         testFormatting(for: input, output, rule: .sortImports)
     }
 
-    func testNoChangeWhenImportsAlreadyAtTop() {
+    func testPreserveImportsOption() {
         let input = """
-        import Bar
-        import Foo
+        import Foundation
 
-        struct Baz {}
+        struct Foo {}
+
+        import UIKit
+        """
+        let options = FormatOptions(hoistImports: false)
+        testFormatting(for: input, rule: .sortImports, options: options)
+    }
+
+    func testNoStrayImportsNoChange() {
+        let input = """
+        import Alpha
+        import Zebra
+
+        struct Foo {}
         """
         testFormatting(for: input, rule: .sortImports)
-    }
-
-    func testHoistImportSeparatedByBlankLine() {
-        let input = """
-        import Foo
-
-        import Bar
-
-        struct Baz {}
-        """
-        let output = """
-        import Bar
-        import Foo
-
-        struct Baz {}
-        """
-        testFormatting(for: input, output, rule: .sortImports)
     }
 }

@@ -3410,6 +3410,7 @@ Sort and group import statements.
 Option | Description
 --- | ---
 `--import-grouping` | Comma-delimited list of import sorting/grouping options: "alpha", "access-control", "length", "testable-first", "testable-last". Defaults to "access-control,alpha"
+`--hoist-imports` | Hoist file-scope imports to top of file
 
 <details>
 <summary>Examples</summary>
@@ -3426,15 +3427,6 @@ Option | Description
 +   import Bar-iOS
 +   import Foo-iOS
   #endif
-```
-
-```diff
-  import Foundation
-+ import UIKit
-
-  struct Foo {}
--
-- import UIKit
 ```
 
 </details>

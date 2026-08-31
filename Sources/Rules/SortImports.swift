@@ -12,19 +12,13 @@ public extension FormatRule {
     /// Sort import statements
     static let sortImports = FormatRule(
         help: "Sort and group import statements.",
-        options: ["import-grouping"],
+        options: ["import-grouping", "hoist-imports"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        var allImportGroups = formatter.parseImports()
-        guard !allImportGroups.isEmpty else { return }
-
-        // Merge separate import groups into one and hoist stray imports to the top.
-        if allImportGroups.count > 1 {
-            formatter.mergeAndHoistImports(&allImportGroups)
+        if formatter.options.hoistImports {
+            formatter.hoistStrayImports()
         }
-
-        // Sort each import group
-        for var importRanges in allImportGroups.reversed() {
+        for var importRanges in formatter.parseImports().reversed() {
             guard importRanges.count > 1 else { continue }
             let range: Range = importRanges.first!.range.lowerBound ..< importRanges.last!.range.upperBound
             let sortedRanges = formatter.sortRanges(importRanges)
@@ -57,200 +51,11 @@ public extension FormatRule {
         +   import Foo-iOS
           #endif
         ```
-
-        ```diff
-          import Foundation
-        + import UIKit
-
-          struct Foo {}
-        -
-        - import UIKit
-        ```
         """
     }
 }
 
 extension Formatter {
-    /// Merges all file-scope import groups into a single contiguous block at the
-    /// top of the file, hoisting stray imports that appear after non-import code.
-    func mergeAndHoistImports(_ allImportGroups: inout [[ImportRange]]) {
-        guard allImportGroups.count > 1 else { return }
-
-        // Pass 1: Collapse blank lines between adjacent import groups (no code between them).
-        // Work bottom-to-top for stable indices.
-        var didMerge = false
-        for groupIndex in (1 ..< allImportGroups.count).reversed() {
-            let group = allImportGroups[groupIndex]
-            guard let firstImport = group.first else { continue }
-
-            if isInsidePreprocessorCondition(at: firstImport.range.lowerBound) {
-                continue
-            }
-
-            let previousGroup = allImportGroups[groupIndex - 1]
-            guard let previousLast = previousGroup.last else { continue }
-
-            let gapStart = previousLast.range.upperBound
-            let gapEnd = firstImport.range.lowerBound
-
-            // Only merge groups separated by whitespace-only gaps
-            guard isOnlyWhitespaceBetween(from: gapStart, to: gapEnd) else {
-                continue
-            }
-
-            // Find the end of whitespace in the current group's range
-            var wsEnd = gapEnd
-            while wsEnd < firstImport.range.upperBound,
-                  tokens[wsEnd].isSpaceOrLinebreak
-            {
-                wsEnd += 1
-            }
-
-            // Only collapse if there's actually extra whitespace (blank line)
-            let linebreakCount = tokens[gapStart ..< wsEnd].filter(\.isLinebreak).count
-            guard linebreakCount > 1 else { continue }
-
-            let linebreak = linebreakToken(for: gapStart)
-            replaceTokens(in: gapStart ..< wsEnd, with: [linebreak])
-            didMerge = true
-        }
-
-        if didMerge {
-            allImportGroups = parseImports()
-        }
-
-        // Pass 2: Hoist stray imports (after non-import code) to the first file-scope group.
-        guard allImportGroups.count > 1 else { return }
-
-        // Find the first import group NOT inside a preprocessor condition
-        guard let targetGroupIndex = allImportGroups.indices.first(where: {
-            guard let firstImport = allImportGroups[$0].first else { return false }
-            return !isInsidePreprocessorCondition(at: firstImport.range.lowerBound)
-        }) else { return }
-
-        var hoistedTokenArrays = [[Token]]()
-        var removalRanges = [Range<Int>]()
-
-        for groupIndex in ((targetGroupIndex + 1) ..< allImportGroups.count).reversed() {
-            let group = allImportGroups[groupIndex]
-            guard let firstImport = group.first, let lastImport = group.last else { continue }
-
-            if isInsidePreprocessorCondition(at: firstImport.range.lowerBound) {
-                continue
-            }
-
-            let previousGroup = allImportGroups[groupIndex - 1]
-            guard let previousLast = previousGroup.last else { continue }
-
-            let gapStart = previousLast.range.upperBound
-            let gapEnd = firstImport.range.lowerBound
-
-            // Only hoist if there's actual non-whitespace, non-import code between groups
-            guard !isOnlyImportRelatedContent(from: gapStart, to: gapEnd) else {
-                continue
-            }
-
-            for importRange in group {
-                hoistedTokenArrays.append(extractImportStatementTokens(from: importRange))
-            }
-
-            var removeStart = firstImport.range.lowerBound
-            let removeEnd = lastImport.range.upperBound
-
-            while removeStart > 0, tokens[removeStart - 1].isSpaceOrLinebreak {
-                removeStart -= 1
-            }
-
-            removalRanges.append(removeStart ..< removeEnd)
-        }
-
-        guard !hoistedTokenArrays.isEmpty,
-              let lastExistingImport = allImportGroups[targetGroupIndex].last
-        else { return }
-
-        for range in removalRanges {
-            removeTokens(in: range)
-        }
-
-        let insertionPoint = lastExistingImport.range.upperBound
-        let linebreak = linebreakToken(for: insertionPoint)
-
-        var insertTokens = [Token]()
-        for importTokens in hoistedTokenArrays {
-            insertTokens.append(linebreak)
-            insertTokens.append(contentsOf: importTokens)
-        }
-
-        insert(insertTokens, at: insertionPoint)
-        allImportGroups = parseImports()
-    }
-
-    /// Returns true if tokens between start and end are only whitespace
-    func isOnlyWhitespaceBetween(from start: Int, to end: Int) -> Bool {
-        for i in start ..< end {
-            if !tokens[i].isSpaceOrLinebreak {
-                return false
-            }
-        }
-        return true
-    }
-
-    /// Returns true if tokens between start and end contain only whitespace,
-    /// comments, import-related attributes, and import statements (no real code)
-    func isOnlyImportRelatedContent(from start: Int, to end: Int) -> Bool {
-        for i in start ..< end {
-            let token = tokens[i]
-            if token.isSpaceOrCommentOrLinebreak { continue }
-            if token.isAttribute { continue }
-            if token == .keyword("import") { continue }
-            if case .keyword(let kw) = token, _FormatRules.aclModifiers.contains(kw) { continue }
-            if case .identifier = token { continue }
-            if case .operator(".", _) = token { continue }
-            return false
-        }
-        return true
-    }
-
-    /// Whether the token at the given index is inside a `#if` / `#endif` block
-    func isInsidePreprocessorCondition(at index: Int) -> Bool {
-        var depth = 0
-        for i in 0 ..< index {
-            if tokens[i] == .startOfScope("#if") {
-                depth += 1
-            } else if tokens[i] == .endOfScope("#endif") {
-                depth -= 1
-            }
-        }
-        return depth > 0
-    }
-
-    /// Extracts the core import statement tokens, stripping leading comment lines
-    /// that parseImports may have attached.
-    func extractImportStatementTokens(from importRange: ImportRange) -> [Token] {
-        let rangeTokens = Array(tokens[importRange.range])
-        // Find the import keyword within the range
-        guard let importKeywordOffset = rangeTokens.firstIndex(where: { $0 == .keyword("import") }) else {
-            return rangeTokens
-        }
-        // Walk backwards from import to find start of this import line (attributes, access modifiers)
-        var startOffset = importKeywordOffset
-        for j in (0 ..< importKeywordOffset).reversed() {
-            let token = rangeTokens[j]
-            if token.isLinebreak {
-                startOffset = j + 1
-                break
-            }
-            if j == 0 {
-                startOffset = 0
-            }
-        }
-        // Skip leading whitespace
-        while startOffset < importKeywordOffset, rangeTokens[startOffset].isSpace {
-            startOffset += 1
-        }
-        return Array(rangeTokens[startOffset...])
-    }
-
     func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
         let grouping = options.importGrouping
 
@@ -293,5 +98,54 @@ extension Formatter {
     func accessLevelSortOrder(for range: Formatter.ImportRange) -> Int {
         guard let level = range.accessLevel else { return -1 }
         return _FormatRules.aclModifiers.firstIndex(of: level) ?? -1
+    }
+
+    /// Move file-scope imports that appear after non-import declarations
+    /// up to the first import group at the top of the file.
+    func hoistStrayImports() {
+        let groups = parseImports()
+        // Find groups not inside #if blocks
+        var nonConditionalIndices = [Int]()
+        for (i, group) in groups.enumerated() {
+            guard let first = group.first else { continue }
+            if !isInsidePreprocessorCondition(at: first.range.lowerBound) {
+                nonConditionalIndices.append(i)
+            }
+        }
+        guard nonConditionalIndices.count > 1 else { return }
+        let insertionIndex = groups[nonConditionalIndices[0]].last!.range.upperBound
+        // Collect import tokens from stray groups, remove bottom-to-top
+        // (removing bottom-to-top keeps earlier indices valid)
+        var collectedTokens = [Token]()
+        for i in nonConditionalIndices.dropFirst().reversed() {
+            let group = groups[i]
+            for importRange in group {
+                var rangeTokens = Array(tokens[importRange.range])
+                while rangeTokens.first?.isLinebreak == true {
+                    rangeTokens.removeFirst()
+                }
+                collectedTokens.append(linebreakToken(for: insertionIndex))
+                collectedTokens.append(contentsOf: rangeTokens)
+            }
+            // Remove the group range plus one trailing linebreak
+            let groupStart = group.first!.range.lowerBound
+            let groupEnd = group.last!.range.upperBound
+            let removeEnd = min(groupEnd + 1, tokens.count)
+            removeTokens(in: groupStart ..< removeEnd)
+        }
+        // Insert all collected imports at the first group's end
+        insert(collectedTokens, at: insertionIndex)
+    }
+
+    /// Check if a token index is inside a `#if` / `#endif` block.
+    func isInsidePreprocessorCondition(at index: Int) -> Bool {
+        var i = index
+        while let ifIndex = self.index(of: .startOfScope("#if"), before: i) {
+            if let endIndex = endOfScope(at: ifIndex), endIndex > index {
+                return true
+            }
+            i = ifIndex
+        }
+        return false
     }
 }

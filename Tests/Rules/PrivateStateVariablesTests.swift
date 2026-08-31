@@ -65,6 +65,13 @@ final class PrivateStateVariablesTests: XCTestCase {
         testFormatting(for: input, rule: .privateStateVariables)
     }
 
+    func testRespectingAccessControlBeforeStatePropertyWrapper() {
+        let input = """
+        private @State var counter: Int
+        """
+        testFormatting(for: input, rule: .privateStateVariables)
+    }
+
     func testStateVariableOnPreviousLine() {
         let input = """
         @State

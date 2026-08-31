@@ -19,8 +19,8 @@ public extension FormatRule {
             }) else { return }
 
             // Don't override any existing access control:
-            guard !formatter.tokens[stateIndex ..< keywordIndex].contains(where: {
-                _FormatRules.aclModifiers.contains($0.string) || _FormatRules.aclSetterModifiers.contains($0.string)
+            guard !formatter.modifiersForDeclaration(at: keywordIndex, contains: { _, modifier in
+                _FormatRules.aclModifiers.contains(modifier) || _FormatRules.aclSetterModifiers.contains(modifier)
             }) else {
                 return
             }

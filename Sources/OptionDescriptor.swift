@@ -858,15 +858,14 @@ struct _Descriptors {
     let importGrouping = OptionDescriptor(
         argumentName: "import-grouping",
         displayName: "Import Grouping",
-        help: "Comma-delimited list of import sorting/grouping options: \"alpha\", \"access-control\", \"length\", \"testable-first\", \"testable-last\". Defaults to \"access-control,alpha\"",
+        help: "Comma-delimited list of import sorting/grouping options: \"alpha\", \"access-control\", \"length\", \"testable-first\", \"testable-last\", \"spi-last\". Defaults to \"access-control,alpha\"",
         keyPath: \FormatOptions.importGrouping,
         type: .text,
         fromArgument: { arg in
-            Set(parseCommaDelimitedList(arg).compactMap { ImportGrouping(rawValue: $0) })
+            parseCommaDelimitedList(arg).compactMap { ImportGrouping(rawValue: $0) }
         },
         toArgument: { options in
-            let order = ImportGrouping.allCases
-            return order.filter { options.contains($0) }.map(\.rawValue).joined(separator: ",")
+            options.map(\.rawValue).joined(separator: ",")
         }
     )
     let hoistImports = OptionDescriptor(

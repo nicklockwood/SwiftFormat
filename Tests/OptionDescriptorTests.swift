@@ -399,4 +399,23 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("testable-top", &options))
         XCTAssertEqual(options.importGrouping, [.testableFirst])
     }
+
+    func testImportGroupingAcceptsSPILast() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("spi-last", &options))
+        XCTAssertEqual(options.importGrouping, [.spiLast])
+    }
+
+    func testImportGroupingAcceptsSPIBottom() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("spi-bottom", &options))
+        XCTAssertEqual(options.importGrouping, [.spiLast])
+    }
+
+    func testImportGroupingPreservesOptionOrder() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("spi-last,alpha,testable-last", &options))
+        XCTAssertEqual(options.importGrouping, [.spiLast, .alpha, .testableLast])
+        XCTAssertEqual(Descriptors.importGrouping.fromOptions(options), "spi-last,alpha,testable-last")
+    }
 }

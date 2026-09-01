@@ -46,7 +46,7 @@ public extension FormatRule {
                 }),
                     let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: index),
                     let firstRangeToken = formatter.index(of: .nonLinebreak, after: sortRangeStart),
-                    let lastRangeToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: endCommentIndex - 2)
+                    let lastRangeToken = formatter.index(of: .nonSpaceOrLinebreak, before: endCommentIndex - 2)
                 else { return }
 
                 rangeToSort = sortRangeStart ... lastRangeToken
@@ -55,7 +55,7 @@ public extension FormatRule {
                 guard let typeOpenBrace = formatter.index(of: .startOfScope("{"), after: index),
                       let typeCloseBrace = formatter.endOfScope(at: typeOpenBrace),
                       let firstTypeBodyToken = formatter.index(of: .nonLinebreak, after: typeOpenBrace),
-                      let lastTypeBodyToken = formatter.index(of: .nonLinebreak, before: typeCloseBrace),
+                      let lastTypeBodyToken = formatter.index(of: .nonSpaceOrLinebreak, before: typeCloseBrace),
                       let declarationKeywordIndex = formatter.indexOfLastSignificantKeyword(at: typeOpenBrace),
                       lastTypeBodyToken > typeOpenBrace
                 else { return }

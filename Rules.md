@@ -140,7 +140,7 @@
 * [preferMinOverSorted](#preferMinOverSorted)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
-* [privateStateVariables](#privateStateVariables)
+* [privateSwiftUIDynamicProperties](#privateSwiftUIDynamicProperties)
 * [propertyTypes](#propertyTypes)
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
 * [redundantSendable](#redundantSendable)
@@ -159,6 +159,7 @@
 
 # Deprecated Rules (do not use)
 
+* [privateStateVariables](#privateStateVariables)
 * [redundantProperty](#redundantProperty)
 * [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
@@ -2229,19 +2230,30 @@ Option | Description
 
 ## privateStateVariables
 
-Adds `private` access control to @State properties without existing access control modifiers.
+Adds `private` access control to SwiftUI state properties without existing access control modifiers.
+
+*Note: privateStateVariables rule is deprecated. Renamed to `privateSwiftUIDynamicProperties`.*
+
+## privateSwiftUIDynamicProperties
+
+Adds `private` access control to SwiftUI dynamic properties without existing access control modifiers.
 
 <details>
 <summary>Examples</summary>
 
 ```diff
-- @State var anInt: Int
-+ @State private var anInt: Int
+- @State var isEnabled = true
++ @State private var isEnabled = true
 ```
 
 ```diff
-- @StateObject var myInstance: MyObject
-+ @StateObject private var myInstance: MyObject
+- @AppStorage("isEnabled") var isEnabled = true
++ @AppStorage("isEnabled") private var isEnabled = true
+```
+
+```diff
+- @Environment(\.colorScheme) var colorScheme
++ @Environment(\.colorScheme) private var colorScheme
 ```
 
 </details>

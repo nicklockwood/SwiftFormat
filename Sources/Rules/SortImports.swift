@@ -59,16 +59,7 @@ extension Formatter {
     func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
         let grouping = options.importGrouping
 
-        let partitions: [[Formatter.ImportRange]]
-        if grouping.contains(.testableFirst) {
-            partitions = [ranges.filter(\.isTestable), ranges.filter { !$0.isTestable }]
-        } else if grouping.contains(.testableLast) {
-            partitions = [ranges.filter { !$0.isTestable }, ranges.filter(\.isTestable)]
-        } else {
-            partitions = [ranges]
-        }
-
-        return partitions.flatMap { partition in
+        return partitionImports(ranges).flatMap { partition in
             partition.sorted { lhs, rhs in
                 if grouping.contains(.accessControl) {
                     let lhsAccessOrder = accessLevelSortOrder(for: lhs)
@@ -91,6 +82,46 @@ extension Formatter {
                 return lhs < rhs
             }
         }
+    }
+
+    /// Splits the imports into the separately sorted groups defined by options like
+    /// `testable-last` and `spi-last`, in the order those groups should appear.
+    /// Groups are ordered relative to each other by the order of the options themselves.
+    func partitionImports(_ ranges: [Formatter.ImportRange]) -> [[Formatter.ImportRange]] {
+        var groupsBeforeOtherImports = [[Formatter.ImportRange]]()
+        var groupsAfterOtherImports = [[Formatter.ImportRange]]()
+        var otherImports = ranges
+
+        for option in options.importGrouping {
+            let isInGroup: (Formatter.ImportRange) -> Bool
+            let groupedBeforeOtherImports: Bool
+            switch option {
+            case .testableFirst:
+                isInGroup = { $0.isTestable }
+                groupedBeforeOtherImports = true
+            case .testableLast:
+                isInGroup = { $0.isTestable }
+                groupedBeforeOtherImports = false
+            case .spiLast:
+                isInGroup = { $0.isSPI }
+                groupedBeforeOtherImports = false
+            case .alpha, .length, .accessControl:
+                continue
+            }
+
+            // Each import joins the first group it matches, so an import that is both
+            // `@testable` and `@_spi` is grouped using whichever option comes first.
+            let group = otherImports.filter(isInGroup)
+            otherImports.removeAll(where: isInGroup)
+
+            if groupedBeforeOtherImports {
+                groupsBeforeOtherImports.append(group)
+            } else {
+                groupsAfterOtherImports.append(group)
+            }
+        }
+
+        return groupsBeforeOtherImports + [otherImports] + groupsAfterOtherImports
     }
 
     /// Sort order for import access level using aclModifiers (higher index = more visible).

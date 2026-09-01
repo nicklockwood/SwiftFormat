@@ -75,6 +75,7 @@ let ruleRegistry: [String: FormatRule] = [
     "preferSwiftStringAPI": .preferSwiftStringAPI,
     "preferSwiftTesting": .preferSwiftTesting,
     "privateStateVariables": .privateStateVariables,
+    "privateSwiftUIDynamicProperties": .privateSwiftUIDynamicProperties,
     "propertyTypes": .propertyTypes,
     "redundantAsync": .redundantAsync,
     "redundantBackticks": .redundantBackticks,

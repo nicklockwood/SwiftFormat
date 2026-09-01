@@ -20,11 +20,14 @@ public extension FormatRule {
                     continue
                 }
                 let range2 = importRanges[j]
+                // Only remove an import that is redundant with the other one. For example
+                // `import Foo` is redundant with `@testable import Foo`, but neither
+                // `@testable import Foo` nor `@_spi(Foo) import Foo` is redundant.
                 if Set(range.attributes).isSubset(of: range2.attributes) {
                     formatter.removeTokens(in: range.range)
                     continue
                 }
-                if j >= i {
+                if j >= i, Set(range2.attributes).isSubset(of: range.attributes) {
                     formatter.removeTokens(in: range2.range)
                     importRanges.remove(at: j)
                 }

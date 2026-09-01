@@ -91,6 +91,22 @@ final class DuplicateImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .duplicateImports)
     }
 
+    func testNoRemoveImportsWithDifferentAttributes() {
+        let input = """
+        @testable import Foo
+        @_spi(Bar) import Foo
+        """
+        testFormatting(for: input, rule: .duplicateImports)
+    }
+
+    func testNoRemoveImportsWithDifferentAttributes2() {
+        let input = """
+        @_spi(Bar) import Foo
+        @testable import Foo
+        """
+        testFormatting(for: input, rule: .duplicateImports)
+    }
+
     func testNoRemoveExportedDuplicateImport() {
         let input = """
         import Foo

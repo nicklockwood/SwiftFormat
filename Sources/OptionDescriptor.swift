@@ -869,6 +869,14 @@ struct _Descriptors {
             return order.filter { options.contains($0) }.map(\.rawValue).joined(separator: ",")
         }
     )
+    let hoistImports = OptionDescriptor(
+        argumentName: "hoist-imports",
+        displayName: "Hoist Imports",
+        help: "Hoist file-scope imports to top of file",
+        keyPath: \.hoistImports,
+        trueValues: ["hoist"],
+        falseValues: ["preserve"]
+    )
     let trailingClosures = OptionDescriptor(
         argumentName: "trailing-closures",
         displayName: "Trailing Closure Functions",

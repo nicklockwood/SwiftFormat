@@ -2846,7 +2846,10 @@ extension Formatter {
             }
             if var nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex) {
                 while tokens[nextTokenIndex].isAttribute {
-                    guard let nextIndex = index(of: .nonSpaceOrLinebreak, after: nextTokenIndex) else {
+                    // Skip over any arguments to the attribute, e.g. `@_spi(Foo)`
+                    guard let endOfAttribute = endOfAttribute(at: nextTokenIndex),
+                          let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfAttribute)
+                    else {
                         // End of imports
                         pushStack()
                         return

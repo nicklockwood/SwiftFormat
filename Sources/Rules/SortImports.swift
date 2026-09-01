@@ -103,38 +103,70 @@ extension Formatter {
     /// Move file-scope imports that appear after non-import declarations
     /// up to the first import group at the top of the file.
     func hoistStrayImports() {
-        let groups = parseImports()
-        // Find groups not inside #if blocks
-        var nonConditionalIndices = [Int]()
-        for (i, group) in groups.enumerated() {
-            guard let first = group.first else { continue }
-            if !isInsidePreprocessorCondition(at: first.range.lowerBound) {
-                nonConditionalIndices.append(i)
-            }
+        // In a fragment the top of the file isn't necessarily present,
+        // so hoisting imports could move them to an incorrect location.
+        guard !options.fragment else { return }
+
+        // Imports within a `#if` block are always left where they are.
+        let groups = parseImports().filter { group in
+            guard let first = group.first else { return false }
+            return !isInsidePreprocessorCondition(at: first.range.lowerBound)
         }
-        guard nonConditionalIndices.count > 1 else { return }
-        let insertionIndex = groups[nonConditionalIndices[0]].last!.range.upperBound
-        // Collect import tokens from stray groups, remove bottom-to-top
-        // (removing bottom-to-top keeps earlier indices valid)
-        var collectedTokens = [Token]()
-        for i in nonConditionalIndices.dropFirst().reversed() {
-            let group = groups[i]
-            for importRange in group {
+        guard groups.count > 1 else { return }
+
+        // Groups separated only by a blank line are preserved if each group can be
+        // sorted individually without affecting the required sort order. Imports
+        // below another declaration are always hoisted to the top of the file.
+        let hasStrayImports = groups.indices.dropFirst().contains { i in
+            hasCodeBetweenImportGroups(groups[i - 1], groups[i])
+        }
+        guard hasStrayImports || !canSortImportGroupsIndependently(groups) else { return }
+
+        // Move the imports from the other groups into the first group
+        let insertionIndex = groups[0].last!.range.upperBound
+        let hoistedGroups = groups.dropFirst()
+        let hoistedTokens = hoistedGroups.flatMap { group in
+            group.flatMap { importRange -> [Token] in
                 var rangeTokens = Array(tokens[importRange.range])
                 while rangeTokens.first?.isLinebreak == true {
                     rangeTokens.removeFirst()
                 }
-                collectedTokens.append(linebreakToken(for: insertionIndex))
-                collectedTokens.append(contentsOf: rangeTokens)
+                return [linebreakToken(for: insertionIndex)] + rangeTokens
             }
-            // Remove the group range plus one trailing linebreak
-            let groupStart = group.first!.range.lowerBound
-            let groupEnd = group.last!.range.upperBound
-            let removeEnd = min(groupEnd + 1, tokens.count)
-            removeTokens(in: groupStart ..< removeEnd)
         }
-        // Insert all collected imports at the first group's end
-        insert(collectedTokens, at: insertionIndex)
+        // Removing bottom-to-top keeps the earlier groups' indices valid
+        for group in hoistedGroups.reversed() {
+            removeImportGroupLines(group)
+        }
+        insert(hoistedTokens, at: insertionIndex)
+    }
+
+    /// Removes the lines containing the given import group, plus the blank line
+    /// that preceded it, if any.
+    func removeImportGroupLines(_ group: [Formatter.ImportRange]) {
+        // An import's range starts at the linebreak that ends the previous line,
+        // so the group's lines start at the following token.
+        let startOfLine = group.first!.range.lowerBound
+        let endOfLastLine = min(group.last!.range.upperBound + 1, tokens.count)
+        let precededByBlankLine = last(.nonSpace, before: startOfLine)?.isLinebreak == true
+        removeTokens(in: (precededByBlankLine ? startOfLine : startOfLine + 1) ..< endOfLastLine)
+    }
+
+    /// Whether the required sort order is satisfied by sorting each group individually,
+    /// without any import having to move to a different group.
+    func canSortImportGroupsIndependently(_ groups: [[Formatter.ImportRange]]) -> Bool {
+        let sortedWithinGroups = groups.flatMap { sortRanges($0) }
+        let sortedAcrossGroups = sortRanges(groups.flatMap { $0 })
+        return sortedWithinGroups.map(\.range.lowerBound) == sortedAcrossGroups.map(\.range.lowerBound)
+    }
+
+    /// Whether there is any code between the end of the first import group and the start of the second
+    func hasCodeBetweenImportGroups(_ group: [Formatter.ImportRange], _ nextGroup: [Formatter.ImportRange]) -> Bool {
+        guard let start = group.last?.range.upperBound,
+              let end = nextGroup.first?.range.lowerBound,
+              start < end
+        else { return false }
+        return index(of: .nonSpaceOrCommentOrLinebreak, in: start ..< end) != nil
     }
 
     /// Check if a token index is inside a `#if` / `#endif` block.

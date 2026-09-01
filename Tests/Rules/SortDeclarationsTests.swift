@@ -10,6 +10,70 @@ import XCTest
 @testable import SwiftFormat
 
 final class SortDeclarationsTests: XCTestCase {
+    func testSortNestedDeclarationsDoesNotMoveClosingBraceIndentation() {
+        let input = """
+        public extension String {
+            // swiftformat:sort
+            enum Feature {
+                /// comment
+                case bFeature = "bFeature"
+                /// comment
+                case cFeature = "cFeature"
+                /// comment
+                case aFeature = "aFeature" // Trailing comment -- a feature
+            }
+
+            // swiftformat:sort
+            extension Feature {
+                /// comment
+                var b: Bool {
+                    true
+                }
+                /// comment
+                var c: Bool {
+                    true
+                }
+                /// comment
+                var a: Bool {
+                    true
+                }
+            }
+        }
+        """
+
+        let output = """
+        public extension String {
+            // swiftformat:sort
+            enum Feature {
+                /// comment
+                case aFeature = "aFeature" // Trailing comment -- a feature
+                /// comment
+                case bFeature = "bFeature"
+                /// comment
+                case cFeature = "cFeature"
+            }
+
+            // swiftformat:sort
+            extension Feature {
+                /// comment
+                var a: Bool {
+                    true
+                }
+                /// comment
+                var b: Bool {
+                    true
+                }
+                /// comment
+                var c: Bool {
+                    true
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .sortDeclarations, exclude: [.blankLinesBetweenScopes])
+    }
+
     func testSortEnumBody() {
         let input = """
         // swiftformat:sort
@@ -173,8 +237,9 @@ final class SortDeclarationsTests: XCTestCase {
             // swiftformat:sort:begin
             case upsellB
             case fooFeature
-            case barFeature
-            case upsellA
+            case barFeature // Trailing comment -- bar feature
+            /// Leading comment -- upsell A
+            case upsellA // Trailing comment -- upsell A
             // swiftformat:sort:end
 
             var anUnsortedProperty: Foo {
@@ -186,9 +251,10 @@ final class SortDeclarationsTests: XCTestCase {
         let output = """
         enum FeatureFlags {
             // swiftformat:sort:begin
-            case barFeature
+            case barFeature // Trailing comment -- bar feature
             case fooFeature
-            case upsellA
+            /// Leading comment -- upsell A
+            case upsellA // Trailing comment -- upsell A
             case upsellB
             // swiftformat:sort:end
 

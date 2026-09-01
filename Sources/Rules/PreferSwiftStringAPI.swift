@@ -34,6 +34,7 @@ public extension FormatRule {
             guard args.count == 2,
                   args[0].label == "of",
                   args[1].label == "with",
+                  args[0].value != "\"\"",
                   let ofLabelIndex = args[0].labelIndex
             else { return }
 

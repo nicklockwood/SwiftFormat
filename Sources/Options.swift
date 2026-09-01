@@ -454,13 +454,16 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     }
 }
 
-/// Individual import sorting/grouping options, combined as a Set
+/// Individual import sorting/grouping options. The order of the options is
+/// significant when using more than one of the separate-group options,
+/// like `testable-last` and `spi-last`.
 public enum ImportGrouping: String, CaseIterable, Hashable {
     case alpha
     case length
     case accessControl = "access-control"
     case testableFirst = "testable-first"
     case testableLast = "testable-last"
+    case spiLast = "spi-last"
 
     public init?(rawValue: String) {
         switch rawValue {
@@ -478,6 +481,9 @@ public enum ImportGrouping: String, CaseIterable, Hashable {
         case "testable-last",
              "testable-bottom":
             self = .testableLast
+        case "spi-last",
+             "spi-bottom":
+            self = .spiLast
         default:
             return nil
         }
@@ -846,7 +852,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var throwCapturing: Set<String>
     public var asyncCapturing: Set<String>
     public var experimentalRules: Bool
-    public var importGrouping: Set<ImportGrouping>
+    public var importGrouping: [ImportGrouping]
     public var hoistImports: Bool
     public var trailingClosures: Set<String>
     public var neverTrailing: Set<String>
@@ -1000,7 +1006,7 @@ public struct FormatOptions: CustomStringConvertible {
                 throwCapturing: Set<String> = [],
                 asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,
-                importGrouping: Set<ImportGrouping> = [.accessControl, .alpha],
+                importGrouping: [ImportGrouping] = [.accessControl, .alpha],
                 hoistImports: Bool = true,
                 trailingClosures: Set<String> = [],
                 neverTrailing: Set<String> = [],
@@ -1271,8 +1277,8 @@ public struct FormatOptions: CustomStringConvertible {
                 value = array.joined(separator: ",")
             case let set as Set<String>:
                 value = set.sorted().joined(separator: ",")
-            case let set as Set<ImportGrouping>:
-                value = ImportGrouping.allCases.filter { set.contains($0) }.map(\.rawValue).joined(separator: ",")
+            case let array as [ImportGrouping]:
+                value = array.map(\.rawValue).joined(separator: ",")
             default:
                 break
             }

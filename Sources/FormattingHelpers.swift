@@ -3425,6 +3425,33 @@ extension Formatter {
         insertLinebreak(at: insertionIndex)
         insertSpace(indent, at: insertionIndex + 1)
     }
+
+    func makeSwiftUIDynamicPropertiesPrivate() {
+        parseDeclarations().forEachRecursiveDeclaration { declaration in
+            guard declaration.isStoredInstanceProperty,
+                  let propertyWrapper = declaration.swiftUIPropertyWrapper,
+                  propertyWrapper != "@Binding" ||
+                  declaration.parentType?.visibility() == .public ||
+                  declaration.parentType?.visibility() == .open
+            else { return }
+
+            let keywordIndex = declaration.keywordIndex
+
+            // Don't override any existing access control:
+            guard !modifiersForDeclaration(at: keywordIndex, contains: { _, modifier in
+                _FormatRules.aclModifiers.contains(modifier) || _FormatRules.aclSetterModifiers.contains(modifier)
+            }) else {
+                return
+            }
+
+            // Check for @Previewable - we won't modify @Previewable macros.
+            guard !modifiersForDeclaration(at: keywordIndex, contains: "@Previewable") else {
+                return
+            }
+
+            insert([.keyword("private"), .space(" ")], at: keywordIndex)
+        }
+    }
 }
 
 extension RandomAccessCollection<Token> where Index == Int {

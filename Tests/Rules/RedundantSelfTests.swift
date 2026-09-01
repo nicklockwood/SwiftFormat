@@ -3209,7 +3209,7 @@ final class RedundantSelfTests: XCTestCase {
     func testNoInsertSelfBeforeBinding() {
         let input = """
         struct MyView: View {
-            @Environment(ViewModel.self) var viewModel
+            @Environment(ViewModel.self) private var viewModel
 
             var body: some View {
                 @Bindable var viewModel = self.viewModel

@@ -2614,6 +2614,10 @@ extension Formatter {
             attributes.contains("@testable")
         }
 
+        var isSPI: Bool {
+            attributes.contains("@_spi")
+        }
+
         static func < (lhs: ImportRange, rhs: ImportRange) -> Bool {
             let la = lhs.module.lowercased()
             let lb = rhs.module.lowercased()

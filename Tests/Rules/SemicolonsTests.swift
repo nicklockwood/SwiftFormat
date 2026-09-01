@@ -108,7 +108,7 @@ final class SemicolonsTests: XCTestCase {
     func testRequiredSemicolonNotRemovedAfterInferredVar() {
         let input = """
         func foo() {
-            @Environment(\\.colorScheme) var colorScheme;
+            @Environment(\\.colorScheme) private var colorScheme;
             print(colorScheme)
         }
         """

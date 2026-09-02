@@ -49,7 +49,7 @@ final class RegressionTests: XCTestCase {
                 Swift.print(message)
                 messages.append(message)
             }
-            XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --symlinks follow --lint --verbose"), .ok)
+            XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --lint --verbose"), .ok)
             XCTAssert(messages.contains("-- no changes (cached)"))
         }
     }

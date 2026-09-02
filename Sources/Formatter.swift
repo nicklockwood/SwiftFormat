@@ -201,23 +201,6 @@ public final class Formatter: NSObject {
             return
         }
 
-        let line, tokenIndex: Int
-        switch tokens[index] {
-        case let .linebreak(_, ln):
-            line = ln + 1
-            tokenIndex = 0
-        default:
-            if let i = tokens[..<index].lastIndex(where: { $0.isLinebreak }),
-               case let .linebreak(_, ln) = tokens[i]
-            {
-                line = ln + 1
-                tokenIndex = index - i - 1
-            } else {
-                line = 1
-                tokenIndex = index
-            }
-        }
-
         // TODO: replace with stricter format for rules (space and/or comma-delimited)
         func containsRule(_ directive: DirectiveType) -> Bool {
             guard let rule = currentRule else {
@@ -230,6 +213,54 @@ public final class Formatter: NSObject {
                 ]) != nil
             case .options:
                 return false
+            }
+        }
+
+        let physicalLine: Int
+        if case let .linebreak(_, line) = tokens[index] {
+            physicalLine = line + 1
+        } else if let linebreakIndex = tokens[..<index].lastIndex(where: { $0.isLinebreak }),
+                  case let .linebreak(_, line) = tokens[linebreakIndex]
+        {
+            physicalLine = line + 1
+        } else {
+            physicalLine = 1
+        }
+        let hasApplicableLineDirective = directives.contains { directive in
+            guard !directive.toggle, directive.line == physicalLine else {
+                return false
+            }
+            if case .options = directive.type {
+                return true
+            }
+            return containsRule(directive.type)
+        }
+
+        let enablementIndex: Int
+        if tokens[index].isLinebreak,
+           !hasApplicableLineDirective,
+           let startIndex = startOfScope(at: index),
+           tokens[startIndex].isMultilineStringDelimiter
+        {
+            enablementIndex = startIndex
+        } else {
+            enablementIndex = index
+        }
+
+        let line, tokenIndex: Int
+        switch tokens[enablementIndex] {
+        case let .linebreak(_, ln):
+            line = ln + 1
+            tokenIndex = 0
+        default:
+            if let i = tokens[..<enablementIndex].lastIndex(where: { $0.isLinebreak }),
+               case let .linebreak(_, ln) = tokens[i]
+            {
+                line = ln + 1
+                tokenIndex = enablementIndex - i - 1
+            } else {
+                line = 1
+                tokenIndex = enablementIndex
             }
         }
 

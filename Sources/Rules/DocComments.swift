@@ -164,6 +164,11 @@ extension Formatter {
             if options.docComments == .beforeNonLocalDeclarations || declarationToken != .keyword("func") {
                 return false
             }
+            if let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
+               tokens[previousToken] != .startOfScope("{")
+            {
+                return false
+            }
         }
 
         // If there are blank lines between comment and declaration, comment is not treated as doc comment

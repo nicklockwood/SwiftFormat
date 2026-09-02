@@ -215,6 +215,63 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
+    func testDisableNextAppliesToEntireMultilineString() {
+        let input = #"""
+        // swiftformat:disable:next wrap
+        let string = """
+        VERSION=\(ShapeScript.version); curl https://example.com/a/very/long/path
+        """
+        let foo : Int=5;
+        """#
+        let output = #"""
+        // swiftformat:disable:next wrap
+        let string = """
+        VERSION=\(ShapeScript.version); curl https://example.com/a/very/long/path
+        """
+        let foo: Int = 5
+        """#
+        let options = FormatOptions(maxWidth: 40)
+        XCTAssertEqual(try format(input, rules: FormatRules.default, options: options).output, output + "\n")
+    }
+
+    func testDisableNextInsideMultilineStringInterpolation() {
+        let input = #"""
+        let string = """
+        value: \(
+            // swiftformat:disable:next spaceAroundOperators
+            foo+bar
+        )
+        """
+        """#
+        let output = #"""
+        let string = """
+        value: \(
+            // swiftformat:disable:next spaceAroundOperators
+            foo+bar
+        )
+        """
+        """#
+        XCTAssertEqual(try format(input, rules: [.spaceAroundOperators]).output, output)
+    }
+
+    func testDisableThisInsideMultilineStringInterpolation() {
+        let input = #"""
+        let string = """
+        Some text \(foo+bar // swiftformat:disable:this spaceAroundOperators
+        ) some more text
+        """
+        let result = foo+bar
+        """#
+        let output = #"""
+        let string = """
+        Some text \(foo+bar // swiftformat:disable:this spaceAroundOperators
+        ) some more text
+        """
+        let result = foo + bar
+        """#
+        XCTAssertEqual(try format(input, rules: [.spaceAroundOperators]).output, output)
+    }
+
     func testEnableNext() {
         let input = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"

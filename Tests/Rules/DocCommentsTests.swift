@@ -817,6 +817,50 @@ final class DocCommentsTests: XCTestCase {
         testFormatting(for: input, rule: .docComments, options: options)
     }
 
+    func testDoesNotConvertLocalFunctionCommentAfterExecutableCode() {
+        let input = """
+        func outer() {
+            let value = foo()
+            let isEnabled = value != nil
+            // This comment describes the local helper below.
+            // It shouldn't be treated as API documentation.
+            func inner() {
+                bar()
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .docComments)
+    }
+
+    func testConvertsLocalFunctionDocCommentAfterExecutableCodeToRegularComment() {
+        let input = """
+        func outer() {
+            let value = foo()
+            let isEnabled = value != nil
+            /// This comment describes the local helper below.
+            /// It shouldn't be treated as API documentation.
+            func inner() {
+                bar()
+            }
+        }
+        """
+
+        let output = """
+        func outer() {
+            let value = foo()
+            let isEnabled = value != nil
+            // This comment describes the local helper below.
+            // It shouldn't be treated as API documentation.
+            func inner() {
+                bar()
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .docComments)
+    }
+
     func testBeforeNonLocalDeclarationsConvertsDocCommentOnNestedFunctionToRegularComment() {
         let input = """
         func parentFunction() {

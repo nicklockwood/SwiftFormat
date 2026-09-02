@@ -56,6 +56,15 @@ final class PreferSwiftStringAPITests: XCTestCase {
         testFormatting(for: input, output, rule: .preferSwiftStringAPI, options: options)
     }
 
+    func testReplacingOccurrencesWithEmptyPatternNotTransformed() {
+        let input = """
+        str.replacingOccurrences(of: "", with: "-")
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: .preferSwiftStringAPI, options: options)
+    }
+
     func testReplacingOccurrencesNotTransformedBeforeSwift5_7() {
         let input = """
         str.replacingOccurrences(of: "foo", with: "bar")

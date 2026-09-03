@@ -11,6 +11,7 @@ import Foundation
 public extension FormatRule {
     static let preferStructSwiftTestingSuites = FormatRule(
         help: "Use structs for Swift Testing suites where possible.",
+        disabledByDefault: true,
         orderAfter: [.preferSwiftTesting]
     ) { formatter in
         guard formatter.hasImport("Testing") else { return }
@@ -23,6 +24,7 @@ public extension FormatRule {
             switch typeDeclaration.keyword {
             case "class":
                 guard !typeDeclaration.body.containsMutableStoredInstanceVar else { return }
+                guard typeDeclaration.conformances.isEmpty else { return }
                 var keywordIndex = typeDeclaration.keywordIndex
 
                 if let finalIndex = formatter.indexOfModifier("final", forDeclarationAt: keywordIndex),

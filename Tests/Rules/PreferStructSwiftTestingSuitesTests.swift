@@ -74,6 +74,40 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         )
     }
 
+    func testDoesNotConvertClassSuiteWithConformance() {
+        let input = """
+        import Testing
+
+        protocol MyFeatureTestable: AnyObject {}
+
+        class MyFeatureTests: MyFeatureTestable {
+            @Test func testFeature() {}
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
+    }
+
+    func testDoesNotConvertClassSuiteWithSuperclass() {
+        let input = """
+        import Testing
+
+        class BaseSuite {}
+
+        class MyFeatureTests: BaseSuite {
+            @Test func testFeature() {}
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
+    }
+
     func testConvertsSuiteEnumWithoutCasesToStruct() {
         let input = """
         import Testing

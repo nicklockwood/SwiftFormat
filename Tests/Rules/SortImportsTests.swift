@@ -647,39 +647,41 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    // MARK: - SPI imports
+    // MARK: - Attributed imports
 
-    func testSPIImportsSortedLast() {
+    func testAttributedImportsSortedLast() {
         let input = """
         @_spi(Foo) import UIKit
         import Baz
-        @_spi(Bar) import Bar
+        @_exported import Bar
         """
         let output = """
         import Baz
-        @_spi(Bar) import Bar
+        @_exported import Bar
         @_spi(Foo) import UIKit
         """
-        let options = FormatOptions(importGrouping: [.alpha, .spiLast])
+        let options = FormatOptions(importGrouping: [.alpha, .attributesLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    func testSPIImportsSortedByAccessControlAndAlpha() {
+    func testAttributedImportsSortedByAttributeThenModule() {
         let input = """
+        @preconcurrency @testable import CModule
+        import Regular
         @_spi(Foo) import BModule
-        import Regular
-        @_spi(Foo) public import AModule
+        @_spi(Foo) import AModule
         """
         let output = """
         import Regular
-        @_spi(Foo) public import AModule
+        @_spi(Foo) import AModule
         @_spi(Foo) import BModule
+        @preconcurrency @testable import CModule
         """
-        let options = FormatOptions(importGrouping: [.alpha, .accessControl, .spiLast])
+        let options = FormatOptions(importGrouping: [.alpha, .attributesLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    func testTestableGroupedBeforeSPIGroupWhenListedFirst() {
+    func testTestableGroupedBeforeAttributedGroupWhenListedFirst() {
         let input = """
         @_spi(Foo) import SPIModule
         @testable import TestableModule
@@ -690,11 +692,11 @@ final class SortImportsTests: XCTestCase {
         @testable import TestableModule
         @_spi(Foo) import SPIModule
         """
-        let options = FormatOptions(importGrouping: [.alpha, .testableLast, .spiLast])
+        let options = FormatOptions(importGrouping: [.alpha, .testableLast, .attributesLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    func testSPIGroupedBeforeTestableGroupWhenListedFirst() {
+    func testAttributedGroupedBeforeTestableGroupWhenListedFirst() {
         let input = """
         @testable import TestableModule
         @_spi(Foo) import SPIModule
@@ -705,13 +707,13 @@ final class SortImportsTests: XCTestCase {
         @_spi(Foo) import SPIModule
         @testable import TestableModule
         """
-        let options = FormatOptions(importGrouping: [.alpha, .spiLast, .testableLast])
+        let options = FormatOptions(importGrouping: [.alpha, .attributesLast, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    func testTestableAndSPIImportGroupedWithTestable() {
+    func testTestableAndAttributedImportGroupedWithTestable() {
         let input = """
-        @_spi(Foo) import SPIOnly
+        @_exported import ExportedOnly
         @testable @_spi(Foo) import Both
         @testable import TestableOnly
         import Regular
@@ -720,30 +722,30 @@ final class SortImportsTests: XCTestCase {
         import Regular
         @testable @_spi(Foo) import Both
         @testable import TestableOnly
-        @_spi(Foo) import SPIOnly
+        @_exported import ExportedOnly
         """
-        let options = FormatOptions(importGrouping: [.alpha, .testableLast, .spiLast])
+        let options = FormatOptions(importGrouping: [.alpha, .testableLast, .attributesLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    func testTestableAndSPIImportGroupedWithSPI() {
+    func testTestableAndAttributedImportGroupedWithAttributes() {
         let input = """
         @testable import TestableOnly
         @testable @_spi(Foo) import Both
-        @_spi(Foo) import SPIOnly
+        @_exported import ExportedOnly
         import Regular
         """
         let output = """
         import Regular
-        @testable @_spi(Foo) import Both
-        @_spi(Foo) import SPIOnly
+        @_exported import ExportedOnly
         @testable import TestableOnly
+        @testable @_spi(Foo) import Both
         """
-        let options = FormatOptions(importGrouping: [.alpha, .spiLast, .testableLast])
+        let options = FormatOptions(importGrouping: [.alpha, .attributesLast, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
-    func testSPILastWithTestableFirst() {
+    func testAttributesLastWithTestableFirst() {
         let input = """
         import RegularModule
         @_spi(Foo) import SPIModule
@@ -754,7 +756,7 @@ final class SortImportsTests: XCTestCase {
         import RegularModule
         @_spi(Foo) import SPIModule
         """
-        let options = FormatOptions(importGrouping: [.alpha, .testableFirst, .spiLast])
+        let options = FormatOptions(importGrouping: [.alpha, .testableFirst, .attributesLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 

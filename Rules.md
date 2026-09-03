@@ -47,6 +47,7 @@
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
+* [preferStructSwiftTestingSuites](#preferStructSwiftTestingSuites)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
@@ -2132,6 +2133,25 @@ Prefer `min()` over `sorted().first`.
 
 - let earliest = events.sorted(by: { $0.date < $1.date }).first
 + let earliest = events.min(by: { $0.date < $1.date })
+```
+
+</details>
+<br/>
+
+## preferStructSwiftTestingSuites
+
+Use structs for Swift Testing suites where possible.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import Testing
+
+- final class FeatureTests {
++ struct FeatureTests {
+      @Test func featureWorks() {}
+  }
 ```
 
 </details>

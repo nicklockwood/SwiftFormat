@@ -25,7 +25,12 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
             @Test func testFeature() {}
         }
         """
-        testFormatting(for: input, output, rule: .preferStructSwiftTestingSuites)
+        testFormatting(
+            for: input,
+            output,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
     }
 
     func testConvertsClassSuiteWithImmutableStoredPropertyToStruct() {
@@ -45,7 +50,12 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
             @Test func testFeature() {}
         }
         """
-        testFormatting(for: input, output, rule: .preferStructSwiftTestingSuites)
+        testFormatting(
+            for: input,
+            output,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
     }
 
     func testDoesNotConvertClassSuiteWithMutableStoredInstanceVar() {
@@ -57,7 +67,11 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
             @Test func testFeature() {}
         }
         """
-        testFormatting(for: input, rule: .preferStructSwiftTestingSuites)
+        testFormatting(
+            for: input,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
     }
 
     func testConvertsSuiteEnumWithoutCasesToStruct() {
@@ -75,7 +89,12 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
             @Test static func testFeature() {}
         }
         """
-        testFormatting(for: input, output, rule: .preferStructSwiftTestingSuites)
+        testFormatting(
+            for: input,
+            output,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
     }
 
     func testDoesNotConvertSuiteEnumWithCases() {
@@ -88,7 +107,11 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
             @Test static func testFeature() {}
         }
         """
-        testFormatting(for: input, rule: .preferStructSwiftTestingSuites)
+        testFormatting(
+            for: input,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
     }
 
     func testConvertsXCTestClassToSwiftTestingStructWhenCombinedWithPreferSwiftTesting() {
@@ -102,6 +125,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         }
         """
         let output = """
+        import Foundation
         import Testing
 
         struct MyFeatureTests {

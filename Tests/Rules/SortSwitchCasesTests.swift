@@ -186,6 +186,42 @@ final class SortSwitchCasesTests: XCTestCase {
                        exclude: [.wrapSwitchCases])
     }
 
+    func testSortSwitchCasesWithEnglishLocale() {
+        let input = """
+        switch self {
+        case .hora, .chata, .idea:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .chata, .hora, .idea:
+            break
+        }
+        """
+        let options = FormatOptions(sortSwitchCasesLocale: .identifier("en_US"))
+        testFormatting(for: input, output, rule: .sortSwitchCases, options: options,
+                       exclude: [.wrapSwitchCases])
+    }
+
+    func testSortSwitchCasesWithCzechLocale() {
+        let input = """
+        switch self {
+        case .chata, .idea, .hora:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .hora, .chata, .idea:
+            break
+        }
+        """
+        let options = FormatOptions(sortSwitchCasesLocale: .identifier("cs_CZ"))
+        testFormatting(for: input, output, rule: .sortSwitchCases, options: options,
+                       exclude: [.wrapSwitchCases])
+    }
+
     func testSortedSwitchWhereConditionNotLastCase() {
         let input = """
         switch self {

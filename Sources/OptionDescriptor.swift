@@ -1204,6 +1204,12 @@ struct _Descriptors {
         help: "List of patterns to sort alphabetically without `:sort` mark",
         keyPath: \.alphabeticallySortedDeclarationPatterns
     )
+    let sortSwitchCasesLocale = OptionDescriptor(
+        argumentName: "sort-switch-cases-locale",
+        displayName: "Switch Case Sort Locale",
+        help: "Locale for sorting switch cases: \"system\" (default) or a locale identifier such as \"en_US\"",
+        keyPath: \.sortSwitchCasesLocale
+    )
     let funcAttributes = OptionDescriptor(
         argumentName: "func-attributes",
         displayName: "Function Attributes",

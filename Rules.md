@@ -3448,6 +3448,10 @@ Option | Description
 
 Sort switch cases alphabetically.
 
+Option | Description
+--- | ---
+`--sort-switch-cases-locale` | Locale for sorting switch cases: "system" (default) or a locale identifier such as "en_US"
+
 <details>
 <summary>Examples</summary>
 

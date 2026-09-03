@@ -568,6 +568,26 @@ final class RedundantExtendedLifetimeTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantExtendedLifetime)
     }
 
+    func testPreservesDiscardedValueStatementWhenVariableIsOnlyReassigned() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeature() {
+                var first: Subscription? = observer.subscribe()
+                var second: Subscription? = observer.subscribe()
+                waitForObservation()
+                first = nil
+                second = nil
+
+                _ = first
+                _ = second
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
     func testPreservesDiscardedValueOfMultilineExpression() {
         let input = """
         import Testing

@@ -858,7 +858,7 @@ struct _Descriptors {
     let importGrouping = OptionDescriptor(
         argumentName: "import-grouping",
         displayName: "Import Grouping",
-        help: "Comma-delimited list of import sorting/grouping options: \"alpha\", \"access-control\", \"length\", \"testable-first\", \"testable-last\", \"spi-last\". Defaults to \"access-control,alpha\"",
+        help: "Comma-delimited list of import sorting/grouping options: \"alpha\", \"access-control\", \"length\", \"testable-first\", \"testable-last\", \"attributes-last\". Defaults to \"access-control,alpha\"",
         keyPath: \FormatOptions.importGrouping,
         type: .text,
         fromArgument: { arg in

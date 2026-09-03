@@ -60,7 +60,20 @@ extension Formatter {
         let grouping = options.importGrouping
 
         return partitionImports(ranges).flatMap { partition in
-            partition.sorted { lhs, rhs in
+            partition.ranges.sorted { lhs, rhs in
+                if partition.sortByAttributes {
+                    let lhsAttributes = lhs.attributeSortKey
+                    let rhsAttributes = rhs.attributeSortKey
+                    let la = lhsAttributes.lowercased()
+                    let lb = rhsAttributes.lowercased()
+                    if la != lb {
+                        return la < lb
+                    }
+                    if lhsAttributes != rhsAttributes {
+                        return lhsAttributes < rhsAttributes
+                    }
+                }
+
                 if grouping.contains(.accessControl) {
                     let lhsAccessOrder = accessLevelSortOrder(for: lhs)
                     let rhsAccessOrder = accessLevelSortOrder(for: rhs)
@@ -85,26 +98,39 @@ extension Formatter {
     }
 
     /// Splits the imports into the separately sorted groups defined by options like
-    /// `testable-last` and `spi-last`, in the order those groups should appear.
+    /// `testable-last` and `attributes-last`, in the order those groups should appear.
     /// Groups are ordered relative to each other by the order of the options themselves.
-    func partitionImports(_ ranges: [Formatter.ImportRange]) -> [[Formatter.ImportRange]] {
-        var groupsBeforeOtherImports = [[Formatter.ImportRange]]()
-        var groupsAfterOtherImports = [[Formatter.ImportRange]]()
+    func partitionImports(_ ranges: [Formatter.ImportRange]) -> [(
+        ranges: [Formatter.ImportRange],
+        sortByAttributes: Bool
+    )] {
+        var groupsBeforeOtherImports = [(
+            ranges: [Formatter.ImportRange],
+            sortByAttributes: Bool
+        )]()
+        var groupsAfterOtherImports = [(
+            ranges: [Formatter.ImportRange],
+            sortByAttributes: Bool
+        )]()
         var otherImports = ranges
 
         for option in options.importGrouping {
             let isInGroup: (Formatter.ImportRange) -> Bool
             let groupedBeforeOtherImports: Bool
+            let sortByAttributes: Bool
             switch option {
             case .testableFirst:
                 isInGroup = { $0.isTestable }
                 groupedBeforeOtherImports = true
+                sortByAttributes = false
             case .testableLast:
                 isInGroup = { $0.isTestable }
                 groupedBeforeOtherImports = false
-            case .spiLast:
-                isInGroup = { $0.isSPI }
+                sortByAttributes = false
+            case .attributesLast:
+                isInGroup = { $0.isAttributed }
                 groupedBeforeOtherImports = false
+                sortByAttributes = true
             case .alpha, .length, .accessControl:
                 continue
             }
@@ -115,13 +141,13 @@ extension Formatter {
             otherImports.removeAll(where: isInGroup)
 
             if groupedBeforeOtherImports {
-                groupsBeforeOtherImports.append(group)
+                groupsBeforeOtherImports.append((group, sortByAttributes))
             } else {
-                groupsAfterOtherImports.append(group)
+                groupsAfterOtherImports.append((group, sortByAttributes))
             }
         }
 
-        return groupsBeforeOtherImports + [otherImports] + groupsAfterOtherImports
+        return groupsBeforeOtherImports + [(otherImports, false)] + groupsAfterOtherImports
     }
 
     /// Sort order for import access level using aclModifiers (higher index = more visible).

@@ -400,22 +400,16 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertEqual(options.importGrouping, [.testableFirst])
     }
 
-    func testImportGroupingAcceptsSPILast() {
+    func testImportGroupingAcceptsAttributesLast() {
         var options: FormatOptions = .default
-        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("spi-last", &options))
-        XCTAssertEqual(options.importGrouping, [.spiLast])
-    }
-
-    func testImportGroupingAcceptsSPIBottom() {
-        var options: FormatOptions = .default
-        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("spi-bottom", &options))
-        XCTAssertEqual(options.importGrouping, [.spiLast])
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("attributes-last", &options))
+        XCTAssertEqual(options.importGrouping, [.attributesLast])
     }
 
     func testImportGroupingPreservesOptionOrder() {
         var options: FormatOptions = .default
-        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("spi-last,alpha,testable-last", &options))
-        XCTAssertEqual(options.importGrouping, [.spiLast, .alpha, .testableLast])
-        XCTAssertEqual(Descriptors.importGrouping.fromOptions(options), "spi-last,alpha,testable-last")
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("attributes-last,alpha,testable-last", &options))
+        XCTAssertEqual(options.importGrouping, [.attributesLast, .alpha, .testableLast])
+        XCTAssertEqual(Descriptors.importGrouping.fromOptions(options), "attributes-last,alpha,testable-last")
     }
 }

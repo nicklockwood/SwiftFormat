@@ -456,14 +456,14 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 
 /// Individual import sorting/grouping options. The order of the options is
 /// significant when using more than one of the separate-group options,
-/// like `testable-last` and `spi-last`.
+/// like `testable-last` and `attributes-last`.
 public enum ImportGrouping: String, CaseIterable, Hashable {
     case alpha
     case length
     case accessControl = "access-control"
     case testableFirst = "testable-first"
     case testableLast = "testable-last"
-    case spiLast = "spi-last"
+    case attributesLast = "attributes-last"
 
     public init?(rawValue: String) {
         switch rawValue {
@@ -481,9 +481,8 @@ public enum ImportGrouping: String, CaseIterable, Hashable {
         case "testable-last",
              "testable-bottom":
             self = .testableLast
-        case "spi-last",
-             "spi-bottom":
-            self = .spiLast
+        case "attributes-last":
+            self = .attributesLast
         default:
             return nil
         }

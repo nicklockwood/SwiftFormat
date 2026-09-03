@@ -2618,6 +2618,14 @@ extension Formatter {
             attributes.contains("@_spi")
         }
 
+        var isAttributed: Bool {
+            !attributes.isEmpty
+        }
+
+        var attributeSortKey: String {
+            attributes.joined(separator: " ")
+        }
+
         static func < (lhs: ImportRange, rhs: ImportRange) -> Bool {
             let la = lhs.module.lowercased()
             let lb = rhs.module.lowercased()

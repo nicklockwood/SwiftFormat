@@ -424,4 +424,307 @@ final class RedundantExtendedLifetimeTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantExtendedLifetime)
     }
+
+    func testRemovesDiscardedValueStatement() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start()
+                #expect(observer.isRunning)
+                _ = observer
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start()
+                #expect(observer.isRunning)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesDiscardedValueStatementWhereVariableIsNotOtherwiseReferenced() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeature() {
+                let observer = Observer(handler: { XCTFail("unexpected") })
+                _ = observer
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesDiscardedValueStatementOnStoredProperty() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            private var observer: Observer!
+
+            func testMyFeature() {
+                observer = Observer()
+                observer.start()
+                _ = observer
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesDiscardedValueStatementInNestedScope() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeature() {
+                let observer = Observer()
+                observer.start()
+                DispatchQueue.main.async {
+                    _ = observer
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesDiscardedValueStatementOutsideOfTestCase() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureHelper {
+            func startObserving() {
+                let observer = Observer()
+                observer.start()
+                _ = observer
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesDiscardedValueStatementWithNonVariableValue() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start()
+                _ = observer.child
+                _ = observer.start()
+                _ = try observer.value
+                _ = await observer.value
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
+    func testRemovesDiscardedValueStatementAndExtendedLifetimeCallInSameTestCase() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                let subscription = observer.subscribe()
+                observer.start()
+                #expect(subscription.isActive)
+                withExtendedLifetime(observer) {}
+                _ = subscription
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                let subscription = observer.subscribe()
+                observer.start()
+                #expect(subscription.isActive)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesDiscardedValueOfMultilineExpression() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start()
+                _ = observer
+                    .isRunning
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesUnrelatedUnderscores() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start()
+                for _ in 0 ..< 3 {
+                    observer.tick()
+                }
+                let (_, count) = observer.state
+                #expect(count == 3)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantExtendedLifetime)
+    }
+
+    func testRemovesLeadingCommentAndBlankLine() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start()
+                #expect(observer.isRunning)
+
+                // Prevent the observer from being deallocated
+                // until the end of the test.
+                _ = observer
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start()
+                #expect(observer.isRunning)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantExtendedLifetime)
+    }
+
+    func testRemovesLeadingCommentOfExtendedLifetimeCall() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeature() {
+                let observer = Observer()
+                observer.start()
+                XCTAssertTrue(observer.isRunning)
+                // Keep the observer alive until the end of the test
+                withExtendedLifetime(observer) {}
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeature() {
+                let observer = Observer()
+                observer.start()
+                XCTAssertTrue(observer.isRunning)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesTrailingCommentOfPreviousLine() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start() // starts observing
+                _ = observer
+                #expect(observer.isRunning)
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+                observer.start() // starts observing
+                #expect(observer.isRunning)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantExtendedLifetime)
+    }
+
+    func testPreservesCommentAboveHoistedClosureBody() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+
+                // Keep the observer alive while it's running
+                withExtendedLifetime(observer) {
+                    observer.start()
+                    #expect(observer.isRunning)
+                }
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeature() {
+                let observer = Observer()
+
+                // Keep the observer alive while it's running
+                observer.start()
+                #expect(observer.isRunning)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantExtendedLifetime, .indent])
+    }
 }

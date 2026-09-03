@@ -2495,7 +2495,7 @@ a hand-written Equatable conformance:
 
 ## redundantExtendedLifetime
 
-Remove redundant withExtendedLifetime calls in tests.
+Remove redundant `withExtendedLifetime` calls and `_ = value` statements in tests.
 
 <details>
 <summary>Examples</summary>
@@ -2510,6 +2510,7 @@ Remove redundant withExtendedLifetime calls in tests.
           observer.start()
           #expect(observer.isRunning)
 -         withExtendedLifetime(observer) {}
+-         _ = observer
       }
   }
 ```

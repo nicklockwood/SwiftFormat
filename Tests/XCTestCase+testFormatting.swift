@@ -83,6 +83,7 @@ extension XCTestCase {
             .blockComments,
             .unusedPrivateDeclarations,
             .preferFinalClasses,
+            .preferStructSwiftTestingSuites,
             .preferExplicitFalse,
             .wrapCaseBodies,
             .wrapIfStatementBodies,

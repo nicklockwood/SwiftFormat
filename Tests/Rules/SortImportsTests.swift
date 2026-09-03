@@ -738,8 +738,8 @@ final class SortImportsTests: XCTestCase {
         let output = """
         import Regular
         @_exported import ExportedOnly
-        @testable @_spi(Foo) import Both
         @testable import TestableOnly
+        @testable @_spi(Foo) import Both
         """
         let options = FormatOptions(importGrouping: [.alpha, .attributesLast, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)

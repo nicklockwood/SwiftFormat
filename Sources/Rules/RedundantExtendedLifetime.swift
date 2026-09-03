@@ -218,7 +218,8 @@ extension Formatter {
         // "initialization of immutable value was never used" warning. Only the references
         // that survive the removal count, so not the ones in the statement itself.
         return indicesOfReferences(to: statement.identifier, in: testCaseBodyRange).contains(where: { index in
-            !statement.range.contains(index) || statement.closureBodyRange?.contains(index) == true
+            (!statement.range.contains(index) || statement.closureBodyRange?.contains(index) == true)
+                && isReadReference(at: index)
         })
     }
 
@@ -334,5 +335,11 @@ extension Formatter {
 
             return true
         }
+    }
+
+    /// Whether the identifier at the given index is read, not only written to
+    func isReadReference(at index: Int) -> Bool {
+        guard tokens[index].isIdentifier else { return false }
+        return next(.nonSpaceOrCommentOrLinebreak, after: index) != .operator("=", .infix)
     }
 }

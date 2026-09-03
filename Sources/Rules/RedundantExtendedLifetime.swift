@@ -9,20 +9,20 @@
 import Foundation
 
 public extension FormatRule {
-    /// Remove redundant `withExtendedLifetime` calls in test cases
+    /// Remove redundant `withExtendedLifetime` calls and `_ = value` statements in test cases
     static let redundantExtendedLifetime = FormatRule(
-        help: "Remove redundant withExtendedLifetime calls in tests.",
+        help: "Remove redundant `withExtendedLifetime` calls and `_ = value` statements in tests.",
         disabledByDefault: true
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else { return }
 
-        formatter.forEach(.identifier("withExtendedLifetime")) { callIndex, _ in
-            guard let testCaseBodyRange = formatter.enclosingTestCaseBodyRange(at: callIndex, for: testFramework),
-                  let call = formatter.parseExtendedLifetimeCall(at: callIndex),
-                  formatter.isRedundantExtendedLifetimeCall(call, in: testCaseBodyRange)
+        formatter.forEachToken(where: { $0 == .identifier("withExtendedLifetime") || $0 == .identifier("_") }) { index, _ in
+            guard let testCaseBodyRange = formatter.enclosingTestCaseBodyRange(at: index, for: testFramework),
+                  let statement = formatter.parseExtendedLifetimeStatement(at: index),
+                  formatter.isRedundantExtendedLifetimeStatement(statement, in: testCaseBodyRange)
             else { return }
 
-            formatter.removeExtendedLifetimeCall(call)
+            formatter.removeExtendedLifetimeStatement(statement)
         }
     } examples: {
         """
@@ -36,6 +36,7 @@ public extension FormatRule {
                   observer.start()
                   #expect(observer.isRunning)
         -         withExtendedLifetime(observer) {}
+        -         _ = observer
               }
           }
         ```
@@ -44,21 +45,34 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// A `withExtendedLifetime(value) { ... }` statement
-    struct ExtendedLifetimeCall {
-        /// The full range of the call, from `withExtendedLifetime` to the closing brace of its closure
+    /// A statement that extends the lifetime of a value,
+    /// either `withExtendedLifetime(value) { ... }` or `_ = value`
+    struct ExtendedLifetimeStatement {
+        /// The full range of the statement, excluding the body of any trailing closure
         let range: ClosedRange<Int>
         /// The name of the variable whose lifetime is extended
         let identifier: String
-        /// The body of the trailing closure, which takes the place of the call, unless the closure is empty
+        /// The body of the trailing closure, which takes the place of the statement, unless the closure is empty
         let closureBodyRange: ClosedRange<Int>?
         /// The indices where the closure body refers to the closure's own argument, like `value` or `$0`.
-        /// These are renamed to `identifier` when the body takes the place of the call.
+        /// These are renamed to `identifier` when the body takes the place of the statement.
         let closureArgumentReferences: [Int]
     }
 
+    /// Parses the lifetime extension statement at the given index, if there is one
+    func parseExtendedLifetimeStatement(at index: Int) -> ExtendedLifetimeStatement? {
+        switch tokens[index] {
+        case .identifier("withExtendedLifetime"):
+            return parseExtendedLifetimeCall(at: index)
+        case .identifier("_"):
+            return parseDiscardedValueStatement(at: index)
+        default:
+            return nil
+        }
+    }
+
     /// Parses the `withExtendedLifetime(value) { ... }` statement at the given index, if there is one
-    func parseExtendedLifetimeCall(at index: Int) -> ExtendedLifetimeCall? {
+    func parseExtendedLifetimeCall(at index: Int) -> ExtendedLifetimeStatement? {
         guard tokens[index] == .identifier("withExtendedLifetime"),
               // The statement is removed line by line, so it has to start its own line
               startOfLine(at: index, excludingIndent: true) == index,
@@ -85,11 +99,39 @@ extension Formatter {
             return nil
         }
 
-        return ExtendedLifetimeCall(
+        return ExtendedLifetimeStatement(
             range: index ... closureEndIndex,
             identifier: identifier,
             closureBodyRange: closure.bodyRange,
             closureArgumentReferences: closure.argumentReferences
+        )
+    }
+
+    /// Parses the `_ = value` statement at the given index, if there is one
+    func parseDiscardedValueStatement(at index: Int) -> ExtendedLifetimeStatement? {
+        guard tokens[index] == .identifier("_"),
+              // The statement is removed line by line, so it has to start its own line
+              startOfLine(at: index, excludingIndent: true) == index,
+              isStartOfStatement(at: index),
+              let equalsIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+              tokens[equalsIndex] == .operator("=", .infix),
+              // A single variable is discarded, like `_ = observer`
+              let identifierIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+              case let .identifier(identifier) = tokens[identifierIndex]
+        else { return nil }
+
+        // Nothing can follow the value, since the whole statement is removed
+        if let tokenAfterValue = self.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
+           tokens[tokenAfterValue].isOperator || tokens[tokenAfterValue].isStartOfScope || tokens[tokenAfterValue].isDelimiter
+        {
+            return nil
+        }
+
+        return ExtendedLifetimeStatement(
+            range: index ... identifierIndex,
+            identifier: identifier,
+            closureBodyRange: nil,
+            closureArgumentReferences: []
         )
     }
 
@@ -159,40 +201,67 @@ extension Formatter {
         return (bodyRange: bodyRange, argumentReferences: argumentReferences)
     }
 
-    /// Whether the given `withExtendedLifetime` call has no effect, so can be removed
-    func isRedundantExtendedLifetimeCall(_ call: ExtendedLifetimeCall, in testCaseBodyRange: ClosedRange<Int>) -> Bool {
-        // `withExtendedLifetime` only has no effect if the variable is declared in the same scope as the call
-        guard let scopeIndex = startOfScope(at: call.range.lowerBound),
-              let declarationIndex = indexOfLocalDeclaration(of: call.identifier, in: scopeIndex ... call.range.lowerBound),
+    /// Whether the given lifetime extension statement has no effect, so can be removed
+    func isRedundantExtendedLifetimeStatement(_ statement: ExtendedLifetimeStatement, in testCaseBodyRange: ClosedRange<Int>) -> Bool {
+        // The statement only has no effect if the variable is declared in the same scope as the statement
+        guard let scopeIndex = startOfScope(at: statement.range.lowerBound),
+              let declarationIndex = indexOfLocalDeclaration(of: statement.identifier, in: scopeIndex ... statement.range.lowerBound),
               startOfScope(at: declarationIndex) == scopeIndex
         else { return false }
 
         // References to the closure's own argument become references to the variable
-        if !call.closureArgumentReferences.isEmpty {
+        if !statement.closureArgumentReferences.isEmpty {
             return true
         }
 
-        // If the variable isn't referenced anywhere else, the call is suppressing an
+        // If the variable isn't referenced anywhere else, the statement is suppressing an
         // "initialization of immutable value was never used" warning. Only the references
-        // that survive the removal count, so not the ones in the call's own arguments.
-        return indicesOfReferences(to: call.identifier, in: testCaseBodyRange).contains(where: { index in
-            !call.range.contains(index) || call.closureBodyRange?.contains(index) == true
+        // that survive the removal count, so not the ones in the statement itself.
+        return indicesOfReferences(to: statement.identifier, in: testCaseBodyRange).contains(where: { index in
+            !statement.range.contains(index) || statement.closureBodyRange?.contains(index) == true
         })
     }
 
-    /// Removes the given `withExtendedLifetime` call, but keeps the body of its closure
-    func removeExtendedLifetimeCall(_ call: ExtendedLifetimeCall) {
+    /// Removes the given lifetime extension statement, but keeps the body of any trailing closure
+    func removeExtendedLifetimeStatement(_ statement: ExtendedLifetimeStatement) {
         // Renaming the closure's argument doesn't change any indices, so this is safe to do first
-        for referenceIndex in call.closureArgumentReferences {
-            replaceToken(at: referenceIndex, with: .identifier(call.identifier))
+        for referenceIndex in statement.closureArgumentReferences {
+            replaceToken(at: referenceIndex, with: .identifier(statement.identifier))
         }
 
-        if let closureBodyRange = call.closureBodyRange {
+        if let closureBodyRange = statement.closureBodyRange {
             // The `indent` rule updates the indentation of the hoisted body.
-            replaceTokens(in: call.range, with: Array(tokens[closureBodyRange]))
+            replaceTokens(in: statement.range, with: Array(tokens[closureBodyRange]))
         } else {
-            removeTokens(in: startOfLine(at: call.range.lowerBound) ... endOfLine(at: call.range.upperBound))
+            removeTokens(in: startOfLinesToRemove(at: statement.range.lowerBound) ... endOfLine(at: statement.range.upperBound))
         }
+    }
+
+    /// The start of the line range to remove when removing the statement at the given index,
+    /// including any comments that describe the statement
+    func startOfLinesToRemove(at index: Int) -> Int {
+        let startOfStatement = startOfLine(at: index)
+        var startIndex = startOfStatement
+
+        // Comments on their own line above the statement describe the statement, so are removed with it
+        while startIndex > 0 {
+            let previousLine = startOfLine(at: startIndex - 1) ..< startIndex
+            guard self.index(of: .nonSpaceOrCommentOrLinebreak, in: previousLine) == nil,
+                  tokens[previousLine].contains(where: \.isComment)
+            else { break }
+
+            startIndex = previousLine.lowerBound
+        }
+
+        // Without the comments, the blank line that separated them from the code above is redundant
+        if startIndex != startOfStatement, startIndex > 0 {
+            let previousLine = startOfLine(at: startIndex - 1) ..< startIndex
+            if self.index(of: .nonSpaceOrLinebreak, in: previousLine) == nil {
+                startIndex = previousLine.lowerBound
+            }
+        }
+
+        return startIndex
     }
 
     /// The body range of the test case function containing the given index, if there is one

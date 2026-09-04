@@ -96,6 +96,32 @@ public final class Formatter: NSObject {
         return true
     }
 
+    /// Whether the current rule is enabled at a specific token index.
+    func isEnabled(at index: Int) -> Bool {
+        withPreservedRuleState {
+            enumerationIndex = index
+            updateEnablement(at: index)
+            return isEnabled
+        }
+    }
+
+    /// Executes a closure without changing the current rule's enablement or options state.
+    func withPreservedRuleState<T>(_ body: () throws -> T) rethrows -> T {
+        let previousEnumerationIndex = enumerationIndex
+        let previousDisabled = disabled
+        let previousRuleDisabled = ruleDisabled
+        let previousOptions = options
+        let previousTempOptions = tempOptions
+        defer {
+            enumerationIndex = previousEnumerationIndex
+            disabled = previousDisabled
+            ruleDisabled = previousRuleDisabled
+            options = previousOptions
+            tempOptions = previousTempOptions
+        }
+        return try body()
+    }
+
     private struct Directive {
         var type: DirectiveType
         var toggle: Bool

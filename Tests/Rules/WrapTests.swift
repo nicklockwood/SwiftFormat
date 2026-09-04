@@ -157,6 +157,363 @@ final class WrapTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrap, options: options, exclude: [.wrapMultilineStatementBraces])
     }
 
+    func testWrapGenericRequirementsInExtension() {
+        let input = """
+        extension Combined: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition, TransitionB: MirrorableAtomicTransition {}
+        """
+        let output = """
+        extension Combined: MirrorableAtomicTransition where
+            TransitionA: MirrorableAtomicTransition,
+            TransitionB: MirrorableAtomicTransition {}
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, output, rule: .wrap, options: options)
+    }
+
+    func testWrapGenericRequirementsBeforeMultilineBodyBrace() {
+        let input = """
+        extension Combined: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition, TransitionB: MirrorableAtomicTransition {
+            typealias Value = (TransitionA, TransitionB)
+        }
+        """
+        let output = """
+        extension Combined: MirrorableAtomicTransition where
+            TransitionA: MirrorableAtomicTransition,
+            TransitionB: MirrorableAtomicTransition
+        {
+            typealias Value = (TransitionA, TransitionB)
+        }
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, [output], rules: [.wrap, .wrapMultilineStatementBraces], options: options)
+    }
+
+    func testCompletePartialGenericRequirementWrappingWithComment() {
+        let input = """
+        extension Combined: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition, // first transition
+            TransitionB: MirrorableAtomicTransition {
+            typealias Value = (TransitionA, TransitionB)
+        }
+        """
+        let output = """
+        extension Combined: MirrorableAtomicTransition where
+            TransitionA: MirrorableAtomicTransition, // first transition
+            TransitionB: MirrorableAtomicTransition {
+            typealias Value = (TransitionA, TransitionB)
+        }
+        """
+        let options = FormatOptions(maxWidth: 100)
+        testFormatting(for: input, output, rule: .wrap, options: options, exclude: [.wrapMultilineStatementBraces])
+    }
+
+    func testCompleteLeadingCommaGenericRequirementWrapping() {
+        let input = """
+        extension Foo where T: ProtocolOne
+            , U: ProtocolTwo {
+            func foo() {}
+        }
+        """
+        let output = """
+        extension Foo where
+            T: ProtocolOne,
+            U: ProtocolTwo {
+            func foo() {}
+        }
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, output, rule: .wrap, options: options,
+                       exclude: [.wrapMultilineStatementBraces])
+    }
+
+    func testPreserveLeadingCommaSeparatedFromPreviousRequirementByComment() {
+        let input = """
+        extension Foo where T: ProtocolOne
+            // Keep this comment with the next requirement.
+            , U: ProtocolTwo {
+            func foo() {}
+        }
+        """
+        let output = """
+        extension Foo where
+            T: ProtocolOne
+            // Keep this comment with the next requirement.
+            , U: ProtocolTwo {
+            func foo() {}
+        }
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, output, rule: .wrap, options: options,
+                       exclude: [.consecutiveSpaces, .leadingDelimiters, .wrapMultilineStatementBraces])
+    }
+
+    func testWrapGenericRequirementsWhenContinuationLineExceedsMaxWidth() throws {
+        let input = """
+        extension Foo where T == Result<
+            ATypeNameThatExceedsTheConfiguredMaximumWidth,
+            Error
+        >, U: ProtocolOne {}
+        """
+        let options = FormatOptions(maxWidth: 40)
+        let output = try format(input, rules: [.wrap], options: options).output
+        XCTAssertTrue(output.contains("where\n    T =="))
+        XCTAssertTrue(output.contains("\n    U: ProtocolOne"))
+    }
+
+    func testWrapGenericRequirementsInFunctionLikeDeclarations() {
+        let input = """
+        func resolve<T, U>() where T == Result<Value, Error>, U == (Value, Error) {}
+        init?<T, U>() where T: VeryLongProtocolName, U: AnotherLongProtocolName {}
+        init!<T, U>() where T: VeryLongProtocolName, U: AnotherLongProtocolName {}
+        subscript<T, U>(_: T, _: U) -> Value where T: VeryLongProtocolName, U: AnotherLongProtocolName {}
+        """
+        let output = """
+        func resolve<T, U>() where
+            T == Result<Value, Error>,
+            U == (Value, Error) {}
+        init?<T, U>() where
+            T: VeryLongProtocolName,
+            U: AnotherLongProtocolName {}
+        init!<T, U>() where
+            T: VeryLongProtocolName,
+            U: AnotherLongProtocolName {}
+        subscript<T, U>(_: T, _: U) -> Value where
+            T: VeryLongProtocolName,
+            U: AnotherLongProtocolName {}
+        """
+        let options = FormatOptions(maxWidth: 70)
+        testFormatting(for: input, output, rule: .wrap, options: options)
+    }
+
+    func testWrapGenericRequirementsInLocalFunction() {
+        let input = """
+        func outer() {
+            func inner<T, U>() where T: VeryLongProtocolName, U: AnotherLongProtocolName {}
+        }
+        """
+        let output = """
+        func outer() {
+            func inner<T, U>() where
+                T: VeryLongProtocolName,
+                U: AnotherLongProtocolName {}
+        }
+        """
+        let options = FormatOptions(maxWidth: 70)
+        testFormatting(for: input, output, rule: .wrap, options: options,
+                       exclude: [.simplifyGenericConstraints, .unusedArguments])
+    }
+
+    func testWrapGenericRequirementsWhenDeclarationStartsOutsideFormattingRange() throws {
+        let input = """
+        extension Bar where V: VeryLongProtocolName, W: AnotherLongProtocolName {}
+        extension Foo
+        where T: VeryLongProtocolName, U: AnotherLongProtocolName {}
+        """
+        let output = """
+        extension Bar where V: VeryLongProtocolName, W: AnotherLongProtocolName {}
+        extension Foo
+        where
+            T: VeryLongProtocolName,
+            U: AnotherLongProtocolName {}
+        """
+        let options = FormatOptions(maxWidth: 40)
+        XCTAssertEqual(
+            try format(input, rules: [.wrap], options: options, lineRange: 3 ... 3).output,
+            output
+        )
+    }
+
+    func testWrapGenericRequirementsWithoutSpaceAfterComma() {
+        let input = """
+        extension Combined: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition,TransitionB: MirrorableAtomicTransition {}
+        """
+        let output = """
+        extension Combined: MirrorableAtomicTransition where
+            TransitionA: MirrorableAtomicTransition,
+            TransitionB: MirrorableAtomicTransition {}
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, output, rule: .wrap, options: options)
+    }
+
+    func testWrapGenericRequirementsInAssociatedType() {
+        let input = """
+        protocol Foo {
+            associatedtype Value where Value: VeryLongProtocolName, Value: AnotherLongProtocolName
+        }
+        """
+        let output = """
+        protocol Foo {
+            associatedtype Value where
+                Value: VeryLongProtocolName,
+                Value: AnotherLongProtocolName
+        }
+        """
+        let options = FormatOptions(maxWidth: 70)
+        testFormatting(for: input, output, rule: .wrap, options: options)
+    }
+
+    func testNoWrapGenericRequirementsBelowMaxWidth() {
+        let input = """
+        extension Foo where Bar: Baaz, Quux: Quuz {
+            func foo() {}
+        }
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, rule: .wrap, options: options)
+    }
+
+    func testNoWrapGenericRequirementsWhenMultilineDeclarationIsBelowMaxWidth() {
+        let input = """
+        func resolve<T, U>(
+            value: T,
+            fallback: U
+        ) where T: ProtocolOne, U: ProtocolTwo {}
+        """
+        let options = FormatOptions(maxWidth: 50)
+        testFormatting(for: input, rule: .wrap, options: options,
+                       exclude: [.simplifyGenericConstraints, .unusedArguments])
+    }
+
+    func testNoWrapGenericRequirementsWhenRuleDisabled() {
+        let input = """
+        // swiftformat:disable:next wrap
+        extension Combined: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition, TransitionB: MirrorableAtomicTransition {}
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, rule: .wrap, options: options)
+    }
+
+    func testGenericRequirementsRespectMaxWidthDirectives() {
+        let input = """
+        // swiftformat:options:next --max-width 200
+        extension Combined: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition, TransitionB: MirrorableAtomicTransition {}
+        // swiftformat:options:next --max-width 80
+        extension Wrapped: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition, TransitionB: MirrorableAtomicTransition {}
+        """
+        let output = """
+        // swiftformat:options:next --max-width 200
+        extension Combined: MirrorableAtomicTransition where TransitionA: MirrorableAtomicTransition, TransitionB: MirrorableAtomicTransition {}
+        // swiftformat:options:next --max-width 80
+        extension Wrapped: MirrorableAtomicTransition where
+            TransitionA: MirrorableAtomicTransition,
+            TransitionB: MirrorableAtomicTransition {}
+        """
+        let options = FormatOptions(maxWidth: 120)
+        testFormatting(for: input, output, rule: .wrap, options: options)
+    }
+
+    func testNoWrapGenericRequirementsAcrossRuleDirective() {
+        let input = """
+        extension Foo where // swiftformat:disable:next wrap
+            T: VeryLongProtocolName, U: AnotherLongProtocolName {
+            func foo() {}
+        }
+        """
+        let options = FormatOptions(maxWidth: 40)
+        testFormatting(for: input, rule: .wrap, options: options,
+                       exclude: [.wrapMultilineStatementBraces])
+    }
+
+    func testWrapGenericRequirementsAcrossUnrelatedRuleDirective() {
+        let input = """
+        extension Foo where // swiftformat:disable:next redundantSelf
+            T: VeryLongProtocolName, U: AnotherLongProtocolName {
+            func foo() {}
+        }
+        """
+        let output = """
+        extension Foo where // swiftformat:disable:next redundantSelf
+            T: VeryLongProtocolName,
+            U: AnotherLongProtocolName {
+            func foo() {}
+        }
+        """
+        let options = FormatOptions(maxWidth: 40)
+        testFormatting(for: input, output, rule: .wrap, options: options,
+                       exclude: [.wrapMultilineStatementBraces])
+    }
+
+    func testNoGenericRequirementWrappingInTypeAttribute() throws {
+        let input = """
+        @Marker({
+            for value in values where predicate(value) {}
+        })
+        struct Example {}
+        """
+        let output = """
+        @Marker({
+            for value in
+                values
+                where predicate(
+                    value
+                ) {}
+        })
+        struct Example {}
+        """
+        let options = FormatOptions(maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [.wrap], options: options).output, output)
+    }
+
+    func testNoGenericRequirementWrappingForNonDeclarationWhere() throws {
+        let input = """
+        struct Marker {}
+        for value in allAvailableValues where predicate(value, someVeryLongContextName) {}
+        switch result {
+        case let .value(lhs, rhs) where predicate(lhs, rhs): break
+        }
+        let match = allAvailableValues.first(where: { predicate($0, someVeryLongContextName) })
+        """
+        let expected = """
+        struct Marker {}
+        for value in allAvailableValues where predicate(
+            value,
+            someVeryLongContextName
+        ) {}
+        switch result {
+        case let .value(lhs, rhs) where predicate(
+            lhs,
+            rhs
+        ): break
+        }
+        let match = allAvailableValues
+            .first(where: { predicate(
+                $0,
+                someVeryLongContextName
+            ) })
+        """
+        let options = FormatOptions(maxWidth: 50)
+        let output = try format(input, rules: [.wrap], options: options)
+        XCTAssertEqual(output.output, expected)
+    }
+
+    func testNoGenericRequirementWrappingAfterPreviousDeclaration() throws {
+        let input = """
+        struct Marker {}
+        for value in allAvailableValues where predicateOne(value), predicateTwoWithLongName(value) {}
+        """
+        let expected = """
+        struct Marker {}
+        for value in allAvailableValues where predicateOne(value),
+            predicateTwoWithLongName(value) {}
+        """
+        let options = FormatOptions(maxWidth: 70)
+        let output = try format(input, rules: [.wrap], options: options)
+        XCTAssertEqual(output.output, expected)
+    }
+
+    func testNoGenericRequirementWrappingAfterInitializerCall() throws {
+        let input = """
+        for value in Values.init() where predicateOne(value), predicateTwoWithLongName(value) {}
+        """
+        let expected = """
+        for value in Values.init() where predicateOne(value),
+            predicateTwoWithLongName(value) {}
+        """
+        let options = FormatOptions(maxWidth: 70)
+        let output = try format(input, rules: [.wrap], options: options)
+        XCTAssertEqual(output.output, expected)
+    }
+
     func testWrapFunctionIfReturnTypeExceedsMaxWidthWithXcodeIndentation() {
         let input = """
         func testFunc() -> ReturnType {

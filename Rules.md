@@ -3435,6 +3435,10 @@ Option | Description
 
 Sort switch cases alphabetically.
 
+Option | Description
+--- | ---
+`--locale` | Locale for sorting: "en_US" (default), "system", or any valid locale identifier
+
 <details>
 <summary>Examples</summary>
 

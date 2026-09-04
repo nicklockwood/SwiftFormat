@@ -22,7 +22,7 @@ public extension FormatRule {
             "organization-mode", "type-body-marks", "visibility-order", "type-order", "visibility-marks",
             "type-marks", "group-blank-lines", "sort-swiftui-properties",
         ],
-        sharedOptions: ["sorted-patterns", "line-after-marks", "linebreaks"]
+        sharedOptions: ["sorted-patterns", "locale", "line-after-marks", "linebreaks"]
     ) { formatter in
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             // Organize the body of type declarations
@@ -257,7 +257,7 @@ extension Formatter {
                    let rhsName = rhs.declaration.name,
                    lhsName != rhsName
                 {
-                    return lhsName.localizedCompare(rhsName) == .orderedAscending
+                    return options.locale.compare(lhsName, rhsName) == .orderedAscending
                 }
 
                 if lhs.category.type == rhs.category.type,
@@ -268,7 +268,7 @@ extension Formatter {
                     case .none:
                         break
                     case .alphabetize:
-                        return lhs.localizedCompare(rhs) == .orderedAscending
+                        return options.locale.compare(lhs, rhs) == .orderedAscending
                     case .firstAppearanceSort:
                         return customDeclarationSortOrder.areInRelativeOrder(lhs: lhs, rhs: rhs)
                     }

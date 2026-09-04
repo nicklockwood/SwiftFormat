@@ -16,7 +16,7 @@ public extension FormatRule {
         // swiftformat:sort:end comments.
         """,
         options: ["sorted-patterns"],
-        sharedOptions: ["linebreaks", "organize-types", "struct-threshold", "class-threshold", "enum-threshold", "extension-threshold"]
+        sharedOptions: ["locale", "linebreaks", "organize-types", "struct-threshold", "class-threshold", "enum-threshold", "extension-threshold"]
     ) { formatter in
         formatter.forEachToken(
             where: {
@@ -90,7 +90,7 @@ public extension FormatRule {
                        let rhsName = rhsDeclaration.name,
                        lhsName != rhsName
                     {
-                        return lhsName.localizedCompare(rhsName) == .orderedAscending
+                        return formatter.options.locale.compare(lhsName, rhsName) == .orderedAscending
                     }
 
                     // Otherwise preserve the existing order

@@ -1204,6 +1204,12 @@ struct _Descriptors {
         help: "List of patterns to sort alphabetically without `:sort` mark",
         keyPath: \.alphabeticallySortedDeclarationPatterns
     )
+    let locale = OptionDescriptor(
+        argumentName: "locale",
+        displayName: "Sorting Locale",
+        help: "Locale for sorting: \"en_US\" (default), \"system\", or any valid locale identifier",
+        keyPath: \.locale
+    )
     let funcAttributes = OptionDescriptor(
         argumentName: "func-attributes",
         displayName: "Function Attributes",

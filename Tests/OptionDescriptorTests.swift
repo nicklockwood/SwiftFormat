@@ -228,6 +228,19 @@ final class OptionDescriptorTests: XCTestCase {
         validateFromOptionalArguments(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
     }
 
+    func testLocale() {
+        let descriptor = Descriptors.locale
+        let expectations: [OptionArgumentMapping<FormatLocale>] = [
+            (optionValue: .identifier("en_US"), argumentValue: "en_US"),
+            (optionValue: .identifier("cs_CZ"), argumentValue: "cs_CZ"),
+            (optionValue: .system, argumentValue: "system"),
+        ]
+
+        validateFromOptions(descriptor, keyPath: \FormatOptions.locale, expectations: expectations)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.locale, expectations: expectations)
+        validateDescriptorThrowsOptionsError(descriptor)
+    }
+
     func testNoSpaceOperators() {
         let descriptor = Descriptors.noSpaceOperators
         let validations: [FreeTextValidationExpectation] = [

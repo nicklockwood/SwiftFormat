@@ -221,6 +221,24 @@ final class SortSwitchCasesTests: XCTestCase {
                        exclude: [.wrapSwitchCases])
     }
 
+    func testSortSwitchCasesWithSystemLocale() {
+        let input = """
+        switch self {
+        case .b, .a:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a, .b:
+            break
+        }
+        """
+        let options = FormatOptions(locale: .system)
+        testFormatting(for: input, output, rule: .sortSwitchCases, options: options,
+                       exclude: [.wrapSwitchCases])
+    }
+
     func testSortedSwitchWhereConditionNotLastCase() {
         let input = """
         switch self {

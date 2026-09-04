@@ -186,7 +186,7 @@ final class SortSwitchCasesTests: XCTestCase {
                        exclude: [.wrapSwitchCases])
     }
 
-    func testSortSwitchCasesWithEnglishLocale() {
+    func testSortSwitchCasesUsesEnglishLocaleByDefault() {
         let input = """
         switch self {
         case .hora, .chata, .idea:
@@ -199,8 +199,7 @@ final class SortSwitchCasesTests: XCTestCase {
             break
         }
         """
-        let options = FormatOptions(sortSwitchCasesLocale: .identifier("en_US"))
-        testFormatting(for: input, output, rule: .sortSwitchCases, options: options,
+        testFormatting(for: input, output, rule: .sortSwitchCases,
                        exclude: [.wrapSwitchCases])
     }
 
@@ -217,7 +216,7 @@ final class SortSwitchCasesTests: XCTestCase {
             break
         }
         """
-        let options = FormatOptions(sortSwitchCasesLocale: .identifier("cs_CZ"))
+        let options = FormatOptions(locale: .identifier("cs_CZ"))
         testFormatting(for: input, output, rule: .sortSwitchCases, options: options,
                        exclude: [.wrapSwitchCases])
     }

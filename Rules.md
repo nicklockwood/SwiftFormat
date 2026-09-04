@@ -3450,7 +3450,7 @@ Sort switch cases alphabetically.
 
 Option | Description
 --- | ---
-`--sort-switch-cases-locale` | Locale for sorting switch cases: "system" (default) or a locale identifier such as "en_US"
+`--locale` | Locale for sorting: "en_US" (default), "system", or any valid locale identifier
 
 <details>
 <summary>Examples</summary>

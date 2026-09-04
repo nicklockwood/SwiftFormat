@@ -228,15 +228,16 @@ final class OptionDescriptorTests: XCTestCase {
         validateFromOptionalArguments(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
     }
 
-    func testSortSwitchCasesLocale() {
-        let descriptor = Descriptors.sortSwitchCasesLocale
-        let expectations: [OptionArgumentMapping<SortSwitchCasesLocale>] = [
-            (optionValue: .system, argumentValue: "system"),
+    func testLocale() {
+        let descriptor = Descriptors.locale
+        let expectations: [OptionArgumentMapping<FormatLocale>] = [
+            (optionValue: .identifier("en_US"), argumentValue: "en_US"),
             (optionValue: .identifier("cs_CZ"), argumentValue: "cs_CZ"),
+            (optionValue: .system, argumentValue: "system"),
         ]
 
-        validateFromOptions(descriptor, keyPath: \FormatOptions.sortSwitchCasesLocale, expectations: expectations)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.sortSwitchCasesLocale, expectations: expectations)
+        validateFromOptions(descriptor, keyPath: \FormatOptions.locale, expectations: expectations)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.locale, expectations: expectations)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 

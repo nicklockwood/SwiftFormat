@@ -660,8 +660,8 @@ public enum FormatTimeZone: Equatable, RawRepresentable, CustomStringConvertible
     }
 }
 
-/// Locale to use when sorting switch cases
-public enum SortSwitchCasesLocale: Equatable, RawRepresentable, CustomStringConvertible {
+/// Locale to use when sorting
+public enum FormatLocale: Equatable, RawRepresentable, CustomStringConvertible {
     case system
     case identifier(String)
 
@@ -688,12 +688,16 @@ public enum SortSwitchCasesLocale: Equatable, RawRepresentable, CustomStringConv
         }
     }
 
-    public var locale: Locale? {
+    func compare(_ lhs: String, _ rhs: String) -> ComparisonResult {
         switch self {
         case .system:
-            return nil
+            return lhs.localizedStandardCompare(rhs)
         case let .identifier(identifier):
-            return Locale(identifier: identifier)
+            return lhs.compare(
+                rhs,
+                options: [.caseInsensitive, .numeric, .widthInsensitive, .forcedOrdering],
+                locale: Locale(identifier: identifier)
+            )
         }
     }
 
@@ -941,7 +945,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var customTypeMarks: Set<String>
     public var blankLineAfterSubgroups: Bool
     public var alphabeticallySortedDeclarationPatterns: Set<String>
-    public var sortSwitchCasesLocale: SortSwitchCasesLocale
+    public var locale: FormatLocale
     public var swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
@@ -1096,7 +1100,7 @@ public struct FormatOptions: CustomStringConvertible {
                 customTypeMarks: Set<String> = [],
                 blankLineAfterSubgroups: Bool = true,
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],
-                sortSwitchCasesLocale: SortSwitchCasesLocale = .system,
+                locale: FormatLocale = .identifier("en_US"),
                 swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode = .none,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
@@ -1240,7 +1244,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.customTypeMarks = customTypeMarks
         self.blankLineAfterSubgroups = blankLineAfterSubgroups
         self.alphabeticallySortedDeclarationPatterns = alphabeticallySortedDeclarationPatterns
-        self.sortSwitchCasesLocale = sortSwitchCasesLocale
+        self.locale = locale
         self.swiftUIPropertiesSortMode = swiftUIPropertiesSortMode
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement

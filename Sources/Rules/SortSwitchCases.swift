@@ -12,7 +12,8 @@ public extension FormatRule {
     /// Sorts switch cases alphabetically
     static let sortSwitchCases = FormatRule(
         help: "Sort switch cases alphabetically.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        options: ["locale"]
     ) { formatter in
         formatter.parseSwitchCaseRanges()
             .reversed() // don't mess with indexes
@@ -29,7 +30,7 @@ public extension FormatRule {
                     let rhs = formatter.tokens[case2.beforeDelimiterRange]
                         .compactMap(formatter.sortableValue)
                     for (lhs, rhs) in zip(lhs, rhs) {
-                        switch lhs.localizedStandardCompare(rhs) {
+                        switch formatter.options.locale.compare(lhs, rhs) {
                         case .orderedAscending:
                             return true
                         case .orderedDescending:

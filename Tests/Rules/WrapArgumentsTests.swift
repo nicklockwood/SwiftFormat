@@ -2012,6 +2012,228 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: [.sortTypealiases])
     }
 
+    // MARK: - wrapGenericRequirements
+
+    func testWrapArguments_genericRequirements_preservedByDefault() {
+        let input = """
+        extension Foo: Equatable where Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        testFormatting(for: input, rule: .wrapArguments)
+    }
+
+    func testWrapArguments_genericRequirements_beforeFirst_wrappedInconsistently() {
+        let input = """
+        extension Foo: Equatable where Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let output = """
+        extension Foo: Equatable where
+            Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .beforeFirst)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_genericRequirements_afterFirst_wrappedInconsistently() {
+        let input = """
+        extension Foo: Equatable where
+            Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let output = """
+        extension Foo: Equatable where Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .afterFirst)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_genericRequirements_shorterThanMaxWidth() {
+        let input = """
+        extension Foo: Equatable where Bar: Baaz, Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .beforeFirst, maxWidth: 100)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_genericRequirements_longerThanListWrapThreshold() {
+        let input = """
+        extension Foo: Equatable where Bar: Baaz, Quux: Quuz {}
+        """
+
+        let output = """
+        extension Foo: Equatable where
+            Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .beforeFirst, maxWidth: 100, listWrapThreshold: 40)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_genericRequirements_beforeFirst_preservesGroupedRequirements() {
+        let input = """
+        extension Foo: Equatable where
+            Bar: Baaz, Quux: Quuz,
+            Bar.Foo: Baaz, Quux.Foo: Baaz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .beforeFirst)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_genericRequirements_beforeFirst_withoutPartialWrapping() {
+        let input = """
+        extension Foo: Equatable where
+            Bar: Baaz, Quux: Quuz,
+            Bar.Foo: Baaz, Quux.Foo: Baaz {}
+        """
+
+        let output = """
+        extension Foo: Equatable where
+            Bar: Baaz,
+            Quux: Quuz,
+            Bar.Foo: Baaz,
+            Quux.Foo: Baaz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .beforeFirst, allowPartialWrapping: false)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_genericRequirements_afterFirst_preservesGroupedRequirements() {
+        let input = """
+        extension Foo: Equatable where
+            Bar: Baaz, Quux: Quuz,
+            Bar.Foo: Baaz, Quux.Foo: Baaz {}
+        """
+
+        let output = """
+        extension Foo: Equatable where Bar: Baaz, Quux: Quuz,
+            Bar.Foo: Baaz, Quux.Foo: Baaz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .afterFirst)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    // MARK: - wrapWhereClause
+
+    func testWrapArguments_whereClause_ifMultiline() {
+        let input = """
+        extension Foo: Equatable where Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let output = """
+        extension Foo: Equatable
+            where Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapWhereClause: .ifMultiline)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_whereClause_ifMultiline_singleLineDeclaration() {
+        let input = """
+        extension Foo: Equatable where Bar: Baaz, Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapWhereClause: .ifMultiline)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_whereClause_ifMultiline_multilineFunctionSignature() {
+        let input = """
+        func foo<T: Sequence>(
+            bar: T,
+            baaz: T
+        ) -> Quux where T.Element: Equatable {
+            Quux(bar, baaz)
+        }
+        """
+
+        let output = """
+        func foo<T: Sequence>(
+            bar: T,
+            baaz: T
+        ) -> Quux
+            where T.Element: Equatable
+        {
+            Quux(bar, baaz)
+        }
+        """
+
+        let options = FormatOptions(wrapWhereClause: .ifMultiline)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .wrapMultilineStatementBraces], options: options)
+    }
+
+    func testWrapArguments_whereClause_ifMultiline_genericRequirementsBeforeFirst() {
+        let input = """
+        extension Foo: Equatable where Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let output = """
+        extension Foo: Equatable
+            where
+            Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .beforeFirst, wrapWhereClause: .ifMultiline)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_whereClause_never() {
+        let input = """
+        extension Foo: Equatable
+            where Bar: Baaz, Quux: Quuz {}
+        """
+
+        let output = """
+        extension Foo: Equatable where Bar: Baaz, Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapWhereClause: .never)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_whereClause_never_longerThanMaxWidth() {
+        let input = """
+        extension Foo: Equatable
+            where Bar: Baaz, Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapWhereClause: .never, maxWidth: 50)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArguments_whereClause_never_genericRequirementsBeforeFirst_longerThanMaxWidth() {
+        let input = """
+        extension Foo: Equatable
+            where Bar: Baaz, Quux: Quuz {}
+        """
+
+        let output = """
+        extension Foo: Equatable where
+            Bar: Baaz,
+            Quux: Quuz {}
+        """
+
+        let options = FormatOptions(wrapGenericRequirements: .beforeFirst, wrapWhereClause: .never, maxWidth: 50)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
     // MARK: - -return wrap-if-multiline
 
     func testWrapReturnOnMultilineFunctionDeclaration() {

@@ -122,6 +122,47 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortDeclarations)
     }
 
+    func testSortDeclarationsUsesEnglishLocaleByDefault() {
+        let input = """
+        // swiftformat:sort
+        enum Words {
+            case idea
+            case hora
+            case chata
+        }
+        """
+        let output = """
+        // swiftformat:sort
+        enum Words {
+            case chata
+            case hora
+            case idea
+        }
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsWithCzechLocale() {
+        let input = """
+        // swiftformat:sort
+        enum Words {
+            case chata
+            case idea
+            case hora
+        }
+        """
+        let output = """
+        // swiftformat:sort
+        enum Words {
+            case hora
+            case chata
+            case idea
+        }
+        """
+        let options = FormatOptions(locale: .identifier("cs_CZ"))
+        testFormatting(for: input, output, rule: .sortDeclarations, options: options)
+    }
+
     func testSortEnumBodyWithOnlyOneCase() {
         let input = """
         // swiftformat:sort
@@ -339,7 +380,7 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, rules: [.sortDeclarations, .blankLinesBetweenScopes], options: options, exclude: [.redundantPublic])
     }
 
-    func testSortDeclarationsUsesLocalizedCompare() {
+    func testSortDeclarationsUsesCaseInsensitiveCompare() {
         let input = """
         // swiftformat:sort
         enum FeatureFlags {

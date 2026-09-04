@@ -3904,6 +3904,29 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.organizeDeclarations, .sortDeclarations])
     }
 
+    func testOrganizeDeclarationsUsesConfiguredLocaleWhenSorting() {
+        let input = """
+        // swiftformat:sort
+        public enum Words {
+            public static let chata = "chata"
+            public static let idea = "idea"
+            public static let hora = "hora"
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        public enum Words {
+            public static let hora = "hora"
+            public static let chata = "chata"
+            public static let idea = "idea"
+        }
+        """
+
+        let options = FormatOptions(locale: .identifier("cs_CZ"))
+        testFormatting(for: input, [output], rules: [.organizeDeclarations, .sortDeclarations], options: options)
+    }
+
     func testIssue2045() {
         let input = """
         public final class A {

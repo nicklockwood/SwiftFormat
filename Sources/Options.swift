@@ -669,9 +669,10 @@ public enum SortSwitchCasesLocale: Equatable, RawRepresentable, CustomStringConv
         if rawValue.lowercased() == Self.system.rawValue {
             self = .system
         } else {
-            let identifier = Locale(identifier: rawValue).identifier
-            let normalizedIdentifier = identifier.replacingOccurrences(of: "-", with: "_")
-            guard Locale.availableIdentifiers.contains(normalizedIdentifier) else {
+            let normalizedIdentifier = rawValue.lowercased().replacingOccurrences(of: "-", with: "_")
+            guard let identifier = Locale.availableIdentifiers.first(where: {
+                $0.lowercased().replacingOccurrences(of: "-", with: "_") == normalizedIdentifier
+            }) else {
                 return nil
             }
             self = .identifier(identifier)

@@ -1398,4 +1398,36 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(swiftVersion: "6.2"))
     }
+
+    func testPreservesBacktickedInitNameWithUnnamedArgumentLabels() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `init(_:count:modifier:)`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testPreservesBacktickedSubscriptNameWithUnnamedArgumentLabels() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `subscript(_:)`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
 }

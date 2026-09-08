@@ -1426,13 +1426,13 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
                        options: FormatOptions(swiftVersion: "6.2"))
     }
 
-    func testConvertsLeadingPluralizedAcronymToRawIdentifier() {
+    func testConvertsTrailingPluralizedAcronymToRawIdentifier() {
         let input = """
         import Testing
 
         struct MyFeatureTests {
             @Test
-            func testURLsAreValid() {
+            func testURLs() {
                 #expect(true)
             }
         }
@@ -1443,7 +1443,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
 
         struct MyFeatureTests {
             @Test
-            func `URLs are valid`() {
+            func `URLs`() {
                 #expect(true)
             }
         }

@@ -248,11 +248,7 @@ extension String {
                     words.append(currentWord)
                     currentWord = String(char)
                 } else if let next = nextChar, next.isLowercase {
-                    let nextNextChar = i + 2 < chars.count ? chars[i + 2] : nil
-                    if next == "s",
-                       currentWord.allSatisfy(\.isUppercase),
-                       nextNextChar == nil || nextNextChar!.isUppercase || nextNextChar!.isNumber
-                    {
+                    if next == "s", i + 1 == chars.count - 1, currentWord.allSatisfy(\.isUppercase) {
                         currentWord.append(char)
                         continue
                     }
@@ -309,7 +305,7 @@ extension String {
     }
 
     var isPluralizedAcronym: Bool {
-        count >= 2 &&
+        count >= 3 &&
             last == "s" &&
             dropLast().allSatisfy(\.isUppercase)
     }

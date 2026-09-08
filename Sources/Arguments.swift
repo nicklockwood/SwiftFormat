@@ -30,9 +30,10 @@
 //
 
 import Foundation
+import RegexBuilder
 
 extension Options {
-    init(_ args: [String: String], filterOptions: [Glob: [String: String]] = [:], in directory: String) throws {
+    init(_ args: [String: String], filterOptions: [[ConfigFilter]: [String: String]] = [:], in directory: String) throws {
         fileOptions = try fileOptionsFor(args, in: directory)
         formatOptions = try formatOptionsFor(args)
         configURLs = args["config"].map {
@@ -61,13 +62,149 @@ extension Options {
         self = newOptions
     }
 
-    /// Adds arguments from any `--filter`ed config that applies to this path
-    mutating func addFilterArguments(path: String) throws {
-        for (glob, options) in filterOptions {
-            if glob.matches(path) {
+    /// Adds arguments from any `--filter`ed config that applies to this file
+    mutating func addFilterArguments(path: String, source: String) throws {
+        let locale = (formatOptions ?? .default).locale
+        for (filters, options) in filterOptions {
+            if filters.allSatisfy({ $0.matches(path: path, source: source, locale: locale) }) {
                 try applyArguments(options, lint: lint, to: &self)
             }
         }
+    }
+}
+
+/// A condition that restricts a `--filter`ed config file section to a subset of the files being formatted
+public enum ConfigFilter: Hashable, CustomStringConvertible {
+    /// Matches files whose path matches the given glob
+    case glob(Glob)
+    /// Matches files whose header comment records a creation date after the given date
+    case headerCreationDate(after: Date)
+
+    /// Parses the comma-delimited value of a `--filter` option.
+    /// A file must match every filter in the list.
+    static func parseList(_ value: String, in directory: String) throws -> [ConfigFilter] {
+        var filters = [ConfigFilter]()
+        var globPatterns = [String]()
+
+        for entry in parseCommaDelimitedList(value) {
+            if let date = try parseHeaderCreationDate(entry) {
+                filters.append(.headerCreationDate(after: date))
+            } else {
+                globPatterns.append(entry)
+            }
+        }
+
+        // Rejoin the glob entries so that `expandGlobs` can handle `{foo,bar}` brace groups itself
+        if !globPatterns.isEmpty {
+            filters += expandGlobs(globPatterns.joined(separator: ","), in: directory).map { .glob($0) }
+        }
+        return filters
+    }
+
+    private static func parseHeaderCreationDate(_ entry: String) throws -> Date? {
+        let prefix = "header-creation-date-after:"
+        guard entry.lowercased().hasPrefix(prefix) else {
+            return nil
+        }
+
+        let dateString = String(entry.dropFirst(prefix.count))
+            .trimmingCharacters(in: .whitespaces)
+
+        guard let date = dateString.date(format: "yyyy-MM-dd") else {
+            throw FormatError.options(
+                "Invalid date '\(dateString)' in --filter \(entry). Expected format: YYYY-MM-DD"
+            )
+        }
+        return date
+    }
+
+    /// Whether this filter matches the given file
+    func matches(path: String, source: String, locale: FormatLocale) -> Bool {
+        switch self {
+        case let .glob(glob):
+            return glob.matches(path)
+        case let .headerCreationDate(after: date):
+            guard let creationDate = source.headerCreationDate(locale: locale) else {
+                return false
+            }
+            return creationDate > date
+        }
+    }
+
+    public var description: String {
+        switch self {
+        case let .glob(glob):
+            return glob.description
+        case let .headerCreationDate(after: date):
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd"
+            return "header-creation-date-after:" + formatter.string(from: date)
+        }
+    }
+}
+
+extension String {
+    /// The date the file was created, from parsing the "Created on" date in the header comment.
+    func headerCreationDate(locale: FormatLocale) -> Date? {
+        let formatter = Formatter(tokenize(self))
+        guard let headerRange = formatter.headerCommentTokenRange(includingDirectives: ["*"]) else {
+            return nil
+        }
+
+        let header = formatter.tokens[headerRange].map(\.string).joined()
+        return header.dateSubstrings.lazy.compactMap { $0.parsedDate(locale: locale) }.first
+    }
+
+    /// Substrings that look like they could be a date, e.g. `2026-09-01` or `9/1/26`
+    var dateSubstrings: [String] {
+        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
+            return matches(of: Regex {
+                Repeat(.digit, 1 ... 4)
+                One(.anyOf("-/"))
+                Repeat(.digit, 1 ... 2)
+                One(.anyOf("-/"))
+                Repeat(.digit, 1 ... 4)
+            }).map { String($0.output) }
+        }
+
+        // `Regex` isn't available on older platforms
+        var substrings = [String]()
+        var searchRange = startIndex ..< endIndex
+        while let range = range(
+            of: "\\d{1,4}[-/]\\d{1,2}[-/]\\d{1,4}", options: .regularExpression, range: searchRange
+        ) {
+            substrings.append(String(self[range]))
+            searchRange = range.upperBound ..< searchRange.upperBound
+        }
+        return substrings
+    }
+
+    /// Parses this date string as `YYYY-MM-DD` or `YYYY/MM/DD`, and otherwise using the
+    /// locale's own numeric date format, which accepts either a two or four digit year
+    /// and components that are zero-padded or not.
+    func parsedDate(locale: FormatLocale) -> Date? {
+        // A four digit leading component can only be a year. This is checked because `yyyy`
+        // also accepts two digits, so would otherwise parse `9/1/26` as the year 0009.
+        if prefix(while: \.isNumber).count == 4 {
+            return date(format: "yyyy-MM-dd") ?? date(format: "yyyy/MM/dd")
+        }
+
+        // e.g. `M/d/y` in `en_US`, `dd/MM/y` in `en_GB`, or `d.M.y` in `de_DE`
+        guard let format = DateFormatter.dateFormat(
+            fromTemplate: "yMd", options: 0, locale: locale.locale
+        ) else {
+            return nil
+        }
+        return date(format: format, locale: locale.locale)
+    }
+
+    /// Parses this string as a date using the given format
+    func date(format: String, locale: Locale = Locale(identifier: "en_US_POSIX")) -> Date? {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.dateFormat = format
+        return formatter.date(from: self)
     }
 }
 
@@ -746,8 +883,9 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         options.minVersion = minVersion
     }
 
-    try processOption("filter", in: args, from: &arguments, handler: { _ in
-        // no-op, handled in `Options.init` and `addArguments`
+    try processOption("filter", in: args, from: &arguments, handler: {
+        // Validate the value eagerly. Filters themselves are applied in `Options.addFilterArguments`.
+        _ = try ConfigFilter.parseList($0, in: directory)
     })
 
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")

@@ -687,6 +687,15 @@ public enum FormatLocale: Equatable, RawRepresentable, CustomStringConvertible {
         }
     }
 
+    public var locale: Locale {
+        switch self {
+        case .system:
+            return Locale.current
+        case let .identifier(identifier):
+            return Locale(identifier: identifier)
+        }
+    }
+
     func compare(_ lhs: String, _ rhs: String) -> ComparisonResult {
         switch self {
         case .system:
@@ -1399,7 +1408,7 @@ public struct Options {
     public var rules: Set<String>?
     public var configURLs: [URL]?
     public var lint: Bool
-    public var filterOptions: [Glob: [String: String]]
+    public var filterOptions: [[ConfigFilter]: [String: String]]
 
     public static let `default` = Options(
         fileOptions: .default,
@@ -1414,7 +1423,7 @@ public struct Options {
                 rules: Set<String>? = nil,
                 configURLs: [URL]? = nil,
                 lint: Bool = false,
-                filterOptions: [Glob: [String: String]] = [:])
+                filterOptions: [[ConfigFilter]: [String: String]] = [:])
     {
         self.fileOptions = fileOptions
         self.formatOptions = formatOptions

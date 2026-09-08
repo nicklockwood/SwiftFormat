@@ -84,7 +84,7 @@ extension Formatter {
         var attributes = [HoistableAttribute]()
 
         _ = modifiersForDeclaration(at: declaration.keywordIndex) { index, modifier in
-            guard isHoistableExtensionAttribute(modifier),
+            guard isHoistableExtensionAttribute(modifier, for: declaration),
                   let endIndex = endOfAttribute(at: index)
             else { return false }
 
@@ -111,8 +111,12 @@ extension Formatter {
         }
     }
 
-    func isHoistableExtensionAttribute(_ attribute: String) -> Bool {
-        attribute == "@MainActor" || attribute.hasPrefix("@available(")
+    func isHoistableExtensionAttribute(_ attribute: String, for declaration: Declaration) -> Bool {
+        if attribute == "@MainActor" {
+            return !declaration.definesType
+        }
+
+        return attribute.hasPrefix("@available(")
     }
 
     func removableAttributeRange(from startIndex: Int, to endIndex: Int) -> Range<Int>? {

@@ -73,6 +73,47 @@ final class ExtensionAttributesTests: XCTestCase {
         testFormatting(for: input, output, rule: .extensionAttributes, exclude: [.wrapPropertyBodies])
     }
 
+    func testHoistsAvailableAttributeFromNestedTypes() {
+        let input = """
+        extension Foo {
+            @available(iOS 17.0, *)
+            struct Bar {}
+
+            @available(iOS 17.0, *)
+            enum Baz {}
+        }
+        """
+
+        let output = """
+        @available(iOS 17.0, *)
+        extension Foo {
+            struct Bar {}
+
+            enum Baz {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .extensionAttributes)
+    }
+
+    func testDoesntHoistMainActorAttributeFromNestedTypes() {
+        let input = """
+        extension Foo {
+            @MainActor
+            struct Bar {
+                func baaz() {}
+            }
+
+            @MainActor
+            struct Quux {
+                func corge() {}
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .extensionAttributes)
+    }
+
     func testRemovesRedundantAttributesWhenExtensionAlreadyHasAttribute() {
         let input = """
         @MainActor extension Foo {

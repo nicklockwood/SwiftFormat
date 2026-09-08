@@ -4451,7 +4451,6 @@ extension _FormatRules {
         aclSetterModifiers,
         ["final", "dynamic"],
         ["optional", "required"],
-        ["convenience"],
         ["indirect"],
         ["isolated", "nonisolated", "nonisolated(unsafe)"],
         ["lazy"],
@@ -4460,6 +4459,7 @@ extension _FormatRules {
         mutatingModifiers,
         ["prefix", "infix", "postfix"],
         ["async"],
+        ["convenience"],
     ]
 
     /// Global swift functions

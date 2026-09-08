@@ -815,8 +815,6 @@ final class ParsingHelpersTests: XCTestCase {
             "final",
             "dynamic",
             "optional", "required",
-            "convenience",
-            "override",
             "indirect",
             "isolated", "nonisolated", "nonisolated(unsafe)",
             "lazy",
@@ -825,6 +823,8 @@ final class ParsingHelpersTests: XCTestCase {
             "borrowing", "consuming", "mutating", "nonmutating",
             "prefix", "infix", "postfix",
             "async",
+            "convenience",
+            "override",
         ])
     }
 
@@ -846,10 +846,10 @@ final class ParsingHelpersTests: XCTestCase {
             "lazy",
             "final",
             "optional", "required",
-            "convenience",
-            "weak", "unowned", "unowned(safe)", "unowned(unsafe)",
             "prefix", "infix", "postfix",
             "async",
+            "convenience",
+            "weak", "unowned", "unowned(safe)", "unowned(unsafe)",
         ])
     }
 

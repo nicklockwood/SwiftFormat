@@ -195,7 +195,10 @@ extension String {
             let inner = String(baseName.dropFirst().dropLast())
             // If the backticked name contains individual underscores but no spaces,
             // process it through normal camelCase/underscore splitting logic
-            if inner.contains("_"), !inner.contains("__"), !inner.contains(" ") {
+            let containsOtherPunctuation = inner.unicodeScalars.contains {
+                CharacterSet.punctuationCharacters.contains($0) && $0 != "_"
+            }
+            if inner.contains("_"), !inner.contains("__"), !inner.contains(" "), !containsOtherPunctuation {
                 return inner.camelCaseToWords()
             }
             return inner

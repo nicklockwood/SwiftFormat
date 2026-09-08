@@ -27,6 +27,7 @@
 * [enumNamespaces](#enumNamespaces)
 * [environmentEntry](#environmentEntry)
 * [extensionAccessControl](#extensionAccessControl)
+* [extensionAttributes](#extensionAttributes)
 * [fileHeader](#fileHeader)
 * [fileMacro](#fileMacro)
 * [genericExtensions](#genericExtensions)
@@ -1027,6 +1028,33 @@ Option | Description
 +     public func baz() {}
 +     func quux() {}
   }
+```
+
+</details>
+<br/>
+
+## extensionAttributes
+
+Hoist common member attributes onto the extension.
+
+Option | Description
+--- | ---
+`--type-attributes` | Placement for type @attributes: "prev-line", "same-line" or "preserve" (default)
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- extension Foo {
+-     @MainActor func bar() {}
+-     @MainActor func baz() {}
+- }
+
++ @MainActor
++ extension Foo {
++     func bar() {}
++     func baz() {}
++ }
 ```
 
 </details>

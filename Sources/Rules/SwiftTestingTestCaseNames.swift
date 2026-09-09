@@ -218,7 +218,7 @@ extension String {
         if words.count >= 2,
            words[0].count == 1,
            words[0].first?.isLowercase == true,
-           (words[1].allSatisfy(\.isUppercase) || words[1].isPluralizedAcronym)
+           words[1].allSatisfy(\.isUppercase) || words[1].isPluralizedAcronym
         {
             words = [words[0].uppercased() + words[1]] + Array(words.dropFirst(2))
         }

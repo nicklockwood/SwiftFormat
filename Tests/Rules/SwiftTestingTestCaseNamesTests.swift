@@ -1399,6 +1399,60 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
                        options: FormatOptions(swiftVersion: "6.2"))
     }
 
+    func testConvertsMiddlePluralizedAcronymToRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func test_lavaURLs_includesHeroAndAccessoryRowIcons() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `lava URLs includes hero and accessory row icons`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testConvertsTrailingPluralizedAcronymToRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func testURLs() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `URLs`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
     func testPreservesBacktickedInitNameWithUnnamedArgumentLabels() {
         let input = """
         import Testing

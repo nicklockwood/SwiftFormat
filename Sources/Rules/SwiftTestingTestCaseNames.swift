@@ -212,18 +212,20 @@ extension String {
             words.append(contentsOf: String(segment).splitCamelCase())
         }
 
-        // Merge a lone single lowercase leading character with a following all-uppercase word.
-        // This handles acronym-first names after test prefix removal, e.g. "uUID" (from "testUUID") → "UUID".
+        // Merge a lone single lowercase leading character with a following acronym word.
+        // This handles acronym-first names after test prefix removal, e.g. "uUID" (from "testUUID") → "UUID",
+        // and "uRLs" (from "testURLs") → "URLs".
         if words.count >= 2,
            words[0].count == 1,
            words[0].first?.isLowercase == true,
-           words[1].allSatisfy(\.isUppercase)
+           words[1].allSatisfy(\.isUppercase) || words[1].isPluralizedAcronym
         {
             words = [words[0].uppercased() + words[1]] + Array(words.dropFirst(2))
         }
 
-        // Lowercase each word, but preserve all-uppercase words (acronyms like UUID, URL, ABC).
-        return words.map { $0.allSatisfy(\.isUppercase) ? $0 : $0.lowercased() }.joined(separator: " ")
+        // Lowercase each word, but preserve acronym words (UUID, URL, ABC) and pluralized acronyms (URLs, UUIDs).
+        return words.map { $0.allSatisfy(\.isUppercase) || $0.isPluralizedAcronym ? $0 : $0.lowercased() }
+            .joined(separator: " ")
     }
 
     /// Splits a camelCase string into individual words, treating consecutive uppercase letters as acronyms.
@@ -246,6 +248,10 @@ extension String {
                     words.append(currentWord)
                     currentWord = String(char)
                 } else if let next = nextChar, next.isLowercase {
+                    if next == "s", i + 1 == chars.count - 1, currentWord.allSatisfy(\.isUppercase) {
+                        currentWord.append(char)
+                        continue
+                    }
                     // Uppercase sequence followed by lowercase: this char starts a new word
                     // e.g. "UUIDIs" → "UUID" + "Is"
                     words.append(currentWord)
@@ -296,5 +302,11 @@ extension String {
             }
         }
         return result
+    }
+
+    var isPluralizedAcronym: Bool {
+        count >= 3 &&
+            last == "s" &&
+            dropLast().allSatisfy(\.isUppercase)
     }
 }

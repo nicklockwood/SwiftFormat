@@ -17,8 +17,9 @@ public extension FormatRule {
                         "wrap-return-type", "wrap-conditions", "wrap-type-aliases", "wrap-ternary", "wrap-effects",
                         "allow-partial-wrapping"]
     ) { formatter in
-        let maxWidth = formatter.options.maxWidth
-        guard maxWidth > 0 else { return }
+        guard formatter.options.maxWidth > 0 else { return }
+
+        formatter.wrapGenericRequirements()
 
         // Wrap collections first to avoid conflict
         formatter.wrapCollectionsAndArguments(completePartialWrapping: false,
@@ -74,6 +75,115 @@ public extension FormatRule {
         + let foo = bar(baz: 1, quux: 2) +
         +     bar(baz: 3, quux: 4)
         ```
+
+        ```diff
+        - extension Foo where Bar: Baaz, Quux: Quuz {}
+        + extension Foo where
+        +     Bar: Baaz,
+        +     Quux: Quuz {}
+        ```
         """
+    }
+}
+
+extension Formatter {
+    func wrapGenericRequirements() {
+        let declarations = withPreservedRuleState {
+            let formattingRange = range
+            range = nil
+            defer { range = formattingRange }
+            return parseDeclarations()
+        }
+        let functionLikeDeclarationKeywords = ["func", "init", "subscript"]
+
+        withPreservedRuleState {
+            forEach(.keyword("where")) { whereIndex, _ in
+                let maxWidth = options.maxWidth
+                guard maxWidth > 0 else { return }
+
+                let declarationKeywordIndex: Int
+                let whereClauseRange: ClosedRange<Int>
+                if let functionKeywordIndex = index(before: whereIndex, where: { token in
+                    functionLikeDeclarationKeywords.contains(token.string)
+                }), tokens[functionKeywordIndex].string != "init"
+                    || last(.nonSpaceOrCommentOrLinebreak, before: functionKeywordIndex)?.string != ".",
+                    let parsedRange = parseFunctionDeclaration(keywordIndex: functionKeywordIndex)?.whereClauseRange,
+                    parsedRange.lowerBound == whereIndex
+                {
+                    declarationKeywordIndex = functionKeywordIndex
+                    whereClauseRange = parsedRange
+                } else {
+                    guard let declaration = declarations.declaration(containing: whereIndex),
+                          whereIndex > declaration.keywordIndex,
+                          Token.swiftTypeKeywords.contains(declaration.keyword)
+                          || declaration.keyword == "associatedtype"
+                    else { return }
+                    if let typeDeclaration = declaration as? TypeDeclaration,
+                       whereIndex > typeDeclaration.openBraceIndex
+                    {
+                        return
+                    }
+                    declarationKeywordIndex = declaration.keywordIndex
+                    whereClauseRange = parseGenericTypes(from: whereIndex).range
+                }
+
+                guard !tokens[whereClauseRange].contains(where: { token in
+                    if case let .commentBody(comment) = token {
+                        guard let directiveRange = comment.range(of: "swiftformat:") else { return false }
+                        return comment[directiveRange.upperBound...]
+                            .trimmingCharacters(in: .whitespaces)
+                            .hasPrefix("options")
+                    }
+                    return false
+                }) else { return }
+
+                guard let firstRequirementIndex = index(
+                    of: .nonSpaceOrCommentOrLinebreak,
+                    after: whereIndex
+                ), firstRequirementIndex <= whereClauseRange.upperBound else { return }
+
+                var requirementIndices = [firstRequirementIndex]
+                var commaIndices = [Int]()
+                var searchIndex = firstRequirementIndex
+                while let commaIndex = index(
+                    of: .delimiter(","),
+                    in: searchIndex ..< whereClauseRange.upperBound
+                ), let nextRequirementIndex = index(
+                    of: .nonSpaceOrCommentOrLinebreak,
+                    after: commaIndex
+                ), nextRequirementIndex <= whereClauseRange.upperBound {
+                    commaIndices.append(commaIndex)
+                    requirementIndices.append(nextRequirementIndex)
+                    searchIndex = nextRequirementIndex
+                }
+
+                guard requirementIndices.allSatisfy({ isEnabled(at: $0) }) else { return }
+
+                var lineIndex = whereIndex
+                var isOverMaximumWidth = false
+                while lineIndex <= whereClauseRange.upperBound {
+                    let lineEnd = min(endOfLine(at: lineIndex), whereClauseRange.upperBound + 1)
+                    if lineLength(from: startOfLine(at: lineIndex), upTo: lineEnd) > maxWidth {
+                        isOverMaximumWidth = true
+                        break
+                    }
+                    lineIndex = lineEnd + 1
+                }
+                let isPartiallyWrapped = (requirementIndices + commaIndices).contains { index in
+                    last(.nonSpaceOrComment, before: index)?.isLinebreak == true
+                        || next(.nonSpaceOrComment, after: index)?.isLinebreak == true
+                }
+                guard isOverMaximumWidth || isPartiallyWrapped else { return }
+
+                wrapMultilineStatement(
+                    startIndex: declarationKeywordIndex,
+                    delimiterIndices: requirementIndices,
+                    endIndex: whereClauseRange.upperBound,
+                    forceWrap: true,
+                    leadingDelimiter: .delimiter(","),
+                    normalizeSpaceAfterDelimiter: false
+                )
+            }
+        }
     }
 }

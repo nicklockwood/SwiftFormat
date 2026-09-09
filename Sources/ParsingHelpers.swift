@@ -3780,10 +3780,10 @@ extension Formatter {
             currentIndex = funcNameIndex
         }
 
-        // If this is a failable initializer (`init?`), skip over the ? token
+        // If this is a failable initializer (`init?` or `init!`), skip over the postfix operator
         if tokens[keywordIndex] == .keyword("init"),
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
-           tokens[nextToken] == .operator("?", .postfix)
+           tokens[nextToken] == .operator("?", .postfix) || tokens[nextToken] == .operator("!", .postfix)
         {
             currentIndex = nextToken
         }

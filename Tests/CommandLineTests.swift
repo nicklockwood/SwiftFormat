@@ -953,6 +953,137 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(errors, [])
     }
 
+    func testConfigFileWithHeaderCreationDateFilter() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            print(message)
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        --swift-version 6.0
+
+        [New test files]
+        --filter **/Tests/**,header-creation-date-after:2026-08-31
+        --enable preferSwiftTesting
+        """)
+
+        let testCase = """
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeatureHasNoBugs() {
+                let myFeature = MyFeature()
+                XCTAssertFalse(myFeature.hasBugs)
+            }
+        }
+        """
+
+        let newTestFile = try createTmpFile("Test/Tests/NewTests.swift", contents: """
+        //  Created on 9/1/26.
+
+        import XCTest
+
+        \(testCase)
+        """)
+
+        let oldTestFile = try createTmpFile("Test/Tests/OldTests.swift", contents: """
+        //  Created on 8/30/26.
+
+        import XCTest
+
+        \(testCase)
+        """)
+
+        let undatedTestFile = try createTmpFile("Test/Tests/UndatedTests.swift", contents: """
+        import XCTest
+
+        \(testCase)
+        """)
+
+        _ = processArguments([
+            "",
+            configURL.deletingLastPathComponent().path,
+            "--config", configURL.path,
+        ], in: "")
+
+        // Created after 8/31/26, so is converted to Swift Testing
+        XCTAssertEqual(try String(contentsOf: newTestFile, encoding: .utf8), """
+        //  Created on 9/1/26.
+
+        import Foundation
+        import Testing
+
+        final class MyFeatureTests {
+            @Test func myFeatureHasNoBugs() {
+                let myFeature = MyFeature()
+                #expect(!myFeature.hasBugs)
+            }
+        }
+
+        """)
+
+        // Created before 8/31/26, so keeps using XCTest
+        XCTAssertEqual(try String(contentsOf: oldTestFile, encoding: .utf8), """
+        //  Created on 8/30/26.
+
+        import XCTest
+
+        \(testCase)
+
+        """)
+
+        // Has no creation date, so doesn't match the filter
+        XCTAssertEqual(try String(contentsOf: undatedTestFile, encoding: .utf8), """
+        import XCTest
+
+        \(testCase)
+
+        """)
+
+        for tempFile in [configURL, newTestFile, oldTestFile, undatedTestFile] {
+            try FileManager.default.removeItem(at: tempFile)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
+    func testConfigFileWithInvalidHeaderCreationDateFilter() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            print(message)
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        --filter header-creation-date-after:tomorrowish
+        --indent 2
+        """)
+
+        let file = try createTmpFile("Test/Foo/Foo.swift", contents: """
+        func foo() {}
+        """)
+
+        _ = processArguments([
+            "",
+            configURL.deletingLastPathComponent().path,
+            "--config", configURL.path,
+        ], in: "")
+
+        XCTAssert(
+            errors.contains(where: { $0.contains("Invalid date 'tomorrowish'") }),
+            "\(errors)"
+        )
+
+        for tempFile in [configURL, file] {
+            try FileManager.default.removeItem(at: tempFile)
+        }
+    }
+
     func testBaseConfigFileWithFilters() throws {
         var errors = [String]()
 

@@ -1033,19 +1033,19 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_US")), date("2026-09-01"))
     }
 
-    func testParsesDateInBlockCommentHeader() {
+    func testIgnoresDateInBlockCommentHeader() {
         let source = source(header: """
         /*
          * Foo.swift
          * Created on 2026-09-01.
          */
         """)
-        XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_US")), date("2026-09-01"))
+        XCTAssertNil(source.headerCreationDate(locale: .identifier("en_US")))
     }
 
     func testParsesSupportedHeaderDateFormats() {
-        for dateString in ["2026-09-01", "2026/09/01", "2026-9-1", "09/01/2026",
-                           "9/1/2026", "09/01/26", "9/1/26", "09-01-2026"]
+        for dateString in ["2026-09-01", "2026/09/01", "2026.09.01", "2026-9-1", "09/01/2026",
+                           "9/1/2026", "09/01/26", "9/1/26", "09-01-2026", "09.01.2026"]
         {
             let source = source(header: "//  Created on \(dateString).")
             XCTAssertEqual(
@@ -1056,7 +1056,7 @@ final class ArgumentsTests: XCTestCase {
     }
 
     func testIgnoresUnsupportedHeaderDateFormats() {
-        for dateString in ["1 September 2026", "Sep 1, 2026", "2026.09.01"] {
+        for dateString in ["1 September 2026", "Sep 1, 2026", "2026_09_01"] {
             let source = source(header: "//  Created on \(dateString).")
             XCTAssertNil(source.headerCreationDate(locale: .identifier("en_US")), dateString)
         }
@@ -1067,6 +1067,19 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_US")), date("2018-07-08"))
         XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_GB")), date("2018-08-07"))
         XCTAssertEqual(source.headerCreationDate(locale: .identifier("de_DE")), date("2018-08-07"))
+    }
+
+    func testParsesHeaderDateInLocaleOrderRegardlessOfSeparator() {
+        // `de_DE` uses `.` and `en_US` uses `/`, but either separator is accepted in both
+        for dateString in ["07/08/2018", "07-08-2018", "07.08.2018"] {
+            let source = source(header: "//  Created on \(dateString).")
+            XCTAssertEqual(
+                source.headerCreationDate(locale: .identifier("en_US")), date("2018-07-08"), dateString
+            )
+            XCTAssertEqual(
+                source.headerCreationDate(locale: .identifier("de_DE")), date("2018-08-07"), dateString
+            )
+        }
     }
 
     func testHeaderDateOnlyParsesInTheLocalesOwnOrder() {

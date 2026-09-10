@@ -147,23 +147,27 @@ public enum ConfigFilter: Hashable, CustomStringConvertible {
 extension String {
     /// The date the file was created, from parsing the "Created on" date in the header comment.
     func headerCreationDate(locale: FormatLocale) -> Date? {
-        let formatter = Formatter(tokenize(self))
-        guard let headerRange = formatter.headerCommentTokenRange(includingDirectives: ["*"]) else {
-            return nil
-        }
+        // Only parse the header comment, to avoid unnecessarily tokenizing the entire file here
+        let headerLines = components(separatedBy: .newlines)
+            .drop(while: { $0.isEmpty })
+            .prefix(while: { $0.trimmingCharacters(in: .whitespaces).hasPrefix("//") })
 
-        let header = formatter.tokens[headerRange].map(\.string).joined()
+        let header = tokenize(headerLines.joined(separator: "\n")).compactMap { token -> String? in
+            guard case let .commentBody(body) = token else { return nil }
+            return body
+        }.joined(separator: "\n")
+
         return header.dateSubstrings.lazy.compactMap { $0.parsedDate(locale: locale) }.first
     }
 
-    /// Substrings that look like they could be a date, e.g. `2026-09-01` or `9/1/26`
+    /// Substrings that look like they could be a date, e.g. `2026-09-01`, `9/1/26`, or `01.09.2026`
     var dateSubstrings: [String] {
         if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
             return matches(of: Regex {
                 Repeat(.digit, 1 ... 4)
-                One(.anyOf("-/"))
+                One(.anyOf("-/."))
                 Repeat(.digit, 1 ... 2)
-                One(.anyOf("-/"))
+                One(.anyOf("-/."))
                 Repeat(.digit, 1 ... 4)
             }).map { String($0.output) }
         }
@@ -172,7 +176,7 @@ extension String {
         var substrings = [String]()
         var searchRange = startIndex ..< endIndex
         while let range = range(
-            of: "\\d{1,4}[-/]\\d{1,2}[-/]\\d{1,4}", options: .regularExpression, range: searchRange
+            of: "\\d{1,4}[-/.]\\d{1,2}[-/.]\\d{1,4}", options: .regularExpression, range: searchRange
         ) {
             substrings.append(String(self[range]))
             searchRange = range.upperBound ..< searchRange.upperBound
@@ -180,22 +184,33 @@ extension String {
         return substrings
     }
 
-    /// Parses this date string as `YYYY-MM-DD` or `YYYY/MM/DD`, and otherwise using the
-    /// locale's own numeric date format, which accepts either a two or four digit year
-    /// and components that are zero-padded or not.
+    /// Parses this date string as `YYYY-MM-DD`, and otherwise using the locale's own
+    /// numeric date format, which accepts either a two or four digit year and
+    /// components that are zero-padded or not. Any of `-`, `/`, or `.` can be
+    /// used as the separator, regardless of the locale's own separator.
     func parsedDate(locale: FormatLocale) -> Date? {
+        guard let separator = first(where: { "-/.".contains($0) }) else {
+            return nil
+        }
+
         // A four digit leading component can only be a year. This is checked because `yyyy`
         // also accepts two digits, so would otherwise parse `9/1/26` as the year 0009.
         if prefix(while: \.isNumber).count == 4 {
-            return date(format: "yyyy-MM-dd") ?? date(format: "yyyy/MM/dd")
+            return date(format: ["yyyy", "MM", "dd"].joined(separator: String(separator)))
         }
 
         // e.g. `M/d/y` in `en_US`, `dd/MM/y` in `en_GB`, or `d.M.y` in `de_DE`
-        guard let format = DateFormatter.dateFormat(
+        guard let template = DateFormatter.dateFormat(
             fromTemplate: "yMd", options: 0, locale: locale.locale
         ) else {
             return nil
         }
+
+        // Use the separator from this date string rather than the locale's own separator,
+        // since `DateFormatter` on Linux requires the separators to match exactly.
+        let format = template.split(whereSeparator: { !$0.isLetter })
+            .joined(separator: String(separator))
+
         return date(format: format, locale: locale.locale)
     }
 

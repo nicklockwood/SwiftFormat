@@ -15,7 +15,7 @@ public extension FormatRule {
         `try #require(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
         """,
         disabledByDefault: true,
-        options: ["guard-like-if-statements"],
+        options: ["guard-like-if-statements", "boolean-guards-in-tests"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
@@ -172,6 +172,13 @@ public extension FormatRule {
                         // Skip if #available / #unavailable (can't be converted to #expect)
                         return true
                     case .booleanExpression:
+                        // Converting a boolean guard discards its early exit, so any code
+                        // after the guard now runs even when the condition is false.
+                        // Skip unless the caller opts in with `--boolean-guards-in-tests convert`.
+                        if isGuard, !formatter.options.booleanGuardsInTests {
+                            return true
+                        }
+
                         // XCTAssert doesn't halt the test, so we can't use it to replace
                         // if statement conditions. For guard statements, XCTAssert is fine
                         // since the guard else block handles early exit.

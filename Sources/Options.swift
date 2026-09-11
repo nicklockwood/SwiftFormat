@@ -934,6 +934,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var suiteNameFormat: SwiftTestingNameFormat
     public var testCaseAccessControl: Visibility
     public var guardLikeIfStatements: Bool
+    public var booleanGuardsInTests: Bool
     public var redundantOptionalBinding: RedundantOptionalBindingMode
     public var singleLineTernary: SingleLineTernary
 
@@ -1087,6 +1088,7 @@ public struct FormatOptions: CustomStringConvertible {
                 suiteNameFormat: SwiftTestingNameFormat = .preserve,
                 testCaseAccessControl: Visibility = .internal,
                 guardLikeIfStatements: Bool = false,
+                booleanGuardsInTests: Bool = true,
                 redundantOptionalBinding: RedundantOptionalBindingMode = .sameNameOnly,
                 singleLineTernary: SingleLineTernary = .convert,
                 // Doesn't really belong here, but hard to put elsewhere
@@ -1229,6 +1231,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.suiteNameFormat = suiteNameFormat
         self.testCaseAccessControl = testCaseAccessControl
         self.guardLikeIfStatements = guardLikeIfStatements
+        self.booleanGuardsInTests = booleanGuardsInTests
         self.redundantOptionalBinding = redundantOptionalBinding
         self.singleLineTernary = singleLineTernary
         self.indentComments = indentComments

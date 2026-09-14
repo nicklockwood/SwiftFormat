@@ -194,6 +194,17 @@ public enum RedundantOptionalBindingMode: String, CaseIterable {
     case always
 }
 
+/// How the noGuardInTests rule handles guards with boolean conditions
+public enum BooleanGuardsInTests: String, CaseIterable {
+    /// Convert boolean guards in every test framework, the behaviour before this option existed
+    case convert
+    /// Preserve boolean guards in every test framework
+    case preserve
+    /// Preserve boolean guards under XCTest, where `XCTAssert` does not halt the test,
+    /// and convert them under Swift Testing, where `try #require` throws and so keeps the early exit
+    case preserveXCTest = "preserve-xctest"
+}
+
 public enum TrailingCommas: String, CaseIterable {
     case never
     case always
@@ -934,7 +945,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var suiteNameFormat: SwiftTestingNameFormat
     public var testCaseAccessControl: Visibility
     public var guardLikeIfStatements: Bool
-    public var booleanGuardsInTests: Bool
+    public var booleanGuardsInTests: BooleanGuardsInTests
     public var redundantOptionalBinding: RedundantOptionalBindingMode
     public var singleLineTernary: SingleLineTernary
 
@@ -1088,7 +1099,7 @@ public struct FormatOptions: CustomStringConvertible {
                 suiteNameFormat: SwiftTestingNameFormat = .preserve,
                 testCaseAccessControl: Visibility = .internal,
                 guardLikeIfStatements: Bool = false,
-                booleanGuardsInTests: Bool = true,
+                booleanGuardsInTests: BooleanGuardsInTests = .preserveXCTest,
                 redundantOptionalBinding: RedundantOptionalBindingMode = .sameNameOnly,
                 singleLineTernary: SingleLineTernary = .convert,
                 // Doesn't really belong here, but hard to put elsewhere

@@ -172,11 +172,19 @@ public extension FormatRule {
                         // Skip if #available / #unavailable (can't be converted to #expect)
                         return true
                     case .booleanExpression:
-                        // Converting a boolean guard discards its early exit, so any code
-                        // after the guard now runs even when the condition is false.
-                        // Skip unless the caller opts in with `--boolean-guards-in-tests convert`.
-                        if isGuard, !formatter.options.booleanGuardsInTests {
-                            return true
+                        // Converting a boolean guard discards its early exit whenever the
+                        // replacement does not halt, so code after the guard would run with
+                        // the condition false. That is true of `XCTAssert` but not of
+                        // `try #require`, which throws, so the two frameworks differ.
+                        if isGuard {
+                            switch formatter.options.booleanGuardsInTests {
+                            case .preserve:
+                                return true
+                            case .preserveXCTest:
+                                if testFramework == .xcTest { return true }
+                            case .convert:
+                                break
+                            }
                         }
 
                         // XCTAssert doesn't halt the test, so we can't use it to replace

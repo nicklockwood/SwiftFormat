@@ -1512,10 +1512,8 @@ struct _Descriptors {
     let booleanGuardsInTests = OptionDescriptor(
         argumentName: "boolean-guards-in-tests",
         displayName: "Boolean Guards In Tests",
-        help: "Convert guards with boolean conditions in tests:",
-        keyPath: \.booleanGuardsInTests,
-        trueValues: ["convert"],
-        falseValues: ["preserve"]
+        help: "Boolean guards: \"preserve-xctest\" (default), \"preserve\" or \"convert\"",
+        keyPath: \.booleanGuardsInTests
     )
 
     let redundantOptionalBinding = OptionDescriptor(

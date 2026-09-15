@@ -181,7 +181,9 @@ public extension FormatRule {
                             case .preserve:
                                 return true
                             case .preserveXCTest:
-                                if testFramework == .xcTest { return true }
+                                if testFramework == .xcTest {
+                                    return true
+                                }
                             case .convert:
                                 break
                             }

@@ -168,11 +168,17 @@ public extension FormatRule {
                         break
                     }
                 }
+                let isOptionalOpaqueOrExistentialType = formatter.isOptionalOpaqueOrExistentialType(in: i ... closingIndex)
                 guard formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                       formatter.index(in: i + 1 ..< closingIndex, where: {
                           switch $0 {
                           case .operator(_, .infix), .identifier("any"), .identifier("some"), .identifier("each"),
                                .keyword("as"), .keyword("is"), .keyword("try"), .keyword("await"):
+                              if formatter.options.swiftVersion >= "6.4", isOptionalOpaqueOrExistentialType,
+                                 [.identifier("any"), .identifier("some")].contains($0)
+                              {
+                                  return false
+                              }
                               switch prevToken {
                               // TODO: add option to always strip parens in this case (or only for boolean operators?)
                               case .operator("=", .infix) where $0 == .operator("->", .infix):
@@ -181,6 +187,9 @@ public extension FormatRule {
                                   return true
                               default:
                                   break
+                              }
+                              if formatter.options.swiftVersion >= "6.4", isOptionalOpaqueOrExistentialType {
+                                  return false
                               }
                               switch nextToken {
                               case .operator(_, .postfix), .operator(_, .infix), .keyword("as"), .keyword("is"):
@@ -260,5 +269,18 @@ extension Formatter {
             return nil
         }
         return startIndex ... endIndex
+    }
+
+    func isOptionalOpaqueOrExistentialType(in range: ClosedRange<Int>) -> Bool {
+        guard next(.nonSpaceOrCommentOrLinebreak, after: range.upperBound) == .operator("?", .postfix),
+              let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound),
+              [.identifier("any"), .identifier("some")].contains(tokens[firstTokenIndex]),
+              let type = parseType(at: firstTokenIndex, excludeProtocolCompositions: true),
+              let lastTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound)
+        else {
+            return false
+        }
+
+        return type.range.upperBound == lastTokenIndex
     }
 }

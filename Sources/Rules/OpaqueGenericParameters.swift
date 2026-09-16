@@ -231,10 +231,12 @@ public extension FormatRule {
                 if let matchingGenericType = genericsEligibleToRemove.first(where: { $0.name == formatter.tokens[index].string }),
                    var opaqueParameter = matchingGenericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny)
                 {
-                    // If this instance of the type is followed by a `.` or `?` then we have to wrap the new type in parens
-                    // (e.g. changing `Foo.Type` to `some Any.Type` breaks the build, it needs to be `(some Any).Type`)
+                    // If this instance of the type is followed by a `.` then we have to wrap the new type in parens
+                    // (e.g. changing `Foo.Type` to `some Any.Type` breaks the build, it needs to be `(some Any).Type`).
+                    // Optional opaque and existential types support `some Foo?` and `any Foo?` in Swift 6.4+.
                     if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
-                       [.operator(".", .infix), .operator("?", .postfix)].contains(nextToken)
+                       nextToken == .operator(".", .infix) ||
+                       (nextToken == .operator("?", .postfix) && formatter.options.swiftVersion < "6.4")
                     {
                         opaqueParameter.insert(.startOfScope("("), at: 0)
                         opaqueParameter.append(.endOfScope(")"))

@@ -768,6 +768,36 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, rule: .redundantParens)
     }
 
+    func testRedundantParensRemovedAroundOptionalAnyTypeInSwift64() {
+        let input = """
+        let foo: (any Foo)?
+        """
+        let output = """
+        let foo: any Foo?
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantParens, options: options)
+    }
+
+    func testRedundantParensRemovedAroundOptionalSomeTypeInSwift64() {
+        let input = """
+        let foo: (some Publisher<String, Never>)?
+        """
+        let output = """
+        let foo: some Publisher<String, Never>?
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantParens, options: options)
+    }
+
+    func testParensNotRemovedAroundOptionalAnyComposedTypeInSwift64() {
+        let input = """
+        let foo: (any Foo & Bar)?
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, rule: .redundantParens, options: options)
+    }
+
     func testRequiredParensNotRemovedAroundAnyTypeSelf() {
         let input = """
         let foo = (any Foo).self

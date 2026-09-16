@@ -98,8 +98,9 @@ public extension FormatRule {
                     return
                 }
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
-                if [.operator("&", .infix), .operator("->", .infix),
-                    .identifier("some"), .identifier("any")].contains(where: typeTokens.contains)
+                if [.operator("&", .infix), .operator("->", .infix)].contains(where: typeTokens.contains) ||
+                    (formatter.options.swiftVersion < "6.4" &&
+                        [.identifier("some"), .identifier("any")].contains(where: typeTokens.contains))
                 {
                     typeTokens.insert(.startOfScope("("), at: typeTokens.startIndex)
                     typeTokens.append(.endOfScope(")"))

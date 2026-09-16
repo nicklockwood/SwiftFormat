@@ -4217,6 +4217,13 @@ Option | Description
 +     bar(baz: 3, quux: 4)
 ```
 
+```diff
+- extension Foo where Bar: Baaz, Quux: Quuz {}
++ extension Foo where
++     Bar: Baaz,
++     Quux: Quuz {}
+```
+
 </details>
 <br/>
 

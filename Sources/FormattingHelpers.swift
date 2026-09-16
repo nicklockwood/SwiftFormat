@@ -997,65 +997,88 @@ extension Formatter {
                 }
             }
         }
+    }
 
-        /// Wraps / re-wraps a multi-line statement where each delimiter index
-        /// should be the first token on its line, if the statement
-        /// is longer than the max width or there is already a linebreak
-        /// adjacent to one of the delimiters
-        @discardableResult
-        func wrapMultilineStatement(
-            startIndex: Int,
-            delimiterIndices: [Int],
-            endIndex: Int
-        ) -> Bool {
-            // ** Decide whether or not this statement needs to be wrapped / re-wrapped
-            let range = startOfLine(at: startIndex) ... endIndex
-            let length = tokens[range].map(\.string).joined().count
+    /// Wraps / re-wraps a multi-line statement where each delimiter index
+    /// should be the first token on its line, if the statement
+    /// is longer than the max width or there is already a linebreak
+    /// adjacent to one of the delimiters
+    @discardableResult
+    func wrapMultilineStatement(
+        startIndex: Int,
+        delimiterIndices: [Int],
+        endIndex: Int,
+        forceWrap: Bool = false,
+        leadingDelimiter: Token? = nil,
+        normalizeSpaceAfterDelimiter: Bool = true
+    ) -> Bool {
+        // ** Decide whether or not this statement needs to be wrapped / re-wrapped
+        let range = startOfLine(at: startIndex) ... endIndex
+        let length = tokens[range].map(\.string).joined().count
 
-            // Only wrap if this line if longer than the max width...
-            let overMaximumWidth = maxWidth > 0 && length > maxWidth
+        // Only wrap if this line if longer than the max width...
+        let overMaximumWidth = options.maxWidth > 0 && length > options.maxWidth
 
-            // ... or if there is at least one delimiter currently adjacent to a linebreak,
-            // which means this statement is already being wrapped in some way
-            // and should be re-wrapped to the expected way if necessary
-            let delimitersAdjacentToLinebreak = delimiterIndices.filter { delimiterIndex in
-                last(.nonSpaceOrComment, before: delimiterIndex)?.is(.linebreak) == true
-                    || next(.nonSpaceOrComment, after: delimiterIndex)?.is(.linebreak) == true
-            }.count
+        // ... or if there is at least one delimiter currently adjacent to a linebreak,
+        // which means this statement is already being wrapped in some way
+        // and should be re-wrapped to the expected way if necessary
+        let delimitersAdjacentToLinebreak = delimiterIndices.filter { delimiterIndex in
+            last(.nonSpaceOrComment, before: delimiterIndex)?.is(.linebreak) == true
+                || next(.nonSpaceOrComment, after: delimiterIndex)?.is(.linebreak) == true
+        }.count
 
-            if !(overMaximumWidth || delimitersAdjacentToLinebreak > 0) {
-                return false
-            }
+        if !(forceWrap || overMaximumWidth || delimitersAdjacentToLinebreak > 0) {
+            return false
+        }
 
-            // ** Now that we know this is supposed to wrap,
-            //    make sure each delimiter is the start of a line
-            let indent = currentIndentForLine(at: startIndex) + options.indent
+        // ** Now that we know this is supposed to wrap,
+        //    make sure each delimiter is the start of a line
+        let indent = currentIndentForLine(at: startIndex) + options.indent
 
-            for indexToWrap in delimiterIndices.reversed() {
-                // if this item isn't already on its own line, then wrap it
-                if last(.nonSpaceOrComment, before: indexToWrap)?.is(.linebreak) == false {
-                    // Remove the space immediately before this token if present,
-                    // so it isn't orphaned on the previous line once we wrap
-                    if tokens[indexToWrap - 1].isSpace {
-                        removeToken(at: indexToWrap - 1)
-                    }
-
-                    insertSpace(indent, at: indexToWrap - 1)
-                    insertLinebreak(at: indexToWrap - 1)
-
-                    // While we're here, make sure there's exactly one space after the delimiter
-                    let updatedAndIndex = indexToWrap + 1
-                    if let nextExpressionIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: updatedAndIndex) {
-                        replaceTokens(
-                            in: (updatedAndIndex + 1) ..< nextExpressionIndex,
-                            with: .space(" ")
-                        )
-                    }
+        for originalIndexToWrap in delimiterIndices.reversed() {
+            var indexToWrap = originalIndexToWrap
+            if let leadingDelimiter,
+               let leadingDelimiterIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: indexToWrap),
+               tokens[leadingDelimiterIndex] == leadingDelimiter,
+               last(.nonSpaceOrComment, before: leadingDelimiterIndex)?.isLinebreak == true,
+               let previousTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: leadingDelimiterIndex)
+            {
+                let whitespaceRange = (previousTokenIndex + 1) ..< leadingDelimiterIndex
+                if !tokens[whitespaceRange].contains(where: \.isComment) {
+                    removeTokens(in: whitespaceRange)
+                    indexToWrap -= whitespaceRange.count
+                } else {
+                    indexToWrap = leadingDelimiterIndex
                 }
             }
 
-            return true
+            // if this item isn't already on its own line, then wrap it
+            if last(.nonSpaceOrComment, before: indexToWrap)?.is(.linebreak) == false {
+                // Remove the space immediately before this token if present,
+                // so it isn't orphaned on the previous line once we wrap
+                var insertionIndex = indexToWrap
+                if tokens[indexToWrap - 1].isSpace {
+                    removeToken(at: indexToWrap - 1)
+                    insertionIndex -= 1
+                }
+
+                insertSpace(indent, at: insertionIndex)
+                insertLinebreak(at: insertionIndex)
+
+                // While we're here, make sure there's exactly one space after the delimiter
+                let updatedDelimiterIndex = insertionIndex + 2
+                if normalizeSpaceAfterDelimiter,
+                   let nextExpressionIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: updatedDelimiterIndex)
+                {
+                    replaceTokens(
+                        in: (updatedDelimiterIndex + 1) ..< nextExpressionIndex,
+                        with: .space(" ")
+                    )
+                }
+            }
         }
+
+        return true
     }
 
     /// Returns the index where the `wrap` rule should add the next linebreak in the line at the selected index.

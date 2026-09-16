@@ -1193,6 +1193,7 @@
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+				__DIAGNOSE_INVALID_DEPLOYMENT_TARGET_AS_ERROR = NO;
 			};
 			name = Debug;
 		};
@@ -1251,6 +1252,7 @@
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+				__DIAGNOSE_INVALID_DEPLOYMENT_TARGET_AS_ERROR = NO;
 			};
 			name = Release;
 		};

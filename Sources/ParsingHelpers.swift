@@ -2834,12 +2834,7 @@ extension Formatter {
                     partIndex = nextPartIndex
                 }
                 let range = startIndex ..< endIndex as Range
-                let accessLevel: String? = tokens[range].lazy.compactMap { token -> String? in
-                    guard case let .keyword(kw) = token, _FormatRules.aclModifiers.contains(kw) else {
-                        return nil
-                    }
-                    return kw
-                }.first
+                let accessLevel: String? = tokens[range].lazy.compactMap(\.importAccessLevel).first
                 importRanges.append(ImportRange(
                     module: name,
                     range: range,
@@ -2871,8 +2866,7 @@ extension Formatter {
                 let nextToken = tokens[nextTokenIndex]
                 let isImportKeyword = nextToken == .keyword("import")
                 // Access modifiers only continue the import block when they are immediately followed by import.
-                let isAccessModifierBeforeImport = nextToken.isKeyword &&
-                    _FormatRules.aclModifiers.contains(nextToken.string) &&
+                let isAccessModifierBeforeImport = nextToken.importAccessLevel != nil &&
                     next(.nonSpaceOrComment, after: nextTokenIndex) == .keyword("import")
                 if !isImportKeyword, !isAccessModifierBeforeImport {
                     // End of imports
@@ -4558,5 +4552,15 @@ extension Token {
         default:
             return false
         }
+    }
+}
+
+extension Token {
+    /// The access level this token sets on an `import` (SE-0409); `package` is tokenized as an identifier, not a keyword
+    var importAccessLevel: String? {
+        guard isKeyword || isIdentifier, _FormatRules.aclModifiers.contains(string) else {
+            return nil
+        }
+        return string
     }
 }

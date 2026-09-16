@@ -458,6 +458,33 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
+    func testAccessControlSortPackageImport() {
+        let input = """
+        import Foo
+        package import Bar
+        public import Baz
+        """
+        let output = """
+        public import Baz
+        package import Bar
+        import Foo
+        """
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testPackageImportContinuesImportBlock() {
+        let input = """
+        import Foo
+        package import Bar
+        """
+        let output = """
+        package import Bar
+        import Foo
+        """
+        testFormatting(for: input, output, rule: .sortImports)
+    }
+
     func testAccessControlSortAlphaWithinLevel() {
         let input = """
         public import Zebra

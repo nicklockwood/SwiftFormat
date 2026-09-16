@@ -24,6 +24,7 @@ public extension FormatRule {
             switch typeDeclaration.keyword {
             case "class":
                 guard !typeDeclaration.body.containsMutableStoredInstanceVar else { return }
+                guard !typeDeclaration.body.containsDeinitializer else { return }
                 guard typeDeclaration.conformances.isEmpty else { return }
                 var keywordIndex = typeDeclaration.keywordIndex
 
@@ -90,6 +91,12 @@ extension Collection<Declaration> {
     var containsEnumCaseDeclaration: Bool {
         containsRecursiveDeclaration { declaration in
             declaration.keyword == "case"
+        }
+    }
+
+    var containsDeinitializer: Bool {
+        containsRecursiveDeclaration { declaration in
+            declaration.keyword == "deinit"
         }
     }
 

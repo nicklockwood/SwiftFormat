@@ -289,6 +289,28 @@ final class TypeSugarTests: XCTestCase {
         testFormatting(for: input, output, rule: .typeSugar)
     }
 
+    func testUnwrappedOptionalSomeNotParenthesizedInSwift64() {
+        let input = """
+        func foo() -> Optional<some Publisher<String, Never>> {}
+        """
+        let output = """
+        func foo() -> some Publisher<String, Never>? {}
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .typeSugar, options: options)
+    }
+
+    func testUnwrappedOptionalAnyNotParenthesizedInSwift64() {
+        let input = """
+        func foo() -> Optional<any Publisher<String, Never>> {}
+        """
+        let output = """
+        func foo() -> any Publisher<String, Never>? {}
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .typeSugar, options: options)
+    }
+
     // swift parser bug
 
     func testAvoidSwiftParserBugWithClosuresInsideArrays() {

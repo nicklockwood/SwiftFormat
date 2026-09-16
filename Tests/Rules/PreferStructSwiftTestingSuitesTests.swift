@@ -91,6 +91,25 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         )
     }
 
+    func testDoesNotConvertClassSuiteWithDeinit() {
+        let input = """
+        import Testing
+
+        final class MyFeatureTests {
+            @Test func testFeature() {}
+
+            deinit {
+                Observatory.shared.reset()
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .preferStructSwiftTestingSuites,
+            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+        )
+    }
+
     func testDoesNotConvertClassSuiteWithSuperclass() {
         let input = """
         import Testing
@@ -163,6 +182,39 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         import Testing
 
         struct MyFeatureTests {
+            @Test func feature() {
+                #expect(true)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .preferStructSwiftTestingSuites, .sortImports], options: options)
+    }
+
+    func testDoesNotConvertXCTestClassWithTearDownWhenCombinedWithPreferSwiftTesting() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            override func tearDown() {
+                super.tearDown()
+                Observatory.shared.reset()
+            }
+
+            func testFeature() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+        let output = """
+        import Foundation
+        import Testing
+
+        final class MyFeatureTests {
+            deinit {
+                Observatory.shared.reset()
+            }
+
             @Test func feature() {
                 #expect(true)
             }

@@ -292,7 +292,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testPreserveFailMessageWithInterpolations() {
@@ -317,7 +317,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testNoMangleNontrivialGuardBody() {
@@ -388,7 +388,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
     }
 
     func testReplaceMultipleGuardConditionsWithMixedPatterns() {
@@ -417,7 +417,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
     }
 
     func testSimpleMultipleConditions() {
@@ -443,7 +443,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
     }
 
     func testSimpleMultipleConditions2() {
@@ -469,7 +469,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapConditionalBodies])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.wrapConditionalBodies])
     }
 
     func testHandlesFiveConditions() {
@@ -594,7 +594,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
     }
 
     // MARK: - Swift Testing tests
@@ -922,7 +922,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
     }
 
     // MARK: - Variable shadowing tests
@@ -1174,7 +1174,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testConvertsBooleanConditionsToRequire() {
@@ -1235,7 +1235,117 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
+    }
+
+    func testPreservesBooleanGuardWithOptionDisabled() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard polygons.count > 1 else {
+                    return
+                }
+
+                let a = Set(polygons[0].vertices)
+            }
+        }
+        """
+        let options = FormatOptions(booleanGuardsInTests: .preserve)
+        testFormatting(for: input, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testPreservesBooleanGuardWithOptionDisabledSwiftTesting() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                guard polygons.count > 1 else {
+                    return
+                }
+
+                let a = Set(polygons[0].vertices)
+            }
+        }
+        """
+        let options = FormatOptions(booleanGuardsInTests: .preserve)
+        testFormatting(for: input, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testPreservesGuardWithMixedConditionsWithOptionDisabled() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard someCondition,
+                      let value = optionalValue else {
+                    XCTFail()
+                    return
+                }
+                print(value)
+            }
+        }
+        """
+        let options = FormatOptions(booleanGuardsInTests: .preserve)
+        testFormatting(for: input, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements, .unusedArguments, .elseOnSameLine, .wrapMultilineStatementBraces])
+    }
+
+    func testStillConvertsOptionalBindingGuardWithOptionDisabled() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value = optionalValue else {
+                    XCTFail()
+                    return
+                }
+                print(value)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value = try XCTUnwrap(optionalValue)
+                print(value)
+            }
+        }
+        """
+        let options = FormatOptions(booleanGuardsInTests: .preserve)
+        testFormatting(for: input, output, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+    }
+
+    func testStillConvertsTrailingIfWithOptionDisabled() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let value = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value = try XCTUnwrap(optionalValue)
+                print(value)
+            }
+        }
+        """
+        let options = FormatOptions(guardLikeIfStatements: true, booleanGuardsInTests: .preserve)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testPreservesGuardWithShadowedVariable() {

@@ -1698,6 +1698,7 @@ Convert guard statements and trailing if statements in unit tests to
 Option | Description
 --- | ---
 `--guard-like-if-statements` | Convert guard-like trailing if statements in tests: "convert" or "preserve" (default)
+`--boolean-guards-in-tests` | Boolean guards: "preserve-xctest" (default), "preserve" or "convert"
 
 <details>
 <summary>Examples</summary>

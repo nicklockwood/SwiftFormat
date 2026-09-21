@@ -179,7 +179,10 @@ extension TypeDeclaration {
 
             // Allow the user to specify additional attributes to add to the new test suite,
             // like `@MainActor`, `@Suite(.serialized)`, etc.
-            let attributesToAdd = formatter.options.defaultTestSuiteAttributes.joined(separator: " ")
+            let existingAttributes = Set(attributes)
+            let attributesToAdd = formatter.options.defaultTestSuiteAttributes
+                .filter { !existingAttributes.contains($0) }
+                .joined(separator: " ")
             if !attributesToAdd.isEmpty {
                 let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
                 let attributesWithNewline = attributesToAdd + "\n"

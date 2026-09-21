@@ -757,6 +757,36 @@ final class PreferSwiftTestingTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 
+    func testDoesNotDuplicateExistingDefaultTestSuiteAttribute() {
+        let input = """
+        import XCTest
+
+        @MainActor
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeatureWorks() {
+                let myFeature = MyFeature()
+                XCTAssertTrue(myFeature.worksProperly)
+            }
+        }
+        """
+
+        let output = """
+        import Foundation
+        import Testing
+
+        @MainActor
+        final class MyFeatureTests {
+            @Test func myFeatureWorks() {
+                let myFeature = MyFeature()
+                #expect(myFeature.worksProperly)
+            }
+        }
+        """
+
+        let options = FormatOptions(defaultTestSuiteAttributes: ["@MainActor"], swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
+    }
+
     func testAppliesMultipleTestSuiteAttributes() {
         let input = """
         import XCTest

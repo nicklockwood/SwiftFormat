@@ -701,7 +701,8 @@ public extension FormatRule {
                         } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
                             indent += formatter.linewrapIndent(at: i)
                         }
-                    } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i),
+                    } else if !formatter.isWrappedFunctionName(at: i),
+                              !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i),
                               !formatter.isInClosureArguments(at: i)
                               || (lineIndex - 1) == scopeStartLineIndexes.last
                     {
@@ -979,6 +980,15 @@ extension Formatter {
             }
         }
         return false
+    }
+
+    /// Whether or not the line wrap at the given index separates a function's
+    /// `func` keyword from the function name that follows it. The name is part of
+    /// the declaration's introducer rather than a wrapped continuation of it, so it
+    /// shouldn't be given a line wrap indent (which would indent the signature
+    /// more deeply than the function body).
+    func isWrappedFunctionName(at i: Int) -> Bool {
+        last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("func")
     }
 
     func isWrappedDeclaration(at i: Int) -> Bool {

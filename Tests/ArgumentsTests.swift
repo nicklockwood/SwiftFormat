@@ -1004,4 +1004,172 @@ final class ArgumentsTests: XCTestCase {
         // This is the solution to the aforementioned bug
         XCTAssertEqual(warningsForArguments(arguments, ignoreUnusedOptions: true), [])
     }
+
+    // MARK: header creation date filters
+
+    private func date(_ isoDate: String) -> Date {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: isoDate)!
+    }
+
+    /// A source file with the given header comment, followed by a line of code
+    private func source(header: String) -> String {
+        """
+        \(header)
+
+        let foo = "foo"
+        """
+    }
+
+    func testParsesISODateInHeader() {
+        let source = source(header: """
+        //
+        //  Foo.swift
+        //  Created on 2026-09-01.
+        //
+        """)
+        XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_US")), date("2026-09-01"))
+    }
+
+    func testIgnoresDateInBlockCommentHeader() {
+        let source = source(header: """
+        /*
+         * Foo.swift
+         * Created on 2026-09-01.
+         */
+        """)
+        XCTAssertNil(source.headerCreationDate(locale: .identifier("en_US")))
+    }
+
+    func testParsesSupportedHeaderDateFormats() {
+        for dateString in ["2026-09-01", "2026/09/01", "2026.09.01", "2026-9-1", "09/01/2026",
+                           "9/1/2026", "09/01/26", "9/1/26", "09-01-2026", "09.01.2026"]
+        {
+            let source = source(header: "//  Created on \(dateString).")
+            XCTAssertEqual(
+                source.headerCreationDate(locale: .identifier("en_US")),
+                date("2026-09-01"), dateString
+            )
+        }
+    }
+
+    func testIgnoresUnsupportedHeaderDateFormats() {
+        for dateString in ["1 September 2026", "Sep 1, 2026", "2026_09_01"] {
+            let source = source(header: "//  Created on \(dateString).")
+            XCTAssertNil(source.headerCreationDate(locale: .identifier("en_US")), dateString)
+        }
+    }
+
+    func testAmbiguousHeaderDateUsesLocale() {
+        let source = source(header: "//  Created on 07/08/2018.")
+        XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_US")), date("2018-07-08"))
+        XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_GB")), date("2018-08-07"))
+        XCTAssertEqual(source.headerCreationDate(locale: .identifier("de_DE")), date("2018-08-07"))
+    }
+
+    func testParsesHeaderDateInLocaleOrderRegardlessOfSeparator() {
+        // `de_DE` uses `.` and `en_US` uses `/`, but either separator is accepted in both
+        for dateString in ["07/08/2018", "07-08-2018", "07.08.2018"] {
+            let source = source(header: "//  Created on \(dateString).")
+            XCTAssertEqual(
+                source.headerCreationDate(locale: .identifier("en_US")), date("2018-07-08"), dateString
+            )
+            XCTAssertEqual(
+                source.headerCreationDate(locale: .identifier("de_DE")), date("2018-08-07"), dateString
+            )
+        }
+    }
+
+    func testHeaderDateOnlyParsesInTheLocalesOwnOrder() {
+        let source = source(header: "//  Created on 31/12/2018.")
+        XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_GB")), date("2018-12-31"))
+        XCTAssertNil(source.headerCreationDate(locale: .identifier("en_US")))
+    }
+
+    func testParsesHeaderDateWithoutCreatedKeyword() {
+        let source = source(header: "//  Foo.swift\n//  2026-09-01")
+        XCTAssertEqual(source.headerCreationDate(locale: .identifier("en_US")), date("2026-09-01"))
+    }
+
+    func testIgnoresDatesAfterTheHeaderComment() {
+        let source = """
+        //  Foo.swift
+
+        // Created on 2026-09-01.
+        let foo = "foo"
+        """
+        XCTAssertNil(source.headerCreationDate(locale: .identifier("en_US")))
+    }
+
+    func testHeaderWithNoDate() {
+        let copyrightOnly = source(header: """
+        //
+        //  Foo.swift
+        //  Copyright © 2024 Nick Lockwood. All rights reserved.
+        //
+        """)
+        XCTAssertNil(copyrightOnly.headerCreationDate(locale: .identifier("en_US")))
+        XCTAssertNil(source(header: "//  Foo.swift").headerCreationDate(locale: .identifier("en_US")))
+    }
+
+    func testMatchesFilesCreatedAfterDate() throws {
+        let filters = try ConfigFilter.parseList("header-creation-date-after:2026-09-01", in: "/")
+        XCTAssertEqual(filters, [.headerCreationDate(after: date("2026-09-01"))])
+
+        func matches(createdOn dateString: String) -> Bool {
+            let source = source(header: "//  Created on \(dateString).")
+            return filters.allSatisfy {
+                $0.matches(path: "/Foo/Foo.swift", source: source, locale: .identifier("en_US"))
+            }
+        }
+
+        XCTAssertTrue(matches(createdOn: "2026-09-02"))
+        XCTAssertFalse(matches(createdOn: "2026-09-01"))
+        XCTAssertFalse(matches(createdOn: "2026-08-31"))
+        XCTAssertFalse(filters.allSatisfy {
+            $0.matches(path: "/Foo/Foo.swift", source: "let foo = \"foo\"", locale: .identifier("en_US"))
+        })
+    }
+
+    func testFiltersInAGroupAreAnded() throws {
+        let filters = try ConfigFilter.parseList("**/Tests/**,header-creation-date-after:2026-09-01", in: "/")
+        XCTAssertEqual(filters.count, 2)
+
+        func matches(_ path: String, createdOn dateString: String) -> Bool {
+            let source = source(header: "//  Created on \(dateString).")
+            return filters.allSatisfy { $0.matches(path: path, source: source, locale: .identifier("en_US")) }
+        }
+
+        XCTAssertTrue(matches("/Foo/Tests/FooTests.swift", createdOn: "2026-09-02"))
+        XCTAssertFalse(matches("/Foo/Tests/FooTests.swift", createdOn: "2024-01-01"))
+        XCTAssertFalse(matches("/Foo/Sources/Foo.swift", createdOn: "2026-09-02"))
+    }
+
+    func testParsesGlobFilters() throws {
+        let filters = try ConfigFilter.parseList("**/{Tests,Tools}/**", in: "/")
+        XCTAssertEqual(filters.count, 1)
+
+        func matches(_ path: String) -> Bool {
+            filters[0].matches(path: path, source: "", locale: .identifier("en_US"))
+        }
+
+        XCTAssertTrue(matches("/Foo/Tests/FooTests.swift"))
+        XCTAssertTrue(matches("/Foo/Tools/FooTool.swift"))
+        XCTAssertFalse(matches("/Foo/Sources/Foo.swift"))
+    }
+
+    func testThrowsForInvalidFilterDateFormat() {
+        for value in ["tomorrowish", "01/09/2026", "Sept 1 2026"] {
+            XCTAssertThrowsError(
+                try ConfigFilter.parseList("header-creation-date-after:\(value)", in: "/")
+            ) { error in
+                XCTAssertEqual(
+                    "\(error)",
+                    "Invalid date '\(value)' in --filter header-creation-date-after:\(value). Expected format: YYYY-MM-DD"
+                )
+            }
+        }
+    }
 }

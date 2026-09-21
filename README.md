@@ -798,7 +798,7 @@ The config file format is designed to be edited by hand. You may include blank l
 --disable elseOnSameLine,semicolons
 ```
 
-You can create multiple configuration sections within a single `.swiftformat` file to apply different formatting options to different parts of your project. Each section should specify a `--filter` glob pattern to determine which files the configuration applies to. Options in that section are used when formatting files that match `--filter` glob, in addition to the base options in the file.
+You can create multiple configuration sections within a single `.swiftformat` file to apply different formatting options to different parts of your project. Each section should specify a `--filter` to determine which files the configuration applies to. Options in that section are used when formatting files that match the `--filter`, in addition to the base options in the file.
 
 ```
 --enable indent
@@ -809,6 +809,16 @@ You can create multiple configuration sections within a single `.swiftformat` fi
 --enable noForceUnwrapInTests
 --enable noForceTryInTests
 --indent 2
+```
+
+As well as a glob pattern, a `--filter` can match against the creation date recorded in a file's header comment, using `header-creation-date-after:`. The date must be given in `YYYY-MM-DD` format. This is useful for adopting a new rule in newly-created files only, without reformatting your existing code:
+
+```
+--swift-version 6.0
+
+[New test files]
+--filter header-creation-date-after:2026-08-31
+--enable preferSwiftTesting
 ```
 
 If you would prefer not to edit the configuration file by hand, you can use the [SwiftFormat for Xcode](#xcode-source-editor-extension) app to edit the configuration and export a configuration file. You can also use the swiftformat command-line-tool's `--infer-options` command to generate a config file from your existing project, like this:

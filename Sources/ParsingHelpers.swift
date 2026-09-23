@@ -2561,14 +2561,14 @@ extension Formatter {
         }
     }
 
-    /// Finds the index of a @ViewBuilder attribute for the given declaration, if present
+    /// Finds the index of a @ViewBuilder (or equivalent @ContentBuilder) attribute for the given declaration, if present
     func indexOfViewBuilderAttribute(for declaration: Declaration) -> Int? {
         let startOfModifiers = declaration.startOfModifiersIndex(includingAttributes: true)
         let keywordIndex = declaration.keywordIndex
 
         var index = startOfModifiers
         while index < keywordIndex {
-            if tokens[index].string == "@ViewBuilder" {
+            if ["@ViewBuilder", "@ContentBuilder"].contains(tokens[index].string) {
                 return index
             }
             index += 1

@@ -754,6 +754,13 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(formatOptions.semicolons, .inlineOnly)
     }
 
+    func testAddEmptyArgumentsIsNoOp() throws {
+        var options = Options(formatOptions: FormatOptions(indent: "  "))
+        let arguments = argumentsFor(options)
+        try options.addArguments([:], in: "")
+        XCTAssertEqual(argumentsFor(options), arguments)
+    }
+
     func testAddArgumentsDoesntBreakSwiftVersion() throws {
         var options = Options(formatOptions: FormatOptions(swiftVersion: "4.2"))
         try options.addArguments(["indent": "2"], in: "")

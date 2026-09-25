@@ -793,6 +793,51 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(warnings, [])
     }
 
+    func testFilterMatchingFileNameAppliesPerFileWithinDirectory() throws {
+        CLI.print = { _, _ in }
+
+        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        --rules indent
+        --indent 1
+        """)
+
+        let testsConfigURL = try createTmpFile("Test/tests.swiftformat", contents: """
+        --filter **Tests.swift
+        --indent 4
+        """)
+
+        let sourceFile = try createTmpFile("Test/Foo/Foo.swift", contents: """
+        func foo() {
+        print("bar")
+        }
+        """)
+
+        let testFile = try createTmpFile("Test/Foo/FooTests.swift", contents: """
+        func foo() {
+        print("bar")
+        }
+        """)
+
+        _ = processArguments([
+            "",
+            configURL.deletingLastPathComponent().path,
+            "--config", configURL.path,
+            "--config", testsConfigURL.path,
+        ], in: "")
+
+        XCTAssertEqual(try String(contentsOf: sourceFile, encoding: .utf8), """
+        func foo() {
+         print("bar")
+        }
+        """)
+
+        XCTAssertEqual(try String(contentsOf: testFile, encoding: .utf8), """
+        func foo() {
+            print("bar")
+        }
+        """)
+    }
+
     func testConfigFilesWithFilter() throws {
         var errors = [String]()
 

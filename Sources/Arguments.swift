@@ -485,10 +485,11 @@ func parseCommaDelimitedList(_ string: String) -> [String] {
 /// Parse a comma-delimited string into an array of rules
 let allRules = Set(FormatRules.all.map(\.name))
 let defaultRules = Set(FormatRules.default.map(\.name))
+private let rulesByLowercaseName = Dictionary(uniqueKeysWithValues: allRules.map { ($0.lowercased(), $0) })
 func parseRules(_ rules: String, ignoreUnknown: Bool) throws -> [String] {
     try parseCommaDelimitedList(rules).flatMap { proposedName -> [String] in
         let lowercaseName = proposedName.lowercased()
-        if let name = allRules.first(where: { $0.lowercased() == lowercaseName }) {
+        if let name = rulesByLowercaseName[lowercaseName] {
             return [name]
         } else if lowercaseName == "all" {
             return FormatRules.all.compactMap { $0.isDeprecated ? nil : $0.name }

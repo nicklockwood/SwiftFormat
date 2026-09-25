@@ -272,6 +272,9 @@ final class TypeDeclaration: Declaration {
     /// The updated array must contain the same set of declarations, just in a different order.
     func updateBody(to newBody: [Declaration]) {
         assert(!body.isEmpty)
+        guard !newBody.elementsEqual(body, by: { $0 === $1 }) else {
+            return
+        }
 
         // Store the expected tokens associated with each declaration.
         // This is necessary since the declarations' range values will temporarily be invalid.

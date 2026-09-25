@@ -513,4 +513,76 @@ final class SortDeclarationsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .sortDeclarations)
     }
+
+    func testSortPackageDotSwift() {
+        let input = """
+        // swiftformat:sort:begin
+        Package(
+            name: "PackageName",
+            products: [
+                .library(
+                    name: "PackageName",
+                    targets: ["PackageName"]
+                ),
+            ],
+            dependencies: [
+                .package(path: "../OtherPackage"),
+                .package(path: "../AnotherPackage"),
+            ],
+            targets: [
+                .target(
+                    name: "PackageName",
+                    dependencies: [
+                        "OtherPackage",
+                        "AnotherPackage",
+                    ]
+                ),
+                .target(
+                    name: "AnotherPackage",
+                    dependencies: [
+                        "OtherPackage",
+                        "AnotherPackage",
+                    ]
+                ),
+            ]
+        )
+        // swiftformat:sort:end
+        """
+
+        let output = """
+        // swiftformat:sort:begin
+        Package(
+            name: "PackageName",
+            products: [
+                .library(
+                    name: "PackageName",
+                    targets: ["PackageName"]
+                ),
+            ],
+            dependencies: [
+                .package(path: "../AnotherPackage"),
+                .package(path: "../OtherPackage"),
+            ],
+            targets: [
+                .target(
+                    name: "AnotherPackage",
+                    dependencies: [
+                        "AnotherPackage",
+                        "OtherPackage",
+                    ]
+                ),
+                .target(
+                    name: "PackageName",
+                    dependencies: [
+                        "AnotherPackage",
+                        "OtherPackage",
+                    ]
+                ),
+            ]
+        )
+        // swiftformat:sort:end
+        """
+
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
 }

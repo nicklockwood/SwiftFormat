@@ -249,7 +249,7 @@ extension Formatter {
         let parts = elements.map(collectionLiteralElementParts)
         let sortKeys = parts.map { collectionLiteralElementSortKey($0.body) }
         let sortedParts = parts.indices.sorted { lhs, rhs in
-            let order = sortKeys[lhs].localizedCompare(sortKeys[rhs])
+            let order = options.locale.compare(sortKeys[lhs], sortKeys[rhs])
             return order == .orderedSame ? lhs < rhs : order == .orderedAscending
         }.map { parts[$0] }
 

@@ -595,4 +595,18 @@ final class HoistTryTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .hoistTry)
     }
+
+    func testHoistTryBeforeExpressionWithInfixOperator() {
+        let input = """
+        let points = zip(controlPoints, controlPoints.dropFirst()).flatMap { start, end in
+            (0 ..< 32).map { start.lerp(end, Double($0) / 32) }
+        } + [try XCTUnwrap(controlPoints.last)]
+        """
+        let output = """
+        let points = try zip(controlPoints, controlPoints.dropFirst()).flatMap { start, end in
+            (0 ..< 32).map { start.lerp(end, Double($0) / 32) }
+        } + [XCTUnwrap(controlPoints.last)]
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
 }

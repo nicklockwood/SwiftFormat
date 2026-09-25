@@ -39,7 +39,7 @@ import Foundation
 /// transparently handles changes that affect the current token index.
 public final class Formatter: NSObject {
     private var enumerationIndex = -1
-    private var autoUpdatingReferences = [WeakAutoUpdatingReference]()
+    private var autoUpdatingReferences = [ObjectIdentifier: WeakAutoUpdatingReference]()
 
     /// Formatting range
     public var range: Range<Int>?
@@ -963,12 +963,12 @@ public extension Formatter {
     /// in this formatter. The registration is automatically cleared after the reference
     /// is deallocated.
     internal func registerAutoUpdatingReference(_ reference: AutoUpdatingReference) {
-        autoUpdatingReferences.append(WeakAutoUpdatingReference(reference: reference))
+        autoUpdatingReferences[ObjectIdentifier(reference)] = WeakAutoUpdatingReference(reference: reference)
     }
 
     /// Unregisters the given reference so it will no longer be notified of modifications.
     internal func unregisterAutoUpdatingReference(_ reference: AutoUpdatingReference) {
-        autoUpdatingReferences.removeAll(where: { $0.reference === reference })
+        autoUpdatingReferences[ObjectIdentifier(reference)] = nil
     }
 }
 
@@ -1139,15 +1139,15 @@ extension Array {
     }
 }
 
-extension [WeakAutoUpdatingReference] {
-    /// Updates the `range` value of the index references in this array
+extension [ObjectIdentifier: WeakAutoUpdatingReference] {
+    /// Updates the `range` value of the index references in this dictionary
     /// to account for the given addition or removal of tokens.
     mutating func updateRanges(at modifiedIndex: Int, delta: Int) {
-        for (tokenIndex, reference) in zip(indices, self).reversed() {
-            guard let reference = reference.reference else {
+        for (key, weakReference) in self {
+            guard let reference = weakReference.reference else {
                 // If we encounter a reference that no longer exists
                 // (the weak reference is nil), clean up the entry.
-                remove(at: tokenIndex)
+                self[key] = nil
                 continue
             }
 

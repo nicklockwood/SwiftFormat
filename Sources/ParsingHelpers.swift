@@ -2244,7 +2244,6 @@ extension Formatter {
 
         var declarations = [_Declaration]()
         var startOfDeclaration = range.lowerBound
-        let startOfScopeAtDeclaration = startOfScope(at: startOfDeclaration)
 
         let isDeclarationStart = { [self] (index: Int, token: Token) in
             token.isDeclarationTypeKeyword
@@ -2253,10 +2252,12 @@ extension Formatter {
         }
 
         let handleIndex = { [self] (index: Int, token: Token) in
+            // Tokens between the end of the previous declaration and this index are at the
+            // same scope unless one of them opens a scope that is still unclosed at `index`.
             guard range.contains(index),
                   index >= startOfDeclaration,
                   isDeclarationStart(index, token),
-                  startOfScopeAtDeclaration == startOfScope(at: index)
+                  lastIndex(in: startOfDeclaration ..< index, where: \.isStartOfScope) == nil
             else {
                 return
             }
@@ -2281,12 +2282,12 @@ extension Formatter {
         }
 
         if _useForEachToken {
-            forEachToken(onlyWhereEnabled: false) { index, token in
+            forEachToken(in: range, onlyWhereEnabled: false) { index, token in
                 handleIndex(index, token)
             }
         } else {
-            for (index, token) in tokens.enumerated() {
-                handleIndex(index, token)
+            for index in range.clamped(to: tokens.indices) {
+                handleIndex(index, tokens[index])
             }
         }
 

@@ -542,6 +542,84 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortDeclarations)
     }
 
+    func testSortDeclarationsArrayMembersUsesEnglishLocaleByDefault() {
+        let input = """
+        let x = [ // swiftformat:sort
+            idea,
+            hora,
+            chata,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            chata,
+            hora,
+            idea,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsArrayMembersWithCzechLocale() {
+        let input = """
+        let x = [ // swiftformat:sort
+            chata,
+            idea,
+            hora,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            hora,
+            chata,
+            idea,
+        ]
+        """
+        let options = FormatOptions(locale: .identifier("cs_CZ"))
+        testFormatting(for: input, output, rule: .sortDeclarations, options: options)
+    }
+
+    func testSortDeclarationsDictionaryMembersUsesEnglishLocaleByDefault() {
+        let input = """
+        let x = [ // swiftformat:sort
+            idea: 1,
+            hora: 2,
+            chata: 3,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            chata: 3,
+            hora: 2,
+            idea: 1,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsDictionaryMembersWithCzechLocale() {
+        let input = """
+        let x = [ // swiftformat:sort
+            chata: 3,
+            idea: 1,
+            hora: 2,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            hora: 2,
+            chata: 3,
+            idea: 1,
+        ]
+        """
+        let options = FormatOptions(locale: .identifier("cs_CZ"))
+        testFormatting(for: input, output, rule: .sortDeclarations, options: options)
+    }
+
     func testSortDeclarationsDictionaryMembersWithColonInStringKey() {
         // Splitting at the first `:` would compare `"x` against `"x_y"` and put `"x:y"` first
         let input = """

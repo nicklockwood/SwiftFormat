@@ -4488,20 +4488,16 @@ extension Token {
 
     /// All of the keywords defining top-level entity
     /// https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
-    static var swiftTypeKeywords: Set<String> {
-        Set(["struct", "class", "actor", "protocol", "enum", "extension"])
-    }
+    static let swiftTypeKeywords: Set<String> = ["struct", "class", "actor", "protocol", "enum", "extension"]
 
     /// All of the keywords that map to individual Declaration grammars
     /// https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
-    static var declarationTypeKeywords: Set<String> {
-        swiftTypeKeywords.union([
-            "import", "let", "var", "typealias", "func", "enum", "case",
-            "struct", "class", "actor", "protocol", "init", "deinit",
-            "extension", "subscript", "operator", "precedencegroup",
-            "associatedtype", "macro",
-        ])
-    }
+    static let declarationTypeKeywords: Set<String> = swiftTypeKeywords.union([
+        "import", "let", "var", "typealias", "func", "enum", "case",
+        "struct", "class", "actor", "protocol", "init", "deinit",
+        "extension", "subscript", "operator", "precedencegroup",
+        "associatedtype", "macro",
+    ])
 
     /// Whether or not this token "defines" the specific type of declaration
     ///  - A valid declaration will usually include exactly one of these keywords in its outermost scope.
@@ -4512,9 +4508,8 @@ extension Token {
             return false
         }
 
-        return Self.declarationTypeKeywords
-            .subtracting(keywordsToExclude)
-            .contains(keyword)
+        return Self.declarationTypeKeywords.contains(keyword)
+            && !keywordsToExclude.contains(keyword)
     }
 
     /// Whether or not this token "defines" the specific type of declaration
@@ -4526,9 +4521,8 @@ extension Token {
             return false
         }
 
-        return Self.declarationTypeKeywords
-            .intersection(keywordsToInclude)
-            .contains(keyword)
+        return Self.declarationTypeKeywords.contains(keyword)
+            && keywordsToInclude.contains(keyword)
     }
 
     /// Whether or not this token represents a potential modifier keyword.

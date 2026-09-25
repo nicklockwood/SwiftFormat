@@ -231,6 +231,9 @@ public enum OperatorSpacingMode: String, CaseIterable {
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
 
+    /// Dot-separated numeric components, or nil if any component is non-numeric.
+    private let components: [Int]?
+
     public static let undefined = Version(rawValue: "0")!
 
     public init(stringLiteral value: String) {
@@ -243,10 +246,15 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral,
             return nil
         }
         self.rawValue = rawValue
+        let parts = rawValue.split(separator: ".", omittingEmptySubsequences: false).map { Int($0) }
+        components = parts.allSatisfy { $0 != nil } ? parts.map { $0! } : nil
     }
 
     public static func < (lhs: Version, rhs: Version) -> Bool {
-        lhs.rawValue.compare(
+        if let lhs = lhs.components, let rhs = rhs.components {
+            return lhs.lexicographicallyPrecedes(rhs)
+        }
+        return lhs.rawValue.compare(
             rhs.rawValue,
             options: .numeric,
             locale: Locale(identifier: "en_US")

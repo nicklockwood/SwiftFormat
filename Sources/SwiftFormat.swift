@@ -629,6 +629,7 @@ public func applyRules(
     for iteration in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
                                   trackChanges: trackChanges, range: range)
+        defer { formatter.clearDerivedCaches() }
         for rule in rules {
             queue.async(group: group) {
                 rule.apply(with: formatter)

@@ -230,8 +230,14 @@ final class SimpleDeclaration: Declaration {
         formatter.unregisterAutoUpdatingReference(self)
     }
 
-    var keyword: String
-    var range: ClosedRange<Int>
+    let keyword: String
+
+    /// Ranges can be adjusted without changing any tokens (see `adjustBodyDeclarationRanges`),
+    /// so this invalidates the shared `parseDeclarations()` result directly.
+    var range: ClosedRange<Int> {
+        didSet { formatter.invalidateDeclarationCache() }
+    }
+
     let formatter: Formatter
     weak var parent: Declaration?
 
@@ -258,9 +264,16 @@ final class TypeDeclaration: Declaration {
         formatter.unregisterAutoUpdatingReference(self)
     }
 
-    var keyword: String
-    var range: ClosedRange<Int>
+    let keyword: String
+
+    /// Ranges can be adjusted without changing any tokens (see `adjustBodyDeclarationRanges`),
+    /// so this invalidates the shared `parseDeclarations()` result directly.
+    var range: ClosedRange<Int> {
+        didSet { formatter.invalidateDeclarationCache() }
+    }
+
     var body: [Declaration]
+
     let formatter: Formatter
     weak var parent: Declaration?
 
@@ -378,8 +391,14 @@ final class ConditionalCompilationDeclaration: Declaration {
     }
 
     let keyword = "#if"
-    var range: ClosedRange<Int>
-    var body: [Declaration]
+    /// Ranges can be adjusted without changing any tokens (see `adjustBodyDeclarationRanges`),
+    /// so this invalidates the shared `parseDeclarations()` result directly.
+    var range: ClosedRange<Int> {
+        didSet { formatter.invalidateDeclarationCache() }
+    }
+
+    let body: [Declaration]
+
     let formatter: Formatter
     weak var parent: Declaration?
 

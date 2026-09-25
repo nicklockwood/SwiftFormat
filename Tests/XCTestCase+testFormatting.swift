@@ -85,6 +85,7 @@ extension XCTestCase {
             .preferFinalClasses,
             .preferStructSwiftTestingSuites,
             .preferExplicitFalse,
+            .preferContentBuilder,
             .wrapCaseBodies,
             .wrapIfStatementBodies,
             .wrapGuardStatementBodies,

@@ -132,6 +132,7 @@
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferContains](#preferContains)
+* [preferContentBuilder](#preferContentBuilder)
 * [preferCountWhere](#preferCountWhere)
 * [preferExplicitFalse](#preferExplicitFalse)
 * [preferFinalClasses](#preferFinalClasses)
@@ -1965,6 +1966,24 @@ Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(
 ```diff
 - if text.range(of: "needle") != nil {
 + if text.contains("needle") {
+```
+
+</details>
+<br/>
+
+## preferContentBuilder
+
+Replace @ViewBuilder with @ContentBuilder for projects built with Xcode 27 or later.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- @ViewBuilder var content: some View {
++ @ContentBuilder var content: some View {
+    Text("Hello")
+    Text("World")
+  }
 ```
 
 </details>

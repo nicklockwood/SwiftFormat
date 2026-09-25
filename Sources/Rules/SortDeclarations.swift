@@ -235,7 +235,8 @@ extension Formatter {
     }
 
     /// Sorts the comma-separated elements of the array or dictionary literal starting at the given `[`,
-    /// leaving the commas, whitespace, and comments between elements in place.
+    /// leaving the commas and whitespace between elements in place. Comments on their own lines
+    /// move with the element below them, and comments at the end of a line move with the element before them.
     func sortCollectionLiteralElements(startOfScope: Int) {
         var elements = commaSeparatedElementsInScope(startOfScope: startOfScope)
         // The first element range starts at the sort comment itself, so skip past it
@@ -245,17 +246,61 @@ extension Formatter {
         else { return }
         elements[0] = firstElementStart ... firstElement.upperBound
 
-        let elementTokens = elements.map { Array(tokens[$0]) }
-        let sortKeys = elements.map(collectionLiteralElementSortKey)
-        let sortedTokens = elementTokens.indices.sorted { lhs, rhs in
+        let parts = elements.map(collectionLiteralElementParts)
+        let sortKeys = parts.map { collectionLiteralElementSortKey($0.body) }
+        let sortedParts = parts.indices.sorted { lhs, rhs in
             let order = sortKeys[lhs].localizedCompare(sortKeys[rhs])
             return order == .orderedSame ? lhs < rhs : order == .orderedAscending
-        }.map { elementTokens[$0] }
+        }.map { parts[$0] }
+
+        var replacements = [(range: Range<Int>, tokens: [Token])]()
+        for (original, sorted) in zip(parts, sortedParts) {
+            replacements.append((original.leadingCommentsAndBody, Array(tokens[sorted.leadingCommentsAndBody])))
+            replacements.append((original.trailingComment, Array(tokens[sorted.trailingComment])))
+        }
 
         // Replace from last to first so earlier ranges remain valid
-        for (range, newTokens) in zip(elements, sortedTokens).reversed() where Array(tokens[range]) != newTokens {
+        for (range, newTokens) in replacements.reversed() where Array(tokens[range]) != newTokens {
             replaceTokens(in: range, with: newTokens)
         }
+    }
+
+    /// Splits a collection literal element into the element itself, the element along with
+    /// the comments on the lines above it, and the (possibly empty) comment at the end of its line.
+    func collectionLiteralElementParts(_ element: ClosedRange<Int>)
+        -> (body: ClosedRange<Int>, leadingCommentsAndBody: Range<Int>, trailingComment: Range<Int>)
+    {
+        var body = element
+        let endOfElement: Int
+        if let commaIndex = index(of: .nonSpaceOrLinebreak, after: element.upperBound),
+           tokens[commaIndex] == .delimiter(",")
+        {
+            endOfElement = commaIndex
+        } else {
+            // The last element has no trailing comma, so exclude any comments after it
+            let lastBodyToken = index(of: .nonSpaceOrCommentOrLinebreak, before: element.upperBound + 1) ?? element.upperBound
+            body = element.lowerBound ... lastBodyToken
+            endOfElement = body.upperBound
+        }
+
+        var trailingComment = endOfElement + 1 ..< endOfElement + 1
+        let restOfLine = endOfElement + 1 ..< endOfLine(at: endOfElement)
+        if tokens[restOfLine].contains(where: \.isComment),
+           tokens[restOfLine].allSatisfy(\.isSpaceOrComment)
+        {
+            trailingComment = restOfLine
+        }
+
+        var leadingStart = body.lowerBound
+        while let previousIndex = index(of: .nonSpaceOrLinebreak, before: leadingStart),
+              tokens[previousIndex].isComment
+        {
+            let lineStart = startOfLine(at: previousIndex, excludingIndent: true)
+            guard tokens[lineStart].isComment else { break }
+            leadingStart = lineStart
+        }
+
+        return (body, leadingStart ..< body.upperBound + 1, trailingComment)
     }
 
     /// The text to sort a collection literal element by: the key for dictionary

@@ -439,4 +439,78 @@ final class SortDeclarationsTests: XCTestCase {
         let options = FormatOptions(organizeStructThreshold: 20)
         testFormatting(for: input, [output], rules: [.sortDeclarations, .organizeDeclarations], options: options)
     }
+
+    func testSortDeclarationsArrayMembers() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b,
+            c,
+            a,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a,
+            b,
+            c,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsDictionaryMembers() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b: 2,
+            c: 3,
+            a: 1,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a: 1,
+            b: 2,
+            c: 3,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsDictionaryMembersSortsByKey() {
+        // `_` sorts before `:`, so comparing whole elements would put `a_b: 2` before `a: 1`
+        let input = """
+        let x = [ // swiftformat:sort
+            a_b: 2,
+            a: 1,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a: 1,
+            a_b: 2,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsDictionaryMembersWithColonInStringKey() {
+        // Splitting at the first `:` would compare `"x` against `"x_y"` and put `"x:y"` first
+        let input = """
+        let x = [ // swiftformat:sort
+            "x:y": 1,
+            "x_y": 2,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            "x_y": 2,
+            "x:y": 1,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
 }

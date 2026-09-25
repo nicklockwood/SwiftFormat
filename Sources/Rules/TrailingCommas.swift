@@ -309,32 +309,4 @@ extension Formatter {
             break
         }
     }
-
-    /// Returns the range of each comma-separated element in the given range
-    func commaSeparatedElementsInScope(startOfScope: Int) -> [ClosedRange<Int>] {
-        guard let endOfScope = endOfScope(at: startOfScope),
-              let firstTokenInScope = index(of: .nonSpaceOrLinebreak, after: startOfScope),
-              let lastTokenInScope = index(of: .nonSpaceOrLinebreak, before: endOfScope),
-              firstTokenInScope != endOfScope,
-              firstTokenInScope < lastTokenInScope
-        else { return [] }
-
-        var currentIndex = firstTokenInScope
-        var commasSeparatedElements = [ClosedRange<Int>]()
-
-        while let nextCommaIndex = index(of: .delimiter(","), in: currentIndex ..< endOfScope),
-              let tokenBeforeComma = index(of: .nonSpaceOrLinebreak, before: nextCommaIndex),
-              let tokenAfterComma = index(of: .nonSpaceOrCommentOrLinebreak, after: nextCommaIndex)
-        {
-            commasSeparatedElements.append(currentIndex ... tokenBeforeComma)
-            currentIndex = tokenAfterComma
-        }
-
-        // Add the final element, unless the final comma was a trailing comma
-        if currentIndex < endOfScope, currentIndex <= lastTokenInScope {
-            commasSeparatedElements.append(currentIndex ... lastTokenInScope)
-        }
-
-        return commasSeparatedElements
-    }
 }

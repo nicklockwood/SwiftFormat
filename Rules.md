@@ -3460,6 +3460,13 @@ Option | Description
           Foo()
       }
   }
+
+  let featureFlags = [ // swiftformat:sort
+-     fooFeature,
+-     barFeature,
++     barFeature,
++     fooFeature,
+  ]
 ```
 
 </details>

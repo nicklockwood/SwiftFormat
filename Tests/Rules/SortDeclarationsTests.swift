@@ -459,6 +459,52 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortDeclarations)
     }
 
+    func testSortDeclarationsArrayMembersWithoutTrailingComma() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b,
+            c,
+            a
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a,
+            b,
+            c
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations, exclude: [.trailingCommas])
+    }
+
+    func testSortCollectionLiteralWithoutTrailingCommaInSortBlock() {
+        let input = """
+        // swiftformat:sort:begin
+        foo(
+            bar: [
+                "b",
+                "c",
+                "a"
+            ]
+        )
+        // swiftformat:sort:end
+        """
+
+        let output = """
+        // swiftformat:sort:begin
+        foo(
+            bar: [
+                "a",
+                "b",
+                "c"
+            ]
+        )
+        // swiftformat:sort:end
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations, exclude: [.trailingCommas])
+    }
+
     func testSortDeclarationsDictionaryMembers() {
         let input = """
         let x = [ // swiftformat:sort

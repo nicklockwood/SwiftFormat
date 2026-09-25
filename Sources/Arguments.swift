@@ -52,6 +52,9 @@ extension Options {
     }
 
     mutating func addArguments(_ args: [String: String], in directory: String) throws {
+        guard !args.isEmpty else {
+            return
+        }
         let oldArguments = argumentsFor(self)
         let newArguments = try mergeArguments(args, into: oldArguments)
         var newOptions = try Options(newArguments, filterOptions: filterOptions, in: directory)

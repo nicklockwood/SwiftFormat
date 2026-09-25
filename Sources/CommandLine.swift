@@ -1129,6 +1129,26 @@ func processInput(_ inputURLs: [URL],
         }
         showedConfigurationWarnings = true
     }
+    // Options with overrides applied, keyed by directory. Files in the same directory share
+    // the same options apart from `fileInfo`, so the overrides only need to be merged once per directory.
+    var overriddenOptionsCache = [String: Options]()
+    let overriddenOptionsQueue = DispatchQueue(label: "swiftformat.overrides")
+    func applyOverrides(to options: Options, for inputURL: URL) throws -> Options {
+        guard !overrides.isEmpty else {
+            return options
+        }
+        let directory = inputURL.deletingLastPathComponent().path
+        var result = try overriddenOptionsQueue.sync { () throws -> Options in
+            try overriddenOptionsCache[directory] ?? {
+                var overridden = options
+                try overridden.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
+                overriddenOptionsCache[directory] = overridden
+                return overridden
+            }()
+        }
+        result.formatOptions?.fileInfo = options.formatOptions?.fileInfo ?? .init()
+        return result
+    }
     // Format files
     var errors = enumerateFiles(
         withInputURLs: inputURLs,
@@ -1142,15 +1162,16 @@ func processInput(_ inputURLs: [URL],
             throw FormatError.reading("Failed to read file \(inputURL.path)")
         }
         // Override options
-        var options = options
-        try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
+        var options = try applyOverrides(to: options, for: inputURL)
         try options.addFilterArguments(path: inputURL.path, source: input)
         let formatOptions = options.formatOptions ?? .default
         let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
         // Check cache
         let rules = options.rules ?? defaultRules
-        let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
-        let cachePrefix = "\(version);\(configHash);"
+        let cachePrefix: String = cache == nil ? "" : {
+            let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
+            return "\(version);\(configHash);"
+        }()
         let cacheKey: String = {
             var path = inputURL.absoluteURL.path
             if let cacheDirectory {

@@ -45,6 +45,13 @@ final class VersionTests: XCTestCase {
         XCTAssertGreaterThan(version ?? "0", "3.1.4")
     }
 
+    func testMultiDigitComponentComparison() {
+        XCTAssertLessThan(Version(rawValue: "5.9") ?? "0", "5.10")
+        XCTAssertLessThan(Version(rawValue: "5.7") ?? "0", "5.7.1")
+        XCTAssertGreaterThan(Version(rawValue: "6") ?? "0", "5.10.2")
+        XCTAssertEqual(Version(rawValue: "5.7"), "5.7")
+    }
+
     func testPreviewComparison() {
         let version = Version(rawValue: "3.0-PREVIEW-4")
         XCTAssertLessThan(version ?? "0", "4.0")

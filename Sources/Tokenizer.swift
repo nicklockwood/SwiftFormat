@@ -561,8 +561,10 @@ public extension Token {
     var isStringDelimiter: Bool {
         switch self {
         case let .startOfScope(string), let .endOfScope(string):
-            return string.contains("\"") || string == "/" || string.hasSuffix("#")
-                || (string.hasPrefix("#") && string.hasSuffix("/"))
+            let utf8 = string.utf8
+            let quote = UInt8(ascii: "\""), hash = UInt8(ascii: "#"), slash = UInt8(ascii: "/")
+            return utf8.contains(quote) || string == "/" || utf8.last == hash
+                || (utf8.first == hash && utf8.last == slash)
         default:
             return false
         }

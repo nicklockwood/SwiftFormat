@@ -18,8 +18,8 @@ public extension FormatRule {
     ) { formatter in
         formatter.forEachToken { i, token in
             // `if let foo` conditions were added in Swift 5.7 (SE-0345)
-            guard formatter.options.swiftVersion >= "5.7",
-                  [.keyword("let"), .keyword("var")].contains(token),
+            guard [.keyword("let"), .keyword("var")].contains(token),
+                  formatter.options.swiftVersion >= "5.7",
                   formatter.isConditionalStatement(at: i),
 
                   let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),

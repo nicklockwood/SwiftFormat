@@ -24,6 +24,13 @@ public extension FormatRule {
                     || $0.isDeclarationTypeKeyword(including: Array(Token.swiftTypeKeywords))
             }
         ) { index, token in
+            if token.isCommentBody, !token.string.contains(":sort:"),
+               let literalStartIndex = formatter.collectionLiteralStartOfScope(forSortCommentAt: index)
+            {
+                formatter.sortCollectionLiteralElements(startOfScope: literalStartIndex)
+                return
+            }
+
             let rangeToSort: ClosedRange<Int>
             let numberOfLeadingLinebreaks: Int
 
@@ -179,7 +186,62 @@ public extension FormatRule {
                   Foo()
               }
           }
+
+          let featureFlags = [ // swiftformat:sort
+        -     fooFeature,
+        -     barFeature,
+        +     barFeature,
+        +     fooFeature,
+          ]
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// If the sort directive comment body at the given index directly follows
+    /// the opening `[` of an array or dictionary literal, returns the index of that `[`.
+    func collectionLiteralStartOfScope(forSortCommentAt commentBodyIndex: Int) -> Int? {
+        guard let commentStartIndex = index(of: .startOfScope("//"), before: commentBodyIndex),
+              let previousIndex = index(of: .nonSpace, before: commentStartIndex),
+              tokens[previousIndex] == .startOfScope("["),
+              !isSubscriptOrFunctionCall(at: previousIndex)
+        else { return nil }
+        return previousIndex
+    }
+
+    /// Sorts the comma-separated elements of the array or dictionary literal starting at the given `[`,
+    /// leaving the commas, whitespace, and comments between elements in place.
+    func sortCollectionLiteralElements(startOfScope: Int) {
+        var elements = commaSeparatedElementsInScope(startOfScope: startOfScope)
+        // The first element range starts at the sort comment itself, so skip past it
+        guard let firstElement = elements.first,
+              let firstElementStart = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope),
+              firstElementStart <= firstElement.upperBound
+        else { return }
+        elements[0] = firstElementStart ... firstElement.upperBound
+
+        let elementTokens = elements.map { Array(tokens[$0]) }
+        let sortKeys = elements.map(collectionLiteralElementSortKey)
+        let sortedTokens = elementTokens.indices.sorted { lhs, rhs in
+            let order = sortKeys[lhs].localizedCompare(sortKeys[rhs])
+            return order == .orderedSame ? lhs < rhs : order == .orderedAscending
+        }.map { elementTokens[$0] }
+
+        // Replace from last to first so earlier ranges remain valid
+        for (range, newTokens) in zip(elements, sortedTokens).reversed() where Array(tokens[range]) != newTokens {
+            replaceTokens(in: range, with: newTokens)
+        }
+    }
+
+    /// The text to sort a collection literal element by: the key for dictionary
+    /// elements, or the entire element for array elements.
+    func collectionLiteralElementSortKey(_ element: ClosedRange<Int>) -> String {
+        // Ternary colons are tokenized as `.operator(":", .infix)`, so only the dictionary colon matches
+        guard let colonIndex = index(of: .delimiter(":"), in: element.lowerBound ..< element.upperBound),
+              let endOfKey = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
+              endOfKey >= element.lowerBound
+        else { return tokens[element].string }
+        return tokens[element.lowerBound ... endOfKey].string
     }
 }

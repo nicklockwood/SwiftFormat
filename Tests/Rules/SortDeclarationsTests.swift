@@ -560,6 +560,153 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortDeclarations)
     }
 
+    func testSortDeclarationsArrayMembersWithCommentsBeforeElements() {
+        let input = """
+        let x = [ // swiftformat:sort
+            // bee
+            b,
+            // sea
+            c,
+            // ay
+            a,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            // ay
+            a,
+            // bee
+            b,
+            // sea
+            c,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsArrayMembersWithCommentsAfterElements() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b, // bee
+            c, // sea
+            a, // ay
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a, // ay
+            b, // bee
+            c, // sea
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsArrayMembersWithCommentBetweenSomeElements() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b,
+            c,
+            // ay
+            a,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            // ay
+            a,
+            b,
+            c,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsArrayMembersWithCommentAfterLastElement() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b,
+            c,
+            a,
+            // end of list
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a,
+            b,
+            c,
+            // end of list
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsDictionaryMembersWithCommentsBeforeElements() {
+        let input = """
+        let x = [ // swiftformat:sort
+            // bee
+            b: 2,
+            // sea
+            c: 3,
+            // ay
+            a: 1,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            // ay
+            a: 1,
+            // bee
+            b: 2,
+            // sea
+            c: 3,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsDictionaryMembersWithCommentsAfterElements() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b: 2, // bee
+            c: 3, // sea
+            a: 1, // ay
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a: 1, // ay
+            b: 2, // bee
+            c: 3, // sea
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsDictionaryMembersWithCommentBetweenKeyAndValue() {
+        let input = """
+        let x = [ // swiftformat:sort
+            b: /* bee */ 2,
+            a: /* ay */ 1,
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            a: /* ay */ 1,
+            b: /* bee */ 2,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
     func testSortPackageDotSwift() {
         let input = """
         // swiftformat:sort:begin

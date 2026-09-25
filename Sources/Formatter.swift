@@ -62,6 +62,38 @@ public final class Formatter: NSObject {
     /// The token array managed by the formatter (read-only)
     public private(set) var tokens: [Token]
 
+    /// Incremented on every change to `tokens`. Used to invalidate derived caches.
+    private(set) var mutationCount = 0
+
+    /// Derived data that is only valid for a specific `mutationCount`.
+    var derivedCaches = DerivedCaches()
+
+    struct DerivedCaches {
+        var declarations: (mutationCount: Int, value: [Declaration])?
+        var declarationsAreStale = false
+        var imports: (mutationCount: Int, value: [[ImportRange]])?
+        var enclosingStringDelimiters: (mutationCount: Int, value: [Int?])?
+    }
+
+    /// Whether `parseDeclarations()` would produce the same result for every rule.
+    /// Directives, a formatting range, or a rule disabled by a parsing error all exclude declarations.
+    var canCacheDeclarations: Bool {
+        directives.isEmpty && range == nil && !ruleDisabled
+    }
+
+    /// Marks the cached result of `parseDeclarations()` as stale, e.g. after a declaration's
+    /// range is edited directly. The cache is released lazily, since this can be called while
+    /// `autoUpdatingReferences` is being mutated and releasing declarations would re-enter it.
+    func invalidateDeclarationCache() {
+        derivedCaches.declarationsAreStale = true
+    }
+
+    /// Releases cached derived data. Cached declarations retain this formatter,
+    /// so this must be called once all rules have been applied.
+    func clearDerivedCaches() {
+        derivedCaches = DerivedCaches()
+    }
+
     /// Swiftformat directives found in the file
     private var directives: [Directive] = []
 
@@ -426,6 +458,7 @@ public extension Formatter {
             trackChange(at: index.index, isMove: isMove)
         }
         tokens[index.index] = token
+        mutationCount += 1
     }
 
     /// Replaces the tokens in the specified range with new tokens
@@ -537,6 +570,7 @@ public extension Formatter {
         trackChange(at: index, isMove: isMove)
         updateRange(at: index, delta: -1)
         tokens.remove(at: index)
+        mutationCount += 1
         if enumerationIndex >= index {
             enumerationIndex -= 1
         }
@@ -607,6 +641,7 @@ public extension Formatter {
         trackChange(at: tokens.endIndex - 1)
         updateRange(at: tokens.endIndex - 1, delta: -1)
         tokens.removeLast()
+        mutationCount += 1
     }
 
     /// Inserts an array of tokens at the specified index
@@ -622,6 +657,7 @@ public extension Formatter {
         trackChange(at: index, isMove: isMove)
         updateRange(at: index, delta: tokens.count)
         self.tokens.insert(contentsOf: tokens, at: index)
+        mutationCount += 1
         if enumerationIndex >= index {
             enumerationIndex += tokens.count
         }
@@ -637,6 +673,7 @@ public extension Formatter {
         trackChange(at: index.index)
         updateRange(at: index.index, delta: 1)
         tokens.insert(token, at: index.index)
+        mutationCount += 1
         if enumerationIndex >= index.index {
             enumerationIndex += 1
         }

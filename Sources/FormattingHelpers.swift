@@ -1246,21 +1246,43 @@ extension Formatter {
     /// Returns true if the token at the specified index is inside a single-line string literal (including inside an interpolation),
     /// which should never be wrapped, or in any string literal when string interpolation wrapping is disabled.
     func isInStringLiteralWithWrappingDisabled(at i: Int) -> Bool {
+        let enclosing = enclosingStringDelimiters
         var i = i
-        while let startOfScope = startOfScope(at: i) {
-            i = startOfScope
+        while i < enclosing.count, let delimiter = enclosing[i] {
+            i = delimiter
 
-            if tokens[startOfScope].isStringDelimiter {
-                if !options.wrapStringInterpolation {
-                    return true
-                } else if !tokens[startOfScope].isMultilineStringDelimiter {
-                    // Single line strings can never have line break
-                    return true
-                }
+            if !options.wrapStringInterpolation {
+                return true
+            } else if !tokens[i].isMultilineStringDelimiter {
+                // Single line strings can never have line break
+                return true
             }
         }
 
         return false
+    }
+
+    /// For each token, the index of the innermost enclosing string literal's opening
+    /// delimiter, or nil if the token isn't inside a string literal (or interpolation).
+    var enclosingStringDelimiters: [Int?] {
+        if let cached = derivedCaches.enclosingStringDelimiters, cached.mutationCount == mutationCount {
+            return cached.value
+        }
+        var result = [Int?](repeating: nil, count: tokens.count)
+        var stack = [Int]()
+        for (i, token) in tokens.enumerated() {
+            switch token {
+            case .startOfScope where token.isStringDelimiter:
+                result[i] = stack.last
+                stack.append(i)
+            case .endOfScope where token.isStringDelimiter:
+                result[i] = stack.popLast()
+            default:
+                result[i] = stack.last
+            }
+        }
+        derivedCaches.enclosingStringDelimiters = (mutationCount, result)
+        return result
     }
 
     func removeParen(at index: Int) {

@@ -2218,8 +2218,22 @@ extension Formatter {
     }
 
     /// Parses all of the declarations in the source file.
+    ///
+    /// The result is shared between rules until the tokens or a declaration's range change.
+    /// Files containing directives are parsed per-rule, since disabled regions are excluded.
     func parseDeclarations() -> [Declaration] {
-        parseDeclarations(in: tokens.indices)
+        let cacheable = canCacheDeclarations
+        if cacheable, !derivedCaches.declarationsAreStale,
+           let cached = derivedCaches.declarations, cached.mutationCount == mutationCount
+        {
+            return cached.value
+        }
+        let declarations = parseDeclarations(in: tokens.indices)
+        if cacheable {
+            derivedCaches.declarations = (mutationCount, declarations)
+            derivedCaches.declarationsAreStale = false
+        }
+        return declarations
     }
 
     /// Parses the declarations in the given range.
@@ -2761,6 +2775,18 @@ extension Formatter {
 
     /// Shared import rules implementation
     func parseImports() -> [[ImportRange]] {
+        let cacheable = canCacheDeclarations
+        if cacheable, let cached = derivedCaches.imports, cached.mutationCount == mutationCount {
+            return cached.value
+        }
+        let imports = _parseImports()
+        if cacheable {
+            derivedCaches.imports = (mutationCount, imports)
+        }
+        return imports
+    }
+
+    private func _parseImports() -> [[ImportRange]] {
         var importStack = [[ImportRange]]()
         var importRanges = [ImportRange]()
         forEach(.keyword("import")) { i, _ in

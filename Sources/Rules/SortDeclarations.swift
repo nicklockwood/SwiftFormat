@@ -53,7 +53,8 @@ public extension FormatRule {
                 }),
                     let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: index),
                     let firstRangeToken = formatter.index(of: .nonLinebreak, after: sortRangeStart),
-                    let lastRangeToken = formatter.index(of: .nonSpaceOrLinebreak, before: endCommentIndex - 2)
+                    let lastRangeToken = formatter.index(of: .nonSpaceOrLinebreak, before: endCommentIndex - 2),
+                    sortRangeStart <= lastRangeToken
                 else { return }
 
                 rangeToSort = sortRangeStart ... lastRangeToken
@@ -85,8 +86,19 @@ public extension FormatRule {
                 return
             }
 
-            var declarations = Formatter(Array(formatter.tokens[rangeToSort]))
-                .parseDeclarations()
+            let parsedDeclarations = Formatter(Array(formatter.tokens[rangeToSort])).parseDeclarations()
+
+            // Tokens that aren't part of any declaration (e.g. a bare expression)
+            // would be dropped when reassembling the sorted declarations,
+            // so sort the collection literals in the expression instead
+            guard parsedDeclarations.reduce(0, { $0 + $1.tokens.count }) == rangeToSort.count else {
+                if shouldBePartiallySorted {
+                    formatter.sortCollectionLiterals(in: rangeToSort)
+                }
+                return
+            }
+
+            var declarations = parsedDeclarations
                 .enumerated()
                 .sorted(by: { lhs, rhs -> Bool in
                     let (lhsIndex, lhsDeclaration) = lhs
@@ -208,6 +220,18 @@ extension Formatter {
               !isSubscriptOrFunctionCall(at: previousIndex)
         else { return nil }
         return previousIndex
+    }
+
+    /// Sorts the elements of every array and dictionary literal in the given range.
+    func sortCollectionLiterals(in range: ClosedRange<Int>) {
+        let literalStarts = range.filter {
+            tokens[$0] == .startOfScope("[") && [.array, .dictionary].contains(scopeType(at: $0))
+        }
+        // Sorting from last to first sorts nested literals before their parents,
+        // and never moves the start of an earlier literal
+        for startOfScope in literalStarts.reversed() {
+            sortCollectionLiteralElements(startOfScope: startOfScope)
+        }
     }
 
     /// Sorts the comma-separated elements of the array or dictionary literal starting at the given `[`,

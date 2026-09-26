@@ -124,6 +124,13 @@ public extension FormatRule {
                     indentCount = indentCounts.last! + 1
                 }
                 var indent = indentStack[indentStack.count - indentCount]
+                if indentCount > 1, formatter.options.indentCase,
+                   scopeStack.count > 1, scopeStack[scopeStack.count - 2] == .endOfScope("case"),
+                   !formatter.isInIfdef(at: i, scopeStack: scopeStack)
+                {
+                    // Scope opened on the same line as `case`, so align with the indented case
+                    indent += formatter.options.indent
+                }
 
                 switch string {
                 case "/*":
@@ -366,6 +373,11 @@ public extension FormatRule {
                         for _ in 0 ..< indentCount {
                             indentStack.append(indentStack.last ?? "")
                             stringBodyIndentStack.append(stringBodyIndentStack.last ?? "")
+                        }
+                        if formatter.options.indentCase, scopeStack.last == .endOfScope("case"),
+                           !formatter.isInIfdef(at: i, scopeStack: scopeStack)
+                        {
+                            indentStack[indentStack.count - 1] += formatter.options.indent
                         }
                     }
 

@@ -1407,6 +1407,95 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options, exclude: [.sortSwitchCases])
     }
 
+    func testSwitchCaseWrappedPatternWithIndentCaseTrue() {
+        let input = """
+        switch x {
+        case let .arc(
+        center,
+        radius
+        ):
+        break
+        case let .line(
+        start
+        ) where start > 0:
+        break
+        }
+        """
+        let output = """
+        switch x {
+            case let .arc(
+                center,
+                radius
+            ):
+                break
+            case let .line(
+                start
+            ) where start > 0:
+                break
+        }
+        """
+        let options = FormatOptions(indentCase: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNestedSwitchCaseWrappedPatternWithIndentCaseTrue() {
+        let input = """
+        switch x {
+        case let .foo(
+        y
+        ):
+        switch y {
+        case let .bar(
+        z
+        ):
+        print(z)
+        default:
+        break
+        }
+
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+            case let .foo(
+                y
+            ):
+                switch y {
+                    case let .bar(
+                        z
+                    ):
+                        print(z)
+                    default:
+                        break
+                }
+
+            default:
+                break
+        }
+        """
+        let options = FormatOptions(indentCase: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testSwitchCaseWrappedPatternInIfdefWithIndentCaseTrue() {
+        let input = """
+        switch x {
+            #if DEBUG
+                case let .arc(
+                    center
+                ):
+                    break
+            #endif
+            default:
+                break
+        }
+        """
+        let options = FormatOptions(indentCase: true)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue() {
         let input = """
         switch x {

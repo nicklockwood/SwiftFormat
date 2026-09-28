@@ -60,6 +60,32 @@ final class RedundantEmptyViewTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantEmptyView)
     }
 
+    func testRemoveInlineRedundantEmptyViewElseInContentBuilderProperty() {
+        let input = """
+        struct ContentView: View {
+            @ContentBuilder
+            var description: some View {
+                if condition {
+                    Text("Hello")
+                } else { 
+                    EmptyView() 
+                }
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            @ContentBuilder
+            var description: some View {
+                if condition {
+                    Text("Hello")
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEmptyView)
+    }
+
     func testRemoveRedundantEmptyViewElseInNestedResultBuilder() {
         let input = """
         struct ContentView: View {

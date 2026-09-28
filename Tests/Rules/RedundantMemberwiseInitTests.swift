@@ -1938,6 +1938,33 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
+    }
+
+    func testRemoveInitWithContentBuilderClosureParameter() {
+        let input = """
+        struct MyView<Content: View>: View {
+            let content: Content
+
+            init(@ContentBuilder content: () -> Content) {
+                self.content = content()
+            }
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        let output = """
+        struct MyView<Content: View>: View {
+            @ContentBuilder let content: Content
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1974,7 +2001,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
     }
 
     func testRemoveInitWithPrivateViewBuilderProperty() {
@@ -2003,7 +2030,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always, swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
     }
 
     func testDontRemoveInitWithPrivateViewBuilderPropertyWithoutOption() {
@@ -2127,7 +2154,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
     }
 
     func testRemoveInitWithCustomResultBuilder() {
@@ -2210,7 +2237,8 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             for: input,
             [output],
             rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope],
-            options: options
+            options: options,
+            exclude: [.preferContentBuilder]
         )
     }
 

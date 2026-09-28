@@ -46,6 +46,7 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
+* [preferContentBuilder](#preferContentBuilder)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
@@ -132,7 +133,6 @@
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferContains](#preferContains)
-* [preferContentBuilder](#preferContentBuilder)
 * [preferCountWhere](#preferCountWhere)
 * [preferExplicitFalse](#preferExplicitFalse)
 * [preferFinalClasses](#preferFinalClasses)
@@ -1973,7 +1973,7 @@ Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(
 
 ## preferContentBuilder
 
-Replace `@ViewBuilder` with the equivalent `@ContentBuilder` attribute (requires Xcode 27 or later).
+Replace legacy SwiftUI result builder attributes like `@ViewBuilder` with the equivalent `@ContentBuilder`.
 
 <details>
 <summary>Examples</summary>
@@ -1985,6 +1985,13 @@ Replace `@ViewBuilder` with the equivalent `@ContentBuilder` attribute (requires
     var content: some View {
       Text("foo")
       Text("bar")
+    }
+
+-   @ToolbarContentBuilder
++   @ContentBuilder
+    var toolbarItems: some ToolbarContent {
+      ToolbarItem { saveButton }
+      ToolbarItem { cancelButton }
     }
   }
 ```

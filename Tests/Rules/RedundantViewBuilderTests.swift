@@ -31,6 +31,48 @@ final class RedundantViewBuilderTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantViewBuilder)
     }
 
+    func testRemoveRedundantContentBuilder() {
+        let input = """
+        struct MyView: View {
+            @ContentBuilder
+            var body: some View {
+                Text("foo")
+                Text("bar")
+            }
+
+            @ContentBuilder
+            var helper: some View {
+                Text("baaz")
+            }
+
+            @ContentBuilder
+            var helper2: some View {
+                Text("foo")
+                Text("bar")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                Text("foo")
+                Text("bar")
+            }
+
+            var helper: some View {
+                Text("baaz")
+            }
+
+            @ContentBuilder
+            var helper2: some View {
+                Text("foo")
+                Text("bar")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
+
     func testRemoveRedundantViewBuilderOnViewModifierBody() {
         let input = """
         struct MyModifier: ViewModifier {

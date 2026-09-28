@@ -249,6 +249,38 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
     }
 
+    func testRemoveGroupInHelperPropertyWithContentBuilder() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                content
+            }
+
+            @ContentBuilder
+            var content: some View {
+                Group {
+                    Text("foo")
+                    Text("bar")
+                }
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                content
+            }
+
+            @ContentBuilder
+            var content: some View {
+                Text("foo")
+                Text("bar")
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
     func testAddViewBuilderWhenRemovingGroupFromHelper() {
         // Without @ViewBuilder, we need to add it when removing Group with multiple views
         let input = """

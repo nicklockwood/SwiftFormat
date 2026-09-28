@@ -634,6 +634,26 @@ final class WrapAttributesTests: XCTestCase {
         testFormatting(for: input, rule: .wrapAttributes, options: options, exclude: [.redundantViewBuilder])
     }
 
+    func testWrapAttributesInSwiftUIViewWithContentBuilder() {
+        let input = """
+        struct MyView: View {
+            @State private var textContent: String
+            @Environment(\\.colorScheme) private var colorScheme
+
+            var body: some View {
+                childView
+            }
+
+            @ContentBuilder var childView: some View {
+                Text(verbatim: textContent)
+            }
+        }
+        """
+
+        let options = FormatOptions(varAttributes: .sameLine, complexAttributes: .prevLine)
+        testFormatting(for: input, rule: .wrapAttributes, options: options, exclude: [.redundantViewBuilder])
+    }
+
     func testInlineMainActorAttributeNotWrapped() {
         let input = """
         var foo: @MainActor (Foo) -> Void

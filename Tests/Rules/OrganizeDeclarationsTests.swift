@@ -471,6 +471,74 @@ final class OrganizeDeclarationsTests: XCTestCase {
         )
     }
 
+    func testOrganizeSwiftUIViewInTypeOrderWithContentBuilder() {
+        let input = """
+        struct ContentView: View {
+
+            private var label: String
+
+            @State
+            var isOn: Bool = false
+
+            @ContentBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+            init(label: String) {
+                self.label = label
+            }
+
+            @ContentBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: SwiftUI Properties
+
+            @State
+            var isOn: Bool = false
+
+            // MARK: Properties
+
+            private var label: String
+
+            // MARK: Lifecycle
+
+            init(label: String) {
+                self.label = label
+            }
+
+            // MARK: Content Properties
+
+            @ContentBuilder
+            var body: some View {
+                toggle
+            }
+
+            @ContentBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+        )
+    }
+
     func testOrganizeSwiftUIViewModifierInTypeOrder() {
         let input = """
         struct Modifier: ViewModifier {

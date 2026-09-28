@@ -46,6 +46,7 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
+* [preferContentBuilder](#preferContentBuilder)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
@@ -1965,6 +1966,41 @@ Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(
 ```diff
 - if text.range(of: "needle") != nil {
 + if text.contains("needle") {
+```
+
+</details>
+<br/>
+
+## preferContentBuilder
+
+Replace legacy SwiftUI result builder attributes like `@ViewBuilder` with the equivalent `@ContentBuilder`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct MyView: View {
+    var body: some View {
+      NavigationStack {
+        content
+      }
+      .toolbar { toolbarItems }
+    }
+
+-   @ViewBuilder
++   @ContentBuilder
+    var content: some View {
+      Text("foo")
+      Text("bar")
+    }
+
+-   @ToolbarContentBuilder
++   @ContentBuilder
+    var toolbarItems: some ToolbarContent {
+      ToolbarItem { Button("Save") {} }
+      ToolbarItem { Button("Cancel") {} }
+    }
+  }
 ```
 
 </details>

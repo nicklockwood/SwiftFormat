@@ -653,6 +653,7 @@ Correct common spelling mistakes in comments and identifiers.
 Option | Description
 --- | ---
 `--typo-visibility` | Correct typos at or below this visibility threshold: "public", "package", "internal" (default), "fileprivate" or "private"
+`--typos` | Comma-delimited list of typo=correction mappings
 `--ignore-typos` | Comma-delimited list of typos to ignore
 
 <details>

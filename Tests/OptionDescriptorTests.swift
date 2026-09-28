@@ -390,6 +390,16 @@ final class OptionDescriptorTests: XCTestCase {
         }
     }
 
+    func testIgnoredTyposAcceptsCommaDelimitedList() throws {
+        let descriptor = Descriptors.ignoredTypos
+        XCTAssertEqual(descriptor.argumentName, "ignore-typos")
+        XCTAssertEqual(descriptor.defaultArgument, "")
+
+        var options: FormatOptions = .default
+        try descriptor.toOptions("retreive,prefered", &options)
+        XCTAssertEqual(options.ignoredTypos, ["retreive", "prefered"])
+    }
+
     // MARK: - importGrouping
 
     func testImportGroupingAcceptsCommaDelimitedList() {

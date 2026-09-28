@@ -526,6 +526,39 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortDeclarations)
     }
 
+    func testSortCollectionLiteralsInComputedPropertyBody() {
+        let input = """
+        extension Target {
+            // swiftformat:sort
+            static var foo: Target {
+                .target(
+                    name: "Foo",
+                    dependencies: [
+                        .quux,
+                        .baz,
+                    ]
+                )
+            }
+        }
+        """
+
+        let output = """
+        extension Target {
+            // swiftformat:sort
+            static var foo: Target {
+                .target(
+                    name: "Foo",
+                    dependencies: [
+                        .baz,
+                        .quux,
+                    ]
+                )
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
     func testSortDeclarationsArrayMembersWithoutTrailingComma() {
         let input = """
         let x = [ // swiftformat:sort

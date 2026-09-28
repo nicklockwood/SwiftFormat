@@ -228,7 +228,7 @@ extension Formatter {
     }
 
     /// If the sort directive comment body at the given index precedes an expression, or a property
-    /// declaration with a value, returns the range of that expression or value.
+    /// declaration with a value or computed body, returns the range of that expression, value, or body.
     /// Returns nil for other declarations, whose bodies are sorted as declarations instead.
     func sortableExpressionRange(afterSortCommentAt commentBodyIndex: Int) -> ClosedRange<Int>? {
         guard var startIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: commentBodyIndex) else { return nil }
@@ -238,7 +238,8 @@ extension Formatter {
             startIndex = nextIndex
         }
         if ["let", "var"].contains(tokens[startIndex].string) {
-            return parsePropertyDeclaration(atIntroducerIndex: startIndex)?.value?.expressionRange
+            let property = parsePropertyDeclaration(atIntroducerIndex: startIndex)
+            return property?.value?.expressionRange ?? property?.body?.range
         }
         guard !tokens[startIndex].isDeclarationTypeKeyword else { return nil }
         return parseExpressionRange(startingAt: startIndex)

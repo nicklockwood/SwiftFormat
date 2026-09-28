@@ -120,6 +120,17 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
+    func testDisableRuleNamesCanBeCommaDelimitedAndCaseInsensitive() {
+        let input = "// swiftformat:disable indent,SPACEAROUNDOPERATORS\nlet foo=bar"
+        XCTAssertEqual(try format(input, rules: [.spaceAroundOperators]).output, input)
+    }
+
+    func testDisableRuleNameMustBeACompleteWord() {
+        let input = "// swiftformat:disable spaceAroundOperators_suffix\nlet foo=bar"
+        let output = "// swiftformat:disable spaceAroundOperators_suffix\nlet foo = bar"
+        XCTAssertEqual(try format(input, rules: [.spaceAroundOperators]).output, output)
+    }
+
     func testDirectiveInMiddleOfComment() {
         let input = "//fixme: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5;"
         let output = "// FIXME: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5\n"

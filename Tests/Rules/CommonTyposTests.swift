@@ -80,6 +80,88 @@ final class CommonTyposTests: XCTestCase {
         testFormatting(for: input, rule: .commonTypos)
     }
 
+    func testPublicVisibilityCorrectsPublicAndPackageButNotOpenAPI() {
+        let input = """
+        public struct Reciever {
+            public let widht: Int
+            package func retreiveValue() {}
+        }
+
+        open class AdressProvider {}
+        """
+        let output = """
+        public struct Receiver {
+            public let width: Int
+            package func retrieveValue() {}
+        }
+
+        open class AdressProvider {}
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(typoVisibility: .public)
+        )
+    }
+
+    func testFileprivateVisibilityPreservesInternalAPI() {
+        let input = """
+        let internalAdress = ""
+        fileprivate let privateReciever = ""
+        private let privateWidht = 10
+        """
+        let output = """
+        let internalAdress = ""
+        fileprivate let privateReceiver = ""
+        private let privateWidth = 10
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(typoVisibility: .fileprivate),
+            exclude: [.redundantFileprivate]
+        )
+    }
+
+    func testPackageVisibilityPreservesPublicAPI() {
+        let input = """
+        public let publicAdress = ""
+        package let packageReciever = ""
+        let internalWidht = 10
+        """
+        let output = """
+        public let publicAdress = ""
+        package let packageReceiver = ""
+        let internalWidth = 10
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(typoVisibility: .package)
+        )
+    }
+
+    func testPrivateVisibilityPreservesFileprivateAPI() {
+        let input = """
+        fileprivate let fileprivateAdress = ""
+        private let privateReciever = ""
+        """
+        let output = """
+        fileprivate let fileprivateAdress = ""
+        private let privateReceiver = ""
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(typoVisibility: .private),
+            exclude: [.redundantFileprivate]
+        )
+    }
+
     func testPreservesSerializedProperties() {
         let input = """
         struct User: Codable {

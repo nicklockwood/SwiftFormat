@@ -11,8 +11,9 @@ import Foundation
 public extension FormatRule {
     /// Correct common, unambiguous spelling mistakes in comments and non-public declarations.
     static let commonTypos = FormatRule(
-        help: "Correct common spelling mistakes in comments and private or internal identifiers.",
-        disabledByDefault: true
+        help: "Correct common spelling mistakes in comments and identifiers.",
+        disabledByDefault: true,
+        options: ["typo-visibility"]
     ) { formatter in
         let declarations = formatter.parseDeclarations()
         var declaredNames = Set<String>()
@@ -109,7 +110,7 @@ extension Formatter {
     func declarationCanHaveTyposCorrected(_ declaration: Declaration) -> Bool {
         guard declaration.keyword != "extension",
               !["case", "import", "operator", "precedencegroup"].contains(declaration.keyword),
-              [.internal, .fileprivate, .private].contains(effectiveVisibility(of: declaration))
+              effectiveVisibility(of: declaration) <= options.typoVisibility
         else { return false }
 
         let contractModifiers = [

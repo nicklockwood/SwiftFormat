@@ -369,6 +369,27 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try Descriptors.preferFileMacro.toOptions(argument, &options))
     }
 
+    func testTypoVisibilityAcceptsSupportedVisibilityThresholds() throws {
+        let descriptor = Descriptors.typoVisibility
+        XCTAssertEqual(descriptor.defaultArgument, "internal")
+        XCTAssertEqual(descriptor.validArguments, ["public", "package", "internal", "fileprivate", "private"])
+
+        var options: FormatOptions = .default
+        try descriptor.toOptions("public", &options)
+        XCTAssertEqual(options.typoVisibility, .public)
+        try descriptor.toOptions("fileprivate", &options)
+        XCTAssertEqual(options.typoVisibility, .fileprivate)
+        try descriptor.toOptions("private", &options)
+        XCTAssertEqual(options.typoVisibility, .private)
+    }
+
+    func testTypoVisibilityRejectsUnsupportedVisibilityThresholds() {
+        let descriptor = Descriptors.typoVisibility
+        for visibility in ["open"] {
+            XCTAssertFalse(descriptor.validateArgument(visibility))
+        }
+    }
+
     // MARK: - importGrouping
 
     func testImportGroupingAcceptsCommaDelimitedList() {

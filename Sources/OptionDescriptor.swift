@@ -1303,6 +1303,44 @@ struct _Descriptors {
             "private": .private,
         ]
     )
+    let typos = OptionDescriptor(
+        argumentName: "typos",
+        displayName: "Custom Typos",
+        help: "Comma-delimited list of typo=correction mappings",
+        keyPath: \.typos,
+        type: .array,
+        fromArgument: { argument in
+            var typos = [String: String]()
+            for mapping in parseCommaDelimitedList(argument) {
+                let pair = mapping.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
+                guard pair.count == 2,
+                      !pair[0].isEmpty,
+                      !pair[1].isEmpty,
+                      pair[0].allSatisfy(\.isLetter),
+                      pair[1].allSatisfy(\.isLetter)
+                else {
+                    throw FormatError.options("--typos expects <typo>=<correction> mappings")
+                }
+
+                let typo = pair[0].lowercased()
+                let correction = String(pair[1])
+                guard typos[typo] == nil else {
+                    throw FormatError.options("Duplicate typo '\(pair[0])'")
+                }
+                if let builtInCorrection = commonTypoCorrections[typo],
+                   builtInCorrection != correction.lowercased()
+                {
+                    throw FormatError.options("Custom correction for '\(pair[0])' conflicts with the built-in correction '\(builtInCorrection)'")
+                }
+                typos[typo] = correction
+            }
+            return typos
+        },
+        toArgument: {
+            $0.sorted(by: { $0.key < $1.key })
+                .map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+        }
+    )
     let ignoredTypos = OptionDescriptor(
         argumentName: "ignore-typos",
         displayName: "Ignored Typos",

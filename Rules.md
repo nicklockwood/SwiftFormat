@@ -125,6 +125,7 @@
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blockComments](#blockComments)
+* [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
 * [ifExpressions](#ifExpressions)
 * [isEmpty](#isEmpty)
@@ -641,6 +642,23 @@ Option | Description
 + {
       // foo
   }
+```
+
+</details>
+<br/>
+
+## commonTypos
+
+Correct common spelling mistakes in comments and private or internal identifiers.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- // Retreive the cached value if it exists
+- private func retreiveCachedValue() -> Value? { ... }
++ // Retrieve the cached value if it exists
++ private func retrieveCachedValue() -> Value? { ... }
 ```
 
 </details>

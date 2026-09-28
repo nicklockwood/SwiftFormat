@@ -1290,6 +1290,19 @@ struct _Descriptors {
         help: "List of symbols to be ignored by the acronyms rule",
         keyPath: \.preserveAcronyms
     )
+    let typoVisibility = OptionDescriptor(
+        argumentName: "typo-visibility",
+        displayName: "Typo Visibility",
+        help: "Correct typos at or below this visibility threshold:",
+        keyPath: \.typoVisibility,
+        options: [
+            "public": .public,
+            "package": .package,
+            "internal": .internal,
+            "fileprivate": .fileprivate,
+            "private": .private,
+        ]
+    )
     let indentBlankLines = OptionDescriptor(
         argumentName: "indent-blank-lines",
         displayName: "Indent Blank Lines",

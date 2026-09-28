@@ -1031,6 +1031,35 @@ final class UnusedArgumentsTests: XCTestCase {
                        exclude: [.braces, .wrapArguments])
     }
 
+    func testContentBuilderAnnotationDoesntBreakUnusedArgDetection() {
+        let input = """
+        public struct Foo {
+            let content: View
+
+            public init(
+                responsibleFileID: StaticString = #fileID,
+                @ContentBuilder content: () -> View)
+            {
+                self.content = content()
+            }
+        }
+        """
+        let output = """
+        public struct Foo {
+            let content: View
+
+            public init(
+                responsibleFileID _: StaticString = #fileID,
+                @ContentBuilder content: () -> View)
+            {
+                self.content = content()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments,
+                       exclude: [.braces, .wrapArguments])
+    }
+
     func testArgumentUsedInDictionaryLiteral() {
         let input = """
         class MyClass {

@@ -223,4 +223,37 @@ final class CommonTyposTests: XCTestCase {
             options: FormatOptions(ignoredTypos: ["RETREIVE", "prefered"])
         )
     }
+
+    func testCorrectsCustomTyposInCommentsAndIdentifiers() {
+        let input = """
+        private let statuzColourAdress = "" // Statuz colour adress
+        """
+        let output = """
+        private let statusColorAddress = "" // Status color address
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(typos: ["statuz": "status", "colour": "color"])
+        )
+    }
+
+    func testIgnoredTyposOverrideCustomTypos() {
+        let input = """
+        private let statuzColour = "" // Statuz colour
+        """
+        let output = """
+        private let statuzColor = "" // Statuz color
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(
+                typos: ["statuz": "status", "colour": "color"],
+                ignoredTypos: ["statuz"]
+            )
+        )
+    }
 }

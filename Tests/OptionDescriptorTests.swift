@@ -400,6 +400,31 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertEqual(options.ignoredTypos, ["retreive", "prefered"])
     }
 
+    func testTyposAcceptsCommaDelimitedMappings() throws {
+        let descriptor = Descriptors.typos
+        XCTAssertEqual(descriptor.defaultArgument, "")
+
+        var options: FormatOptions = .default
+        try descriptor.toOptions("statuz=status,colour=color", &options)
+        XCTAssertEqual(options.typos, ["statuz": "status", "colour": "color"])
+        XCTAssertEqual(descriptor.fromOptions(options), "colour=color,statuz=status")
+    }
+
+    func testTyposRejectsInvalidMappings() {
+        let descriptor = Descriptors.typos
+        for mappings in [
+            "statuz",
+            "=status",
+            "statuz=",
+            "statuz=status=state",
+            "statuz-code=status",
+            "statuz=status,STATUZ=state",
+            "adress=location",
+        ] {
+            XCTAssertFalse(descriptor.validateArgument(mappings), mappings)
+        }
+    }
+
     // MARK: - importGrouping
 
     func testImportGroupingAcceptsCommaDelimitedList() {

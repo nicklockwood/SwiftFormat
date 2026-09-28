@@ -13,9 +13,13 @@ public extension FormatRule {
     static let commonTypos = FormatRule(
         help: "Correct common spelling mistakes in comments and identifiers.",
         disabledByDefault: true,
-        options: ["typo-visibility", "ignore-typos"]
+        options: ["typo-visibility", "typos", "ignore-typos"]
     ) { formatter in
         let ignoredTypos = Set(formatter.options.ignoredTypos.map { $0.lowercased() })
+        var typoCorrections = commonTypoCorrections
+        for (typo, correction) in formatter.options.typos where typoCorrections[typo.lowercased()] == nil {
+            typoCorrections[typo.lowercased()] = correction
+        }
         let declarations = formatter.parseDeclarations()
         var declaredNames = Set<String>()
         var protectedNames = Set<String>()
@@ -71,7 +75,11 @@ public extension FormatRule {
         var renames = [String: String]()
         var correctedNames = [String: [String]]()
         for name in eligibleNames.subtracting(protectedNames) {
-            let correctedName = formatter.correctingCommonTypos(in: name, ignoring: ignoredTypos)
+            let correctedName = formatter.correctingCommonTypos(
+                in: name,
+                using: typoCorrections,
+                ignoring: ignoredTypos
+            )
             guard correctedName != name else { continue }
             correctedNames[correctedName, default: []].append(name)
         }
@@ -87,7 +95,11 @@ public extension FormatRule {
                 guard let correctedName = renames[name] else { return }
                 formatter.replaceToken(at: index, with: .identifier(correctedName))
             case let .commentBody(comment):
-                let correctedComment = formatter.correctingCommonTypos(in: comment, ignoring: ignoredTypos)
+                let correctedComment = formatter.correctingCommonTypos(
+                    in: comment,
+                    using: typoCorrections,
+                    ignoring: ignoredTypos
+                )
                 guard correctedComment != comment else { return }
                 formatter.replaceToken(at: index, with: .commentBody(correctedComment))
             default:
@@ -163,13 +175,21 @@ extension Formatter {
     }
 
     /// Corrects typo dictionary matches while preserving camel case and capitalization.
-    func correctingCommonTypos(in text: String, ignoring ignoredTypos: Set<String>) -> String {
+    func correctingCommonTypos(
+        in text: String,
+        using typoCorrections: [String: String],
+        ignoring ignoredTypos: Set<String>
+    ) -> String {
         var result = ""
         var letters = ""
 
         func appendLetters() {
             guard !letters.isEmpty else { return }
-            result += correctingCommonTyposInWord(letters, ignoring: ignoredTypos)
+            result += correctingCommonTyposInWord(
+                letters,
+                using: typoCorrections,
+                ignoring: ignoredTypos
+            )
             letters = ""
         }
 
@@ -185,9 +205,13 @@ extension Formatter {
         return result
     }
 
-    func correctingCommonTyposInWord(_ word: String, ignoring ignoredTypos: Set<String>) -> String {
+    func correctingCommonTyposInWord(
+        _ word: String,
+        using typoCorrections: [String: String],
+        ignoring ignoredTypos: Set<String>
+    ) -> String {
         let lowercaseWord = word.lowercased()
-        if !ignoredTypos.contains(lowercaseWord), let correction = commonTypoCorrections[lowercaseWord] {
+        if !ignoredTypos.contains(lowercaseWord), let correction = typoCorrections[lowercaseWord] {
             return correction.applyingCapitalization(of: word)
         }
 
@@ -212,7 +236,7 @@ extension Formatter {
         return components.map { component in
             let lowercaseComponent = component.lowercased()
             guard !ignoredTypos.contains(lowercaseComponent),
-                  let correction = commonTypoCorrections[lowercaseComponent]
+                  let correction = typoCorrections[lowercaseComponent]
             else { return component }
             return correction.applyingCapitalization(of: component)
         }.joined()
@@ -232,7 +256,7 @@ extension String {
 }
 
 /// A deliberately conservative subset of unambiguous corrections inspired by codespell.
-private let commonTypoCorrections = [
+let commonTypoCorrections = [
     "acheive": "achieve",
     "acheived": "achieved",
     "acheives": "achieves",

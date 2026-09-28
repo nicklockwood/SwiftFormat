@@ -29,6 +29,13 @@ public extension FormatRule {
         """
         ```diff
           struct MyView: View {
+            var body: some View {
+              NavigationStack {
+                content
+              }
+              .toolbar { toolbarItems }
+            }
+
         -   @ViewBuilder
         +   @ContentBuilder
             var content: some View {
@@ -39,8 +46,8 @@ public extension FormatRule {
         -   @ToolbarContentBuilder
         +   @ContentBuilder
             var toolbarItems: some ToolbarContent {
-              ToolbarItem { saveButton }
-              ToolbarItem { cancelButton }
+              ToolbarItem { Button("Save") {} }
+              ToolbarItem { Button("Cancel") {} }
             }
           }
         ```
@@ -49,36 +56,27 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// SwiftUI result builders that are replaced by `@ContentBuilder`
+    /// SwiftUI result builders that `@ContentBuilder` can replace. Other builders like
+    /// `TabContentBuilder` and `KeyframeTrackContentBuilder` aren't supported by `@ContentBuilder`.
     static let legacyContentBuilders: Set<String> = [
         "ViewBuilder",
         "ToolbarContentBuilder",
         "CommandsBuilder",
-        "TabContentBuilder",
-        "KeyframeTrackContentBuilder",
-        "CompositorContentBuilder",
     ]
 
     /// If the attribute at the given index is a legacy SwiftUI result builder like `@ViewBuilder`
     /// or `@SwiftUI.ViewBuilder`, returns the index of the token containing the builder name
     func indexOfLegacyContentBuilderName(forAttributeAt attributeIndex: Int) -> Int? {
-        let nameIndex: Int
         if Formatter.legacyContentBuilders.contains(String(tokens[attributeIndex].string.dropFirst())) {
-            nameIndex = attributeIndex
-        } else if tokens[attributeIndex] == .keyword("@SwiftUI"),
-                  let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: attributeIndex),
-                  tokens[dotIndex].isOperator("."),
-                  let qualifiedNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
-                  Formatter.legacyContentBuilders.contains(tokens[qualifiedNameIndex].string)
-        {
-            nameIndex = qualifiedNameIndex
-        } else {
-            return nil
+            return attributeIndex
         }
 
-        // `@ContentBuilder` is a non-generic typealias for `ViewBuilder`, so generic
-        // builders like `@TabContentBuilder<Value>` can't be migrated as-is
-        guard next(.nonSpace, after: nameIndex) != .startOfScope("<") else { return nil }
+        guard ["@SwiftUI", "@SwiftUICore"].contains(tokens[attributeIndex].string),
+              let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: attributeIndex),
+              tokens[dotIndex].isOperator("."),
+              let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
+              Formatter.legacyContentBuilders.contains(tokens[nameIndex].string)
+        else { return nil }
         return nameIndex
     }
 }

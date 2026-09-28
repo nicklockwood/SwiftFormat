@@ -638,7 +638,7 @@ final class WrapAttributesTests: XCTestCase {
         let input = """
         struct MyView: View {
             @State private var textContent: String
-            @Environment(\\.myEnvironmentVar) private var environmentVar
+            @Environment(\\.colorScheme) private var colorScheme
 
             var body: some View {
                 childView

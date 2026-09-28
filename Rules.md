@@ -1980,6 +1980,13 @@ Replace legacy SwiftUI result builder attributes like `@ViewBuilder` with the eq
 
 ```diff
   struct MyView: View {
+    var body: some View {
+      NavigationStack {
+        content
+      }
+      .toolbar { toolbarItems }
+    }
+
 -   @ViewBuilder
 +   @ContentBuilder
     var content: some View {
@@ -1990,8 +1997,8 @@ Replace legacy SwiftUI result builder attributes like `@ViewBuilder` with the eq
 -   @ToolbarContentBuilder
 +   @ContentBuilder
     var toolbarItems: some ToolbarContent {
-      ToolbarItem { saveButton }
-      ToolbarItem { cancelButton }
+      ToolbarItem { Button("Save") {} }
+      ToolbarItem { Button("Cancel") {} }
     }
   }
 ```

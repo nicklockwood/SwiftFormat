@@ -13,6 +13,10 @@ final class PreferContentBuilderTests: XCTestCase {
     func testReplaceViewBuilderOnProperty() {
         let input = """
         struct MyView: View {
+            var body: some View {
+                content
+            }
+
             @ViewBuilder
             var content: some View {
                 Text("foo")
@@ -22,6 +26,10 @@ final class PreferContentBuilderTests: XCTestCase {
         """
         let output = """
         struct MyView: View {
+            var body: some View {
+                content
+            }
+
             @ContentBuilder
             var content: some View {
                 Text("foo")
@@ -36,6 +44,10 @@ final class PreferContentBuilderTests: XCTestCase {
     func testDoesntReplaceViewBuilderBeforeSwift6_4() {
         let input = """
         struct MyView: View {
+            var body: some View {
+                content
+            }
+
             @ViewBuilder
             var content: some View {
                 Text("foo")
@@ -70,16 +82,10 @@ final class PreferContentBuilderTests: XCTestCase {
         testFormatting(for: input, output, rule: .preferContentBuilder, options: options)
     }
 
-    func testReplaceViewBuilderOnInitParameterAndStoredProperty() {
+    func testReplaceViewBuilderOnStoredProperty() {
         let input = """
-        struct Card<Content: View, Footer: View>: View {
+        struct Card<Content: View>: View {
             @ViewBuilder let content: Content
-            let footer: () -> Footer
-
-            init(@ViewBuilder content: () -> Content, footer: @escaping @ViewBuilder () -> Footer) {
-                self.content = content()
-                self.footer = footer
-            }
 
             var body: some View {
                 content
@@ -87,14 +93,8 @@ final class PreferContentBuilderTests: XCTestCase {
         }
         """
         let output = """
-        struct Card<Content: View, Footer: View>: View {
+        struct Card<Content: View>: View {
             @ContentBuilder let content: Content
-            let footer: () -> Footer
-
-            init(@ContentBuilder content: () -> Content, footer: @escaping @ContentBuilder () -> Footer) {
-                self.content = content()
-                self.footer = footer
-            }
 
             var body: some View {
                 content
@@ -105,50 +105,93 @@ final class PreferContentBuilderTests: XCTestCase {
         testFormatting(for: input, output, rule: .preferContentBuilder, options: options)
     }
 
-    func testReplaceLegacyResultBuilders() {
+    func testReplaceViewBuilderOnInitParameters() {
+        let input = """
+        struct Card<Content: View, Footer: View>: View {
+            let title: String
+            let content: Content
+            let footer: () -> Footer
+
+            init(title: String, @ViewBuilder content: () -> Content, @ViewBuilder footer: @escaping () -> Footer) {
+                self.title = title.uppercased()
+                self.content = content()
+                self.footer = footer
+            }
+
+            var body: some View {
+                Text(title)
+                content
+                footer()
+            }
+        }
+        """
+        let output = """
+        struct Card<Content: View, Footer: View>: View {
+            let title: String
+            let content: Content
+            let footer: () -> Footer
+
+            init(title: String, @ContentBuilder content: () -> Content, @ContentBuilder footer: @escaping () -> Footer) {
+                self.title = title.uppercased()
+                self.content = content()
+                self.footer = footer
+            }
+
+            var body: some View {
+                Text(title)
+                content
+                footer()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .preferContentBuilder, options: options)
+    }
+
+    func testReplaceToolbarContentBuilderAndCommandsBuilder() {
         let input = """
         @ToolbarContentBuilder
-        var toolbarItems: some ToolbarContent {}
+        var toolbarItems: some ToolbarContent {
+            ToolbarItem { Button("Save") {} }
+            ToolbarItem { Button("Cancel") {} }
+        }
 
         @CommandsBuilder
-        var commands: some Commands {}
-
-        @TabContentBuilder
-        var tabs: some TabContent<Never> {}
-
-        @KeyframeTrackContentBuilder
-        var keyframes: some KeyframeTrackContent<Double> {}
-
-        @CompositorContentBuilder
-        var compositorContent: some CompositorContent {}
+        var commands: some Commands {
+            CommandMenu("File") { Button("Open") {} }
+            CommandMenu("Edit") { Button("Undo") {} }
+        }
         """
         let output = """
         @ContentBuilder
-        var toolbarItems: some ToolbarContent {}
+        var toolbarItems: some ToolbarContent {
+            ToolbarItem { Button("Save") {} }
+            ToolbarItem { Button("Cancel") {} }
+        }
 
         @ContentBuilder
-        var commands: some Commands {}
-
-        @ContentBuilder
-        var tabs: some TabContent<Never> {}
-
-        @ContentBuilder
-        var keyframes: some KeyframeTrackContent<Double> {}
-
-        @ContentBuilder
-        var compositorContent: some CompositorContent {}
+        var commands: some Commands {
+            CommandMenu("File") { Button("Open") {} }
+            CommandMenu("Edit") { Button("Undo") {} }
+        }
         """
         let options = FormatOptions(swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .preferContentBuilder, options: options)
     }
 
-    func testDoesntReplaceResultBuildersWithGenericArguments() {
+    func testDoesntReplaceUnsupportedResultBuilders() {
         let input = """
         @TabContentBuilder<Int>
-        var tabs: some TabContent<Int> {}
+        var tabs: some TabContent<Int> {
+            Tab("Home", systemImage: "house", value: 0) { Text("Home") }
+            Tab("Settings", systemImage: "gear", value: 1) { Text("Settings") }
+        }
 
-        @SwiftUI.KeyframeTrackContentBuilder<Double>
-        var keyframes: some KeyframeTrackContent<Double> {}
+        @KeyframeTrackContentBuilder<Double>
+        var keyframes: some KeyframeTrackContent<Double> {
+            LinearKeyframe(1.0, duration: 0.5)
+            LinearKeyframe(2.0, duration: 0.5)
+        }
         """
         let options = FormatOptions(swiftVersion: "6.4")
         testFormatting(for: input, rule: .preferContentBuilder, options: options)
@@ -162,8 +205,17 @@ final class PreferContentBuilderTests: XCTestCase {
             Text("bar")
         }
 
+        @SwiftUICore.ViewBuilder
+        var otherContent: some View {
+            Text("foo")
+            Text("bar")
+        }
+
         @SwiftUI.ToolbarContentBuilder
-        var toolbarItems: some ToolbarContent {}
+        var toolbarItems: some ToolbarContent {
+            ToolbarItem { Button("Save") {} }
+            ToolbarItem { Button("Cancel") {} }
+        }
         """
         let output = """
         @SwiftUI.ContentBuilder
@@ -172,24 +224,37 @@ final class PreferContentBuilderTests: XCTestCase {
             Text("bar")
         }
 
+        @SwiftUICore.ContentBuilder
+        var otherContent: some View {
+            Text("foo")
+            Text("bar")
+        }
+
         @SwiftUI.ContentBuilder
-        var toolbarItems: some ToolbarContent {}
+        var toolbarItems: some ToolbarContent {
+            ToolbarItem { Button("Save") {} }
+            ToolbarItem { Button("Cancel") {} }
+        }
         """
         let options = FormatOptions(swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .preferContentBuilder, options: options)
     }
 
-    func testDoesntReplaceCustomResultBuilders() {
+    func testDoesntReplaceCustomResultBuilderWithSameName() {
         let input = """
-        @MyModule.ViewBuilder
-        var content: some View {
-            Text("foo")
+        enum Custom {
+            @resultBuilder
+            enum ViewBuilder {
+                static func buildBlock(_ components: Int...) -> [Int] {
+                    components
+                }
+            }
         }
 
-        @ArrayBuilder<String>
-        var strings: [String] {
-            "foo"
-            "bar"
+        @Custom.ViewBuilder
+        var numbers: [Int] {
+            1
+            2
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")

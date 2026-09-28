@@ -63,6 +63,12 @@ final class RedundantEmptyViewTests: XCTestCase {
     func testRemoveInlineRedundantEmptyViewElseInContentBuilderProperty() {
         let input = """
         struct ContentView: View {
+            let condition: Bool
+
+            var body: some View {
+                description
+            }
+
             @ContentBuilder
             var description: some View {
                 if condition {
@@ -75,6 +81,12 @@ final class RedundantEmptyViewTests: XCTestCase {
         """
         let output = """
         struct ContentView: View {
+            let condition: Bool
+
+            var body: some View {
+                description
+            }
+
             @ContentBuilder
             var description: some View {
                 if condition {

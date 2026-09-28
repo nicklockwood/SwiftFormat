@@ -25,6 +25,7 @@ let ruleRegistry: [String: FormatRule] = [
     "blankLinesBetweenScopes": .blankLinesBetweenScopes,
     "blockComments": .blockComments,
     "braces": .braces,
+    "commonTypos": .commonTypos,
     "conditionalAssignment": .conditionalAssignment,
     "consecutiveBlankLines": .consecutiveBlankLines,
     "consecutiveSpaces": .consecutiveSpaces,

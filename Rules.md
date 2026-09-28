@@ -3521,7 +3521,8 @@ Option | Description
       }
   }
 
-  let featureFlags = [ // swiftformat:sort
+  // swiftformat:sort
+  let featureFlags = [
 -     fooFeature,
 -     barFeature,
 +     barFeature,

@@ -440,7 +440,53 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.sortDeclarations, .organizeDeclarations], options: options)
     }
 
-    func testSortDeclarationsArrayMembers() {
+    func testSortDeclarationsArrayMembersPreviousLine() {
+        let input = """
+        // swiftformat:sort
+        let x = [
+            b,
+            c,
+            a,
+        ]
+        """
+
+        let output = """
+        // swiftformat:sort
+        let x = [
+            a,
+            b,
+            c,
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsArrayMembersPreviousLineWithModifiers() {
+        let input = """
+        enum Foo {
+            // swiftformat:sort
+            private static let x = [
+                b,
+                c,
+                a,
+            ]
+        }
+        """
+
+        let output = """
+        enum Foo {
+            // swiftformat:sort
+            private static let x = [
+                a,
+                b,
+                c,
+            ]
+        }
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
+    func testSortDeclarationsArrayMembersSameLine() {
         let input = """
         let x = [ // swiftformat:sort
             b,
@@ -787,7 +833,7 @@ final class SortDeclarationsTests: XCTestCase {
 
     func testSortPackageDotSwift() {
         let input = """
-        // swiftformat:sort:begin
+        // swiftformat:sort
         Package(
             name: "PackageName",
             products: [
@@ -817,11 +863,10 @@ final class SortDeclarationsTests: XCTestCase {
                 ),
             ]
         )
-        // swiftformat:sort:end
         """
 
         let output = """
-        // swiftformat:sort:begin
+        // swiftformat:sort
         Package(
             name: "PackageName",
             products: [
@@ -851,7 +896,6 @@ final class SortDeclarationsTests: XCTestCase {
                 ),
             ]
         )
-        // swiftformat:sort:end
         """
 
         testFormatting(for: input, output, rule: .sortDeclarations)

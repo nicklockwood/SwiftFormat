@@ -24,11 +24,15 @@ public extension FormatRule {
                     || $0.isDeclarationTypeKeyword(including: Array(Token.swiftTypeKeywords))
             }
         ) { index, token in
-            if token.isCommentBody, !token.string.contains(":sort:"),
-               let literalStartIndex = formatter.collectionLiteralStartOfScope(forSortCommentAt: index)
-            {
-                formatter.sortCollectionLiteralElements(startOfScope: literalStartIndex)
-                return
+            if token.isCommentBody, !token.string.contains(":sort:") {
+                if let literalStartIndex = formatter.collectionLiteralStartOfScope(forSortCommentAt: index) {
+                    formatter.sortCollectionLiteralElements(startOfScope: literalStartIndex)
+                    return
+                }
+                if let expressionRange = formatter.sortableExpressionRange(afterSortCommentAt: index) {
+                    formatter.sortCollectionLiterals(in: expressionRange)
+                    return
+                }
             }
 
             let rangeToSort: ClosedRange<Int>
@@ -199,7 +203,8 @@ public extension FormatRule {
               }
           }
 
-          let featureFlags = [ // swiftformat:sort
+          // swiftformat:sort
+          let featureFlags = [
         -     fooFeature,
         -     barFeature,
         +     barFeature,
@@ -220,6 +225,23 @@ extension Formatter {
               !isSubscriptOrFunctionCall(at: previousIndex)
         else { return nil }
         return previousIndex
+    }
+
+    /// If the sort directive comment body at the given index precedes an expression, or a property
+    /// declaration with a value, returns the range of that expression or value.
+    /// Returns nil for other declarations, whose bodies are sorted as declarations instead.
+    func sortableExpressionRange(afterSortCommentAt commentBodyIndex: Int) -> ClosedRange<Int>? {
+        guard var startIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: commentBodyIndex) else { return nil }
+        while isModifier(at: startIndex) || tokens[startIndex].isAttribute,
+              let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfAttribute(at: startIndex) ?? startIndex)
+        {
+            startIndex = nextIndex
+        }
+        if ["let", "var"].contains(tokens[startIndex].string) {
+            return parsePropertyDeclaration(atIntroducerIndex: startIndex)?.value?.expressionRange
+        }
+        guard !tokens[startIndex].isDeclarationTypeKeyword else { return nil }
+        return parseExpressionRange(startingAt: startIndex)
     }
 
     /// Sorts the elements of every array and dictionary literal in the given range.

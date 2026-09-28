@@ -505,6 +505,27 @@ final class SortDeclarationsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortDeclarations)
     }
 
+    func testSortCollectionLiteralStringsByContents() {
+        let input = """
+        let x = [ // swiftformat:sort
+            .package(url: "foo-extras", exact: "1.0.0"),
+            "bar-baz",
+            .package(url: "foo", exact: "2.0.0"),
+            "bar",
+        ]
+        """
+
+        let output = """
+        let x = [ // swiftformat:sort
+            "bar",
+            "bar-baz",
+            .package(url: "foo", exact: "2.0.0"),
+            .package(url: "foo-extras", exact: "1.0.0"),
+        ]
+        """
+        testFormatting(for: input, output, rule: .sortDeclarations)
+    }
+
     func testSortDeclarationsArrayMembersWithoutTrailingComma() {
         let input = """
         let x = [ // swiftformat:sort

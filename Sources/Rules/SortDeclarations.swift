@@ -332,7 +332,20 @@ extension Formatter {
         guard let colonIndex = index(of: .delimiter(":"), in: element.lowerBound ..< element.upperBound),
               let endOfKey = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
               endOfKey >= element.lowerBound
-        else { return tokens[element].string }
-        return tokens[element.lowerBound ... endOfKey].string
+        else { return sortKeyWords(in: element) }
+        return sortKeyWords(in: element.lowerBound ... endOfKey)
+    }
+
+    /// The identifiers, keywords, numbers, and string contents in the given range, separated by spaces.
+    /// Quotes and punctuation are excluded so that e.g. `"foo"` sorts before `"foo-bar"`.
+    func sortKeyWords(in range: ClosedRange<Int>) -> String {
+        tokens[range].compactMap { token -> String? in
+            switch token {
+            case .identifier, .keyword, .number, .stringBody:
+                return token.string
+            default:
+                return nil
+            }
+        }.joined(separator: " ")
     }
 }

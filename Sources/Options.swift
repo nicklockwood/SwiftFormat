@@ -983,6 +983,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var acronyms: Set<String>
     public var preserveAcronyms: Set<String>
     public var typoVisibility: Visibility
+    public var ignoredTypos: Set<String>
     public var indentBlankLines: Bool
     public var indentStrings: Bool
     public var closureVoidReturn: ClosureVoidReturn
@@ -1140,6 +1141,7 @@ public struct FormatOptions: CustomStringConvertible {
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 preserveAcronyms: Set<String> = [],
                 typoVisibility: Visibility = .internal,
+                ignoredTypos: Set<String> = [],
                 indentBlankLines: Bool = false,
                 indentStrings: Bool = false,
                 closureVoidReturn: ClosureVoidReturn = .remove,
@@ -1286,6 +1288,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.acronyms = acronyms
         self.preserveAcronyms = preserveAcronyms
         self.typoVisibility = typoVisibility
+        self.ignoredTypos = ignoredTypos
         self.indentBlankLines = indentBlankLines
         self.indentStrings = indentStrings
         self.closureVoidReturn = closureVoidReturn

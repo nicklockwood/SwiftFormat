@@ -1303,6 +1303,12 @@ struct _Descriptors {
             "private": .private,
         ]
     )
+    let ignoredTypos = OptionDescriptor(
+        argumentName: "ignore-typos",
+        displayName: "Ignored Typos",
+        help: "Comma-delimited list of typos to ignore",
+        keyPath: \.ignoredTypos
+    )
     let indentBlankLines = OptionDescriptor(
         argumentName: "indent-blank-lines",
         displayName: "Indent Blank Lines",

@@ -208,4 +208,19 @@ final class CommonTyposTests: XCTestCase {
         """
         testFormatting(for: input, rule: .commonTypos)
     }
+
+    func testIgnoresConfiguredTyposInCommentsAndIdentifiers() {
+        let input = """
+        private let retreivePreferedAdress = "" // Retreive the prefered adress
+        """
+        let output = """
+        private let retreivePreferedAddress = "" // Retreive the prefered address
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(ignoredTypos: ["RETREIVE", "prefered"])
+        )
+    }
 }

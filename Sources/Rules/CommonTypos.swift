@@ -13,8 +13,9 @@ public extension FormatRule {
     static let commonTypos = FormatRule(
         help: "Correct common spelling mistakes in comments and identifiers.",
         disabledByDefault: true,
-        options: ["typo-visibility"]
+        options: ["typo-visibility", "ignore-typos"]
     ) { formatter in
+        let ignoredTypos = Set(formatter.options.ignoredTypos.map { $0.lowercased() })
         let declarations = formatter.parseDeclarations()
         var declaredNames = Set<String>()
         var protectedNames = Set<String>()
@@ -70,7 +71,7 @@ public extension FormatRule {
         var renames = [String: String]()
         var correctedNames = [String: [String]]()
         for name in eligibleNames.subtracting(protectedNames) {
-            let correctedName = formatter.correctingCommonTypos(in: name)
+            let correctedName = formatter.correctingCommonTypos(in: name, ignoring: ignoredTypos)
             guard correctedName != name else { continue }
             correctedNames[correctedName, default: []].append(name)
         }
@@ -86,7 +87,7 @@ public extension FormatRule {
                 guard let correctedName = renames[name] else { return }
                 formatter.replaceToken(at: index, with: .identifier(correctedName))
             case let .commentBody(comment):
-                let correctedComment = formatter.correctingCommonTypos(in: comment)
+                let correctedComment = formatter.correctingCommonTypos(in: comment, ignoring: ignoredTypos)
                 guard correctedComment != comment else { return }
                 formatter.replaceToken(at: index, with: .commentBody(correctedComment))
             default:
@@ -162,13 +163,13 @@ extension Formatter {
     }
 
     /// Corrects typo dictionary matches while preserving camel case and capitalization.
-    func correctingCommonTypos(in text: String) -> String {
+    func correctingCommonTypos(in text: String, ignoring ignoredTypos: Set<String>) -> String {
         var result = ""
         var letters = ""
 
         func appendLetters() {
             guard !letters.isEmpty else { return }
-            result += correctingCommonTyposInWord(letters)
+            result += correctingCommonTyposInWord(letters, ignoring: ignoredTypos)
             letters = ""
         }
 
@@ -184,8 +185,9 @@ extension Formatter {
         return result
     }
 
-    func correctingCommonTyposInWord(_ word: String) -> String {
-        if let correction = commonTypoCorrections[word.lowercased()] {
+    func correctingCommonTyposInWord(_ word: String, ignoring ignoredTypos: Set<String>) -> String {
+        let lowercaseWord = word.lowercased()
+        if !ignoredTypos.contains(lowercaseWord), let correction = commonTypoCorrections[lowercaseWord] {
             return correction.applyingCapitalization(of: word)
         }
 
@@ -208,7 +210,10 @@ extension Formatter {
         components.append(String(characters[componentStart...]))
 
         return components.map { component in
-            guard let correction = commonTypoCorrections[component.lowercased()] else { return component }
+            let lowercaseComponent = component.lowercased()
+            guard !ignoredTypos.contains(lowercaseComponent),
+                  let correction = commonTypoCorrections[lowercaseComponent]
+            else { return component }
             return correction.applyingCapitalization(of: component)
         }.joined()
     }

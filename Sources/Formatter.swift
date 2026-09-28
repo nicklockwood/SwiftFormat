@@ -49,7 +49,6 @@ public final class Formatter: NSObject {
         didSet {
             disabled = false
             ruleDisabled = false
-            directiveAppliesToCurrentRule = directives.map { directiveApplies($0.type, to: currentRule) }
             if let options = tempOptions {
                 self.options = options
                 tempOptions = nil
@@ -98,9 +97,6 @@ public final class Formatter: NSObject {
     /// Swiftformat directives found in the file
     private var directives: [Directive] = []
 
-    /// Whether each entry in `directives` names the current rule. Parallel to `directives`.
-    private var directiveAppliesToCurrentRule: [Bool] = []
-
     /// Whether the file contains any multiline string literals, which affect how directives apply.
     private lazy var containsMultilineStringLiteral = tokens.contains(where: \.isMultilineStringDelimiter)
 
@@ -140,12 +136,31 @@ public final class Formatter: NSObject {
         var toggle: Bool
         var line: Int
         var index: Int // Index of token in the line
+
+        func applies(to rule: FormatRule?) -> Bool {
+            guard let rule else {
+                return false
+            }
+            switch type {
+            case let .enable(rules), let .disable(rules):
+                return rules.contains("all") || rules.contains(rule.name.lowercased())
+            case .options:
+                return false
+            }
+        }
     }
 
     private enum DirectiveType {
-        case enable(rules: String)
-        case disable(rules: String)
+        case enable(rules: Set<String>)
+        case disable(rules: Set<String>)
         case options(FormatOptions)
+    }
+
+    private func directiveRuleNames(in string: String) -> Set<String> {
+        let wordCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
+        return Set(string.components(separatedBy: wordCharacters.inverted)
+            .filter { !$0.isEmpty }
+            .map { $0.lowercased() })
     }
 
     private func processDirectives() {
@@ -217,9 +232,9 @@ public final class Formatter: NSObject {
                         return fatalError("\(error)", at: i)
                     }
                 case "disable":
-                    type = .disable(rules: args)
+                    type = .disable(rules: directiveRuleNames(in: args))
                 case "enable":
-                    type = .enable(rules: args)
+                    type = .enable(rules: directiveRuleNames(in: args))
                 case "sort":
                     // TODO: treat sort:next/previous/this as an error
                     // TODO: handle sort the same way as other directives
@@ -232,26 +247,6 @@ public final class Formatter: NSObject {
                 continue
             }
         }
-    }
-
-    /// Whether the given directive names the given rule (or `all`).
-    private func directiveApplies(_ directive: DirectiveType, to rule: FormatRule?) -> Bool {
-        guard let rule else {
-            return false
-        }
-        // TODO: replace with stricter format for rules (space and/or comma-delimited)
-        switch directive {
-        case let .enable(rules: rules), let .disable(rules: rules):
-            return rules.range(of: "\\b(\(rule.name)|all)\\b", options: [
-                .regularExpression, .caseInsensitive,
-            ]) != nil
-        case .options:
-            return false
-        }
-    }
-
-    private func directiveApplies(at index: Int) -> Bool {
-        index < directiveAppliesToCurrentRule.count && directiveAppliesToCurrentRule[index]
     }
 
     /// Update `isEnabled` based on directives around the specified index
@@ -270,15 +265,14 @@ public final class Formatter: NSObject {
         } else {
             physicalLine = 1
         }
-        let hasApplicableLineDirective = directives.indices.contains { i in
-            let directive = directives[i]
+        let hasApplicableLineDirective = directives.contains { directive in
             guard !directive.toggle, directive.line == physicalLine else {
                 return false
             }
             if case .options = directive.type {
                 return true
             }
-            return directiveApplies(at: i)
+            return directive.applies(to: currentRule)
         }
 
         let enablementIndex: Int
@@ -312,7 +306,7 @@ public final class Formatter: NSObject {
 
         var disabledCount = 0
         var disabledNext = 0
-        for (i, directive) in directives.enumerated() {
+        for directive in directives {
             if directive.line > line || (directive.line == line && directive.index > tokenIndex) {
                 break
             }
@@ -321,7 +315,7 @@ public final class Formatter: NSObject {
                 self.tempOptions = nil
             }
             switch directive.type {
-            case .enable where directiveApplies(at: i):
+            case .enable where directive.applies(to: currentRule):
                 if directive.toggle {
                     disabledCount -= 1
                 } else if directive.line == line {
@@ -329,7 +323,7 @@ public final class Formatter: NSObject {
                 } else {
                     disabledNext = 0
                 }
-            case .disable where directiveApplies(at: i):
+            case .disable where directive.applies(to: currentRule):
                 if directive.toggle {
                     disabledCount += 1
                 } else if directive.line == line {

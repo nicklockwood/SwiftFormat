@@ -649,7 +649,11 @@ Option | Description
 
 ## commonTypos
 
-Correct common spelling mistakes in comments and private or internal identifiers.
+Correct common spelling mistakes in comments and identifiers.
+
+Option | Description
+--- | ---
+`--typo-visibility` | Correct typos at or below this visibility threshold: "public", "package", "internal" (default), "fileprivate" or "private"
 
 <details>
 <summary>Examples</summary>

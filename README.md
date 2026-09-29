@@ -37,6 +37,7 @@ Table of Contents
     - [Linting](#linting)
     - [Error codes](#error-codes)
     - [Cache](#cache)
+    - [Baseline](#baseline)
     - [File headers](#file-headers)
     - [Markdown formatting](#markdown-formatting)
 - [FAQ](#faq)
@@ -919,6 +920,16 @@ By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftfor
 The cache is shared between all projects. The file is fairly small, as it only stores the path and size for each file, not the contents. If you do start experiencing slowdown due to the cache growing too large, you might want to consider using a separate cache file for each project.
 
 You can specify a custom cache file location by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
+
+
+Baseline
+--------
+
+The `--baseline <path>` option lets you adopt SwiftFormat incrementally. If the baseline file does not exist, SwiftFormat records the current hashes of all eligible input files without formatting or linting them. On later runs, files whose contents still match the baseline are skipped. New and modified files are processed normally, then their hashes are added to the baseline after formatting succeeds or linting passes.
+
+Unlike the cache, baseline entries are not tied to a SwiftFormat version, rules, or options. Changing your configuration therefore does not cause unchanged files to be reformatted. Delete the baseline file to capture a new baseline.
+
+The baseline file uses paths relative to its own location where possible, so it can be checked into the project. SwiftFormat reports an error without modifying source files if an existing baseline cannot be read or parsed, or uses an unsupported schema version. Baselines cannot be used with standard input, `--output`, `--line-range`, or `--infer-options`. A dry run can use an existing baseline but does not update it. Concurrent processes must not write to the same baseline file.
 
 
 File headers

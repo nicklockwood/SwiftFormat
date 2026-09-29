@@ -925,13 +925,13 @@ You can specify a custom cache file location by passing a path as the `--cache` 
 Baseline
 --------
 
-Baseline files let you adopt SwiftFormat incrementally. SwiftFormat automatically detects `.swiftformat-baseline` files along each input path and uses the closest one for each file. Encountered baseline files are logged alongside `.swiftformat` configuration files. Files whose contents match their baseline are skipped. New and modified files are processed normally, then their hashes are added to the relevant baseline after formatting succeeds or linting passes.
+Baseline files let you adopt SwiftFormat incrementally. SwiftFormat automatically detects `.swiftformat-baseline` files along each input path and uses the closest one for each file. Encountered baseline files are logged alongside `.swiftformat` configuration files. Files whose contents match their baseline are skipped. New and modified files are processed normally, but existing baseline files are never modified automatically.
 
 Use `--baseline <path>` to use one specific baseline instead of automatic discovery. Passing `--baseline` without a path creates a `.swiftformat-baseline` fallback at the common root of the inputs for files that do not already have an applicable baseline. For a single directory input this is the directory itself, and for a single file input it is the containing directory. If multiple inputs do not share a project directory, an explicit path is required.
 
-Unlike the cache, baseline entries are not tied to a SwiftFormat version, rules, or options. Changing your configuration therefore does not cause unchanged files to be reformatted. Delete the baseline file to capture a new baseline.
+Unlike the cache, baseline entries are not tied to a SwiftFormat version, rules, or options. Changing your configuration therefore does not cause unchanged files to be reformatted. Delete the baseline file and run with `--baseline` to capture a new baseline.
 
-The baseline file uses paths relative to its own location where possible, so it can be checked into the project. SwiftFormat reports an error without modifying source files if an existing baseline cannot be read or parsed, or uses an unsupported schema version. Baselines cannot be used with standard input, `--output`, `--line-range`, or `--infer-options`. A dry run can use an existing baseline but does not update it. Concurrent processes must not write to the same baseline file.
+The baseline file uses paths relative to its own location where possible, so it can be checked into the project. SwiftFormat reports an error without modifying source files if an existing baseline cannot be read or parsed, or uses an unsupported schema version. Baselines cannot be used with standard input, `--output`, `--line-range`, or `--infer-options`. A missing baseline cannot be created in dry-run mode.
 
 
 File headers

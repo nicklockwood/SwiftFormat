@@ -70,6 +70,25 @@ private func withTmpFiles(_ files: [String: String], fn: (URL) throws -> Void) t
     }
 }
 
+private func withTmpDirectory(_ files: [String: String], fn: (URL) throws -> Void) throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    for (path, contents) in files {
+        _ = try createTmpFile("\(directory.lastPathComponent)/\(path)", contents: contents)
+    }
+    try fn(directory)
+}
+
+private struct TestBaseline: Decodable {
+    let version: Int
+    let files: [String: String]
+}
+
+private func readBaseline(at url: URL) throws -> TestBaseline {
+    try JSONDecoder().decode(TestBaseline.self, from: Data(contentsOf: url))
+}
+
 final class CommandLineTests: XCTestCase {
     // MARK: stdin
 
@@ -445,6 +464,230 @@ final class CommandLineTests: XCTestCase {
 
         """
         XCTAssertNotEqual(computeHash(input), computeHash(output))
+    }
+
+    // MARK: baseline
+
+    func testCreatesBaselineWithoutFormattingFiles() throws {
+        let firstInput = """
+        let foo=bar
+        """
+        let secondInput = """
+        let baz=quux
+        """
+        try withTmpDirectory([
+            "Sources/z.swift": secondInput,
+            "Sources/a.swift": firstInput,
+        ]) { directory in
+            let firstInputURL = directory.appendingPathComponent("Sources/a.swift")
+            let secondInputURL = directory.appendingPathComponent("Sources/z.swift")
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--baseline", baselineURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .ok)
+
+            XCTAssertEqual(try String(contentsOf: firstInputURL), firstInput)
+            XCTAssertEqual(try String(contentsOf: secondInputURL), secondInput)
+            let baselineJSON = try String(contentsOf: baselineURL)
+            XCTAssertEqual(baselineJSON, """
+            {
+              "files" : {
+                "Sources/a.swift" : "\(computeHash(firstInput))",
+                "Sources/z.swift" : "\(computeHash(secondInput))"
+              },
+              "version" : 1
+            }
+            """)
+            let baseline = try readBaseline(at: baselineURL)
+            XCTAssertEqual(baseline.version, 1)
+            XCTAssertEqual(baseline.files, [
+                "Sources/a.swift": computeHash(firstInput),
+                "Sources/z.swift": computeHash(secondInput),
+            ])
+        }
+    }
+
+    func testCreatesEmptyBaselineWhenThereAreNoEligibleFiles() throws {
+        try withTmpDirectory([:]) { directory in
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--baseline", baselineURL.path,
+                "--cache", "ignore",
+            ], in: ""), .ok)
+            XCTAssertEqual(try readBaseline(at: baselineURL).files, [:])
+        }
+    }
+
+    func testBaselineFormatsChangedAndNewFilesThenUpdatesTheirHashes() throws {
+        let original = """
+        let foo = bar
+        """
+        let changed = """
+        let foo=bar
+        """
+        let formatted = """
+        let foo = bar
+        """
+        let new = """
+        let baz=quux
+        """
+        let formattedNew = """
+        let baz = quux
+        """
+        try withTmpDirectory(["foo.swift": original]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let newInputURL = directory.appendingPathComponent("new.swift")
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let arguments = [
+                "", directory.path,
+                "--baseline", baselineURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ]
+            CLI.print = { _, _ in }
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            try changed.write(to: inputURL, atomically: true, encoding: .utf8)
+            try new.write(to: newInputURL, atomically: true, encoding: .utf8)
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            XCTAssertEqual(try String(contentsOf: inputURL), formatted)
+            XCTAssertEqual(try String(contentsOf: newInputURL), formattedNew)
+            let baseline = try readBaseline(at: baselineURL)
+            XCTAssertEqual(baseline.files, [
+                "foo.swift": computeHash(formatted),
+                "new.swift": computeHash(formattedNew),
+            ])
+        }
+    }
+
+    func testBaselineDoesNotRecordLintFailures() throws {
+        let original = """
+        let foo = bar
+        """
+        let changed = """
+        let foo=bar
+        """
+        try withTmpDirectory(["foo.swift": original]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let arguments = [
+                "", directory.path,
+                "--baseline", baselineURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ]
+            CLI.print = { _, _ in }
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            try changed.write(to: inputURL, atomically: true, encoding: .utf8)
+            XCTAssertEqual(processArguments(arguments + ["--lint"], in: ""), .lintFailure)
+            XCTAssertEqual(try String(contentsOf: inputURL), changed)
+            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+                "foo.swift": computeHash(original),
+            ])
+        }
+    }
+
+    func testInvalidBaselinePreventsFormatting() throws {
+        let input = """
+        let foo=bar
+        """
+        try withTmpDirectory([
+            "foo.swift": input,
+            "baseline.json": "not json",
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--baseline", baselineURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .error)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+        }
+    }
+
+    func testUnsupportedBaselineVersionPreventsFormatting() throws {
+        let input = """
+        let foo=bar
+        """
+        try withTmpDirectory([
+            "foo.swift": input,
+            "baseline.json": #"{"version":2,"files":{}}"#,
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--baseline", baselineURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .error)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+        }
+    }
+
+    func testDryRunDoesNotUpdateBaseline() throws {
+        let original = """
+        let foo = bar
+        """
+        let changed = """
+        let baz = quux
+        """
+        try withTmpDirectory(["foo.swift": original]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let arguments = [
+                "", directory.path,
+                "--baseline", baselineURL.path,
+                "--cache", "ignore",
+            ]
+            CLI.print = { _, _ in }
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            try changed.write(to: inputURL, atomically: true, encoding: .utf8)
+            XCTAssertEqual(processArguments(arguments + ["--dry-run"], in: ""), .ok)
+            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+                "foo.swift": computeHash(original),
+            ])
+        }
+    }
+
+    func testBaselineCannotBeCombinedWithOutputOrLineRange() throws {
+        let input = """
+        let foo = bar
+        """
+        try withTmpDirectory(["foo.swift": input]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let outputURL = directory.appendingPathComponent("output.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", inputURL.path,
+                "--baseline", baselineURL.path,
+                "--output", outputURL.path,
+            ], in: ""), .error)
+            XCTAssertEqual(processArguments([
+                "", inputURL.path,
+                "--baseline", baselineURL.path,
+                "--line-range", "1,1",
+            ], in: ""), .error)
+        }
     }
 
     // MARK: rules

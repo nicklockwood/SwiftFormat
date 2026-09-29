@@ -216,6 +216,7 @@ func printHelp(as type: CLI.OutputType) {
     --unknown-rules    How unknown rules are handled: "error" (default) or "ignore"
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
+    --baseline         Path to baseline file used to skip unchanged files
     --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
     --report           Path to a file where --lint output should be written
@@ -666,6 +667,38 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             return start ... end
         }
 
+        // Baseline
+        let baselineURL = try args["baseline"].map { arg in
+            guard !arg.isEmpty else {
+                throw FormatError.options("--baseline argument expects a path")
+            }
+            guard !useStdin, !inputURLs.isEmpty else {
+                throw FormatError.options("--baseline requires one or more file inputs")
+            }
+            guard outputURL == nil else {
+                throw FormatError.options("--baseline cannot be combined with --output")
+            }
+            guard lineRange == nil else {
+                throw FormatError.options("--baseline cannot be combined with --line-range")
+            }
+            guard args["infer-options"] == nil else {
+                throw FormatError.options("--baseline cannot be combined with --infer-options")
+            }
+            let baselineURL = try parsePath(arg, for: "--baseline", in: directory)
+            var isDirectory: ObjCBool = false
+            if FileManager.default.fileExists(atPath: baselineURL.path, isDirectory: &isDirectory),
+               isDirectory.boolValue
+            {
+                throw FormatError.options("--baseline argument expects a file path")
+            }
+            if args["dry-run"] != nil,
+               !FileManager.default.fileExists(atPath: baselineURL.path)
+            {
+                throw FormatError.options("--baseline file cannot be created in --dry-run mode")
+            }
+            return baselineURL
+        }
+
         // Infer options
         if args["infer-options"] != nil {
             guard configURLs.isEmpty else {
@@ -908,6 +941,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   lint: lint,
                                                   lenient: lenient,
                                                   cacheURL: cacheURL,
+                                                  baselineURL: baselineURL,
                                                   reporter: reporter)
             errors += _errors
         })
@@ -1087,8 +1121,35 @@ func processInput(_ inputURLs: [URL],
                   lint: Bool,
                   lenient _: Bool,
                   cacheURL: URL?,
+                  baselineURL: URL?,
                   reporter: Reporter?) -> (OutputFlags, [Error])
 {
+    // Load baseline
+    let baselineDirectory = baselineURL?.deletingLastPathComponent().standardizedFileURL
+    let baselineExists = baselineURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+    var baseline: Baseline?
+    if let baselineURL, baselineExists {
+        do {
+            let data = try Data(contentsOf: baselineURL)
+            baseline = try JSONDecoder().decode(Baseline.self, from: data)
+            guard baseline?.version == Baseline.currentVersion else {
+                return ((0, 0, 0, 0), [FormatError.reading(
+                    "Unsupported baseline version in file at \(baselineURL.path)"
+                )])
+            }
+        } catch let error as FormatError {
+            return ((0, 0, 0, 0), [error])
+        } catch {
+            return ((0, 0, 0, 0), [FormatError.reading(
+                "Failed to read or parse baseline file at \(baselineURL.path)"
+            )])
+        }
+    } else if baselineURL != nil {
+        baseline = Baseline()
+    }
+    let isCreatingBaseline = baselineURL != nil && !baselineExists
+    var baselineWasUpdated = isCreatingBaseline
+
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
@@ -1158,8 +1219,27 @@ func processInput(_ inputURLs: [URL],
         logger: { print($0, as: .info) },
         skipped: skippedHandler
     ) { inputURL, outputURL, options in
+        if let baselineURL, inputURL.standardizedFileURL == baselineURL.standardizedFileURL {
+            return { outputFlags.filesSkipped += 1 }
+        }
         guard let input = try? String(contentsOf: inputURL) else {
             throw FormatError.reading("Failed to read file \(inputURL.path)")
+        }
+        let baselineKey = baselineDirectory.map { baselineKey(for: inputURL, relativeTo: $0) }
+        let inputHash = baseline == nil ? nil : computeHash(input)
+        if let baselineKey, isCreatingBaseline {
+            return {
+                baseline?.files[baselineKey] = inputHash
+                baselineWasUpdated = true
+                outputFlags.filesSkipped += 1
+            }
+        }
+        if let baselineKey, baseline?.files[baselineKey] == inputHash {
+            if verbose {
+                print("Skipping \(inputURL.path)", as: .info)
+                print("-- unchanged (baseline)", as: .success)
+            }
+            return { outputFlags.filesSkipped += 1 }
         }
         // Override options
         var options = try applyOverrides(to: options, for: inputURL)
@@ -1309,6 +1389,10 @@ func processInput(_ inputURLs: [URL],
                 return {
                     outputFlags.filesChecked += 1
                     cache?[cacheKey] = cacheValue
+                    if let baselineKey, lint || !dryrun {
+                        baseline?.files[baselineKey] = inputHash
+                        baselineWasUpdated = true
+                    }
                     showConfigurationWarnings(options)
                 }
             }
@@ -1328,6 +1412,10 @@ func processInput(_ inputURLs: [URL],
                     outputFlags.filesFailed += 1
                     outputFlags.filesWritten += 1
                     cache?[cacheKey] = cacheValue
+                    if let baselineKey {
+                        baseline?.files[baselineKey] = computeHash(output)
+                        baselineWasUpdated = true
+                    }
                     showConfigurationWarnings(options)
                 }
             }
@@ -1390,7 +1478,52 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
+    // Save baseline
+    if baselineWasUpdated, !isCreatingBaseline || errors.isEmpty,
+       let baseline, let baselineURL, let baselineDirectory
+    {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let stripSlashes: Bool
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+                stripSlashes = false
+                encoder.outputFormatting.insert(.withoutEscapingSlashes)
+            } else {
+                stripSlashes = true
+            }
+            var data = try encoder.encode(baseline)
+            if stripSlashes, let string = String(data: data, encoding: .utf8) {
+                data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
+            }
+            try data.write(to: baselineURL, options: .atomic)
+        } catch {
+            if FileManager.default.fileExists(atPath: baselineDirectory.path) {
+                errors.append(FormatError.writing("Failed to write baseline file at \(baselineURL.path)"))
+            } else {
+                errors.append(FormatError.reading(
+                    "Specified baseline file directory does not exist: \(baselineDirectory.path)"
+                ))
+            }
+        }
+    }
     return (outputFlags, errors)
+}
+
+private struct Baseline: Codable {
+    static let currentVersion = 1
+
+    var version = currentVersion
+    var files = [String: String]()
+}
+
+private func baselineKey(for inputURL: URL, relativeTo directoryURL: URL) -> String {
+    let inputComponents = inputURL.standardizedFileURL.pathComponents
+    let directoryComponents = directoryURL.standardizedFileURL.pathComponents
+    guard inputComponents.starts(with: directoryComponents) else {
+        return inputURL.standardizedFileURL.path
+    }
+    return inputComponents.dropFirst(directoryComponents.count).joined(separator: "/")
 }
 
 /// The data format used with `--output-tokens`

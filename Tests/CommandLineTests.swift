@@ -80,13 +80,13 @@ private func withTmpDirectory(_ files: [String: String], fn: (URL) throws -> Voi
     try fn(directory)
 }
 
-private struct TestBaseline: Decodable {
+private struct TestSnapshot: Decodable {
     let version: Int
     let files: [String: String]
 }
 
-private func readBaseline(at url: URL) throws -> TestBaseline {
-    try JSONDecoder().decode(TestBaseline.self, from: Data(contentsOf: url))
+private func readSnapshot(at url: URL) throws -> TestSnapshot {
+    try JSONDecoder().decode(TestSnapshot.self, from: Data(contentsOf: url))
 }
 
 final class CommandLineTests: XCTestCase {
@@ -466,9 +466,7 @@ final class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
-    // MARK: baseline
-
-    func testCreatesBaselineWithoutFormattingFiles() throws {
+    func testCreatesSnapshotWithoutFormattingFiles() throws {
         let firstInput = """
         let foo=bar
         """
@@ -481,20 +479,20 @@ final class CommandLineTests: XCTestCase {
         ]) { directory in
             let firstInputURL = directory.appendingPathComponent("Sources/a.swift")
             let secondInputURL = directory.appendingPathComponent("Sources/z.swift")
-            let baselineURL = directory.appendingPathComponent(".swiftformat-baseline")
+            let snapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", directory.path,
-                "--baseline",
+                "--snapshot",
                 "--cache", "ignore",
                 "--rules", "spaceAroundOperators",
             ], in: ""), .ok)
 
             XCTAssertEqual(try String(contentsOf: firstInputURL), firstInput)
             XCTAssertEqual(try String(contentsOf: secondInputURL), secondInput)
-            let baselineJSON = try String(contentsOf: baselineURL)
-            XCTAssertEqual(baselineJSON, """
+            let snapshotJSON = try String(contentsOf: snapshotURL)
+            XCTAssertEqual(snapshotJSON, """
             {
               "files" : {
                 "Sources/a.swift" : "\(computeHash(firstInput))",
@@ -503,16 +501,16 @@ final class CommandLineTests: XCTestCase {
               "version" : 1
             }
             """)
-            let baseline = try readBaseline(at: baselineURL)
-            XCTAssertEqual(baseline.version, 1)
-            XCTAssertEqual(baseline.files, [
+            let snapshot = try readSnapshot(at: snapshotURL)
+            XCTAssertEqual(snapshot.version, 1)
+            XCTAssertEqual(snapshot.files, [
                 "Sources/a.swift": computeHash(firstInput),
                 "Sources/z.swift": computeHash(secondInput),
             ])
         }
     }
 
-    func testDefaultBaselineUsesCommonInputRoot() throws {
+    func testDefaultSnapshotUsesCommonInputRoot() throws {
         let sourceInput = """
         let foo = bar
         """
@@ -525,53 +523,53 @@ final class CommandLineTests: XCTestCase {
         ]) { directory in
             let sourcesURL = directory.appendingPathComponent("Sources")
             let testsURL = directory.appendingPathComponent("Tests")
-            let baselineURL = directory.appendingPathComponent(".swiftformat-baseline")
+            let snapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", sourcesURL.path, testsURL.path,
-                "--baseline",
+                "--snapshot",
                 "--cache", "ignore",
             ], in: ""), .ok)
-            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
                 "Sources/foo.swift": computeHash(sourceInput),
                 "Tests/foo.swift": computeHash(testInput),
             ])
         }
     }
 
-    func testDefaultBaselineForFileUsesContainingDirectory() throws {
+    func testDefaultSnapshotForFileUsesContainingDirectory() throws {
         let input = """
         let foo = bar
         """
         try withTmpDirectory(["Sources/foo.swift": input]) { directory in
             let inputURL = directory.appendingPathComponent("Sources/foo.swift")
-            let baselineURL = directory.appendingPathComponent("Sources/.swiftformat-baseline")
+            let snapshotURL = directory.appendingPathComponent("Sources/.swiftformat-snapshot")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", inputURL.path,
-                "--baseline",
+                "--snapshot",
                 "--cache", "ignore",
             ], in: ""), .ok)
-            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
                 "foo.swift": computeHash(input),
             ])
         }
     }
 
-    func testAutomaticallyDetectsAndLogsBaseline() throws {
+    func testAutomaticallyDetectsAndLogsSnapshot() throws {
         let input = """
         let foo=bar
         """
         try withTmpDirectory([
             "foo.swift": input,
-            ".swiftformat-baseline": """
+            ".swiftformat-snapshot": """
             {"version":1,"files":{"foo.swift":"\(computeHash(input))"}}
             """,
         ]) { directory in
             let inputURL = directory.appendingPathComponent("foo.swift")
-            let baselineURL = directory.appendingPathComponent(".swiftformat-baseline")
+            let snapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
             var messages = [String]()
             CLI.print = { message, _ in messages.append(message) }
 
@@ -581,31 +579,31 @@ final class CommandLineTests: XCTestCase {
                 "--rules", "spaceAroundOperators",
             ], in: ""), .ok)
             XCTAssertEqual(try String(contentsOf: inputURL), input)
-            XCTAssertTrue(messages.contains("Reading baseline file at \(baselineURL.path)"))
+            XCTAssertTrue(messages.contains("Reading snapshot file at \(snapshotURL.path)"))
         }
     }
 
-    func testClosestBaselineIsUsedWithoutBeingUpdated() throws {
+    func testClosestSnapshotIsUsedWithoutBeingUpdated() throws {
         let nestedInput = """
         let nested=value
         """
         let nestedOutput = """
         let nested = value
         """
-        let rootBaseline = """
+        let rootSnapshot = """
         {"version":1,"files":{"Nested/nested.swift":"root-value"}}
         """
-        let nestedBaseline = """
+        let nestedSnapshot = """
         {"version":1,"files":{"nested.swift":"old-value"}}
         """
         try withTmpDirectory([
             "Nested/nested.swift": nestedInput,
-            ".swiftformat-baseline": rootBaseline,
-            "Nested/.swiftformat-baseline": nestedBaseline,
+            ".swiftformat-snapshot": rootSnapshot,
+            "Nested/.swiftformat-snapshot": nestedSnapshot,
         ]) { directory in
             let nestedInputURL = directory.appendingPathComponent("Nested/nested.swift")
-            let rootBaselineURL = directory.appendingPathComponent(".swiftformat-baseline")
-            let nestedBaselineURL = directory.appendingPathComponent("Nested/.swiftformat-baseline")
+            let rootSnapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
+            let nestedSnapshotURL = directory.appendingPathComponent("Nested/.swiftformat-snapshot")
             var messages = [String]()
             CLI.print = { message, _ in messages.append(message) }
 
@@ -615,20 +613,20 @@ final class CommandLineTests: XCTestCase {
                 "--rules", "spaceAroundOperators",
             ], in: ""), .ok)
             XCTAssertEqual(try String(contentsOf: nestedInputURL), nestedOutput)
-            XCTAssertEqual(try readBaseline(at: rootBaselineURL).files, [
+            XCTAssertEqual(try readSnapshot(at: rootSnapshotURL).files, [
                 "Nested/nested.swift": "root-value",
             ])
-            XCTAssertEqual(try readBaseline(at: nestedBaselineURL).files, [
+            XCTAssertEqual(try readSnapshot(at: nestedSnapshotURL).files, [
                 "nested.swift": "old-value",
             ])
-            XCTAssertEqual(try String(contentsOf: rootBaselineURL), rootBaseline)
-            XCTAssertEqual(try String(contentsOf: nestedBaselineURL), nestedBaseline)
-            XCTAssertTrue(messages.contains("Reading baseline file at \(rootBaselineURL.path)"))
-            XCTAssertTrue(messages.contains("Reading baseline file at \(nestedBaselineURL.path)"))
+            XCTAssertEqual(try String(contentsOf: rootSnapshotURL), rootSnapshot)
+            XCTAssertEqual(try String(contentsOf: nestedSnapshotURL), nestedSnapshot)
+            XCTAssertTrue(messages.contains("Reading snapshot file at \(rootSnapshotURL.path)"))
+            XCTAssertTrue(messages.contains("Reading snapshot file at \(nestedSnapshotURL.path)"))
         }
     }
 
-    func testInvalidAutomaticallyDetectedBaselinePreventsFormatting() throws {
+    func testInvalidAutomaticallyDetectedSnapshotPreventsFormatting() throws {
         let rootInput = """
         let root=value
         """
@@ -638,7 +636,7 @@ final class CommandLineTests: XCTestCase {
         try withTmpDirectory([
             "root.swift": rootInput,
             "Nested/nested.swift": nestedInput,
-            "Nested/.swiftformat-baseline": "not json",
+            "Nested/.swiftformat-snapshot": "not json",
         ]) { directory in
             let rootInputURL = directory.appendingPathComponent("root.swift")
             CLI.print = { _, _ in }
@@ -652,21 +650,21 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    func testCreatesEmptyBaselineWhenThereAreNoEligibleFiles() throws {
+    func testCreatesEmptySnapshotWhenThereAreNoEligibleFiles() throws {
         try withTmpDirectory([:]) { directory in
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", directory.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--cache", "ignore",
             ], in: ""), .ok)
-            XCTAssertEqual(try readBaseline(at: baselineURL).files, [:])
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [:])
         }
     }
 
-    func testBaselineFormatsChangedAndNewFilesWithoutUpdatingHashes() throws {
+    func testSnapshotFormatsChangedAndNewFilesWithoutUpdatingHashes() throws {
         let original = """
         let foo = bar
         """
@@ -685,10 +683,10 @@ final class CommandLineTests: XCTestCase {
         try withTmpDirectory(["foo.swift": original]) { directory in
             let inputURL = directory.appendingPathComponent("foo.swift")
             let newInputURL = directory.appendingPathComponent("new.swift")
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
             let arguments = [
                 "", directory.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--cache", "ignore",
                 "--rules", "spaceAroundOperators",
             ]
@@ -701,14 +699,14 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(try String(contentsOf: inputURL), formatted)
             XCTAssertEqual(try String(contentsOf: newInputURL), formattedNew)
-            let baseline = try readBaseline(at: baselineURL)
-            XCTAssertEqual(baseline.files, [
+            let snapshot = try readSnapshot(at: snapshotURL)
+            XCTAssertEqual(snapshot.files, [
                 "foo.swift": computeHash(original),
             ])
         }
     }
 
-    func testBaselineDoesNotRecordLintFailures() throws {
+    func testSnapshotDoesNotRecordLintFailures() throws {
         let original = """
         let foo = bar
         """
@@ -717,10 +715,10 @@ final class CommandLineTests: XCTestCase {
         """
         try withTmpDirectory(["foo.swift": original]) { directory in
             let inputURL = directory.appendingPathComponent("foo.swift")
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
             let arguments = [
                 "", directory.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--cache", "ignore",
                 "--rules", "spaceAroundOperators",
             ]
@@ -730,27 +728,27 @@ final class CommandLineTests: XCTestCase {
             try changed.write(to: inputURL, atomically: true, encoding: .utf8)
             XCTAssertEqual(processArguments(arguments + ["--lint"], in: ""), .lintFailure)
             XCTAssertEqual(try String(contentsOf: inputURL), changed)
-            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
                 "foo.swift": computeHash(original),
             ])
         }
     }
 
-    func testInvalidBaselinePreventsFormatting() throws {
+    func testInvalidSnapshotPreventsFormatting() throws {
         let input = """
         let foo=bar
         """
         try withTmpDirectory([
             "foo.swift": input,
-            "baseline.json": "not json",
+            "snapshot.json": "not json",
         ]) { directory in
             let inputURL = directory.appendingPathComponent("foo.swift")
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", directory.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--cache", "ignore",
                 "--rules", "spaceAroundOperators",
             ], in: ""), .error)
@@ -758,21 +756,21 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    func testUnsupportedBaselineVersionPreventsFormatting() throws {
+    func testUnsupportedSnapshotVersionPreventsFormatting() throws {
         let input = """
         let foo=bar
         """
         try withTmpDirectory([
             "foo.swift": input,
-            "baseline.json": #"{"version":2,"files":{}}"#,
+            "snapshot.json": #"{"version":2,"files":{}}"#,
         ]) { directory in
             let inputURL = directory.appendingPathComponent("foo.swift")
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", directory.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--cache", "ignore",
                 "--rules", "spaceAroundOperators",
             ], in: ""), .error)
@@ -780,7 +778,7 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    func testDryRunDoesNotUpdateBaseline() throws {
+    func testDryRunDoesNotUpdateSnapshot() throws {
         let original = """
         let foo = bar
         """
@@ -789,10 +787,10 @@ final class CommandLineTests: XCTestCase {
         """
         try withTmpDirectory(["foo.swift": original]) { directory in
             let inputURL = directory.appendingPathComponent("foo.swift")
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
             let arguments = [
                 "", directory.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--cache", "ignore",
             ]
             CLI.print = { _, _ in }
@@ -800,30 +798,30 @@ final class CommandLineTests: XCTestCase {
 
             try changed.write(to: inputURL, atomically: true, encoding: .utf8)
             XCTAssertEqual(processArguments(arguments + ["--dry-run"], in: ""), .ok)
-            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
                 "foo.swift": computeHash(original),
             ])
         }
     }
 
-    func testBaselineCannotBeCombinedWithOutputOrLineRange() throws {
+    func testSnapshotCannotBeCombinedWithOutputOrLineRange() throws {
         let input = """
         let foo = bar
         """
         try withTmpDirectory(["foo.swift": input]) { directory in
             let inputURL = directory.appendingPathComponent("foo.swift")
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
             let outputURL = directory.appendingPathComponent("output.swift")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", inputURL.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--output", outputURL.path,
             ], in: ""), .error)
             XCTAssertEqual(processArguments([
                 "", inputURL.path,
-                "--baseline", baselineURL.path,
+                "--snapshot", snapshotURL.path,
                 "--line-range", "1,1",
             ], in: ""), .error)
         }

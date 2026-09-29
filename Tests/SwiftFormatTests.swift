@@ -38,7 +38,10 @@ final class SwiftFormatTests: XCTestCase {
         let mutations: [(NSMutableArray) -> Void] = [
             { $0.setArray(input) },
             { $0.replaceObjects(in: NSRange(location: 0, length: input.count), withObjectsFrom: input) },
-            { $0.removeAllObjects(); $0.addObjects(from: input) },
+            {
+                $0.removeAllObjects()
+                $0.addObjects(from: input)
+            },
         ]
         for mutate in mutations {
             let lines = TrackedLineArray(lines: input)

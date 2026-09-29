@@ -576,12 +576,12 @@ func replaceLines(in lines: NSMutableArray, with tokens: [Token]) {
             }
         }
     } else {
-        // On older systems, preserve the unchanged prefix and suffix of the buffer.
         replaceLineRange(in: lines, range: start ..< oldEnd, with: Array(updatedLines[start ..< newEnd]))
     }
 }
 
 /// Replace a line range using operations available on older systems.
+/// The caller trims unchanged outer lines, so the fallback preserves the buffer's prefix and suffix.
 func replaceLineRange(in lines: NSMutableArray, range: Range<Int>, with updatedLines: [String]) {
     for index in range.reversed() {
         lines.removeObject(at: index)

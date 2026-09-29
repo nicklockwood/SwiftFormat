@@ -216,7 +216,7 @@ func printHelp(as type: CLI.OutputType) {
     --unknown-rules    How unknown rules are handled: "error" (default) or "ignore"
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
-    --baseline         Path to baseline file (defaults to .swiftformat-baseline)
+    --snapshot         Path to snapshot file (defaults to .swiftformat-snapshot)
     --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
     --report           Path to a file where --lint output should be written
@@ -667,31 +667,31 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             return start ... end
         }
 
-        // Baseline
-        let baselineMode = try args["baseline"].map { arg in
+        // Snapshot
+        let snapshotMode = try args["snapshot"].map { arg in
             guard !useStdin, !inputURLs.isEmpty else {
-                throw FormatError.options("--baseline requires one or more file inputs")
+                throw FormatError.options("--snapshot requires one or more file inputs")
             }
             guard outputURL == nil else {
-                throw FormatError.options("--baseline cannot be combined with --output")
+                throw FormatError.options("--snapshot cannot be combined with --output")
             }
             guard lineRange == nil else {
-                throw FormatError.options("--baseline cannot be combined with --line-range")
+                throw FormatError.options("--snapshot cannot be combined with --line-range")
             }
             guard args["infer-options"] == nil else {
-                throw FormatError.options("--baseline cannot be combined with --infer-options")
+                throw FormatError.options("--snapshot cannot be combined with --infer-options")
             }
             if arg.isEmpty {
-                return try BaselineMode.discover(defaultURL: defaultBaselineURL(for: inputURLs))
+                return try SnapshotMode.discover(defaultURL: defaultSnapshotURL(for: inputURLs))
             }
-            let baselineURL = try parsePath(arg, for: "--baseline", in: directory)
+            let snapshotURL = try parsePath(arg, for: "--snapshot", in: directory)
             var isDirectory: ObjCBool = false
-            if FileManager.default.fileExists(atPath: baselineURL.path, isDirectory: &isDirectory),
+            if FileManager.default.fileExists(atPath: snapshotURL.path, isDirectory: &isDirectory),
                isDirectory.boolValue
             {
-                throw FormatError.options("--baseline argument expects a file path")
+                throw FormatError.options("--snapshot argument expects a file path")
             }
-            return BaselineMode.explicit(baselineURL)
+            return SnapshotMode.explicit(snapshotURL)
         } ?? .discover(defaultURL: nil)
 
         // Infer options
@@ -936,7 +936,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   lint: lint,
                                                   lenient: lenient,
                                                   cacheURL: cacheURL,
-                                                  baselineMode: baselineMode,
+                                                  snapshotMode: snapshotMode,
                                                   reporter: reporter)
             errors += _errors
         })
@@ -1116,16 +1116,16 @@ func processInput(_ inputURLs: [URL],
                   lint: Bool,
                   lenient _: Bool,
                   cacheURL: URL?,
-                  baselineMode: BaselineMode,
+                  snapshotMode: SnapshotMode,
                   reporter: Reporter?) -> (OutputFlags, [Error])
 {
-    // Discover and load baselines before formatting, so an invalid baseline can't result in partial changes.
-    var baselineURLByInputURL = [URL: URL]()
-    var baselineStates = [URL: BaselineState]()
-    let baselineURLs: Set<URL>
-    switch baselineMode {
-    case let .explicit(baselineURL):
-        baselineURLs = [baselineURL.standardizedFileURL]
+    // Discover and load snapshots before formatting, so an invalid snapshot can't result in partial changes.
+    var snapshotURLByInputURL = [URL: URL]()
+    var snapshotStates = [URL: SnapshotState]()
+    let snapshotURLs: Set<URL>
+    switch snapshotMode {
+    case let .explicit(snapshotURL):
+        snapshotURLs = [snapshotURL.standardizedFileURL]
     case let .discover(defaultURL):
         var inputFileURLs = [URL]()
         let discoveryErrors = enumerateFiles(
@@ -1139,27 +1139,27 @@ func processInput(_ inputURLs: [URL],
         guard discoveryErrors.isEmpty else {
             return ((0, 0, 0, 0), discoveryErrors)
         }
-        var discoveredBaselineURLs = Set<URL>()
+        var discoveredSnapshotURLs = Set<URL>()
         for inputURL in inputFileURLs {
-            let encounteredURLs = encounteredBaselineURLs(for: inputURL)
-            discoveredBaselineURLs.formUnion(encounteredURLs)
-            if let baselineURL = encounteredURLs.first ?? defaultURL?.standardizedFileURL {
-                baselineURLByInputURL[inputURL] = baselineURL
+            let encounteredURLs = encounteredSnapshotURLs(for: inputURL)
+            discoveredSnapshotURLs.formUnion(encounteredURLs)
+            if let snapshotURL = encounteredURLs.first ?? defaultURL?.standardizedFileURL {
+                snapshotURLByInputURL[inputURL] = snapshotURL
             }
         }
-        baselineURLs = discoveredBaselineURLs.union(baselineURLByInputURL.values)
+        snapshotURLs = discoveredSnapshotURLs.union(snapshotURLByInputURL.values)
     }
-    if !baselineURLs.isEmpty, outputURL != nil {
-        return ((0, 0, 0, 0), [FormatError.options("--baseline cannot be combined with --output")])
+    if !snapshotURLs.isEmpty, outputURL != nil {
+        return ((0, 0, 0, 0), [FormatError.options("--snapshot cannot be combined with --output")])
     }
-    if !baselineURLs.isEmpty, lineRange != nil {
-        return ((0, 0, 0, 0), [FormatError.options("--baseline cannot be combined with --line-range")])
+    if !snapshotURLs.isEmpty, lineRange != nil {
+        return ((0, 0, 0, 0), [FormatError.options("--snapshot cannot be combined with --line-range")])
     }
     do {
-        for baselineURL in baselineURLs.sorted(by: { $0.path < $1.path }) {
-            baselineStates[baselineURL] = try loadBaseline(at: baselineURL, dryrun: dryrun)
-            if !baselineStates[baselineURL]!.isCreating {
-                print("Reading baseline file at \(baselineURL.path)", as: .info)
+        for snapshotURL in snapshotURLs.sorted(by: { $0.path < $1.path }) {
+            snapshotStates[snapshotURL] = try loadSnapshot(at: snapshotURL, dryrun: dryrun)
+            if !snapshotStates[snapshotURL]!.isCreating {
+                print("Reading snapshot file at \(snapshotURL.path)", as: .info)
             }
         }
     } catch {
@@ -1233,45 +1233,45 @@ func processInput(_ inputURLs: [URL],
         _ options: Options
     ) throws -> () throws -> Void {
         let inputURL = inputURL.standardizedFileURL
-        let baselineURL: URL?
-        switch baselineMode {
+        let snapshotURL: URL?
+        switch snapshotMode {
         case let .explicit(url):
-            baselineURL = url.standardizedFileURL
+            snapshotURL = url.standardizedFileURL
         case .discover:
-            baselineURL = baselineURLByInputURL[inputURL]
+            snapshotURL = snapshotURLByInputURL[inputURL]
         }
-        if inputURL == baselineURL {
+        if inputURL == snapshotURL {
             return { outputFlags.filesSkipped += 1 }
         }
         guard let input = try? String(contentsOf: inputURL) else {
             throw FormatError.reading("Failed to read file \(inputURL.path)")
         }
-        let inputBaselineKey: String?
-        if let baselineURL {
-            inputBaselineKey = baselineKey(
+        let inputSnapshotKey: String?
+        if let snapshotURL {
+            inputSnapshotKey = snapshotKey(
                 for: inputURL,
-                relativeTo: baselineURL.deletingLastPathComponent()
+                relativeTo: snapshotURL.deletingLastPathComponent()
             )
         } else {
-            inputBaselineKey = nil
+            inputSnapshotKey = nil
         }
-        let inputHash = baselineURL == nil ? nil : computeHash(input)
-        if let baselineURL,
-           let inputBaselineKey,
-           baselineStates[baselineURL]?.isCreating == true
+        let inputHash = snapshotURL == nil ? nil : computeHash(input)
+        if let snapshotURL,
+           let inputSnapshotKey,
+           snapshotStates[snapshotURL]?.isCreating == true
         {
             return {
-                baselineStates[baselineURL]?.baseline.files[inputBaselineKey] = inputHash
+                snapshotStates[snapshotURL]?.snapshot.files[inputSnapshotKey] = inputHash
                 outputFlags.filesSkipped += 1
             }
         }
-        if let baselineURL,
-           let inputBaselineKey,
-           baselineStates[baselineURL]?.baseline.files[inputBaselineKey] == inputHash
+        if let snapshotURL,
+           let inputSnapshotKey,
+           snapshotStates[snapshotURL]?.snapshot.files[inputSnapshotKey] == inputHash
         {
             if verbose {
                 print("Skipping \(inputURL.path)", as: .info)
-                print("-- unchanged (baseline)", as: .success)
+                print("-- unchanged (snapshot)", as: .success)
             }
             return { outputFlags.filesSkipped += 1 }
         }
@@ -1513,14 +1513,14 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    // Save newly created baselines
-    for baselineURL in baselineStates.keys.sorted(by: { $0.path < $1.path }) {
-        guard let state = baselineStates[baselineURL],
+    // Save newly created snapshots
+    for snapshotURL in snapshotStates.keys.sorted(by: { $0.path < $1.path }) {
+        guard let state = snapshotStates[snapshotURL],
               state.isCreating, errors.isEmpty
         else {
             continue
         }
-        let baselineDirectory = baselineURL.deletingLastPathComponent()
+        let snapshotDirectory = snapshotURL.deletingLastPathComponent()
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -1531,17 +1531,17 @@ func processInput(_ inputURLs: [URL],
             } else {
                 stripSlashes = true
             }
-            var data = try encoder.encode(state.baseline)
+            var data = try encoder.encode(state.snapshot)
             if stripSlashes, let string = String(data: data, encoding: .utf8) {
                 data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
             }
-            try data.write(to: baselineURL, options: .atomic)
+            try data.write(to: snapshotURL, options: .atomic)
         } catch {
-            if FileManager.default.fileExists(atPath: baselineDirectory.path) {
-                errors.append(FormatError.writing("Failed to write baseline file at \(baselineURL.path)"))
+            if FileManager.default.fileExists(atPath: snapshotDirectory.path) {
+                errors.append(FormatError.writing("Failed to write snapshot file at \(snapshotURL.path)"))
             } else {
                 errors.append(FormatError.reading(
-                    "Specified baseline file directory does not exist: \(baselineDirectory.path)"
+                    "Specified snapshot file directory does not exist: \(snapshotDirectory.path)"
                 ))
             }
         }
@@ -1549,54 +1549,54 @@ func processInput(_ inputURLs: [URL],
     return (outputFlags, errors)
 }
 
-private struct Baseline: Codable {
+private struct Snapshot: Codable {
     static let currentVersion = 1
 
     var version = currentVersion
     var files = [String: String]()
 }
 
-enum BaselineMode {
+enum SnapshotMode {
     case explicit(URL)
     case discover(defaultURL: URL?)
 }
 
-private struct BaselineState {
-    var baseline: Baseline
+private struct SnapshotState {
+    var snapshot: Snapshot
     let isCreating: Bool
 }
 
-private func loadBaseline(at url: URL, dryrun: Bool) throws -> BaselineState {
+private func loadSnapshot(at url: URL, dryrun: Bool) throws -> SnapshotState {
     let url = url.standardizedFileURL
     var isDirectory: ObjCBool = false
     let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
     guard !exists || !isDirectory.boolValue else {
-        throw FormatError.reading("Baseline file at \(url.path) is a directory")
+        throw FormatError.reading("Snapshot file at \(url.path) is a directory")
     }
     guard exists else {
         if dryrun {
-            throw FormatError.options("--baseline file cannot be created in --dry-run mode")
+            throw FormatError.options("--snapshot file cannot be created in --dry-run mode")
         }
-        return BaselineState(baseline: Baseline(), isCreating: true)
+        return SnapshotState(snapshot: Snapshot(), isCreating: true)
     }
     do {
-        let baseline = try JSONDecoder().decode(Baseline.self, from: Data(contentsOf: url))
-        guard baseline.version == Baseline.currentVersion else {
-            throw FormatError.reading("Unsupported baseline version in file at \(url.path)")
+        let snapshot = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url))
+        guard snapshot.version == Snapshot.currentVersion else {
+            throw FormatError.reading("Unsupported snapshot version in file at \(url.path)")
         }
-        return BaselineState(baseline: baseline, isCreating: false)
+        return SnapshotState(snapshot: snapshot, isCreating: false)
     } catch let error as FormatError {
         throw error
     } catch {
-        throw FormatError.reading("Failed to read or parse baseline file at \(url.path)")
+        throw FormatError.reading("Failed to read or parse snapshot file at \(url.path)")
     }
 }
 
-private func encounteredBaselineURLs(for inputURL: URL) -> [URL] {
+private func encounteredSnapshotURLs(for inputURL: URL) -> [URL] {
     var result = [URL]()
     var directory = inputURL.deletingLastPathComponent().standardizedFileURL
     while true {
-        let candidate = directory.appendingPathComponent(".swiftformat-baseline")
+        let candidate = directory.appendingPathComponent(".swiftformat-snapshot")
         if FileManager.default.fileExists(atPath: candidate.path) {
             result.append(candidate)
         }
@@ -1607,7 +1607,7 @@ private func encounteredBaselineURLs(for inputURL: URL) -> [URL] {
     }
 }
 
-private func defaultBaselineURL(for inputURLs: [URL]) throws -> URL {
+private func defaultSnapshotURL(for inputURLs: [URL]) throws -> URL {
     let inputRoots = inputURLs.map { inputURL -> URL in
         let inputURL = inputURL.standardizedFileURL
         var isDirectory: ObjCBool = false
@@ -1619,14 +1619,14 @@ private func defaultBaselineURL(for inputURLs: [URL]) throws -> URL {
         return inputURL.deletingLastPathComponent()
     }
     guard var commonRoot = inputRoots.first else {
-        throw FormatError.options("--baseline requires one or more file inputs")
+        throw FormatError.options("--snapshot requires one or more file inputs")
     }
     for inputRoot in inputRoots.dropFirst() {
         while !inputRoot.pathComponents.starts(with: commonRoot.pathComponents) {
             let parent = commonRoot.deletingLastPathComponent()
             guard parent != commonRoot else {
                 throw FormatError.options(
-                    "--baseline requires an explicit path when inputs do not share a project directory"
+                    "--snapshot requires an explicit path when inputs do not share a project directory"
                 )
             }
             commonRoot = parent
@@ -1634,13 +1634,13 @@ private func defaultBaselineURL(for inputURLs: [URL]) throws -> URL {
     }
     guard commonRoot.pathComponents.count > 1 else {
         throw FormatError.options(
-            "--baseline requires an explicit path when inputs do not share a project directory"
+            "--snapshot requires an explicit path when inputs do not share a project directory"
         )
     }
-    return commonRoot.appendingPathComponent(".swiftformat-baseline")
+    return commonRoot.appendingPathComponent(".swiftformat-snapshot")
 }
 
-private func baselineKey(for inputURL: URL, relativeTo directoryURL: URL) -> String {
+private func snapshotKey(for inputURL: URL, relativeTo directoryURL: URL) -> String {
     let inputComponents = inputURL.standardizedFileURL.pathComponents
     let directoryComponents = directoryURL.standardizedFileURL.pathComponents
     guard inputComponents.starts(with: directoryComponents) else {

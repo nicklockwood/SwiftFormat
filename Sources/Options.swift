@@ -224,7 +224,9 @@ public enum SingleLineTernary: String, CaseIterable {
 public enum ContentBuilderMode: String, CaseIterable {
     /// Remove result builder attributes that Swift applies implicitly, or that aren't needed
     case implicit
-    /// Add an explicit result builder attribute to declarations that return SwiftUI content
+    /// Replace legacy result builder attributes like `@ViewBuilder` with `@ContentBuilder`
+    case prefer
+    /// Add an explicit `@ContentBuilder` attribute to declarations that return SwiftUI content
     case explicit
 }
 

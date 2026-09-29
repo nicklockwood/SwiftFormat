@@ -12,14 +12,17 @@ public extension FormatRule {
     /// Add or remove SwiftUI result builder attributes, depending on the `--content-builder` option
     static let contentBuilder = FormatRule(
         help: "Use implicit or explicit SwiftUI result builder attributes like `@ViewBuilder`.",
-        orderAfter: [.redundantSwiftUIGroup, .preferContentBuilder],
+        orderAfter: [.redundantSwiftUIGroup],
         options: ["content-builder"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         switch formatter.options.contentBuilder {
         case .implicit:
             formatter.removeRedundantContentBuilderAttributes()
+        case .prefer:
+            formatter.replaceLegacyContentBuilderAttributes()
         case .explicit:
+            formatter.replaceLegacyContentBuilderAttributes()
             formatter.addExplicitContentBuilderAttributes()
         }
     } examples: {
@@ -51,9 +54,29 @@ public extension FormatRule {
           }
         ```
 
-        With `--content-builder explicit`, instead adds an explicit
-        `@ContentBuilder` attribute to declarations that return SwiftUI content
-        (requires Swift 6.4 or later):
+        With `--content-builder prefer`, instead replaces legacy result builder
+        attributes with the equivalent `@ContentBuilder` (requires Swift 6.4 or later):
+
+        ```diff
+          struct MyView: View {
+        -   @ViewBuilder
+        +   @ContentBuilder
+            var content: some View {
+              Text("foo")
+              Text("bar")
+            }
+
+        -   @ToolbarContentBuilder
+        +   @ContentBuilder
+            var toolbarItems: some ToolbarContent {
+              ToolbarItem { Button("Save") {} }
+              ToolbarItem { Button("Cancel") {} }
+            }
+          }
+        ```
+
+        With `--content-builder explicit`, additionally adds an explicit
+        `@ContentBuilder` attribute to declarations that return SwiftUI content:
 
         ```diff
           struct MyView: View {
@@ -80,12 +103,50 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// SwiftUI result builders that `@ContentBuilder` can replace.
+    static let legacyContentBuilders: Set<String> = [
+        "ViewBuilder",
+        "ToolbarContentBuilder",
+        "CommandsBuilder",
+    ]
+
     /// SwiftUI content types that `@ContentBuilder` can build
     static let contentBuilderResultTypes: Set<String> = [
         "View",
         "ToolbarContent",
         "Commands",
     ]
+
+    /// Replaces legacy SwiftUI result builder attributes with the equivalent `@ContentBuilder`
+    func replaceLegacyContentBuilderAttributes() {
+        // @ContentBuilder requires the Swift 6.4 SDK (Xcode 27)
+        guard options.swiftVersion >= "6.4" else { return }
+
+        forEachToken(where: \.isAttribute) { i, _ in
+            guard let nameIndex = self.indexOfLegacyContentBuilderName(forAttributeAt: i) else { return }
+            if nameIndex == i {
+                self.replaceToken(at: i, with: .keyword("@ContentBuilder"))
+            } else {
+                self.replaceToken(at: nameIndex, with: .identifier("ContentBuilder"))
+            }
+        }
+    }
+
+    /// If the attribute at the given index is a legacy SwiftUI result builder like `@ViewBuilder`
+    /// or `@SwiftUI.ViewBuilder`, returns the index of the token containing the builder name
+    func indexOfLegacyContentBuilderName(forAttributeAt attributeIndex: Int) -> Int? {
+        if Formatter.legacyContentBuilders.contains(String(tokens[attributeIndex].string.dropFirst())) {
+            return attributeIndex
+        }
+
+        guard ["@SwiftUI", "@SwiftUICore"].contains(tokens[attributeIndex].string),
+              let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: attributeIndex),
+              tokens[dotIndex].isOperator("."),
+              let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
+              Formatter.legacyContentBuilders.contains(tokens[nameIndex].string)
+        else { return nil }
+        return nameIndex
+    }
 
     /// Adds an explicit `@ContentBuilder` attribute to declarations that return SwiftUI content
     func addExplicitContentBuilderAttributes() {

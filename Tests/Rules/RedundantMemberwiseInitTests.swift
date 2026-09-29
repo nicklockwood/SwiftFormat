@@ -1938,7 +1938,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testRemoveInitWithContentBuilderClosureParameter() {
@@ -2001,7 +2001,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testRemoveInitWithPrivateViewBuilderProperty() {
@@ -2030,7 +2030,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always, swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testDontRemoveInitWithPrivateViewBuilderPropertyWithoutOption() {
@@ -2154,7 +2154,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.preferContentBuilder])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testRemoveInitWithCustomResultBuilder() {
@@ -2237,8 +2237,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             for: input,
             [output],
             rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope],
-            options: options,
-            exclude: [.preferContentBuilder]
+            options: options
         )
     }
 

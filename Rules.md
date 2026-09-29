@@ -47,7 +47,6 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
-* [preferContentBuilder](#preferContentBuilder)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
@@ -806,7 +805,7 @@ Use implicit or explicit SwiftUI result builder attributes like `@ViewBuilder`.
 
 Option | Description
 --- | ---
-`--content-builder` | SwiftUI result builder attributes: "implicit" (default) or "explicit"
+`--content-builder` | SwiftUI result builder attributes: "implicit" (default), "prefer" or "explicit"
 
 <details>
 <summary>Examples</summary>
@@ -838,9 +837,29 @@ attributes that Swift applies implicitly, or that aren't needed:
   }
 ```
 
-With `--content-builder explicit`, instead adds an explicit
-`@ContentBuilder` attribute to declarations that return SwiftUI content
-(requires Swift 6.4 or later):
+With `--content-builder prefer`, instead replaces legacy result builder
+attributes with the equivalent `@ContentBuilder` (requires Swift 6.4 or later):
+
+```diff
+  struct MyView: View {
+-   @ViewBuilder
++   @ContentBuilder
+    var content: some View {
+      Text("foo")
+      Text("bar")
+    }
+
+-   @ToolbarContentBuilder
++   @ContentBuilder
+    var toolbarItems: some ToolbarContent {
+      ToolbarItem { Button("Save") {} }
+      ToolbarItem { Button("Cancel") {} }
+    }
+  }
+```
+
+With `--content-builder explicit`, additionally adds an explicit
+`@ContentBuilder` attribute to declarations that return SwiftUI content:
 
 ```diff
   struct MyView: View {
@@ -2058,41 +2077,6 @@ Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(
 ```diff
 - if text.range(of: "needle") != nil {
 + if text.contains("needle") {
-```
-
-</details>
-<br/>
-
-## preferContentBuilder
-
-Replace legacy SwiftUI result builder attributes like `@ViewBuilder` with the equivalent `@ContentBuilder`.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  struct MyView: View {
-    var body: some View {
-      NavigationStack {
-        content
-      }
-      .toolbar { toolbarItems }
-    }
-
--   @ViewBuilder
-+   @ContentBuilder
-    var content: some View {
-      Text("foo")
-      Text("bar")
-    }
-
--   @ToolbarContentBuilder
-+   @ContentBuilder
-    var toolbarItems: some ToolbarContent {
-      ToolbarItem { Button("Save") {} }
-      ToolbarItem { Button("Cancel") {} }
-    }
-  }
 ```
 
 </details>

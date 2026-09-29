@@ -35,6 +35,21 @@ import XCTest
 final class SwiftFormatTests: XCTestCase {
     // MARK: enumerateFiles
 
+    func testRuleTimeoutReportsRuleName() {
+        let slowRule = FormatRule(help: "") { _ in
+            Thread.sleep(forTimeInterval: 1)
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.05
+        let tokens = tokenize("let foo = 1")
+        XCTAssertThrowsError(try applyRules([slowRule], to: tokens, with: options, trackChanges: false, range: nil)) { error in
+            guard case let FormatError.writing(message) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+            XCTAssert(message.hasSuffix("rule timed out"), message)
+        }
+    }
+
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)

@@ -19,6 +19,7 @@
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [consistentSwitchCaseSpacing](#consistentSwitchCaseSpacing)
+* [contentBuilder](#contentBuilder)
 * [docComments](#docComments)
 * [docCommentsBeforeModifiers](#docCommentsBeforeModifiers)
 * [duplicateImports](#duplicateImports)
@@ -79,7 +80,6 @@
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVariable](#redundantVariable)
-* [redundantViewBuilder](#redundantViewBuilder)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [simplifyGenericConstraints](#simplifyGenericConstraints)
@@ -166,6 +166,7 @@
 
 * [privateStateVariables](#privateStateVariables)
 * [redundantProperty](#redundantProperty)
+* [redundantViewBuilder](#redundantViewBuilder)
 * [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
@@ -793,6 +794,72 @@ Ensures consistent spacing among all of the cases in a switch statement.
       "Venus"
   case .earth:
       "Earth"
+  }
+```
+
+</details>
+<br/>
+
+## contentBuilder
+
+Use implicit or explicit SwiftUI result builder attributes like `@ViewBuilder`.
+
+Option | Description
+--- | ---
+`--content-builder` | SwiftUI result builder attributes: "implicit" (default) or "explicit"
+
+<details>
+<summary>Examples</summary>
+
+With `--content-builder implicit` (default), removes result builder
+attributes that Swift applies implicitly, or that aren't needed:
+
+```diff
+  struct MyView: View {
+-   @ViewBuilder
+    var body: some View {
+      helper
+    }
+
+-   @ViewBuilder
+    var helper: some View {
+      VStack {
+        Text("baaz")
+        Text("quux")
+      }
+    }
+
+    // Not redundant - multiple top-level views
+    @ViewBuilder
+    var helper2: some View {
+      Text("foo")
+      Text("bar")
+    }
+  }
+```
+
+With `--content-builder explicit`, instead adds an explicit
+`@ContentBuilder` attribute to declarations that return SwiftUI content
+(requires Swift 6.4 or later):
+
+```diff
+  struct MyView: View {
++   @ContentBuilder
+    var body: some View {
+      content
+    }
+
++   @ContentBuilder
+    var content: some View {
+      if showDetail {
+        Text("foo")
+      }
+    }
+
+    // Not applied: an explicit `return` disables the result builder transform
+    var footer: some View {
+      return Text("bar")
+    }
   }
 ```
 
@@ -3335,35 +3402,7 @@ Simplifies redundant variable definitions that are immediately returned.
 
 Remove redundant @ViewBuilder attribute when it's not needed.
 
-<details>
-<summary>Examples</summary>
-
-```diff
-  struct MyView: View {
--   @ViewBuilder
-    var body: some View {
-      helper
-    }
-
--   @ViewBuilder
-    var helper: some View {
-      VStack {
-        Text("baaz")
-        Text("quux")
-      }
-    }
-
-    // Not redundant - multiple top-level views
-    @ViewBuilder
-    var helper2: some View {
-      Text("foo")
-      Text("bar")
-    }
-  }
-```
-
-</details>
-<br/>
+*Note: redundantViewBuilder rule is deprecated. Use contentBuilder with `--content-builder implicit` instead.*
 
 ## redundantVoidReturnType
 

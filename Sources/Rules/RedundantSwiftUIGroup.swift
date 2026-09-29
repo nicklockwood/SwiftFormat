@@ -75,7 +75,7 @@ public extension FormatRule {
             )
 
             if let addViewBuilderAt {
-                formatter.insertViewBuilderAttribute(at: addViewBuilderAt)
+                formatter.insertResultBuilderAttribute("@ViewBuilder", at: addViewBuilderAt)
             }
         }
     } examples: {
@@ -237,21 +237,5 @@ extension Formatter {
 
         // Insert the body tokens (indent rule will fix indentation)
         insert(bodyTokens, at: groupStartIndex)
-    }
-
-    /// Inserts an `@ViewBuilder` attribute on its own line before the declaration at the given index
-    func insertViewBuilderAttribute(at index: Int) {
-        // Any existing indentation before the insertion point now indents `@ViewBuilder`,
-        // so the declaration that follows needs its own copy of the indentation.
-        let currentIndent = currentIndentForLine(at: index)
-
-        // Attributes are represented as `.keyword` tokens (e.g. `@objc`, `@main`). Inserting an
-        // `.identifier` instead causes other rules like `organizeDeclarations` to misparse the
-        // declaration and insert a spurious blank line after the attribute.
-        var tokensToInsert: [Token] = [.keyword("@ViewBuilder"), linebreakToken(for: index)]
-        if !currentIndent.isEmpty {
-            tokensToInsert.append(.space(currentIndent))
-        }
-        insert(tokensToInsert, at: index)
     }
 }

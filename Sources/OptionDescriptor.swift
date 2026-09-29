@@ -1598,6 +1598,12 @@ struct _Descriptors {
         help: "Single-line ternary handling: \"convert\" (default) or \"preserve\"",
         keyPath: \.singleLineTernary
     )
+    let contentBuilder = OptionDescriptor(
+        argumentName: "content-builder",
+        displayName: "Content Builder",
+        help: "SwiftUI result builder attributes:",
+        keyPath: \.contentBuilder
+    )
 
     // MARK: - Internal
 

@@ -236,7 +236,8 @@ final class MetadataTests: XCTestCase {
                         ]
                     case .identifier("isCommentedCode"):
                         referencedOptions.append(Descriptors.indent)
-                    case .identifier("insertLinebreak"), .identifier("linebreakToken"):
+                    case .identifier("insertLinebreak"), .identifier("linebreakToken"),
+                         .identifier("insertResultBuilderAttribute"):
                         referencedOptions.append(Descriptors.linebreak)
                     case .identifier("wrapCollectionsAndArguments"):
                         referencedOptions += [

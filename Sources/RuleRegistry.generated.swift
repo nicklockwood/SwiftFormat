@@ -30,6 +30,7 @@ let ruleRegistry: [String: FormatRule] = [
     "consecutiveBlankLines": .consecutiveBlankLines,
     "consecutiveSpaces": .consecutiveSpaces,
     "consistentSwitchCaseSpacing": .consistentSwitchCaseSpacing,
+    "contentBuilder": .contentBuilder,
     "docComments": .docComments,
     "docCommentsBeforeModifiers": .docCommentsBeforeModifiers,
     "duplicateImports": .duplicateImports,

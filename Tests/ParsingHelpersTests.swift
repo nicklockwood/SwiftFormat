@@ -3794,4 +3794,262 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(closureArgs.argumentIndices.count, 2)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
     }
+
+    // MARK: scopeBodySupportsResultBuilder
+
+    /// Whether a result builder could be applied to the first declaration in the given source
+    private func supportsResultBuilder(_ source: String) -> Bool {
+        let formatter = Formatter(tokenize(source))
+        guard let declaration = formatter.parseDeclarations().first,
+              let target = formatter.resultBuilderTarget(of: declaration)
+        else {
+            XCTFail("Failed to parse a result builder target from: \(source)")
+            return false
+        }
+        return formatter.scopeBodySupportsResultBuilder(at: target.scopeRange.lowerBound)
+    }
+
+    func testSingleExpressionBodySupportsResultBuilder() {
+        XCTAssertTrue(supportsResultBuilder("""
+        var foo: some View {
+            Text("foo")
+        }
+        """))
+    }
+
+    func testConditionalBodySupportsResultBuilder() {
+        XCTAssertTrue(supportsResultBuilder("""
+        var foo: some View {
+            if bar {
+                Text("bar")
+            } else if let baaz {
+                Text(baaz)
+            } else {
+                Text("quux")
+            }
+        }
+        """))
+    }
+
+    func testExplicitReturnDoesntSupportResultBuilder() {
+        XCTAssertFalse(supportsResultBuilder("""
+        var foo: some View {
+            return Text("foo")
+        }
+        """))
+    }
+
+    func testUnsupportedStatementsDontSupportResultBuilder() {
+        for statement in [
+            "return Text(\"foo\")",
+            "guard bar else { return Text(\"foo\") }",
+            "for bar in baaz { Text(bar) }",
+            "while bar { Text(\"foo\") }",
+            "repeat { Text(\"foo\") } while bar",
+            "do { try bar() } catch {}",
+            "defer { bar() }",
+            "throw MyError.bar",
+        ] {
+            XCTAssertFalse(supportsResultBuilder("""
+            var foo: some View {
+                \(statement)
+                Text("baaz")
+            }
+            """), statement)
+        }
+    }
+
+    func testReturnInBranchDoesntSupportResultBuilder() {
+        XCTAssertFalse(supportsResultBuilder("""
+        var foo: some View {
+            if bar {
+                return Text("bar")
+            }
+        }
+        """))
+    }
+
+    func testReturnInConditionalBindingBranchDoesntSupportResultBuilder() {
+        XCTAssertFalse(supportsResultBuilder("""
+        var foo: some View {
+            if let bar, case .baaz = bar {
+                return Text("bar")
+            }
+        }
+        """))
+    }
+
+    func testReturnInSwitchCaseDoesntSupportResultBuilder() {
+        XCTAssertFalse(supportsResultBuilder("""
+        var foo: some View {
+            switch bar {
+            case let .baaz(quux):
+                return Text(quux)
+            default:
+                Text("foo")
+            }
+        }
+        """))
+    }
+
+    func testReturnInNestedClosureSupportsResultBuilder() {
+        XCTAssertTrue(supportsResultBuilder("""
+        var foo: some View {
+            Button(action: { return bar() }) {
+                Text("foo")
+            }
+        }
+        """))
+    }
+
+    func testReturnInNestedFunctionSupportsResultBuilder() {
+        XCTAssertTrue(supportsResultBuilder("""
+        var foo: some View {
+            func bar() -> String {
+                for baaz in quux {
+                    return baaz
+                }
+            }
+
+            Text(bar())
+        }
+        """))
+    }
+
+    func testReturnInNestedComputedPropertySupportsResultBuilder() {
+        XCTAssertTrue(supportsResultBuilder("""
+        var foo: some View {
+            var bar: String {
+                return "bar"
+            }
+
+            Text(bar)
+        }
+        """))
+    }
+
+    func testReturnInNestedTypeSupportsResultBuilder() {
+        XCTAssertTrue(supportsResultBuilder("""
+        var foo: some View {
+            struct Bar: View {
+                var body: some View {
+                    return Text("bar")
+                }
+            }
+
+            Bar()
+        }
+        """))
+    }
+
+    // MARK: resultBuilderTarget
+
+    /// The tokens of the scope a result builder would apply to in the given source
+    private func resultBuilderScopeTokens(_ source: String) -> String? {
+        let formatter = Formatter(tokenize(source))
+        guard let declaration = formatter.parseDeclarations().first,
+              let target = formatter.resultBuilderTarget(of: declaration)
+        else { return nil }
+        return formatter.tokens[target.scopeRange].string
+    }
+
+    func testResultBuilderTargetOfComputedProperty() {
+        XCTAssertEqual(resultBuilderScopeTokens("var foo: some View { Text(\"foo\") }"),
+                       "{ Text(\"foo\") }")
+    }
+
+    func testResultBuilderTargetOfFunctionAndSubscript() {
+        XCTAssertEqual(resultBuilderScopeTokens("func foo() -> some View { Text(\"foo\") }"),
+                       "{ Text(\"foo\") }")
+        XCTAssertEqual(resultBuilderScopeTokens("subscript(bar: Int) -> some View { Text(\"foo\") }"),
+                       "{ Text(\"foo\") }")
+    }
+
+    func testResultBuilderTargetOfExplicitGetter() {
+        XCTAssertEqual(resultBuilderScopeTokens("var foo: some View { get { Text(\"foo\") } }"),
+                       "{ Text(\"foo\") }")
+    }
+
+    func testResultBuilderTargetOfReturnType() {
+        let formatter = Formatter(tokenize("var foo: some View { Text(\"foo\") }"))
+        let declaration = formatter.parseDeclarations()[0]
+        XCTAssertEqual(formatter.resultBuilderTarget(of: declaration)?.returnType.string, "some View")
+    }
+
+    func testNoResultBuilderTargetForStoredOrSettableProperty() {
+        XCTAssertNil(resultBuilderScopeTokens("var foo: some View = Text(\"foo\")"))
+        XCTAssertNil(resultBuilderScopeTokens("var foo: some View { get { bar } set { bar = newValue } }"))
+        XCTAssertNil(resultBuilderScopeTokens("var foo: some View = bar { didSet { baaz() } }"))
+        XCTAssertNil(resultBuilderScopeTokens("let foo: some View = Text(\"foo\")"))
+    }
+
+    func testNoResultBuilderTargetForProtocolRequirement() {
+        let formatter = Formatter(tokenize("""
+        protocol Foo {
+            var bar: some View { get }
+            func baaz() -> some View
+        }
+        """))
+        let members = formatter.parseDeclarations()[0].body ?? []
+        XCTAssertEqual(members.count, 2)
+        for member in members {
+            XCTAssertNil(formatter.resultBuilderTarget(of: member))
+        }
+    }
+
+    // MARK: hasResultBuilderAttribute
+
+    /// Whether the first declaration in the given source has a result builder attribute
+    private func hasResultBuilderAttribute(_ source: String) -> Bool {
+        let formatter = Formatter(tokenize(source))
+        guard let declaration = formatter.parseDeclarations().first else {
+            XCTFail("Failed to parse a declaration from: \(source)")
+            return false
+        }
+        return formatter.hasResultBuilderAttribute(declaration)
+    }
+
+    func testDetectsResultBuilderAttributes() {
+        XCTAssertTrue(hasResultBuilderAttribute("@ViewBuilder var foo: some View { bar }"))
+        XCTAssertTrue(hasResultBuilderAttribute("@ContentBuilder var foo: some View { bar }"))
+        XCTAssertTrue(hasResultBuilderAttribute("@SwiftUI.ViewBuilder var foo: some View { bar }"))
+        XCTAssertTrue(hasResultBuilderAttribute("@MainActor @ToolbarContentBuilder var foo: some ToolbarContent { bar }"))
+        XCTAssertTrue(hasResultBuilderAttribute("@MyCustomBuilder func foo() -> Bar { baaz }"))
+    }
+
+    func testDoesntDetectOtherAttributesAsResultBuilders() {
+        XCTAssertFalse(hasResultBuilderAttribute("@MainActor var foo: some View { bar }"))
+        XCTAssertFalse(hasResultBuilderAttribute("@available(iOS 16, *) var foo: some View { bar }"))
+        XCTAssertFalse(hasResultBuilderAttribute("var foo: some View { bar }"))
+        XCTAssertFalse(hasResultBuilderAttribute("func foo(@ViewBuilder bar: () -> some View) -> some View { bar() }"))
+    }
+
+    // MARK: isStartOfDeclarationBody
+
+    /// Whether each `{` in the given source starts a declaration body
+    private func declarationBodyBraces(_ source: String) -> [Bool] {
+        let formatter = Formatter(tokenize(source))
+        return formatter.tokens.indices
+            .filter { formatter.tokens[$0] == .startOfScope("{") }
+            .map { formatter.isStartOfDeclarationBody(at: $0) }
+    }
+
+    func testDetectsDeclarationBodyBraces() {
+        XCTAssertEqual(declarationBodyBraces("func foo() -> Int { 0 }"), [true])
+        XCTAssertEqual(declarationBodyBraces("var foo: Int { 0 }"), [true])
+        XCTAssertEqual(declarationBodyBraces("struct Foo: Bar { let baaz = 0 }"), [true])
+        XCTAssertEqual(declarationBodyBraces("subscript(foo: Int) -> Int { 0 }"), [true])
+    }
+
+    func testDoesntTreatConditionalBracesAsDeclarationBody() {
+        XCTAssertEqual(declarationBodyBraces("if foo { bar() }"), [false])
+        XCTAssertEqual(declarationBodyBraces("if let foo { bar() }"), [false])
+        XCTAssertEqual(declarationBodyBraces("if let foo = bar { baaz() }"), [false])
+        XCTAssertEqual(declarationBodyBraces("if foo, let bar = baaz { quux() }"), [false])
+        XCTAssertEqual(declarationBodyBraces("if case let .foo(bar) = baaz { quux() }"), [false])
+        XCTAssertEqual(declarationBodyBraces("while let foo = bar { baaz() }"), [false])
+        XCTAssertEqual(declarationBodyBraces("guard let foo = bar else { return }"), [false])
+        XCTAssertEqual(declarationBodyBraces("switch foo { case .bar: baaz() }"), [false])
+        XCTAssertEqual(declarationBodyBraces("if foo { bar() } else { baaz() }"), [false, false])
+    }
 }

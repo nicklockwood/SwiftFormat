@@ -481,12 +481,12 @@ final class CommandLineTests: XCTestCase {
         ]) { directory in
             let firstInputURL = directory.appendingPathComponent("Sources/a.swift")
             let secondInputURL = directory.appendingPathComponent("Sources/z.swift")
-            let baselineURL = directory.appendingPathComponent("baseline.json")
+            let baselineURL = directory.appendingPathComponent(".swiftformat-baseline")
             CLI.print = { _, _ in }
 
             XCTAssertEqual(processArguments([
                 "", directory.path,
-                "--baseline", baselineURL.path,
+                "--baseline",
                 "--cache", "ignore",
                 "--rules", "spaceAroundOperators",
             ], in: ""), .ok)
@@ -509,6 +509,142 @@ final class CommandLineTests: XCTestCase {
                 "Sources/a.swift": computeHash(firstInput),
                 "Sources/z.swift": computeHash(secondInput),
             ])
+        }
+    }
+
+    func testDefaultBaselineUsesCommonInputRoot() throws {
+        let sourceInput = """
+        let foo = bar
+        """
+        let testInput = """
+        let baz = quux
+        """
+        try withTmpDirectory([
+            "Sources/foo.swift": sourceInput,
+            "Tests/foo.swift": testInput,
+        ]) { directory in
+            let sourcesURL = directory.appendingPathComponent("Sources")
+            let testsURL = directory.appendingPathComponent("Tests")
+            let baselineURL = directory.appendingPathComponent(".swiftformat-baseline")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", sourcesURL.path, testsURL.path,
+                "--baseline",
+                "--cache", "ignore",
+            ], in: ""), .ok)
+            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+                "Sources/foo.swift": computeHash(sourceInput),
+                "Tests/foo.swift": computeHash(testInput),
+            ])
+        }
+    }
+
+    func testDefaultBaselineForFileUsesContainingDirectory() throws {
+        let input = """
+        let foo = bar
+        """
+        try withTmpDirectory(["Sources/foo.swift": input]) { directory in
+            let inputURL = directory.appendingPathComponent("Sources/foo.swift")
+            let baselineURL = directory.appendingPathComponent("Sources/.swiftformat-baseline")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", inputURL.path,
+                "--baseline",
+                "--cache", "ignore",
+            ], in: ""), .ok)
+            XCTAssertEqual(try readBaseline(at: baselineURL).files, [
+                "foo.swift": computeHash(input),
+            ])
+        }
+    }
+
+    func testAutomaticallyDetectsAndLogsBaseline() throws {
+        let input = """
+        let foo=bar
+        """
+        try withTmpDirectory([
+            "foo.swift": input,
+            ".swiftformat-baseline": """
+            {"version":1,"files":{"foo.swift":"\(computeHash(input))"}}
+            """,
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let baselineURL = directory.appendingPathComponent(".swiftformat-baseline")
+            var messages = [String]()
+            CLI.print = { message, _ in messages.append(message) }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .ok)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+            XCTAssertTrue(messages.contains("Reading baseline file at \(baselineURL.path)"))
+        }
+    }
+
+    func testClosestBaselineIsUpdated() throws {
+        let nestedInput = """
+        let nested=value
+        """
+        let nestedOutput = """
+        let nested = value
+        """
+        try withTmpDirectory([
+            "Nested/nested.swift": nestedInput,
+            ".swiftformat-baseline": """
+            {"version":1,"files":{"Nested/nested.swift":"root-value"}}
+            """,
+            "Nested/.swiftformat-baseline": """
+            {"version":1,"files":{"nested.swift":"old-value"}}
+            """,
+        ]) { directory in
+            let nestedInputURL = directory.appendingPathComponent("Nested/nested.swift")
+            let rootBaselineURL = directory.appendingPathComponent(".swiftformat-baseline")
+            let nestedBaselineURL = directory.appendingPathComponent("Nested/.swiftformat-baseline")
+            var messages = [String]()
+            CLI.print = { message, _ in messages.append(message) }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .ok)
+            XCTAssertEqual(try String(contentsOf: nestedInputURL), nestedOutput)
+            XCTAssertEqual(try readBaseline(at: rootBaselineURL).files, [
+                "Nested/nested.swift": "root-value",
+            ])
+            XCTAssertEqual(try readBaseline(at: nestedBaselineURL).files, [
+                "nested.swift": computeHash(nestedOutput),
+            ])
+            XCTAssertTrue(messages.contains("Reading baseline file at \(rootBaselineURL.path)"))
+            XCTAssertTrue(messages.contains("Reading baseline file at \(nestedBaselineURL.path)"))
+        }
+    }
+
+    func testInvalidAutomaticallyDetectedBaselinePreventsFormatting() throws {
+        let rootInput = """
+        let root=value
+        """
+        let nestedInput = """
+        let nested=value
+        """
+        try withTmpDirectory([
+            "root.swift": rootInput,
+            "Nested/nested.swift": nestedInput,
+            "Nested/.swiftformat-baseline": "not json",
+        ]) { directory in
+            let rootInputURL = directory.appendingPathComponent("root.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .error)
+            XCTAssertEqual(try String(contentsOf: rootInputURL), rootInput)
         }
     }
 

@@ -1246,19 +1246,28 @@ func processInput(_ inputURLs: [URL],
         guard let input = try? String(contentsOf: inputURL) else {
             throw FormatError.reading("Failed to read file \(inputURL.path)")
         }
-        let baselineKey = baselineURL.map {
-            baselineKey(for: inputURL, relativeTo: $0.deletingLastPathComponent())
+        let inputBaselineKey: String?
+        if let baselineURL {
+            inputBaselineKey = baselineKey(
+                for: inputURL,
+                relativeTo: baselineURL.deletingLastPathComponent()
+            )
+        } else {
+            inputBaselineKey = nil
         }
         let inputHash = baselineURL == nil ? nil : computeHash(input)
-        if let baselineURL, let baselineKey, baselineStates[baselineURL]?.isCreating == true {
+        if let baselineURL,
+           let inputBaselineKey,
+           baselineStates[baselineURL]?.isCreating == true
+        {
             return {
-                baselineStates[baselineURL]?.baseline.files[baselineKey] = inputHash
-                baselineStates[baselineURL]?.wasUpdated = true
+                baselineStates[baselineURL]?.baseline.files[inputBaselineKey] = inputHash
                 outputFlags.filesSkipped += 1
             }
         }
-        if let baselineURL, let baselineKey,
-           baselineStates[baselineURL]?.baseline.files[baselineKey] == inputHash
+        if let baselineURL,
+           let inputBaselineKey,
+           baselineStates[baselineURL]?.baseline.files[inputBaselineKey] == inputHash
         {
             if verbose {
                 print("Skipping \(inputURL.path)", as: .info)
@@ -1414,10 +1423,6 @@ func processInput(_ inputURLs: [URL],
                 return {
                     outputFlags.filesChecked += 1
                     cache?[cacheKey] = cacheValue
-                    if let baselineURL, let baselineKey, lint || !dryrun {
-                        baselineStates[baselineURL]?.baseline.files[baselineKey] = inputHash
-                        baselineStates[baselineURL]?.wasUpdated = true
-                    }
                     showConfigurationWarnings(options)
                 }
             }
@@ -1437,10 +1442,6 @@ func processInput(_ inputURLs: [URL],
                     outputFlags.filesFailed += 1
                     outputFlags.filesWritten += 1
                     cache?[cacheKey] = cacheValue
-                    if let baselineURL, let baselineKey {
-                        baselineStates[baselineURL]?.baseline.files[baselineKey] = computeHash(output)
-                        baselineStates[baselineURL]?.wasUpdated = true
-                    }
                     showConfigurationWarnings(options)
                 }
             }
@@ -1512,10 +1513,10 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    // Save baselines
+    // Save newly created baselines
     for baselineURL in baselineStates.keys.sorted(by: { $0.path < $1.path }) {
         guard let state = baselineStates[baselineURL],
-              state.wasUpdated, !state.isCreating || errors.isEmpty
+              state.isCreating, errors.isEmpty
         else {
             continue
         }
@@ -1563,7 +1564,6 @@ enum BaselineMode {
 private struct BaselineState {
     var baseline: Baseline
     let isCreating: Bool
-    var wasUpdated: Bool
 }
 
 private func loadBaseline(at url: URL, dryrun: Bool) throws -> BaselineState {
@@ -1577,14 +1577,14 @@ private func loadBaseline(at url: URL, dryrun: Bool) throws -> BaselineState {
         if dryrun {
             throw FormatError.options("--baseline file cannot be created in --dry-run mode")
         }
-        return BaselineState(baseline: Baseline(), isCreating: true, wasUpdated: true)
+        return BaselineState(baseline: Baseline(), isCreating: true)
     }
     do {
         let baseline = try JSONDecoder().decode(Baseline.self, from: Data(contentsOf: url))
         guard baseline.version == Baseline.currentVersion else {
             throw FormatError.reading("Unsupported baseline version in file at \(url.path)")
         }
-        return BaselineState(baseline: baseline, isCreating: false, wasUpdated: false)
+        return BaselineState(baseline: baseline, isCreating: false)
     } catch let error as FormatError {
         throw error
     } catch {

@@ -585,21 +585,23 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    func testClosestBaselineIsUpdated() throws {
+    func testClosestBaselineIsUsedWithoutBeingUpdated() throws {
         let nestedInput = """
         let nested=value
         """
         let nestedOutput = """
         let nested = value
         """
+        let rootBaseline = """
+        {"version":1,"files":{"Nested/nested.swift":"root-value"}}
+        """
+        let nestedBaseline = """
+        {"version":1,"files":{"nested.swift":"old-value"}}
+        """
         try withTmpDirectory([
             "Nested/nested.swift": nestedInput,
-            ".swiftformat-baseline": """
-            {"version":1,"files":{"Nested/nested.swift":"root-value"}}
-            """,
-            "Nested/.swiftformat-baseline": """
-            {"version":1,"files":{"nested.swift":"old-value"}}
-            """,
+            ".swiftformat-baseline": rootBaseline,
+            "Nested/.swiftformat-baseline": nestedBaseline,
         ]) { directory in
             let nestedInputURL = directory.appendingPathComponent("Nested/nested.swift")
             let rootBaselineURL = directory.appendingPathComponent(".swiftformat-baseline")
@@ -617,8 +619,10 @@ final class CommandLineTests: XCTestCase {
                 "Nested/nested.swift": "root-value",
             ])
             XCTAssertEqual(try readBaseline(at: nestedBaselineURL).files, [
-                "nested.swift": computeHash(nestedOutput),
+                "nested.swift": "old-value",
             ])
+            XCTAssertEqual(try String(contentsOf: rootBaselineURL), rootBaseline)
+            XCTAssertEqual(try String(contentsOf: nestedBaselineURL), nestedBaseline)
             XCTAssertTrue(messages.contains("Reading baseline file at \(rootBaselineURL.path)"))
             XCTAssertTrue(messages.contains("Reading baseline file at \(nestedBaselineURL.path)"))
         }
@@ -662,7 +666,7 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    func testBaselineFormatsChangedAndNewFilesThenUpdatesTheirHashes() throws {
+    func testBaselineFormatsChangedAndNewFilesWithoutUpdatingHashes() throws {
         let original = """
         let foo = bar
         """
@@ -699,8 +703,7 @@ final class CommandLineTests: XCTestCase {
             XCTAssertEqual(try String(contentsOf: newInputURL), formattedNew)
             let baseline = try readBaseline(at: baselineURL)
             XCTAssertEqual(baseline.files, [
-                "foo.swift": computeHash(formatted),
-                "new.swift": computeHash(formattedNew),
+                "foo.swift": computeHash(original),
             ])
         }
     }

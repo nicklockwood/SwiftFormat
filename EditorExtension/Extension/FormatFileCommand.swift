@@ -71,7 +71,7 @@ final class FormatFileCommand: NSObject, XCSourceEditorCommand {
         invocation.buffer.selections.removeAllObjects()
 
         // Update buffer
-        invocation.buffer.completeBuffer = sourceCode(for: output)
+        replaceLines(in: invocation.buffer.lines, with: output)
 
         // Restore selections
         for selection in selections {

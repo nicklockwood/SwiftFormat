@@ -564,20 +564,30 @@ func replaceLines(in lines: NSMutableArray, with tokens: [Token]) {
     }
     guard oldEnd > start || newEnd > start else { return }
 
-    guard #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) else {
-        // On older systems, preserve the unchanged prefix and suffix of the buffer.
-        lines.replaceObjects(in: NSRange(start ..< oldEnd), withObjectsFrom: Array(updatedLines[start ..< newEnd]))
-        return
-    }
-    let difference = updatedLines[start ..< newEnd].difference(from: originalLines[start ..< oldEnd], by: areEqual)
-    // CollectionDifference removes in descending order, then inserts in ascending order.
-    for change in difference {
-        switch change {
-        case let .remove(offset, _, _):
-            lines.removeObject(at: start + offset)
-        case let .insert(offset, line, _):
-            lines.insert(line, at: start + offset)
+    if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+        let difference = updatedLines[start ..< newEnd].difference(from: originalLines[start ..< oldEnd], by: areEqual)
+        // CollectionDifference removes in descending order, then inserts in ascending order.
+        for change in difference {
+            switch change {
+            case let .remove(offset, _, _):
+                lines.removeObject(at: start + offset)
+            case let .insert(offset, line, _):
+                lines.insert(line, at: start + offset)
+            }
         }
+    } else {
+        // On older systems, preserve the unchanged prefix and suffix of the buffer.
+        replaceLineRange(in: lines, range: start ..< oldEnd, with: Array(updatedLines[start ..< newEnd]))
+    }
+}
+
+/// Replace a line range using operations available on older systems.
+func replaceLineRange(in lines: NSMutableArray, range: Range<Int>, with updatedLines: [String]) {
+    for index in range.reversed() {
+        lines.removeObject(at: index)
+    }
+    for (offset, line) in updatedLines.enumerated() {
+        lines.insert(line, at: range.lowerBound + offset)
     }
 }
 

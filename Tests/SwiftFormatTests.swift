@@ -33,13 +33,28 @@ import XCTest
 @testable import SwiftFormat
 
 final class SwiftFormatTests: XCTestCase {
+    func testLineArrayTracksWholeBufferReplacement() {
+        let input = ["let a = 1\n", "let b = 2\n"]
+        let mutations: [(NSMutableArray) -> Void] = [
+            { $0.setArray(input) },
+            { $0.replaceObjects(in: NSRange(location: 0, length: input.count), withObjectsFrom: input) },
+            { $0.removeAllObjects(); $0.addObjects(from: input) },
+        ]
+        for mutate in mutations {
+            let lines = TrackedLineArray(lines: input)
+            mutate(lines)
+            XCTAssertEqual(lines as? [String], input)
+            XCTAssertEqual(lines.originalIndices, [nil, nil])
+        }
+    }
+
     func testReplaceLinesWithoutChangesPreservesOriginalObjects() {
         let originals = ["func foo() {\n", "    bar()\n", "}\n"].map { NSMutableString(string: $0) }
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         replaceLines(in: lines, with: tokenize(originals.map { $0 as String }.joined()))
         XCTAssertEqual(lines.count, originals.count)
         for index in originals.indices {
-            XCTAssertTrue(lines[index] as AnyObject === originals[index])
+            XCTAssertEqual(lines.originalIndices[index], index)
         }
     }
 
@@ -52,7 +67,7 @@ final class SwiftFormatTests: XCTestCase {
             "}\n",
             "let after =  2\n",
         ].map { NSMutableString(string: $0) }
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         let output = """
         let before = 1
         func untouched() {
@@ -66,14 +81,14 @@ final class SwiftFormatTests: XCTestCase {
         XCTAssertEqual((lines as? [String])?.joined(), output)
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
             for index in 1 ... 4 {
-                XCTAssertTrue(lines[index] as AnyObject === originals[index])
+                XCTAssertEqual(lines.originalIndices[index], index)
             }
         }
     }
 
     func testReplaceLinesInsertsAtBeginningMiddleAndEnd() {
         let originals = ["let a = 1\n", "let b = 2\n", "let c = 3\n"].map { NSMutableString(string: $0) }
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         let output = """
         // start
         let a = 1
@@ -86,8 +101,8 @@ final class SwiftFormatTests: XCTestCase {
         replaceLines(in: lines, with: tokenize(output))
         XCTAssertEqual((lines as? [String])?.joined(), output)
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            for (index, original) in zip([1, 3, 4], originals) {
-                XCTAssertTrue(lines[index] as AnyObject === original)
+            for (index, originalIndex) in zip([1, 3, 4], originals.indices) {
+                XCTAssertEqual(lines.originalIndices[index], originalIndex)
             }
         }
     }
@@ -95,7 +110,7 @@ final class SwiftFormatTests: XCTestCase {
     func testReplaceLinesDeletesAtBeginningMiddleAndEnd() {
         let originals = ["// start\n", "let a = 1\n", "// middle\n", "let b = 2\n", "// end\n"]
             .map { NSMutableString(string: $0) }
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         let output = """
         let a = 1
         let b = 2
@@ -104,15 +119,15 @@ final class SwiftFormatTests: XCTestCase {
         replaceLines(in: lines, with: tokenize(output))
         XCTAssertEqual((lines as? [String])?.joined(), output)
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            XCTAssertTrue(lines[0] as AnyObject === originals[1])
-            XCTAssertTrue(lines[1] as AnyObject === originals[3])
+            XCTAssertEqual(lines.originalIndices[0], 1)
+            XCTAssertEqual(lines.originalIndices[1], 3)
         }
     }
 
     func testReplaceLinesPreservesRepeatedBracesAndBlankLines() {
         let originals = ["func foo() {\n", "    bar ()\n", "}\n", "\n", "func baz() {\n", "    quux()\n", "}\n"]
             .map { NSMutableString(string: $0) }
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         let output = """
         func foo() {
             bar()
@@ -126,40 +141,40 @@ final class SwiftFormatTests: XCTestCase {
         replaceLines(in: lines, with: tokenize(output))
         XCTAssertEqual((lines as? [String])?.joined(), output)
         for index in [0, 2, 3, 4, 5, 6] {
-            XCTAssertTrue(lines[index] as AnyObject === originals[index])
+            XCTAssertEqual(lines.originalIndices[index], index)
         }
     }
 
     func testReplaceLinesPreservesLineEndings() {
         for linebreak in ["\n", "\r\n", "\r"] {
             let original = NSMutableString(string: "let café = 1\(linebreak)")
-            let lines = NSMutableArray(array: [original, "print (café)\(linebreak)"])
+            let lines = TrackedLineArray(lines: [original, "print (café)\(linebreak)"])
             let output = "let café = 1\(linebreak)print(café)\(linebreak)"
             replaceLines(in: lines, with: tokenize(output))
             XCTAssertEqual(lines as? [String], ["let café = 1\(linebreak)", "print(café)\(linebreak)"])
-            XCTAssertTrue(lines[0] as AnyObject === original)
+            XCTAssertEqual(lines.originalIndices[0], 0)
         }
     }
 
     func testReplaceLinesPreservesUnterminatedFinalLine() {
         let original = NSMutableString(string: "print(café)")
-        let lines = NSMutableArray(array: ["let café =  1\n", original])
+        let lines = TrackedLineArray(lines: ["let café =  1\n", original])
         let output = """
         let café = 1
         print(café)
         """
         replaceLines(in: lines, with: tokenize(output))
         XCTAssertEqual((lines as? [String])?.joined(), output)
-        XCTAssertTrue(lines[1] as AnyObject === original)
+        XCTAssertEqual(lines.originalIndices[1], 1)
     }
 
     func testReplaceLinesRetainsExistingTerminalEmptyLine() {
         let terminalLine = NSMutableString(string: "")
-        let lines = NSMutableArray(array: ["let foo =  1\n", terminalLine])
+        let lines = TrackedLineArray(lines: ["let foo =  1\n", terminalLine])
         let output = "let foo = 1\n"
         replaceLines(in: lines, with: tokenize(output))
         XCTAssertEqual(lines as? [String], [output, ""])
-        XCTAssertTrue(lines[1] as AnyObject === terminalLine)
+        XCTAssertEqual(lines.originalIndices[1], 1)
     }
 
     func testReplaceLinesRemovesTerminalEmptyLineForUnterminatedOutput() {
@@ -188,14 +203,14 @@ final class SwiftFormatTests: XCTestCase {
     func testReplaceLinesAfterFormattingSelectedRange() throws {
         let originals = ["let foo =  1\n", "func untouched() {}\n", "let bar =  2\n"]
             .map { NSMutableString(string: $0) }
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         let input = tokenize(originals.map { $0 as String }.joined())
         let range = tokenRange(forLineRange: 1 ... 1, in: input)
         let output = try format(input, rules: [.consecutiveSpaces], range: range).tokens
         replaceLines(in: lines, with: output)
         XCTAssertEqual((lines as? [String])?.joined(), "let foo = 1\nfunc untouched() {}\nlet bar =  2\n")
-        XCTAssertTrue(lines[1] as AnyObject === originals[1])
-        XCTAssertTrue(lines[2] as AnyObject === originals[2])
+        XCTAssertEqual(lines.originalIndices[1], 1)
+        XCTAssertEqual(lines.originalIndices[2], 2)
     }
 
     func testReplaceLinesUsesExactUnicodeRepresentation() throws {
@@ -243,11 +258,11 @@ final class SwiftFormatTests: XCTestCase {
         var updated = originals.map { $0 as String }
         updated[0] = "let value0 = 1\n"
         updated[4999] = "let value4999 = 5000\n"
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         replaceLines(in: lines, with: tokenize(updated.joined()))
         XCTAssertEqual(lines as? [String], updated)
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            XCTAssertTrue(lines[2500] as AnyObject === originals[2500])
+            XCTAssertEqual(lines.originalIndices[2500], 2500)
         }
     }
 
@@ -263,14 +278,34 @@ final class SwiftFormatTests: XCTestCase {
         // new end
 
         """
-        let lines = NSMutableArray(array: originals)
+        let lines = TrackedLineArray(lines: originals)
         replaceLines(in: lines, with: tokenize(output))
         XCTAssertEqual((lines as? [String])?.joined(), output)
-        XCTAssertTrue(lines[0] as AnyObject === originals[0])
+        XCTAssertEqual(lines.originalIndices[0], 0)
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            XCTAssertTrue(lines[1] as AnyObject === originals[2])
-            XCTAssertTrue(lines[3] as AnyObject === originals[3])
-            XCTAssertTrue(lines[4] as AnyObject === originals[4])
+            XCTAssertEqual(lines.originalIndices[1], 2)
+            XCTAssertEqual(lines.originalIndices[3], 3)
+            XCTAssertEqual(lines.originalIndices[4], 4)
+        }
+    }
+
+    func testReplaceLineRangePreservesOutsideLines() {
+        for replacement in [[], ["let a = 1\n"], ["let a = 1\n", "let b = 2\n", "let c = 3\n"]] {
+            let input = ["// before\n", "let a =  1\n", "let b =  2\n", "// after\n"]
+            let lines = TrackedLineArray(lines: input)
+            replaceLineRange(in: lines, range: 1 ..< 3, with: replacement)
+            XCTAssertEqual(lines as? [String], [input[0]] + replacement + [input[3]])
+            XCTAssertEqual(lines.originalIndices, [0] + Array(repeating: nil, count: replacement.count) + [3])
+        }
+    }
+
+    func testReplaceLineRangeWithEmptyRange() {
+        for input in [[], ["// after\n"]] {
+            for replacement in [[], ["let a = 1\n", "let b = 2\n"]] {
+                let lines = NSMutableArray(array: input)
+                replaceLineRange(in: lines, range: 0 ..< 0, with: replacement)
+                XCTAssertEqual(lines as? [String], replacement + input)
+            }
         }
     }
 
@@ -542,5 +577,55 @@ final class SwiftFormatTests: XCTestCase {
         let input = "class Foo {\r  func bar() {\r  }\r  func baz() {\r  }\r}"
         let output = "class Foo {\r  func bar() {\r  }\r\r  func baz() {\r  }\r}"
         XCTAssertEqual(try format(input, rules: [.blankLinesBetweenScopes]).output, output)
+    }
+}
+
+/// Track edits rather than NSString identity, which is lost when Foundation bridges strings on Linux.
+private final class TrackedLineArray: NSMutableArray {
+    private var storage: [Any] = []
+    private(set) var originalIndices: [Int?] = []
+
+    convenience init(lines: [Any]) {
+        self.init()
+        storage = lines
+        originalIndices = lines.indices.map { $0 }
+    }
+
+    override var count: Int {
+        storage.count
+    }
+
+    override func object(at index: Int) -> Any {
+        storage[index]
+    }
+
+    override func insert(_ anObject: Any, at index: Int) {
+        storage.insert(anObject, at: index)
+        originalIndices.insert(nil, at: index)
+    }
+
+    override func removeObject(at index: Int) {
+        storage.remove(at: index)
+        originalIndices.remove(at: index)
+    }
+
+    override func replaceObject(at index: Int, with anObject: Any) {
+        storage[index] = anObject
+        originalIndices[index] = nil
+    }
+
+    override func add(_ anObject: Any) {
+        insert(anObject, at: count)
+    }
+
+    override func removeLastObject() {
+        if count > 0 {
+            removeObject(at: count - 1)
+        }
+    }
+
+    override func replaceObjects(in range: NSRange, withObjectsFrom otherArray: [Any]) {
+        storage.replaceSubrange(Range(range)!, with: otherArray)
+        originalIndices.replaceSubrange(Range(range)!, with: Array(repeating: nil, count: otherArray.count))
     }
 }

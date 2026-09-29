@@ -37,7 +37,7 @@ Table of Contents
     - [Linting](#linting)
     - [Error codes](#error-codes)
     - [Cache](#cache)
-    - [Baseline](#baseline)
+    - [Snapshot](#snapshot)
     - [File headers](#file-headers)
     - [Markdown formatting](#markdown-formatting)
 - [FAQ](#faq)
@@ -922,16 +922,16 @@ The cache is shared between all projects. The file is fairly small, as it only s
 You can specify a custom cache file location by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
 
 
-Baseline
+Snapshot
 --------
 
-Baseline files let you adopt SwiftFormat incrementally. SwiftFormat automatically detects `.swiftformat-baseline` files along each input path and uses the closest one for each file. Encountered baseline files are logged alongside `.swiftformat` configuration files. Files whose contents match their baseline are skipped. New and modified files are processed normally, but existing baseline files are never modified automatically.
+Snapshot files let you adopt SwiftFormat incrementally. SwiftFormat automatically detects `.swiftformat-snapshot` files along each input path and uses the closest one for each file. Encountered snapshot files are logged alongside `.swiftformat` configuration files. Files whose contents match their snapshot are skipped. New and modified files are processed normally, but existing snapshot files are never modified automatically.
 
-Use `--baseline <path>` to use one specific baseline instead of automatic discovery. Passing `--baseline` without a path creates a `.swiftformat-baseline` fallback at the common root of the inputs for files that do not already have an applicable baseline. For a single directory input this is the directory itself, and for a single file input it is the containing directory. If multiple inputs do not share a project directory, an explicit path is required.
+Use `--snapshot <path>` to use one specific snapshot instead of automatic discovery. Passing `--snapshot` without a path creates a `.swiftformat-snapshot` fallback at the common root of the inputs for files that do not already have an applicable snapshot. For a single directory input this is the directory itself, and for a single file input it is the containing directory. If multiple inputs do not share a project directory, an explicit path is required.
 
-Unlike the cache, baseline entries are not tied to a SwiftFormat version, rules, or options. Changing your configuration therefore does not cause unchanged files to be reformatted. Delete the baseline file and run with `--baseline` to capture a new baseline.
+Unlike the cache, snapshot entries are not tied to a SwiftFormat version, rules, or options. Changing your configuration therefore does not cause unchanged files to be reformatted. Delete the snapshot file and run with `--snapshot` to capture a new snapshot.
 
-The baseline file uses paths relative to its own location where possible, so it can be checked into the project. SwiftFormat reports an error without modifying source files if an existing baseline cannot be read or parsed, or uses an unsupported schema version. Baselines cannot be used with standard input, `--output`, `--line-range`, or `--infer-options`. A missing baseline cannot be created in dry-run mode.
+The snapshot file uses paths relative to its own location where possible, so it can be checked into the project. SwiftFormat reports an error without modifying source files if an existing snapshot cannot be read or parsed, or uses an unsupported schema version. Snapshots cannot be used with standard input, `--output`, `--line-range`, or `--infer-options`. A missing snapshot cannot be created in dry-run mode.
 
 
 File headers

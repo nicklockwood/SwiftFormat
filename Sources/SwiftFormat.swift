@@ -538,6 +538,49 @@ public func sourceCode(for tokens: [Token]?) -> String {
     (tokens ?? []).map(\.string).joined()
 }
 
+/// Update an editor's line array without replacing unchanged lines.
+func replaceLines(in lines: NSMutableArray, with tokens: [Token]) {
+    let originalLines = lines as! [String]
+    var updatedLines = tokens.lines.map { sourceCode(for: Array($0)) }
+    // Retain the editor's terminal empty line when the output still ends at a line boundary.
+    if originalLines.last == "", tokens.last?.isLinebreak != false {
+        updatedLines.append("")
+    }
+    // String equality alone would ignore changes between canonically equivalent Unicode representations.
+    let areEqual: (String, String) -> Bool = { $0.utf8.elementsEqual($1.utf8) }
+
+    var start = 0
+    while start < min(originalLines.count, updatedLines.count),
+          areEqual(originalLines[start], updatedLines[start])
+    {
+        start += 1
+    }
+    var oldEnd = originalLines.count, newEnd = updatedLines.count
+    while oldEnd > start, newEnd > start,
+          areEqual(originalLines[oldEnd - 1], updatedLines[newEnd - 1])
+    {
+        oldEnd -= 1
+        newEnd -= 1
+    }
+    guard oldEnd > start || newEnd > start else { return }
+
+    guard #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) else {
+        // On older systems, preserve the unchanged prefix and suffix of the buffer.
+        lines.replaceObjects(in: NSRange(start ..< oldEnd), withObjectsFrom: Array(updatedLines[start ..< newEnd]))
+        return
+    }
+    let difference = updatedLines[start ..< newEnd].difference(from: originalLines[start ..< oldEnd], by: areEqual)
+    // CollectionDifference removes in descending order, then inserts in ascending order.
+    for change in difference {
+        switch change {
+        case let .remove(offset, _, _):
+            lines.removeObject(at: start + offset)
+        case let .insert(offset, line, _):
+            lines.insert(line, at: start + offset)
+        }
+    }
+}
+
 /// Apply specified rules to a token array and optionally capture list of changes
 public func applyRules(
     _ originalRules: [FormatRule],

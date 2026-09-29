@@ -33,6 +33,247 @@ import XCTest
 @testable import SwiftFormat
 
 final class SwiftFormatTests: XCTestCase {
+    func testReplaceLinesWithoutChangesPreservesOriginalObjects() {
+        let originals = ["func foo() {\n", "    bar()\n", "}\n"].map { NSMutableString(string: $0) }
+        let lines = NSMutableArray(array: originals)
+        replaceLines(in: lines, with: tokenize(originals.map { $0 as String }.joined()))
+        XCTAssertEqual(lines.count, originals.count)
+        for index in originals.indices {
+            XCTAssertTrue(lines[index] as AnyObject === originals[index])
+        }
+    }
+
+    func testReplaceLinesPreservesUnchangedBlockBetweenEdits() {
+        let originals = [
+            "let before =  1\n",
+            "func untouched() {\n",
+            "    /* a folded comment */\n",
+            "    print(\"unchanged\")\n",
+            "}\n",
+            "let after =  2\n",
+        ].map { NSMutableString(string: $0) }
+        let lines = NSMutableArray(array: originals)
+        let output = """
+        let before = 1
+        func untouched() {
+            /* a folded comment */
+            print("unchanged")
+        }
+        let after = 2
+
+        """
+        replaceLines(in: lines, with: tokenize(output))
+        XCTAssertEqual((lines as? [String])?.joined(), output)
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            for index in 1 ... 4 {
+                XCTAssertTrue(lines[index] as AnyObject === originals[index])
+            }
+        }
+    }
+
+    func testReplaceLinesInsertsAtBeginningMiddleAndEnd() {
+        let originals = ["let a = 1\n", "let b = 2\n", "let c = 3\n"].map { NSMutableString(string: $0) }
+        let lines = NSMutableArray(array: originals)
+        let output = """
+        // start
+        let a = 1
+        // middle
+        let b = 2
+        let c = 3
+        // end
+
+        """
+        replaceLines(in: lines, with: tokenize(output))
+        XCTAssertEqual((lines as? [String])?.joined(), output)
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            for (index, original) in zip([1, 3, 4], originals) {
+                XCTAssertTrue(lines[index] as AnyObject === original)
+            }
+        }
+    }
+
+    func testReplaceLinesDeletesAtBeginningMiddleAndEnd() {
+        let originals = ["// start\n", "let a = 1\n", "// middle\n", "let b = 2\n", "// end\n"]
+            .map { NSMutableString(string: $0) }
+        let lines = NSMutableArray(array: originals)
+        let output = """
+        let a = 1
+        let b = 2
+
+        """
+        replaceLines(in: lines, with: tokenize(output))
+        XCTAssertEqual((lines as? [String])?.joined(), output)
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            XCTAssertTrue(lines[0] as AnyObject === originals[1])
+            XCTAssertTrue(lines[1] as AnyObject === originals[3])
+        }
+    }
+
+    func testReplaceLinesPreservesRepeatedBracesAndBlankLines() {
+        let originals = ["func foo() {\n", "    bar ()\n", "}\n", "\n", "func baz() {\n", "    quux()\n", "}\n"]
+            .map { NSMutableString(string: $0) }
+        let lines = NSMutableArray(array: originals)
+        let output = """
+        func foo() {
+            bar()
+        }
+
+        func baz() {
+            quux()
+        }
+
+        """
+        replaceLines(in: lines, with: tokenize(output))
+        XCTAssertEqual((lines as? [String])?.joined(), output)
+        for index in [0, 2, 3, 4, 5, 6] {
+            XCTAssertTrue(lines[index] as AnyObject === originals[index])
+        }
+    }
+
+    func testReplaceLinesPreservesLineEndings() {
+        for linebreak in ["\n", "\r\n", "\r"] {
+            let original = NSMutableString(string: "let café = 1\(linebreak)")
+            let lines = NSMutableArray(array: [original, "print (café)\(linebreak)"])
+            let output = "let café = 1\(linebreak)print(café)\(linebreak)"
+            replaceLines(in: lines, with: tokenize(output))
+            XCTAssertEqual(lines as? [String], ["let café = 1\(linebreak)", "print(café)\(linebreak)"])
+            XCTAssertTrue(lines[0] as AnyObject === original)
+        }
+    }
+
+    func testReplaceLinesPreservesUnterminatedFinalLine() {
+        let original = NSMutableString(string: "print(café)")
+        let lines = NSMutableArray(array: ["let café =  1\n", original])
+        let output = """
+        let café = 1
+        print(café)
+        """
+        replaceLines(in: lines, with: tokenize(output))
+        XCTAssertEqual((lines as? [String])?.joined(), output)
+        XCTAssertTrue(lines[1] as AnyObject === original)
+    }
+
+    func testReplaceLinesRetainsExistingTerminalEmptyLine() {
+        let terminalLine = NSMutableString(string: "")
+        let lines = NSMutableArray(array: ["let foo =  1\n", terminalLine])
+        let output = "let foo = 1\n"
+        replaceLines(in: lines, with: tokenize(output))
+        XCTAssertEqual(lines as? [String], [output, ""])
+        XCTAssertTrue(lines[1] as AnyObject === terminalLine)
+    }
+
+    func testReplaceLinesRemovesTerminalEmptyLineForUnterminatedOutput() {
+        let lines = NSMutableArray(array: ["let foo = 1\n", ""])
+        replaceLines(in: lines, with: tokenize("let foo = 1"))
+        XCTAssertEqual(lines as? [String], ["let foo = 1"])
+    }
+
+    func testReplaceLinesEmptyOutput() {
+        for input in [[], [""], ["let foo = 1\n"], ["let foo = 1\n", ""]] as [[String]] {
+            let lines = NSMutableArray(array: input)
+            replaceLines(in: lines, with: [])
+            XCTAssertEqual((lines as? [String])?.joined(), "")
+            XCTAssertEqual(lines as? [String], input.last == "" ? [""] : [])
+        }
+    }
+
+    func testReplaceLinesEmptyInput() {
+        for input in [[], [""]] as [[String]] {
+            let lines = NSMutableArray(array: input)
+            replaceLines(in: lines, with: tokenize("let foo = 1\n"))
+            XCTAssertEqual((lines as? [String])?.joined(), "let foo = 1\n")
+        }
+    }
+
+    func testReplaceLinesAfterFormattingSelectedRange() throws {
+        let originals = ["let foo =  1\n", "func untouched() {}\n", "let bar =  2\n"]
+            .map { NSMutableString(string: $0) }
+        let lines = NSMutableArray(array: originals)
+        let input = tokenize(originals.map { $0 as String }.joined())
+        let range = tokenRange(forLineRange: 1 ... 1, in: input)
+        let output = try format(input, rules: [.consecutiveSpaces], range: range).tokens
+        replaceLines(in: lines, with: output)
+        XCTAssertEqual((lines as? [String])?.joined(), "let foo = 1\nfunc untouched() {}\nlet bar =  2\n")
+        XCTAssertTrue(lines[1] as AnyObject === originals[1])
+        XCTAssertTrue(lines[2] as AnyObject === originals[2])
+    }
+
+    func testReplaceLinesUsesExactUnicodeRepresentation() throws {
+        for (input, output) in [
+            ("let café = 1\n", "let cafe\u{301} = 1\n"),
+            ("let a =  1\nlet café = 1\n", "let a = 1\nlet cafe\u{301} = 1\n"),
+            ("let café = 1\nlet b =  2\n", "let cafe\u{301} = 1\nlet b = 2\n"),
+            ("let a =  1\nlet café = 1\nlet b =  2\n", "let a = 1\nlet cafe\u{301} = 1\nlet b = 2\n"),
+        ] {
+            let lines = NSMutableArray(array: tokenize(input).lines.map { sourceCode(for: Array($0)) })
+            replaceLines(in: lines, with: tokenize(output))
+            XCTAssertEqual(try Array(XCTUnwrap((lines as? [String])?.joined().utf8)), Array(output.utf8))
+        }
+    }
+
+    func testReplaceLinesWithRepeatedLinesProducesExactOutput() throws {
+        var inputs: [[String]] = [[]]
+        var level: [[String]] = [[]]
+        for _ in 0 ..< 3 {
+            level = level.flatMap { prefix in ["let a = 1\n", "}\n", "\n"].map { prefix + [$0] } }
+            inputs += level
+        }
+        for input in inputs {
+            for output in inputs {
+                let lines = NSMutableArray(array: input)
+                replaceLines(in: lines, with: tokenize(output.joined()))
+                XCTAssertEqual(try XCTUnwrap(lines as? [String]), output, "Input: \(input)")
+            }
+        }
+    }
+
+    func testReplaceLinesRetainsSelectionOffsetsAfterRemovingLines() throws {
+        let input = tokenize("let a = 1\n\n\n\tlet café = 2\n\tprint(café)\n")
+        let output = try format(input, rules: [.consecutiveBlankLines]).tokens
+        let lines = NSMutableArray(array: input.lines.map { sourceCode(for: Array($0)) })
+        replaceLines(in: lines, with: output)
+        XCTAssertEqual((lines as? [String])?.joined(), sourceCode(for: output))
+        let offsets = [SourceOffset(line: 4, column: 5), SourceOffset(line: 5, column: 10)]
+        let expected = [SourceOffset(line: 3, column: 5), SourceOffset(line: 4, column: 10)]
+        XCTAssertEqual(offsets.map { newOffset(for: $0, in: output, tabWidth: 4) }, expected)
+    }
+
+    func testReplaceLinesPreservesLargeUnchangedRegion() {
+        let originals = (0 ..< 5000).map { NSMutableString(string: "let value\($0) = \($0)\n") }
+        var updated = originals.map { $0 as String }
+        updated[0] = "let value0 = 1\n"
+        updated[4999] = "let value4999 = 5000\n"
+        let lines = NSMutableArray(array: originals)
+        replaceLines(in: lines, with: tokenize(updated.joined()))
+        XCTAssertEqual(lines as? [String], updated)
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            XCTAssertTrue(lines[2500] as AnyObject === originals[2500])
+        }
+    }
+
+    func testReplaceLinesMixedChangesAfterUnchangedPrefix() {
+        let originals = ["// keep\n", "// remove\n", "let a = 1\n", "}\n", "}\n", "// old end\n"]
+            .map { NSMutableString(string: $0) }
+        let output = """
+        // keep
+        let a = 1
+        // insert
+        }
+        }
+        // new end
+
+        """
+        let lines = NSMutableArray(array: originals)
+        replaceLines(in: lines, with: tokenize(output))
+        XCTAssertEqual((lines as? [String])?.joined(), output)
+        XCTAssertTrue(lines[0] as AnyObject === originals[0])
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            XCTAssertTrue(lines[1] as AnyObject === originals[2])
+            XCTAssertTrue(lines[3] as AnyObject === originals[3])
+            XCTAssertTrue(lines[4] as AnyObject === originals[4])
+        }
+    }
+
     // MARK: enumerateFiles
 
     func testInputFileMatchesOutputFileForNilOutput() {

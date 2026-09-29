@@ -270,6 +270,8 @@ Alternatively, if you prefer not to use Homebrew, you'll find the latest version
 
 Once you have launched the app and restarted Xcode, you'll find a SwiftFormat option under Xcode's Editor menu. If the SwiftFormat menu does not appear [this thread](https://github.com/nicklockwood/SwiftFormat/issues/494) may help. 
 
+On macOS 10.15 and later, Format File and Format Selection update only changed lines to reduce unnecessary unfolding. Xcode may still expand a folded block when its contents change. On macOS 10.14, unchanged lines before and after the changed region are retained, but unchanged blocks between separate edits may still unfold.
+
 You can configure the formatting [rules](#rules) and [options](#options) using the SwiftFormat for Xcode host application. There is currently no way to override these per-project, however, you can import and export different configurations using the File menu. You will need to do this again each time you switch projects.
 
 The format of the configuration file is described in the [Config section](#config-file) below.

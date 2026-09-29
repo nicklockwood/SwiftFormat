@@ -216,7 +216,7 @@ func printHelp(as type: CLI.OutputType) {
     --unknown-rules    How unknown rules are handled: "error" (default) or "ignore"
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
-    --baseline         Path to baseline file used to skip unchanged files
+    --baseline         Path to baseline file (defaults to .swiftformat-baseline)
     --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
     --report           Path to a file where --lint output should be written
@@ -668,10 +668,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Baseline
-        let baselineURL = try args["baseline"].map { arg in
-            guard !arg.isEmpty else {
-                throw FormatError.options("--baseline argument expects a path")
-            }
+        let baselineMode = try args["baseline"].map { arg in
             guard !useStdin, !inputURLs.isEmpty else {
                 throw FormatError.options("--baseline requires one or more file inputs")
             }
@@ -684,6 +681,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             guard args["infer-options"] == nil else {
                 throw FormatError.options("--baseline cannot be combined with --infer-options")
             }
+            if arg.isEmpty {
+                return try BaselineMode.discover(defaultURL: defaultBaselineURL(for: inputURLs))
+            }
             let baselineURL = try parsePath(arg, for: "--baseline", in: directory)
             var isDirectory: ObjCBool = false
             if FileManager.default.fileExists(atPath: baselineURL.path, isDirectory: &isDirectory),
@@ -691,13 +691,8 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             {
                 throw FormatError.options("--baseline argument expects a file path")
             }
-            if args["dry-run"] != nil,
-               !FileManager.default.fileExists(atPath: baselineURL.path)
-            {
-                throw FormatError.options("--baseline file cannot be created in --dry-run mode")
-            }
-            return baselineURL
-        }
+            return BaselineMode.explicit(baselineURL)
+        } ?? .discover(defaultURL: nil)
 
         // Infer options
         if args["infer-options"] != nil {
@@ -941,7 +936,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   lint: lint,
                                                   lenient: lenient,
                                                   cacheURL: cacheURL,
-                                                  baselineURL: baselineURL,
+                                                  baselineMode: baselineMode,
                                                   reporter: reporter)
             errors += _errors
         })
@@ -1121,34 +1116,55 @@ func processInput(_ inputURLs: [URL],
                   lint: Bool,
                   lenient _: Bool,
                   cacheURL: URL?,
-                  baselineURL: URL?,
+                  baselineMode: BaselineMode,
                   reporter: Reporter?) -> (OutputFlags, [Error])
 {
-    // Load baseline
-    let baselineDirectory = baselineURL?.deletingLastPathComponent().standardizedFileURL
-    let baselineExists = baselineURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
-    var baseline: Baseline?
-    if let baselineURL, baselineExists {
-        do {
-            let data = try Data(contentsOf: baselineURL)
-            baseline = try JSONDecoder().decode(Baseline.self, from: data)
-            guard baseline?.version == Baseline.currentVersion else {
-                return ((0, 0, 0, 0), [FormatError.reading(
-                    "Unsupported baseline version in file at \(baselineURL.path)"
-                )])
-            }
-        } catch let error as FormatError {
-            return ((0, 0, 0, 0), [error])
-        } catch {
-            return ((0, 0, 0, 0), [FormatError.reading(
-                "Failed to read or parse baseline file at \(baselineURL.path)"
-            )])
+    // Discover and load baselines before formatting, so an invalid baseline can't result in partial changes.
+    var baselineURLByInputURL = [URL: URL]()
+    var baselineStates = [URL: BaselineState]()
+    let baselineURLs: Set<URL>
+    switch baselineMode {
+    case let .explicit(baselineURL):
+        baselineURLs = [baselineURL.standardizedFileURL]
+    case let .discover(defaultURL):
+        var inputFileURLs = [URL]()
+        let discoveryErrors = enumerateFiles(
+            withInputURLs: inputURLs,
+            options: options,
+            concurrent: !verbose,
+            logger: { print($0, as: .info) }
+        ) { inputURL, _, _ in
+            { inputFileURLs.append(inputURL.standardizedFileURL) }
         }
-    } else if baselineURL != nil {
-        baseline = Baseline()
+        guard discoveryErrors.isEmpty else {
+            return ((0, 0, 0, 0), discoveryErrors)
+        }
+        var discoveredBaselineURLs = Set<URL>()
+        for inputURL in inputFileURLs {
+            let encounteredURLs = encounteredBaselineURLs(for: inputURL)
+            discoveredBaselineURLs.formUnion(encounteredURLs)
+            if let baselineURL = encounteredURLs.first ?? defaultURL?.standardizedFileURL {
+                baselineURLByInputURL[inputURL] = baselineURL
+            }
+        }
+        baselineURLs = discoveredBaselineURLs.union(baselineURLByInputURL.values)
     }
-    let isCreatingBaseline = baselineURL != nil && !baselineExists
-    var baselineWasUpdated = isCreatingBaseline
+    if !baselineURLs.isEmpty, outputURL != nil {
+        return ((0, 0, 0, 0), [FormatError.options("--baseline cannot be combined with --output")])
+    }
+    if !baselineURLs.isEmpty, lineRange != nil {
+        return ((0, 0, 0, 0), [FormatError.options("--baseline cannot be combined with --line-range")])
+    }
+    do {
+        for baselineURL in baselineURLs.sorted(by: { $0.path < $1.path }) {
+            baselineStates[baselineURL] = try loadBaseline(at: baselineURL, dryrun: dryrun)
+            if !baselineStates[baselineURL]!.isCreating {
+                print("Reading baseline file at \(baselineURL.path)", as: .info)
+            }
+        }
+    } catch {
+        return ((0, 0, 0, 0), [error])
+    }
 
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
@@ -1211,30 +1227,39 @@ func processInput(_ inputURLs: [URL],
         return result
     }
     // Format files
-    var errors = enumerateFiles(
-        withInputURLs: inputURLs,
-        outputURL: outputURL,
-        options: options,
-        concurrent: !verbose,
-        logger: { print($0, as: .info) },
-        skipped: skippedHandler
-    ) { inputURL, outputURL, options in
-        if let baselineURL, inputURL.standardizedFileURL == baselineURL.standardizedFileURL {
+    func fileHandler(
+        _ inputURL: URL,
+        _ outputURL: URL,
+        _ options: Options
+    ) throws -> () throws -> Void {
+        let inputURL = inputURL.standardizedFileURL
+        let baselineURL: URL?
+        switch baselineMode {
+        case let .explicit(url):
+            baselineURL = url.standardizedFileURL
+        case .discover:
+            baselineURL = baselineURLByInputURL[inputURL]
+        }
+        if inputURL == baselineURL {
             return { outputFlags.filesSkipped += 1 }
         }
         guard let input = try? String(contentsOf: inputURL) else {
             throw FormatError.reading("Failed to read file \(inputURL.path)")
         }
-        let baselineKey = baselineDirectory.map { baselineKey(for: inputURL, relativeTo: $0) }
-        let inputHash = baseline == nil ? nil : computeHash(input)
-        if let baselineKey, isCreatingBaseline {
+        let baselineKey = baselineURL.map {
+            baselineKey(for: inputURL, relativeTo: $0.deletingLastPathComponent())
+        }
+        let inputHash = baselineURL == nil ? nil : computeHash(input)
+        if let baselineURL, let baselineKey, baselineStates[baselineURL]?.isCreating == true {
             return {
-                baseline?.files[baselineKey] = inputHash
-                baselineWasUpdated = true
+                baselineStates[baselineURL]?.baseline.files[baselineKey] = inputHash
+                baselineStates[baselineURL]?.wasUpdated = true
                 outputFlags.filesSkipped += 1
             }
         }
-        if let baselineKey, baseline?.files[baselineKey] == inputHash {
+        if let baselineURL, let baselineKey,
+           baselineStates[baselineURL]?.baseline.files[baselineKey] == inputHash
+        {
             if verbose {
                 print("Skipping \(inputURL.path)", as: .info)
                 print("-- unchanged (baseline)", as: .success)
@@ -1389,9 +1414,9 @@ func processInput(_ inputURLs: [URL],
                 return {
                     outputFlags.filesChecked += 1
                     cache?[cacheKey] = cacheValue
-                    if let baselineKey, lint || !dryrun {
-                        baseline?.files[baselineKey] = inputHash
-                        baselineWasUpdated = true
+                    if let baselineURL, let baselineKey, lint || !dryrun {
+                        baselineStates[baselineURL]?.baseline.files[baselineKey] = inputHash
+                        baselineStates[baselineURL]?.wasUpdated = true
                     }
                     showConfigurationWarnings(options)
                 }
@@ -1412,9 +1437,9 @@ func processInput(_ inputURLs: [URL],
                     outputFlags.filesFailed += 1
                     outputFlags.filesWritten += 1
                     cache?[cacheKey] = cacheValue
-                    if let baselineKey {
-                        baseline?.files[baselineKey] = computeHash(output)
-                        baselineWasUpdated = true
+                    if let baselineURL, let baselineKey {
+                        baselineStates[baselineURL]?.baseline.files[baselineKey] = computeHash(output)
+                        baselineStates[baselineURL]?.wasUpdated = true
                     }
                     showConfigurationWarnings(options)
                 }
@@ -1446,6 +1471,15 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
+    var errors = enumerateFiles(
+        withInputURLs: inputURLs,
+        outputURL: outputURL,
+        options: options,
+        concurrent: !verbose,
+        logger: { print($0, as: .info) },
+        skipped: skippedHandler,
+        handler: fileHandler
+    )
     if verbose {
         var errorCount = errors.count
         errors = errors.filter { error in
@@ -1478,10 +1512,14 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    // Save baseline
-    if baselineWasUpdated, !isCreatingBaseline || errors.isEmpty,
-       let baseline, let baselineURL, let baselineDirectory
-    {
+    // Save baselines
+    for baselineURL in baselineStates.keys.sorted(by: { $0.path < $1.path }) {
+        guard let state = baselineStates[baselineURL],
+              state.wasUpdated, !state.isCreating || errors.isEmpty
+        else {
+            continue
+        }
+        let baselineDirectory = baselineURL.deletingLastPathComponent()
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -1492,7 +1530,7 @@ func processInput(_ inputURLs: [URL],
             } else {
                 stripSlashes = true
             }
-            var data = try encoder.encode(baseline)
+            var data = try encoder.encode(state.baseline)
             if stripSlashes, let string = String(data: data, encoding: .utf8) {
                 data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
             }
@@ -1515,6 +1553,91 @@ private struct Baseline: Codable {
 
     var version = currentVersion
     var files = [String: String]()
+}
+
+enum BaselineMode {
+    case explicit(URL)
+    case discover(defaultURL: URL?)
+}
+
+private struct BaselineState {
+    var baseline: Baseline
+    let isCreating: Bool
+    var wasUpdated: Bool
+}
+
+private func loadBaseline(at url: URL, dryrun: Bool) throws -> BaselineState {
+    let url = url.standardizedFileURL
+    var isDirectory: ObjCBool = false
+    let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+    guard !exists || !isDirectory.boolValue else {
+        throw FormatError.reading("Baseline file at \(url.path) is a directory")
+    }
+    guard exists else {
+        if dryrun {
+            throw FormatError.options("--baseline file cannot be created in --dry-run mode")
+        }
+        return BaselineState(baseline: Baseline(), isCreating: true, wasUpdated: true)
+    }
+    do {
+        let baseline = try JSONDecoder().decode(Baseline.self, from: Data(contentsOf: url))
+        guard baseline.version == Baseline.currentVersion else {
+            throw FormatError.reading("Unsupported baseline version in file at \(url.path)")
+        }
+        return BaselineState(baseline: baseline, isCreating: false, wasUpdated: false)
+    } catch let error as FormatError {
+        throw error
+    } catch {
+        throw FormatError.reading("Failed to read or parse baseline file at \(url.path)")
+    }
+}
+
+private func encounteredBaselineURLs(for inputURL: URL) -> [URL] {
+    var result = [URL]()
+    var directory = inputURL.deletingLastPathComponent().standardizedFileURL
+    while true {
+        let candidate = directory.appendingPathComponent(".swiftformat-baseline")
+        if FileManager.default.fileExists(atPath: candidate.path) {
+            result.append(candidate)
+        }
+        guard directory.pathComponents.count > 1 else {
+            return result
+        }
+        directory.deleteLastPathComponent()
+    }
+}
+
+private func defaultBaselineURL(for inputURLs: [URL]) throws -> URL {
+    let inputRoots = inputURLs.map { inputURL -> URL in
+        let inputURL = inputURL.standardizedFileURL
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: inputURL.path, isDirectory: &isDirectory),
+           isDirectory.boolValue
+        {
+            return inputURL
+        }
+        return inputURL.deletingLastPathComponent()
+    }
+    guard var commonRoot = inputRoots.first else {
+        throw FormatError.options("--baseline requires one or more file inputs")
+    }
+    for inputRoot in inputRoots.dropFirst() {
+        while !inputRoot.pathComponents.starts(with: commonRoot.pathComponents) {
+            let parent = commonRoot.deletingLastPathComponent()
+            guard parent != commonRoot else {
+                throw FormatError.options(
+                    "--baseline requires an explicit path when inputs do not share a project directory"
+                )
+            }
+            commonRoot = parent
+        }
+    }
+    guard commonRoot.pathComponents.count > 1 else {
+        throw FormatError.options(
+            "--baseline requires an explicit path when inputs do not share a project directory"
+        )
+    }
+    return commonRoot.appendingPathComponent(".swiftformat-baseline")
 }
 
 private func baselineKey(for inputURL: URL, relativeTo directoryURL: URL) -> String {

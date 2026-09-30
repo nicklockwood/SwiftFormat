@@ -24,6 +24,17 @@ public extension FormatRule {
                     || $0.isDeclarationTypeKeyword(including: Array(Token.swiftTypeKeywords))
             }
         ) { index, token in
+            if token.isCommentBody, !token.string.contains(":sort:") {
+                if let literalStartIndex = formatter.collectionLiteralStartOfScope(forSortCommentAt: index) {
+                    formatter.sortCollectionLiteralElements(startOfScope: literalStartIndex)
+                    return
+                }
+                if let expressionRange = formatter.sortableExpressionRange(afterSortCommentAt: index) {
+                    formatter.sortCollectionLiterals(in: expressionRange)
+                    return
+                }
+            }
+
             let rangeToSort: ClosedRange<Int>
             let numberOfLeadingLinebreaks: Int
 
@@ -46,7 +57,8 @@ public extension FormatRule {
                 }),
                     let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: index),
                     let firstRangeToken = formatter.index(of: .nonLinebreak, after: sortRangeStart),
-                    let lastRangeToken = formatter.index(of: .nonSpaceOrLinebreak, before: endCommentIndex - 2)
+                    let lastRangeToken = formatter.index(of: .nonSpaceOrLinebreak, before: endCommentIndex - 2),
+                    sortRangeStart <= lastRangeToken
                 else { return }
 
                 rangeToSort = sortRangeStart ... lastRangeToken
@@ -78,8 +90,19 @@ public extension FormatRule {
                 return
             }
 
-            var declarations = Formatter(Array(formatter.tokens[rangeToSort]))
-                .parseDeclarations()
+            let parsedDeclarations = Formatter(Array(formatter.tokens[rangeToSort])).parseDeclarations()
+
+            // Tokens that aren't part of any declaration (e.g. a bare expression)
+            // would be dropped when reassembling the sorted declarations,
+            // so sort the collection literals in the expression instead
+            guard parsedDeclarations.reduce(0, { $0 + $1.tokens.count }) == rangeToSort.count else {
+                if shouldBePartiallySorted {
+                    formatter.sortCollectionLiterals(in: rangeToSort)
+                }
+                return
+            }
+
+            var declarations = parsedDeclarations
                 .enumerated()
                 .sorted(by: { lhs, rhs -> Bool in
                     let (lhsIndex, lhsDeclaration) = lhs
@@ -179,7 +202,151 @@ public extension FormatRule {
                   Foo()
               }
           }
+
+          // swiftformat:sort
+          let featureFlags = [
+        -     fooFeature,
+        -     barFeature,
+        +     barFeature,
+        +     fooFeature,
+          ]
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// If the sort directive comment body at the given index directly follows
+    /// the opening `[` of an array or dictionary literal, returns the index of that `[`.
+    func collectionLiteralStartOfScope(forSortCommentAt commentBodyIndex: Int) -> Int? {
+        guard let commentStartIndex = index(of: .startOfScope("//"), before: commentBodyIndex),
+              let previousIndex = index(of: .nonSpace, before: commentStartIndex),
+              tokens[previousIndex] == .startOfScope("["),
+              !isSubscriptOrFunctionCall(at: previousIndex)
+        else { return nil }
+        return previousIndex
+    }
+
+    /// If the sort directive comment body at the given index precedes an expression, or a property
+    /// declaration with a value or computed body, returns the range of that expression, value, or body.
+    /// Returns nil for other declarations, whose bodies are sorted as declarations instead.
+    func sortableExpressionRange(afterSortCommentAt commentBodyIndex: Int) -> ClosedRange<Int>? {
+        guard var startIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: commentBodyIndex) else { return nil }
+        while isModifier(at: startIndex) || tokens[startIndex].isAttribute,
+              let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfAttribute(at: startIndex) ?? startIndex)
+        {
+            startIndex = nextIndex
+        }
+        if ["let", "var"].contains(tokens[startIndex].string) {
+            let property = parsePropertyDeclaration(atIntroducerIndex: startIndex)
+            return property?.value?.expressionRange ?? property?.body?.range
+        }
+        guard !tokens[startIndex].isDeclarationTypeKeyword else { return nil }
+        return parseExpressionRange(startingAt: startIndex)
+    }
+
+    /// Sorts the elements of every array and dictionary literal in the given range.
+    func sortCollectionLiterals(in range: ClosedRange<Int>) {
+        let literalStarts = range.filter {
+            tokens[$0] == .startOfScope("[") && [.array, .dictionary].contains(scopeType(at: $0))
+        }
+        // Sorting from last to first sorts nested literals before their parents,
+        // and never moves the start of an earlier literal
+        for startOfScope in literalStarts.reversed() {
+            sortCollectionLiteralElements(startOfScope: startOfScope)
+        }
+    }
+
+    /// Sorts the comma-separated elements of the array or dictionary literal starting at the given `[`,
+    /// leaving the commas and whitespace between elements in place. Comments on their own lines
+    /// move with the element below them, and comments at the end of a line move with the element before them.
+    func sortCollectionLiteralElements(startOfScope: Int) {
+        var elements = commaSeparatedElementsInScope(startOfScope: startOfScope)
+        // The first element range starts at the sort comment itself, so skip past it
+        guard let firstElement = elements.first,
+              let firstElementStart = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope),
+              firstElementStart <= firstElement.upperBound
+        else { return }
+        elements[0] = firstElementStart ... firstElement.upperBound
+
+        let parts = elements.map(collectionLiteralElementParts)
+        let sortKeys = parts.map { collectionLiteralElementSortKey($0.body) }
+        let sortedParts = parts.indices.sorted { lhs, rhs in
+            let order = options.locale.compare(sortKeys[lhs], sortKeys[rhs])
+            return order == .orderedSame ? lhs < rhs : order == .orderedAscending
+        }.map { parts[$0] }
+
+        var replacements = [(range: Range<Int>, tokens: [Token])]()
+        for (original, sorted) in zip(parts, sortedParts) {
+            replacements.append((original.leadingCommentsAndBody, Array(tokens[sorted.leadingCommentsAndBody])))
+            replacements.append((original.trailingComment, Array(tokens[sorted.trailingComment])))
+        }
+
+        // Replace from last to first so earlier ranges remain valid
+        for (range, newTokens) in replacements.reversed() where Array(tokens[range]) != newTokens {
+            replaceTokens(in: range, with: newTokens)
+        }
+    }
+
+    /// Splits a collection literal element into the element itself, the element along with
+    /// the comments on the lines above it, and the (possibly empty) comment at the end of its line.
+    func collectionLiteralElementParts(_ element: ClosedRange<Int>)
+        -> (body: ClosedRange<Int>, leadingCommentsAndBody: Range<Int>, trailingComment: Range<Int>)
+    {
+        var body = element
+        let endOfElement: Int
+        if let commaIndex = index(of: .nonSpaceOrLinebreak, after: element.upperBound),
+           tokens[commaIndex] == .delimiter(",")
+        {
+            endOfElement = commaIndex
+        } else {
+            // The last element has no trailing comma, so exclude any comments after it
+            let lastBodyToken = index(of: .nonSpaceOrCommentOrLinebreak, before: element.upperBound + 1) ?? element.upperBound
+            body = element.lowerBound ... lastBodyToken
+            endOfElement = body.upperBound
+        }
+
+        var trailingComment = endOfElement + 1 ..< endOfElement + 1
+        let restOfLine = endOfElement + 1 ..< endOfLine(at: endOfElement)
+        if tokens[restOfLine].contains(where: \.isComment),
+           tokens[restOfLine].allSatisfy(\.isSpaceOrComment)
+        {
+            trailingComment = restOfLine
+        }
+
+        var leadingStart = body.lowerBound
+        while let previousIndex = index(of: .nonSpaceOrLinebreak, before: leadingStart),
+              tokens[previousIndex].isComment
+        {
+            let lineStart = startOfLine(at: previousIndex, excludingIndent: true)
+            guard tokens[lineStart].isComment else { break }
+            leadingStart = lineStart
+        }
+
+        return (body, leadingStart ..< body.upperBound + 1, trailingComment)
+    }
+
+    /// The text to sort a collection literal element by: the key for dictionary
+    /// elements, or the entire element for array elements.
+    func collectionLiteralElementSortKey(_ element: ClosedRange<Int>) -> String {
+        // Ternary colons are tokenized as `.operator(":", .infix)`, so only the dictionary colon matches
+        guard let colonIndex = index(of: .delimiter(":"), in: element.lowerBound ..< element.upperBound),
+              let endOfKey = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
+              endOfKey >= element.lowerBound
+        else { return sortKeyWords(in: element) }
+        return sortKeyWords(in: element.lowerBound ... endOfKey)
+    }
+
+    /// The identifiers, keywords, numbers, and string contents in the given range, separated by spaces.
+    /// Quotes and punctuation are excluded so that e.g. `"foo"` sorts before `"foo-bar"`.
+    func sortKeyWords(in range: ClosedRange<Int>) -> String {
+        tokens[range].compactMap { token -> String? in
+            switch token {
+            case .identifier, .keyword, .number, .stringBody:
+                return token.string
+            default:
+                return nil
+            }
+        }.joined(separator: " ")
     }
 }

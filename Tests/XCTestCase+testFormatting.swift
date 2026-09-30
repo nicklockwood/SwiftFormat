@@ -89,6 +89,7 @@ extension XCTestCase {
             .wrapIfStatementBodies,
             .wrapGuardStatementBodies,
             .wrapIfExpressionBodies,
+            .wrapSingleLineStrings,
         ]
         let exclude = exclude + defaultExclusions.filter { !rules.contains($0) }
         let formatResult: (output: String, changes: [SwiftFormat.Formatter.Change])

@@ -182,9 +182,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload release assets
-        uses: skx/github-action-publish-binaries@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          releaseId: ${{ steps.get-release-id.outputs.release-id }}
-          args: 'downloaded_artifacts/SwiftFormat.for.Xcode.app.zip'
+        run: |
+          ZIP_PATH=$(find downloaded_artifacts -name 'SwiftFormat.for.Xcode.app.zip' -print -quit)
+          if [ -z "$ZIP_PATH" ]; then
+            echo "ERROR: Could not find SwiftFormat.for.Xcode.app.zip"
+            ls -R downloaded_artifacts
+            exit 1
+          fi
+        
+          gh release upload "${{ github.event.release.tag_name || inputs.tag }}" \
+            "$ZIP_PATH" \
+            --clobber

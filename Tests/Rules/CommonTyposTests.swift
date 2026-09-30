@@ -22,7 +22,7 @@ final class CommonTyposTests: XCTestCase {
         testFormatting(for: input, output, rule: .commonTypos)
     }
 
-    func testCorrectsPrivateAndInternalIdentifiersAndUses() {
+    func testCorrectsPrivateIdentifiersAndUses() {
         let input = """
         private struct CacheReciever {
             let maxiumumLenght: Int
@@ -68,6 +68,31 @@ final class CommonTyposTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .commonTypos)
+    }
+
+    func testPreservesReferencesToDeclarationsInOtherFilesByDefault() {
+        let input = """
+        let reciever: ExternalReciever = .init()
+        reciever.retreiveValue(for: identifer)
+        """
+        testFormatting(for: input, rule: .commonTypos)
+    }
+
+    func testInternalVisibilityCorrectsReferencesToDeclarationsInOtherFiles() {
+        let input = """
+        let receiver: ExternalReciever = .init()
+        receiver.retreiveValue(for: identifer)
+        """
+        let output = """
+        let receiver: ExternalReceiver = .init()
+        receiver.retrieveValue(for: identifier)
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .commonTypos,
+            options: FormatOptions(typoVisibility: .internal)
+        )
     }
 
     func testPreservesPublicAndPackageAPI() {

@@ -1141,7 +1141,7 @@ public struct FormatOptions: CustomStringConvertible {
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 preserveAcronyms: Set<String> = [],
-                typoVisibility: Visibility = .internal,
+                typoVisibility: Visibility = .fileprivate,
                 typos: [String: String] = [:],
                 ignoredTypos: Set<String> = [],
                 indentBlankLines: Bool = false,

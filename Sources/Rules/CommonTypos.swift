@@ -9,7 +9,7 @@
 import Foundation
 
 public extension FormatRule {
-    /// Correct common, unambiguous spelling mistakes in comments and non-public declarations.
+    /// Correct common, unambiguous spelling mistakes in comments and eligible declarations.
     static let commonTypos = FormatRule(
         help: "Correct common spelling mistakes in comments and identifiers.",
         disabledByDefault: true,
@@ -92,7 +92,19 @@ public extension FormatRule {
         formatter.forEachToken { index, token in
             switch token {
             case let .identifier(name):
-                guard let correctedName = renames[name] else { return }
+                let correctedName: String
+                if let renamed = renames[name] {
+                    correctedName = renamed
+                } else if formatter.options.typoVisibility > .fileprivate, !declaredNames.contains(name) {
+                    correctedName = formatter.correctingCommonTypos(
+                        in: name,
+                        using: typoCorrections,
+                        ignoring: ignoredTypos
+                    )
+                } else {
+                    return
+                }
+                guard correctedName != name else { return }
                 formatter.replaceToken(at: index, with: .identifier(correctedName))
             case let .commentBody(comment):
                 let correctedComment = formatter.correctingCommonTypos(

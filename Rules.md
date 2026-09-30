@@ -159,6 +159,7 @@
 * [wrapGuardStatementBodies](#wrapGuardStatementBodies)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
 * [wrapMultilineFunctionChains](#wrapMultilineFunctionChains)
+* [wrapSingleLineStrings](#wrapSingleLineStrings)
 * [wrapSwitchCases](#wrapSwitchCases)
 
 # Deprecated Rules (do not use)
@@ -4685,6 +4686,26 @@ Wrap single line `//` comments that exceed the specified `--max-width`.
 - // This is a long comment that exceeds the maximum column width
 + // This is a long comment that exceeds
 + // the maximum column width
+```
+
+</details>
+<br/>
+
+## wrapSingleLineStrings
+
+Wrap single-line string literals that exceed the specified `--max-width`.
+
+<details>
+<summary>Examples</summary>
+
+`--max-width 40 --indent-strings enabled`
+
+```diff
+- let message = "This is a long string that exceeds the maximum width"
++ let message = """
++     This is a long string that exceeds \
++     the maximum width
++     """
 ```
 
 </details>

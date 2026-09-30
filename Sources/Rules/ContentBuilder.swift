@@ -13,18 +13,17 @@ public extension FormatRule {
     static let contentBuilder = FormatRule(
         help: "Use implicit or explicit SwiftUI result builder attributes like `@ContentBuilder`.",
         orderAfter: [.redundantSwiftUIGroup],
-        options: ["content-builder"],
+        options: ["content-builder", "prefer-content-builder"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        if formatter.options.contentBuilder.contains(.prefer) {
+        if formatter.options.preferContentBuilder {
             formatter.replaceLegacyContentBuilderAttributes()
         }
 
-        if formatter.options.contentBuilder.contains(.implicit) {
+        switch formatter.options.contentBuilder {
+        case .implicit:
             formatter.removeRedundantContentBuilderAttributes()
-        }
-
-        if formatter.options.contentBuilder.contains(.explicit) {
+        case .explicit:
             formatter.addExplicitContentBuilderAttributes()
         }
     } examples: {
@@ -80,9 +79,9 @@ public extension FormatRule {
           }
         ```
 
-        `prefer` replaces legacy result builders with the equivalent `@ContentBuilder`,
-        which requires Swift 6.4 or later. It can be combined with either of the above,
-        e.g. `--content-builder explicit,prefer`:
+        With `--prefer-content-builder true`, replaces legacy result builders with the
+        equivalent `@ContentBuilder`, which requires Swift 6.4 or later. This can be
+        combined with either `--content-builder` mode:
 
         ```diff
           struct MyView: View {
@@ -174,7 +173,7 @@ extension Formatter {
         else { return nil }
 
         // @ContentBuilder requires the Swift 6.4 SDK (Xcode 27)
-        if options.contentBuilder.contains(.prefer), options.swiftVersion >= "6.4" {
+        if options.preferContentBuilder, options.swiftVersion >= "6.4" {
             return "@ContentBuilder"
         } else {
             return "@" + legacyBuilder

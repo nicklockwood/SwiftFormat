@@ -805,7 +805,8 @@ Use implicit or explicit SwiftUI result builder attributes like `@ContentBuilder
 
 Option | Description
 --- | ---
-`--content-builder` | Comma-delimited list of SwiftUI result builder behaviors: "implicit", "explicit" or "prefer" (default "implicit")
+`--content-builder` | SwiftUI result builder attributes: "implicit" (default) or "explicit"
+`--prefer-content-builder` | Replace legacy builders like @ViewBuilder with @ContentBuilder: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
@@ -861,9 +862,9 @@ attribute to declarations that return SwiftUI content:
   }
 ```
 
-`prefer` replaces legacy result builders with the equivalent `@ContentBuilder`,
-which requires Swift 6.4 or later. It can be combined with either of the above,
-e.g. `--content-builder explicit,prefer`:
+With `--prefer-content-builder true`, replaces legacy result builders with the
+equivalent `@ContentBuilder`, which requires Swift 6.4 or later. This can be
+combined with either `--content-builder` mode:
 
 ```diff
   struct MyView: View {

@@ -227,14 +227,6 @@ final class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
-    func testDuplicateContentBuilderArgumentsAreMerged() {
-        let input = ["", "--content-builder", "implicit", "--content-builder", "prefer"]
-        let output = ["0": "", "content-builder": "implicit,prefer"]
-        XCTAssertEqual(try preprocessArguments(input, [
-            "content-builder",
-        ]), output)
-    }
-
     func testDuplicateNoSpaceOperatorsArgumentsAreMerged() {
         let input = ["", "--nospaceoperators", "+", "--nospaceoperators", "*"]
         let output = ["0": "", "no-space-operators": "+,*"]
@@ -829,23 +821,6 @@ final class ArgumentsTests: XCTestCase {
     func testParseNoSpaceOperatorsOption() throws {
         let options = try Options(["no-space-operators": "...,..<"], in: "")
         XCTAssertEqual(options.formatOptions?.noSpaceOperators, ["...", "..<"])
-    }
-
-    func testParseContentBuilderOption() throws {
-        let options = try Options(["content-builder": "implicit,prefer"], in: "")
-        XCTAssertEqual(options.formatOptions?.contentBuilder, [.implicit, .prefer])
-    }
-
-    func testParseInvalidContentBuilderOption() {
-        XCTAssertThrowsError(try Options(["content-builder": "implicit,nope"], in: "")) { error in
-            XCTAssert("\(error)".contains("nope"))
-        }
-    }
-
-    func testParseMutuallyExclusiveContentBuilderOptions() {
-        XCTAssertThrowsError(try Options(["content-builder": "implicit,explicit"], in: "")) { error in
-            XCTAssert("\(error)".contains("mutually exclusive"))
-        }
     }
 
     func testParseNoWrapOperatorsOption() throws {

@@ -105,7 +105,7 @@ final class CommonTyposTests: XCTestCase {
         )
     }
 
-    func testFileprivateVisibilityPreservesInternalAPI() {
+    func testDefaultVisibilityPreservesInternalAPI() {
         let input = """
         let internalAdress = ""
         fileprivate let privateReciever = ""
@@ -120,7 +120,6 @@ final class CommonTyposTests: XCTestCase {
             for: input,
             output,
             rule: .commonTypos,
-            options: FormatOptions(typoVisibility: .fileprivate),
             exclude: [.redundantFileprivate]
         )
     }

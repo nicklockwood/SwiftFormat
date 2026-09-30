@@ -371,7 +371,7 @@ final class OptionDescriptorTests: XCTestCase {
 
     func testTypoVisibilityAcceptsSupportedVisibilityThresholds() throws {
         let descriptor = Descriptors.typoVisibility
-        XCTAssertEqual(descriptor.defaultArgument, "internal")
+        XCTAssertEqual(descriptor.defaultArgument, "fileprivate")
         XCTAssertEqual(descriptor.validArguments, ["public", "package", "internal", "fileprivate", "private"])
 
         var options: FormatOptions = .default

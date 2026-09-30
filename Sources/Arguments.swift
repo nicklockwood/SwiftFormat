@@ -1031,6 +1031,7 @@ let commandLineArguments = [
     "line-range",
     "output",
     "cache",
+    "snapshot",
     "dry-run",
     "lint",
     "lenient",

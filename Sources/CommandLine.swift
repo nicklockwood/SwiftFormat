@@ -216,6 +216,7 @@ func printHelp(as type: CLI.OutputType) {
     --unknown-rules    How unknown rules are handled: "error" (default) or "ignore"
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
+    --snapshot         Path to snapshot file (defaults to .swiftformat-snapshot)
     --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
     --report           Path to a file where --lint output should be written
@@ -604,7 +605,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             inputURLs += try parseScriptInput(from: environment)
         }
 
-        /// Treat values for arguments that do not take a value as input paths
+        // Treat values for arguments that do not take a value as input paths
         func addInputPaths(for argName: String) throws {
             guard let arg = args[argName], !arg.isEmpty else {
                 return
@@ -665,6 +666,33 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
             return start ... end
         }
+
+        // Snapshot
+        let snapshotMode = try args["snapshot"].map { arg in
+            guard !useStdin, !inputURLs.isEmpty else {
+                throw FormatError.options("--snapshot requires one or more file inputs")
+            }
+            guard outputURL == nil else {
+                throw FormatError.options("--snapshot cannot be combined with --output")
+            }
+            guard lineRange == nil else {
+                throw FormatError.options("--snapshot cannot be combined with --line-range")
+            }
+            guard args["infer-options"] == nil else {
+                throw FormatError.options("--snapshot cannot be combined with --infer-options")
+            }
+            if arg.isEmpty {
+                return try SnapshotMode.discover(defaultURL: defaultSnapshotURL(for: inputURLs))
+            }
+            let snapshotURL = try parsePath(arg, for: "--snapshot", in: directory)
+            var isDirectory: ObjCBool = false
+            if FileManager.default.fileExists(atPath: snapshotURL.path, isDirectory: &isDirectory),
+               isDirectory.boolValue
+            {
+                throw FormatError.options("--snapshot argument expects a file path")
+            }
+            return SnapshotMode.explicit(snapshotURL)
+        } ?? .discover(defaultURL: nil)
 
         // Infer options
         if args["infer-options"] != nil {
@@ -908,6 +936,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   lint: lint,
                                                   lenient: lenient,
                                                   cacheURL: cacheURL,
+                                                  snapshotMode: snapshotMode,
                                                   reporter: reporter)
             errors += _errors
         })
@@ -1087,8 +1116,56 @@ func processInput(_ inputURLs: [URL],
                   lint: Bool,
                   lenient _: Bool,
                   cacheURL: URL?,
+                  snapshotMode: SnapshotMode,
                   reporter: Reporter?) -> (OutputFlags, [Error])
 {
+    // Discover and load snapshots before formatting, so an invalid snapshot can't result in partial changes.
+    var snapshotURLByInputURL = [URL: URL]()
+    var snapshotStates = [URL: SnapshotState]()
+    let snapshotURLs: Set<URL>
+    switch snapshotMode {
+    case let .explicit(snapshotURL):
+        snapshotURLs = [snapshotURL.standardizedFileURL]
+    case let .discover(defaultURL):
+        var inputFileURLs = [URL]()
+        let discoveryErrors = enumerateFiles(
+            withInputURLs: inputURLs,
+            options: options,
+            concurrent: !verbose,
+            logger: { print($0, as: .info) }
+        ) { inputURL, _, _ in
+            { inputFileURLs.append(inputURL.standardizedFileURL) }
+        }
+        guard discoveryErrors.isEmpty else {
+            return ((0, 0, 0, 0), discoveryErrors)
+        }
+        var discoveredSnapshotURLs = Set<URL>()
+        for inputURL in inputFileURLs {
+            let encounteredURLs = encounteredSnapshotURLs(for: inputURL)
+            discoveredSnapshotURLs.formUnion(encounteredURLs)
+            if let snapshotURL = encounteredURLs.first ?? defaultURL?.standardizedFileURL {
+                snapshotURLByInputURL[inputURL] = snapshotURL
+            }
+        }
+        snapshotURLs = discoveredSnapshotURLs.union(snapshotURLByInputURL.values)
+    }
+    if !snapshotURLs.isEmpty, outputURL != nil {
+        return ((0, 0, 0, 0), [FormatError.options("--snapshot cannot be combined with --output")])
+    }
+    if !snapshotURLs.isEmpty, lineRange != nil {
+        return ((0, 0, 0, 0), [FormatError.options("--snapshot cannot be combined with --line-range")])
+    }
+    do {
+        for snapshotURL in snapshotURLs.sorted(by: { $0.path < $1.path }) {
+            snapshotStates[snapshotURL] = try loadSnapshot(at: snapshotURL, dryrun: dryrun)
+            if !snapshotStates[snapshotURL]!.isCreating {
+                print("Reading snapshot file at \(snapshotURL.path)", as: .info)
+            }
+        }
+    } catch {
+        return ((0, 0, 0, 0), [error])
+    }
+
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
@@ -1150,16 +1227,53 @@ func processInput(_ inputURLs: [URL],
         return result
     }
     // Format files
-    var errors = enumerateFiles(
-        withInputURLs: inputURLs,
-        outputURL: outputURL,
-        options: options,
-        concurrent: !verbose,
-        logger: { print($0, as: .info) },
-        skipped: skippedHandler
-    ) { inputURL, outputURL, options in
+    func fileHandler(
+        _ inputURL: URL,
+        _ outputURL: URL,
+        _ options: Options
+    ) throws -> () throws -> Void {
+        let inputURL = inputURL.standardizedFileURL
+        let snapshotURL: URL?
+        switch snapshotMode {
+        case let .explicit(url):
+            snapshotURL = url.standardizedFileURL
+        case .discover:
+            snapshotURL = snapshotURLByInputURL[inputURL]
+        }
+        if inputURL == snapshotURL {
+            return { outputFlags.filesSkipped += 1 }
+        }
         guard let input = try? String(contentsOf: inputURL) else {
             throw FormatError.reading("Failed to read file \(inputURL.path)")
+        }
+        let inputSnapshotKey: String?
+        if let snapshotURL {
+            inputSnapshotKey = snapshotKey(
+                for: inputURL,
+                relativeTo: snapshotURL.deletingLastPathComponent()
+            )
+        } else {
+            inputSnapshotKey = nil
+        }
+        let inputHash = snapshotURL == nil ? nil : computeHash(input)
+        if let snapshotURL,
+           let inputSnapshotKey,
+           snapshotStates[snapshotURL]?.isCreating == true
+        {
+            return {
+                snapshotStates[snapshotURL]?.snapshot.files[inputSnapshotKey] = inputHash
+                outputFlags.filesSkipped += 1
+            }
+        }
+        if let snapshotURL,
+           let inputSnapshotKey,
+           snapshotStates[snapshotURL]?.snapshot.files[inputSnapshotKey] == inputHash
+        {
+            if verbose {
+                print("Skipping \(inputURL.path)", as: .info)
+                print("-- unchanged (snapshot)", as: .success)
+            }
+            return { outputFlags.filesSkipped += 1 }
         }
         // Override options
         var options = try applyOverrides(to: options, for: inputURL)
@@ -1358,6 +1472,15 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
+    var errors = enumerateFiles(
+        withInputURLs: inputURLs,
+        outputURL: outputURL,
+        options: options,
+        concurrent: !verbose,
+        logger: { print($0, as: .info) },
+        skipped: skippedHandler,
+        handler: fileHandler
+    )
     if verbose {
         var errorCount = errors.count
         errors = errors.filter { error in
@@ -1390,7 +1513,140 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
+    // Save newly created snapshots
+    for snapshotURL in snapshotStates.keys.sorted(by: { $0.path < $1.path }) {
+        guard let state = snapshotStates[snapshotURL],
+              state.isCreating, errors.isEmpty
+        else {
+            continue
+        }
+        let snapshotDirectory = snapshotURL.deletingLastPathComponent()
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let stripSlashes: Bool
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+                stripSlashes = false
+                encoder.outputFormatting.insert(.withoutEscapingSlashes)
+            } else {
+                stripSlashes = true
+            }
+            var data = try encoder.encode(state.snapshot)
+            if stripSlashes, let string = String(data: data, encoding: .utf8) {
+                data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
+            }
+            try data.write(to: snapshotURL, options: .atomic)
+        } catch {
+            if FileManager.default.fileExists(atPath: snapshotDirectory.path) {
+                errors.append(FormatError.writing("Failed to write snapshot file at \(snapshotURL.path)"))
+            } else {
+                errors.append(FormatError.reading(
+                    "Specified snapshot file directory does not exist: \(snapshotDirectory.path)"
+                ))
+            }
+        }
+    }
     return (outputFlags, errors)
+}
+
+private struct Snapshot: Codable {
+    static let currentVersion = 1
+
+    var version = currentVersion
+    var files = [String: String]()
+}
+
+enum SnapshotMode {
+    case explicit(URL)
+    case discover(defaultURL: URL?)
+}
+
+private struct SnapshotState {
+    var snapshot: Snapshot
+    let isCreating: Bool
+}
+
+private func loadSnapshot(at url: URL, dryrun: Bool) throws -> SnapshotState {
+    let url = url.standardizedFileURL
+    var isDirectory: ObjCBool = false
+    let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+    guard !exists || !isDirectory.boolValue else {
+        throw FormatError.reading("Snapshot file at \(url.path) is a directory")
+    }
+    guard exists else {
+        if dryrun {
+            throw FormatError.options("--snapshot file cannot be created in --dry-run mode")
+        }
+        return SnapshotState(snapshot: Snapshot(), isCreating: true)
+    }
+    do {
+        let snapshot = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url))
+        guard snapshot.version == Snapshot.currentVersion else {
+            throw FormatError.reading("Unsupported snapshot version in file at \(url.path)")
+        }
+        return SnapshotState(snapshot: snapshot, isCreating: false)
+    } catch let error as FormatError {
+        throw error
+    } catch {
+        throw FormatError.reading("Failed to read or parse snapshot file at \(url.path)")
+    }
+}
+
+private func encounteredSnapshotURLs(for inputURL: URL) -> [URL] {
+    var result = [URL]()
+    var directory = inputURL.deletingLastPathComponent().standardizedFileURL
+    while true {
+        let candidate = directory.appendingPathComponent(".swiftformat-snapshot")
+        if FileManager.default.fileExists(atPath: candidate.path) {
+            result.append(candidate)
+        }
+        guard directory.pathComponents.count > 1 else {
+            return result
+        }
+        directory.deleteLastPathComponent()
+    }
+}
+
+private func defaultSnapshotURL(for inputURLs: [URL]) throws -> URL {
+    let inputRoots = inputURLs.map { inputURL -> URL in
+        let inputURL = inputURL.standardizedFileURL
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: inputURL.path, isDirectory: &isDirectory),
+           isDirectory.boolValue
+        {
+            return inputURL
+        }
+        return inputURL.deletingLastPathComponent()
+    }
+    guard var commonRoot = inputRoots.first else {
+        throw FormatError.options("--snapshot requires one or more file inputs")
+    }
+    for inputRoot in inputRoots.dropFirst() {
+        while !inputRoot.pathComponents.starts(with: commonRoot.pathComponents) {
+            let parent = commonRoot.deletingLastPathComponent()
+            guard parent != commonRoot else {
+                throw FormatError.options(
+                    "--snapshot requires an explicit path when inputs do not share a project directory"
+                )
+            }
+            commonRoot = parent
+        }
+    }
+    guard commonRoot.pathComponents.count > 1 else {
+        throw FormatError.options(
+            "--snapshot requires an explicit path when inputs do not share a project directory"
+        )
+    }
+    return commonRoot.appendingPathComponent(".swiftformat-snapshot")
+}
+
+private func snapshotKey(for inputURL: URL, relativeTo directoryURL: URL) -> String {
+    let inputComponents = inputURL.standardizedFileURL.pathComponents
+    let directoryComponents = directoryURL.standardizedFileURL.pathComponents
+    guard inputComponents.starts(with: directoryComponents) else {
+        return inputURL.standardizedFileURL.path
+    }
+    return inputComponents.dropFirst(directoryComponents.count).joined(separator: "/")
 }
 
 /// The data format used with `--output-tokens`

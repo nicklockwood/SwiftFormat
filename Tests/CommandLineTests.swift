@@ -70,6 +70,25 @@ private func withTmpFiles(_ files: [String: String], fn: (URL) throws -> Void) t
     }
 }
 
+private func withTmpDirectory(_ files: [String: String], fn: (URL) throws -> Void) throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    for (path, contents) in files {
+        _ = try createTmpFile("\(directory.lastPathComponent)/\(path)", contents: contents)
+    }
+    try fn(directory)
+}
+
+private struct TestSnapshot: Decodable {
+    let version: Int
+    let files: [String: String]
+}
+
+private func readSnapshot(at url: URL) throws -> TestSnapshot {
+    try JSONDecoder().decode(TestSnapshot.self, from: Data(contentsOf: url))
+}
+
 final class CommandLineTests: XCTestCase {
     // MARK: stdin
 
@@ -445,6 +464,367 @@ final class CommandLineTests: XCTestCase {
 
         """
         XCTAssertNotEqual(computeHash(input), computeHash(output))
+    }
+
+    func testCreatesSnapshotWithoutFormattingFiles() throws {
+        let firstInput = """
+        let foo=bar
+        """
+        let secondInput = """
+        let baz=quux
+        """
+        try withTmpDirectory([
+            "Sources/z.swift": secondInput,
+            "Sources/a.swift": firstInput,
+        ]) { directory in
+            let firstInputURL = directory.appendingPathComponent("Sources/a.swift")
+            let secondInputURL = directory.appendingPathComponent("Sources/z.swift")
+            let snapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--snapshot",
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .ok)
+
+            XCTAssertEqual(try String(contentsOf: firstInputURL), firstInput)
+            XCTAssertEqual(try String(contentsOf: secondInputURL), secondInput)
+            let snapshotJSON = try String(contentsOf: snapshotURL)
+            XCTAssertEqual(snapshotJSON, """
+            {
+              "files" : {
+                "Sources/a.swift" : "\(computeHash(firstInput))",
+                "Sources/z.swift" : "\(computeHash(secondInput))"
+              },
+              "version" : 1
+            }
+            """)
+            let snapshot = try readSnapshot(at: snapshotURL)
+            XCTAssertEqual(snapshot.version, 1)
+            XCTAssertEqual(snapshot.files, [
+                "Sources/a.swift": computeHash(firstInput),
+                "Sources/z.swift": computeHash(secondInput),
+            ])
+        }
+    }
+
+    func testDefaultSnapshotUsesCommonInputRoot() throws {
+        let sourceInput = """
+        let foo = bar
+        """
+        let testInput = """
+        let baz = quux
+        """
+        try withTmpDirectory([
+            "Sources/foo.swift": sourceInput,
+            "Tests/foo.swift": testInput,
+        ]) { directory in
+            let sourcesURL = directory.appendingPathComponent("Sources")
+            let testsURL = directory.appendingPathComponent("Tests")
+            let snapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", sourcesURL.path, testsURL.path,
+                "--snapshot",
+                "--cache", "ignore",
+            ], in: ""), .ok)
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
+                "Sources/foo.swift": computeHash(sourceInput),
+                "Tests/foo.swift": computeHash(testInput),
+            ])
+        }
+    }
+
+    func testDefaultSnapshotForFileUsesContainingDirectory() throws {
+        let input = """
+        let foo = bar
+        """
+        try withTmpDirectory(["Sources/foo.swift": input]) { directory in
+            let inputURL = directory.appendingPathComponent("Sources/foo.swift")
+            let snapshotURL = directory.appendingPathComponent("Sources/.swiftformat-snapshot")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", inputURL.path,
+                "--snapshot",
+                "--cache", "ignore",
+            ], in: ""), .ok)
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
+                "foo.swift": computeHash(input),
+            ])
+        }
+    }
+
+    func testAutomaticallyDetectsAndLogsSnapshot() throws {
+        let input = """
+        let foo=bar
+        """
+        try withTmpDirectory([
+            "foo.swift": input,
+            ".swiftformat-snapshot": """
+            {"version":1,"files":{"foo.swift":"\(computeHash(input))"}}
+            """,
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let snapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
+            var messages = [String]()
+            CLI.print = { message, _ in messages.append(message) }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .ok)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+            XCTAssertTrue(messages.contains("Reading snapshot file at \(snapshotURL.path)"))
+        }
+    }
+
+    func testClosestSnapshotIsUsedWithoutBeingUpdated() throws {
+        let nestedInput = """
+        let nested=value
+        """
+        let nestedOutput = """
+        let nested = value
+        """
+        let rootSnapshot = """
+        {"version":1,"files":{"Nested/nested.swift":"root-value"}}
+        """
+        let nestedSnapshot = """
+        {"version":1,"files":{"nested.swift":"old-value"}}
+        """
+        try withTmpDirectory([
+            "Nested/nested.swift": nestedInput,
+            ".swiftformat-snapshot": rootSnapshot,
+            "Nested/.swiftformat-snapshot": nestedSnapshot,
+        ]) { directory in
+            let nestedInputURL = directory.appendingPathComponent("Nested/nested.swift")
+            let rootSnapshotURL = directory.appendingPathComponent(".swiftformat-snapshot")
+            let nestedSnapshotURL = directory.appendingPathComponent("Nested/.swiftformat-snapshot")
+            var messages = [String]()
+            CLI.print = { message, _ in messages.append(message) }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .ok)
+            XCTAssertEqual(try String(contentsOf: nestedInputURL), nestedOutput)
+            XCTAssertEqual(try readSnapshot(at: rootSnapshotURL).files, [
+                "Nested/nested.swift": "root-value",
+            ])
+            XCTAssertEqual(try readSnapshot(at: nestedSnapshotURL).files, [
+                "nested.swift": "old-value",
+            ])
+            XCTAssertEqual(try String(contentsOf: rootSnapshotURL), rootSnapshot)
+            XCTAssertEqual(try String(contentsOf: nestedSnapshotURL), nestedSnapshot)
+            XCTAssertTrue(messages.contains("Reading snapshot file at \(rootSnapshotURL.path)"))
+            XCTAssertTrue(messages.contains("Reading snapshot file at \(nestedSnapshotURL.path)"))
+        }
+    }
+
+    func testInvalidAutomaticallyDetectedSnapshotPreventsFormatting() throws {
+        let rootInput = """
+        let root=value
+        """
+        let nestedInput = """
+        let nested=value
+        """
+        try withTmpDirectory([
+            "root.swift": rootInput,
+            "Nested/nested.swift": nestedInput,
+            "Nested/.swiftformat-snapshot": "not json",
+        ]) { directory in
+            let rootInputURL = directory.appendingPathComponent("root.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .error)
+            XCTAssertEqual(try String(contentsOf: rootInputURL), rootInput)
+        }
+    }
+
+    func testCreatesEmptySnapshotWhenThereAreNoEligibleFiles() throws {
+        try withTmpDirectory([:]) { directory in
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--snapshot", snapshotURL.path,
+                "--cache", "ignore",
+            ], in: ""), .ok)
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [:])
+        }
+    }
+
+    func testSnapshotFormatsChangedAndNewFilesWithoutUpdatingHashes() throws {
+        let original = """
+        let foo = bar
+        """
+        let changed = """
+        let foo=bar
+        """
+        let formatted = """
+        let foo = bar
+        """
+        let new = """
+        let baz=quux
+        """
+        let formattedNew = """
+        let baz = quux
+        """
+        try withTmpDirectory(["foo.swift": original]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let newInputURL = directory.appendingPathComponent("new.swift")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
+            let arguments = [
+                "", directory.path,
+                "--snapshot", snapshotURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ]
+            CLI.print = { _, _ in }
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            try changed.write(to: inputURL, atomically: true, encoding: .utf8)
+            try new.write(to: newInputURL, atomically: true, encoding: .utf8)
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            XCTAssertEqual(try String(contentsOf: inputURL), formatted)
+            XCTAssertEqual(try String(contentsOf: newInputURL), formattedNew)
+            let snapshot = try readSnapshot(at: snapshotURL)
+            XCTAssertEqual(snapshot.files, [
+                "foo.swift": computeHash(original),
+            ])
+        }
+    }
+
+    func testSnapshotDoesNotRecordLintFailures() throws {
+        let original = """
+        let foo = bar
+        """
+        let changed = """
+        let foo=bar
+        """
+        try withTmpDirectory(["foo.swift": original]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
+            let arguments = [
+                "", directory.path,
+                "--snapshot", snapshotURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ]
+            CLI.print = { _, _ in }
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            try changed.write(to: inputURL, atomically: true, encoding: .utf8)
+            XCTAssertEqual(processArguments(arguments + ["--lint"], in: ""), .lintFailure)
+            XCTAssertEqual(try String(contentsOf: inputURL), changed)
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
+                "foo.swift": computeHash(original),
+            ])
+        }
+    }
+
+    func testInvalidSnapshotPreventsFormatting() throws {
+        let input = """
+        let foo=bar
+        """
+        try withTmpDirectory([
+            "foo.swift": input,
+            "snapshot.json": "not json",
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--snapshot", snapshotURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .error)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+        }
+    }
+
+    func testUnsupportedSnapshotVersionPreventsFormatting() throws {
+        let input = """
+        let foo=bar
+        """
+        try withTmpDirectory([
+            "foo.swift": input,
+            "snapshot.json": #"{"version":2,"files":{}}"#,
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", directory.path,
+                "--snapshot", snapshotURL.path,
+                "--cache", "ignore",
+                "--rules", "spaceAroundOperators",
+            ], in: ""), .error)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+        }
+    }
+
+    func testDryRunDoesNotUpdateSnapshot() throws {
+        let original = """
+        let foo = bar
+        """
+        let changed = """
+        let baz = quux
+        """
+        try withTmpDirectory(["foo.swift": original]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
+            let arguments = [
+                "", directory.path,
+                "--snapshot", snapshotURL.path,
+                "--cache", "ignore",
+            ]
+            CLI.print = { _, _ in }
+            XCTAssertEqual(processArguments(arguments, in: ""), .ok)
+
+            try changed.write(to: inputURL, atomically: true, encoding: .utf8)
+            XCTAssertEqual(processArguments(arguments + ["--dry-run"], in: ""), .ok)
+            XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
+                "foo.swift": computeHash(original),
+            ])
+        }
+    }
+
+    func testSnapshotCannotBeCombinedWithOutputOrLineRange() throws {
+        let input = """
+        let foo = bar
+        """
+        try withTmpDirectory(["foo.swift": input]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            let snapshotURL = directory.appendingPathComponent("snapshot.json")
+            let outputURL = directory.appendingPathComponent("output.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(processArguments([
+                "", inputURL.path,
+                "--snapshot", snapshotURL.path,
+                "--output", outputURL.path,
+            ], in: ""), .error)
+            XCTAssertEqual(processArguments([
+                "", inputURL.path,
+                "--snapshot", snapshotURL.path,
+                "--line-range", "1,1",
+            ], in: ""), .error)
+        }
     }
 
     // MARK: rules

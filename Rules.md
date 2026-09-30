@@ -125,6 +125,7 @@
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blockComments](#blockComments)
+* [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
 * [ifExpressions](#ifExpressions)
 * [isEmpty](#isEmpty)
@@ -641,6 +642,29 @@ Option | Description
 + {
       // foo
   }
+```
+
+</details>
+<br/>
+
+## commonTypos
+
+Correct common spelling mistakes in comments and identifiers.
+
+Option | Description
+--- | ---
+`--typo-visibility` | Correct typos at or below this visibility threshold: "public", "package", "internal" (default), "fileprivate" or "private"
+`--typos` | Comma-delimited list of typo=correction mappings
+`--ignore-typos` | Comma-delimited list of typos to ignore
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- // Retreive the cached value if it exists
+- private func retreiveCachedValue() -> Value? { ... }
++ // Retrieve the cached value if it exists
++ private func retrieveCachedValue() -> Value? { ... }
 ```
 
 </details>

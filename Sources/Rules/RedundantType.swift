@@ -60,7 +60,7 @@ public extension FormatRule {
                 return
             }
 
-            /// Removes a type already processed by `compare(typeStartingAfter:withTypeStartingAfter:)`
+            // Removes a type already processed by `compare(typeStartingAfter:withTypeStartingAfter:)`
             func removeType(after indexBeforeStartOfType: Int, i: Int, j: Int, wasValue: Bool) {
                 if isInferred {
                     formatter.removeTokens(in: colonIndex ... typeEndIndex)

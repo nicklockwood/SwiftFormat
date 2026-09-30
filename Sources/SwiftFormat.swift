@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.63.0"
+let swiftFormatVersion = "0.63.1"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name
@@ -644,7 +644,7 @@ public func applyRules(
         }
     }
 
-    /// Split tokens into lines
+    // Split tokens into lines
     func getLines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>] {
         var lines: [Int: ArraySlice<Token>] = [:]
         var startIndex = 0, nextLine = 1
@@ -682,14 +682,25 @@ public func applyRules(
     for iteration in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
                                   trackChanges: trackChanges, range: range)
-        defer { formatter.clearDerivedCaches() }
-        for rule in rules {
-            queue.async(group: group) {
+        let progress = RuleProgress()
+        queue.async(group: group) {
+            for (index, rule) in rules.enumerated() {
+                progress.index = index
                 rule.apply(with: formatter)
             }
-            guard group.wait(timeout: .now() + timeout) != .timedOut else {
-                throw FormatError.writing("\(rule.name) rule timed out")
+            // Cached declarations retain the formatter. Release them here, on the same queue
+            // the rules ran on, so the formatter is never touched from two threads at once.
+            formatter.clearDerivedCaches()
+        }
+        // Each rule is allowed `timeout` seconds. The wait is re-armed whenever a new rule starts,
+        // so a single dispatch per iteration is enough.
+        var lastIndex = -1
+        while group.wait(timeout: .now() + timeout) == .timedOut {
+            let index = progress.index
+            guard index != lastIndex else {
+                throw FormatError.writing("\(rules[index].name) rule timed out")
             }
+            lastIndex = index
         }
 
         // Abort if there are fatal errors
@@ -861,4 +872,15 @@ func stripMarkdown(_ input: String) -> String {
         }
     }
     return result
+}
+
+/// Index of the rule currently being applied, shared between the formatting queue and the waiting thread.
+private final class RuleProgress {
+    private let queue = DispatchQueue(label: "swiftformat.ruleprogress")
+    private var _index = 0
+
+    var index: Int {
+        get { queue.sync { _index } }
+        set { queue.sync { _index = newValue } }
+    }
 }

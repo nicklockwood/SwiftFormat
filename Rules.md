@@ -801,11 +801,11 @@ Ensures consistent spacing among all of the cases in a switch statement.
 
 ## contentBuilder
 
-Use implicit or explicit SwiftUI result builder attributes like `@ViewBuilder`.
+Use implicit or explicit SwiftUI result builder attributes like `@ContentBuilder`.
 
 Option | Description
 --- | ---
-`--content-builder` | SwiftUI result builder attributes: "implicit" (default), "prefer" or "explicit"
+`--content-builder` | Comma-delimited list of SwiftUI result builder behaviors: "implicit", "explicit" or "prefer" (default "implicit")
 
 <details>
 <summary>Examples</summary>
@@ -837,29 +837,8 @@ attributes that Swift applies implicitly, or that aren't needed:
   }
 ```
 
-With `--content-builder prefer`, instead replaces legacy result builder
-attributes with the equivalent `@ContentBuilder` (requires Swift 6.4 or later):
-
-```diff
-  struct MyView: View {
--   @ViewBuilder
-+   @ContentBuilder
-    var content: some View {
-      Text("foo")
-      Text("bar")
-    }
-
--   @ToolbarContentBuilder
-+   @ContentBuilder
-    var toolbarItems: some ToolbarContent {
-      ToolbarItem { Button("Save") {} }
-      ToolbarItem { Button("Cancel") {} }
-    }
-  }
-```
-
-With `--content-builder explicit`, additionally adds an explicit
-`@ContentBuilder` attribute to declarations that return SwiftUI content:
+With `--content-builder explicit`, instead adds an explicit result builder
+attribute to declarations that return SwiftUI content:
 
 ```diff
   struct MyView: View {
@@ -878,6 +857,28 @@ With `--content-builder explicit`, additionally adds an explicit
     // Not applied: an explicit `return` disables the result builder transform
     var footer: some View {
       return Text("bar")
+    }
+  }
+```
+
+`prefer` replaces legacy result builders with the equivalent `@ContentBuilder`,
+which requires Swift 6.4 or later. It can be combined with either of the above,
+e.g. `--content-builder explicit,prefer`:
+
+```diff
+  struct MyView: View {
+-   @ViewBuilder
++   @ContentBuilder
+    var content: some View {
+      Text("foo")
+      Text("bar")
+    }
+
+-   @ToolbarContentBuilder
++   @ContentBuilder
+    var toolbarItems: some ToolbarContent {
+      ToolbarItem { Button("Save") {} }
+      ToolbarItem { Button("Cancel") {} }
     }
   }
 ```

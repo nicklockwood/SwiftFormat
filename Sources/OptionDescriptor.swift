@@ -1601,8 +1601,22 @@ struct _Descriptors {
     let contentBuilder = OptionDescriptor(
         argumentName: "content-builder",
         displayName: "Content Builder",
-        help: "SwiftUI result builder attributes:",
-        keyPath: \.contentBuilder
+        help: "Comma-delimited list of SwiftUI result builder behaviors: \"implicit\", \"explicit\" or \"prefer\" (default \"implicit\")",
+        keyPath: \FormatOptions.contentBuilder,
+        type: .set,
+        fromArgument: { argument in
+            let modes = try parseCommaDelimitedList(argument).map { value in
+                guard let mode = ContentBuilderMode(rawValue: value) else {
+                    throw FormatError.options("Unsupported --content-builder value '\(value)'")
+                }
+                return mode
+            }
+            guard !modes.contains(.implicit) || !modes.contains(.explicit) else {
+                throw FormatError.options("--content-builder values 'implicit' and 'explicit' are mutually exclusive")
+            }
+            return Set(modes)
+        },
+        toArgument: { $0.map(\.rawValue).sorted().joined(separator: ",") }
     )
 
     // MARK: - Internal

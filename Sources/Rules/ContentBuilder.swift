@@ -11,18 +11,20 @@ import Foundation
 public extension FormatRule {
     /// Add or remove SwiftUI result builder attributes, depending on the `--content-builder` option
     static let contentBuilder = FormatRule(
-        help: "Use implicit or explicit SwiftUI result builder attributes like `@ViewBuilder`.",
+        help: "Use implicit or explicit SwiftUI result builder attributes like `@ContentBuilder`.",
         orderAfter: [.redundantSwiftUIGroup],
         options: ["content-builder"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        switch formatter.options.contentBuilder {
-        case .implicit:
+        if formatter.options.contentBuilder.contains(.prefer) {
+            formatter.replaceLegacyContentBuilderAttributes()
+        }
+
+        if formatter.options.contentBuilder.contains(.implicit) {
             formatter.removeRedundantContentBuilderAttributes()
-        case .prefer:
-            formatter.replaceLegacyContentBuilderAttributes()
-        case .explicit:
-            formatter.replaceLegacyContentBuilderAttributes()
+        }
+
+        if formatter.options.contentBuilder.contains(.explicit) {
             formatter.addExplicitContentBuilderAttributes()
         }
     } examples: {
@@ -54,29 +56,8 @@ public extension FormatRule {
           }
         ```
 
-        With `--content-builder prefer`, instead replaces legacy result builder
-        attributes with the equivalent `@ContentBuilder` (requires Swift 6.4 or later):
-
-        ```diff
-          struct MyView: View {
-        -   @ViewBuilder
-        +   @ContentBuilder
-            var content: some View {
-              Text("foo")
-              Text("bar")
-            }
-
-        -   @ToolbarContentBuilder
-        +   @ContentBuilder
-            var toolbarItems: some ToolbarContent {
-              ToolbarItem { Button("Save") {} }
-              ToolbarItem { Button("Cancel") {} }
-            }
-          }
-        ```
-
-        With `--content-builder explicit`, additionally adds an explicit
-        `@ContentBuilder` attribute to declarations that return SwiftUI content:
+        With `--content-builder explicit`, instead adds an explicit result builder
+        attribute to declarations that return SwiftUI content:
 
         ```diff
           struct MyView: View {
@@ -98,24 +79,43 @@ public extension FormatRule {
             }
           }
         ```
+
+        `prefer` replaces legacy result builders with the equivalent `@ContentBuilder`,
+        which requires Swift 6.4 or later. It can be combined with either of the above,
+        e.g. `--content-builder explicit,prefer`:
+
+        ```diff
+          struct MyView: View {
+        -   @ViewBuilder
+        +   @ContentBuilder
+            var content: some View {
+              Text("foo")
+              Text("bar")
+            }
+
+        -   @ToolbarContentBuilder
+        +   @ContentBuilder
+            var toolbarItems: some ToolbarContent {
+              ToolbarItem { Button("Save") {} }
+              ToolbarItem { Button("Cancel") {} }
+            }
+          }
+        ```
         """
     }
 }
 
 extension Formatter {
-    /// SwiftUI result builders that `@ContentBuilder` can replace.
-    static let legacyContentBuilders: Set<String> = [
-        "ViewBuilder",
-        "ToolbarContentBuilder",
-        "CommandsBuilder",
+    /// The legacy result builder for each SwiftUI content type that `@ContentBuilder` can build.
+    /// Other builders like `TabContentBuilder` and `KeyframeTrackContentBuilder` aren't supported
+    /// by `@ContentBuilder`, so they're left alone.
+    static let legacyContentBuilders = [
+        "View": "ViewBuilder",
+        "ToolbarContent": "ToolbarContentBuilder",
+        "Commands": "CommandsBuilder",
     ]
 
-    /// SwiftUI content types that `@ContentBuilder` can build
-    static let contentBuilderResultTypes: Set<String> = [
-        "View",
-        "ToolbarContent",
-        "Commands",
-    ]
+    static let legacyContentBuilderNames = Set(legacyContentBuilders.values)
 
     /// Replaces legacy SwiftUI result builder attributes with the equivalent `@ContentBuilder`
     func replaceLegacyContentBuilderAttributes() {
@@ -135,7 +135,7 @@ extension Formatter {
     /// If the attribute at the given index is a legacy SwiftUI result builder like `@ViewBuilder`
     /// or `@SwiftUI.ViewBuilder`, returns the index of the token containing the builder name
     func indexOfLegacyContentBuilderName(forAttributeAt attributeIndex: Int) -> Int? {
-        if Formatter.legacyContentBuilders.contains(String(tokens[attributeIndex].string.dropFirst())) {
+        if Formatter.legacyContentBuilderNames.contains(String(tokens[attributeIndex].string.dropFirst())) {
             return attributeIndex
         }
 
@@ -143,37 +143,41 @@ extension Formatter {
               let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: attributeIndex),
               tokens[dotIndex].isOperator("."),
               let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
-              Formatter.legacyContentBuilders.contains(tokens[nameIndex].string)
+              Formatter.legacyContentBuilderNames.contains(tokens[nameIndex].string)
         else { return nil }
         return nameIndex
     }
 
-    /// Adds an explicit `@ContentBuilder` attribute to declarations that return SwiftUI content
+    /// Adds an explicit result builder attribute to declarations that return SwiftUI content
     func addExplicitContentBuilderAttributes() {
-        // @ContentBuilder requires the Swift 6.4 SDK (Xcode 27)
-        guard options.swiftVersion >= "6.4" else { return }
-
         parseDeclarations().forEachRecursiveDeclaration { declaration in
             guard !hasResultBuilderAttribute(declaration),
                   let target = resultBuilderTarget(of: declaration),
-                  isContentBuilderResultType(target.returnType),
+                  let attribute = contentBuilderAttribute(forReturnType: target.returnType),
                   scopeBodySupportsResultBuilder(at: target.scopeRange.lowerBound)
             else { return }
 
             insertResultBuilderAttribute(
-                "@ContentBuilder",
+                attribute,
                 at: declaration.startOfModifiersIndex(includingAttributes: true)
             )
         }
     }
 
-    /// Whether the given type is an opaque SwiftUI content type like `some View`
-    func isContentBuilderResultType(_ type: TypeName) -> Bool {
+    /// The result builder attribute to apply to a declaration returning the given type, or `nil`
+    /// if it isn't an opaque SwiftUI content type like `some View` that a result builder can build
+    func contentBuilderAttribute(forReturnType type: TypeName) -> String? {
         guard tokens[type.range.lowerBound] == .identifier("some"),
               let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.lowerBound),
-              nameIndex == type.range.upperBound
-        else { return false }
+              nameIndex == type.range.upperBound,
+              let legacyBuilder = Formatter.legacyContentBuilders[tokens[nameIndex].string]
+        else { return nil }
 
-        return Formatter.contentBuilderResultTypes.contains(tokens[nameIndex].string)
+        // @ContentBuilder requires the Swift 6.4 SDK (Xcode 27)
+        if options.contentBuilder.contains(.prefer), options.swiftVersion >= "6.4" {
+            return "@ContentBuilder"
+        } else {
+            return "@" + legacyBuilder
+        }
     }
 }

@@ -606,7 +606,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -639,7 +639,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -668,7 +668,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -693,7 +693,7 @@ final class ContentBuilderTests: XCTestCase {
             Text("bar")
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -744,7 +744,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -777,7 +777,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -803,7 +803,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -827,7 +827,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder,
                        options: options, exclude: [.redundantGet])
     }
@@ -859,7 +859,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -875,7 +875,7 @@ final class ContentBuilderTests: XCTestCase {
             Text("foo")
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -895,7 +895,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder,
                        options: options, exclude: [.redundantGet])
     }
@@ -916,7 +916,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder,
                        options: options, exclude: [.redundantReturn])
     }
@@ -956,7 +956,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -994,7 +994,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder,
                        options: options, exclude: [.redundantReturn, .redundantProperty])
     }
@@ -1039,7 +1039,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1055,7 +1055,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
@@ -1072,7 +1072,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options,
                        exclude: [.redundantReturn])
     }
@@ -1094,7 +1094,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
@@ -1121,7 +1121,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options,
                        exclude: [.wrapLoopBodies])
     }
@@ -1163,7 +1163,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1183,7 +1183,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
@@ -1202,7 +1202,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options,
                        exclude: [.propertyTypes, .redundantType])
     }
@@ -1215,20 +1215,30 @@ final class ContentBuilderTests: XCTestCase {
             func makeContent() -> some View
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
-    func testDoesntAddContentBuilderBeforeSwift6_4() {
+    func testAddsViewBuilderInsteadOfContentBuilderBeforeSwift6_4() {
         let input = """
         struct MyView: View {
             var body: some View {
                 Text("foo")
+                Text("bar")
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.3")
-        testFormatting(for: input, rule: .contentBuilder, options: options)
+        let output = """
+        struct MyView: View {
+            @ViewBuilder
+            var body: some View {
+                Text("foo")
+                Text("bar")
+            }
+        }
+        """
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.3")
+        testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
     func testReplacesViewBuilderOnProperty() {
@@ -1258,7 +1268,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1276,7 +1286,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.3")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.3")
         testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
@@ -1299,7 +1309,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1322,7 +1332,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1365,7 +1375,7 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1396,7 +1406,7 @@ final class ContentBuilderTests: XCTestCase {
             CommandMenu("Edit") { Button("Undo") {} }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1414,7 +1424,7 @@ final class ContentBuilderTests: XCTestCase {
             LinearKeyframe(2.0, duration: 0.5)
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
@@ -1457,7 +1467,7 @@ final class ContentBuilderTests: XCTestCase {
             ToolbarItem { Button("Cancel") {} }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
@@ -1478,7 +1488,7 @@ final class ContentBuilderTests: XCTestCase {
             2
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
@@ -1510,11 +1520,11 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .prefer, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, [output], rules: [.contentBuilder, .redundantSwiftUIGroup, .indent], options: options)
     }
 
-    func testExplicitModeAlsoReplacesLegacyBuilders() {
+    func testExplicitAndPreferReplacesLegacyBuilders() {
         let input = """
         struct MyView: View {
             var body: some View {
@@ -1542,11 +1552,43 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.explicit, .prefer], swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 
-    func testImplicitModeDoesntReplaceLegacyBuilders() {
+    func testRemovesRedundantAndReplacesLegacyBuildersTogether() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var body: some View {
+                content
+            }
+
+            @ViewBuilder
+            var content: some View {
+                Text("foo")
+                Text("bar")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                content
+            }
+
+            @ContentBuilder
+            var content: some View {
+                Text("foo")
+                Text("bar")
+            }
+        }
+        """
+        let options = FormatOptions(contentBuilder: [.implicit, .prefer], swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .contentBuilder, options: options)
+    }
+
+    func testPreservesLegacyBuildersWithoutPrefer() {
         let input = """
         struct MyView: View {
             var body: some View {
@@ -1560,7 +1602,38 @@ final class ContentBuilderTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(contentBuilder: .implicit, swiftVersion: "6.4")
+        let options = FormatOptions(contentBuilder: [.implicit], swiftVersion: "6.4")
         testFormatting(for: input, rule: .contentBuilder, options: options)
+    }
+
+    func testAddsLegacyBuildersWithoutPrefer() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                content
+            }
+
+            var toolbarItems: some ToolbarContent {
+                ToolbarItem { Button("Save") {} }
+                ToolbarItem { Button("Cancel") {} }
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            @ViewBuilder
+            var body: some View {
+                content
+            }
+
+            @ToolbarContentBuilder
+            var toolbarItems: some ToolbarContent {
+                ToolbarItem { Button("Save") {} }
+                ToolbarItem { Button("Cancel") {} }
+            }
+        }
+        """
+        let options = FormatOptions(contentBuilder: [.explicit], swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .contentBuilder, options: options)
     }
 }

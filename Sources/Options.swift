@@ -220,14 +220,15 @@ public enum SingleLineTernary: String, CaseIterable {
     case convert
 }
 
-/// Whether SwiftUI result builder attributes like `@ViewBuilder` should be implicit or explicit
+/// How SwiftUI result builder attributes like `@ViewBuilder` should be applied.
+/// `implicit` and `explicit` are mutually exclusive, but either can be combined with `prefer`.
 public enum ContentBuilderMode: String, CaseIterable {
     /// Remove result builder attributes that Swift applies implicitly, or that aren't needed
     case implicit
+    /// Add an explicit result builder attribute to declarations that return SwiftUI content
+    case explicit
     /// Replace legacy result builder attributes like `@ViewBuilder` with `@ContentBuilder`
     case prefer
-    /// Add an explicit `@ContentBuilder` attribute to declarations that return SwiftUI content
-    case explicit
 }
 
 /// Whether to insert, remove, or preserve spaces around operators
@@ -1031,7 +1032,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var booleanGuardsInTests: BooleanGuardsInTests
     public var redundantOptionalBinding: RedundantOptionalBindingMode
     public var singleLineTernary: SingleLineTernary
-    public var contentBuilder: ContentBuilderMode
+    public var contentBuilder: Set<ContentBuilderMode>
 
     /// Deprecated
     public var indentComments: Bool
@@ -1191,7 +1192,7 @@ public struct FormatOptions: CustomStringConvertible {
                 booleanGuardsInTests: BooleanGuardsInTests = .preserveXCTest,
                 redundantOptionalBinding: RedundantOptionalBindingMode = .sameNameOnly,
                 singleLineTernary: SingleLineTernary = .convert,
-                contentBuilder: ContentBuilderMode = .implicit,
+                contentBuilder: Set<ContentBuilderMode> = [.implicit],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,

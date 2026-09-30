@@ -48,10 +48,10 @@ public extension FormatRule {
             isIfdefDirective(formatter.tokens[formatter.startOfLine(at: index, excludingIndent: true)])
         }
 
-        /// In .noIndent mode, conditional compilation directives are transparent
-        /// to indent computation: code is indented as if the directives were absent.
-        /// Returns the last code token index at or before `index`, looking back past
-        /// any lines that consist of a conditional compilation directive.
+        // In .noIndent mode, conditional compilation directives are transparent
+        // to indent computation: code is indented as if the directives were absent.
+        // Returns the last code token index at or before `index`, looking back past
+        // any lines that consist of a conditional compilation directive.
         func lastNonIfdefIndex(from index: Int) -> Int {
             var index = index
             while index > -1, startsWithIfdefDirective(lineContaining: index) {
@@ -66,8 +66,8 @@ public extension FormatRule {
             return index
         }
 
-        /// Returns the next code token index at or after `index`, skipping past
-        /// conditional compilation directive lines (used in .noIndent mode)
+        // Returns the next code token index at or after `index`, skipping past
+        // conditional compilation directive lines (used in .noIndent mode)
         func nextNonIfdefIndex(from index: Int?) -> Int? {
             var index = index
             while let i = index, isIfdefDirective(formatter.tokens[i]) {

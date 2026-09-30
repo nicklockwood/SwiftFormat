@@ -1,5 +1,22 @@
 # Change Log
 
+## [0.63.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.63.1) (2026-09-30)
+
+- Added `--locale` option for deterministic sorting
+- Added `--boolean-guards-in-tests` option, defaulting to `preserve`
+- Updated the default modifier order for `convenience` to match Apple conventions
+- Fixed `sortDeclarations` handling of trailing whitespace and comments
+- Fixed `preferSwiftStringAPI` modifying `replacingOccurrences(of: "", with: ...)`
+- Fixed `disable:next` handling in multiline strings
+- Fixed `docComments` incorrectly converting nested function comments when preceded by executable code
+- Fixed `swiftTestingTestCaseNames` removing unnamed argument underscores and pluralized acronyms
+- Fixed `sortImports` treating `package` imports as unlabeled
+- Fixed `indent` adding line-wrap indentation to wrapped function names
+- Fixed `indent` of wrapped case patterns with `--indent-case true`
+- Fixed `preferSwiftTesting` adding duplicate default suite attributes
+- Fixed `hoistTry` placement across infix expressions with trailing closures
+- Fixed building the project with Xcode 27
+
 ## [0.63.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.63.0) (2026-08-30)
 
 - Added `ifExpressions` rule to convert ternaries to if expressions

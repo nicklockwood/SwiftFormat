@@ -466,6 +466,87 @@ final class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
+    func testProjectIndexIncludesFilesNotBeingFormatted() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules redundantPublic --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                func bar() {}
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexDoesNotCombineSwiftPackageTargets() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/Library/Type.swift": "struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let input = try String(contentsOf: extensionURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules redundantPublic --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), input)
+        }
+    }
+
+    func testProjectIndexChangeInvalidatesFormattingCache() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let typeURL = directory.appendingPathComponent("Sources/App/Type.swift")
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Extension.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                public func bar() {}
+            }
+            """)
+
+            try "struct Foo {}".write(to: typeURL, atomically: true, encoding: .utf8)
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                func bar() {}
+            }
+            """)
+        }
+    }
+
     func testCreatesSnapshotWithoutFormattingFiles() throws {
         let firstInput = """
         let foo=bar

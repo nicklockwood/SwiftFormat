@@ -639,6 +639,28 @@ public func applyRules(
     logger: Logger? = nil,
     maxIterations: Int = 10
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
+    try applyRules(
+        originalRules,
+        to: originalTokens,
+        with: options,
+        trackChanges: trackChanges,
+        range: originalRange,
+        logger: logger,
+        maxIterations: maxIterations,
+        context: .empty
+    )
+}
+
+func applyRules(
+    _ originalRules: [FormatRule],
+    to originalTokens: [Token],
+    with options: FormatOptions,
+    trackChanges: Bool,
+    range originalRange: Range<Int>?,
+    logger: Logger? = nil,
+    maxIterations: Int = 10,
+    context: FormattingContext
+) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
 
     let originalRules = originalRules.sorted()
@@ -721,7 +743,7 @@ public func applyRules(
     for iteration in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
                                   trackChanges: trackChanges, range: range,
-                                  logger: logger)
+                                  logger: logger, context: context)
         let progress = RuleProgress()
         queue.async(group: group) {
             for (index, rule) in rules.enumerated() {

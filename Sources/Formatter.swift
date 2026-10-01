@@ -60,6 +60,21 @@ public final class Formatter: NSObject {
     /// The options that the formatter was initialized with
     public private(set) var options: FormatOptions
 
+    /// Project-wide information supplied by the command-line formatting session.
+    private let context: FormattingContext
+
+    var currentFileURL: URL? {
+        context.currentFileURL
+    }
+
+    var projectIndex: ProjectIndex? {
+        assert(
+            currentRule?.usesProjectContext == true,
+            "\(currentRule?.name ?? "Unknown rule") must declare usesProjectContext"
+        )
+        return context.projectIndex
+    }
+
     /// The token array managed by the formatter (read-only)
     public private(set) var tokens: [Token]
 
@@ -102,15 +117,24 @@ public final class Formatter: NSObject {
     private lazy var containsMultilineStringLiteral = tokens.contains(where: \.isMultilineStringDelimiter)
 
     /// Create a new formatter instance from a token array
-    public init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
-                trackChanges: Bool = false, range: Range<Int>? = nil,
-                logger: Logger? = nil)
+    public convenience init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
+                            trackChanges: Bool = false, range: Range<Int>? = nil,
+                            logger: Logger? = nil)
+    {
+        self.init(tokens, options: options, trackChanges: trackChanges, range: range, logger: logger, context: .empty)
+    }
+
+    init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
+         trackChanges: Bool = false, range: Range<Int>? = nil,
+         logger: Logger? = nil,
+         context: FormattingContext)
     {
         self.tokens = tokens
         self.options = options
         self.trackChanges = trackChanges
         self.range = range
         self.logger = logger
+        self.context = context
 
         // TODO: why is this an NSObject?
         super.init()

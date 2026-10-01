@@ -1166,7 +1166,7 @@ Known issues
 
 * If you assign `SomeClass.self` to a variable and then instantiate an instance of the class using that variable, Swift requires that you use an explicit `.init()`, however, the `redundantInit` rule is not currently capable of detecting this situation in all cases, and may remove the `.init`. To work around this issue, use the `// swiftformat:disable:next redundantInit` comment directive to disable the rule for any affected lines of code (or just disable the `redundantInit` rule completely).
 
-* The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions in other files, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
+* The `--self insert` option recognizes locally declared members and, when project indexing is available, members declared in the same type or its extensions in other files. It still cannot recognize inherited members or members unavailable to the project index, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 
 * The `trailingClosures` rule can generate ambiguous code if a function has multiple optional closure arguments, or if multiple functions have signatures differing only by the name of the closure argument. For this reason, the rule is limited to anonymous closure arguments by default. You can use the `--trailing-closures` and `--never-trailing` arguments to explicitly opt in or out of trailing closure support for specific functions.
 

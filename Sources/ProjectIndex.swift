@@ -28,12 +28,51 @@ struct SourceFileIndex: Codable, Equatable {
         var visibility: String
     }
 
-    static let schemaVersion = 1
+    struct FunctionDeclaration: Codable, Equatable {
+        var name: String
+        var argumentLabels: [String?]
+        var autoclosureArgumentIndices: [Int]
+    }
+
+    static let schemaVersion = 2
 
     var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
     var moduleIdentifier: String?
     var typeDeclarations: [TypeDeclaration]
+    var functionDeclarations: [FunctionDeclaration]
+
+    init(
+        contentHash: String,
+        moduleIdentifier: String?,
+        typeDeclarations: [TypeDeclaration],
+        functionDeclarations: [FunctionDeclaration]
+    ) {
+        self.contentHash = contentHash
+        self.moduleIdentifier = moduleIdentifier
+        self.typeDeclarations = typeDeclarations
+        self.functionDeclarations = functionDeclarations
+    }
+
+    private enum CodingKeys: CodingKey {
+        case schemaVersion
+        case contentHash
+        case moduleIdentifier
+        case typeDeclarations
+        case functionDeclarations
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        contentHash = try container.decode(String.self, forKey: .contentHash)
+        moduleIdentifier = try container.decodeIfPresent(String.self, forKey: .moduleIdentifier)
+        typeDeclarations = try container.decode([TypeDeclaration].self, forKey: .typeDeclarations)
+        functionDeclarations = try container.decodeIfPresent(
+            [FunctionDeclaration].self,
+            forKey: .functionDeclarations
+        ) ?? []
+    }
 }
 
 /// A read-only view of all source summaries discovered for a formatting run.
@@ -46,25 +85,39 @@ struct ProjectIndex {
     let files: [String: SourceFileIndex]
     let fingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
+    private let autoclosureFunctionNamesByModule: [String: Set<String>]
 
     init(files: [String: SourceFileIndex]) {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
+        var autoclosureFunctionNamesByModule = [String: Set<String>]()
         for file in files.values {
             guard let moduleIdentifier = file.moduleIdentifier else { continue }
             for declaration in file.typeDeclarations {
                 let key = TypeKey(moduleIdentifier: moduleIdentifier, name: declaration.name)
                 typeVisibilities[key, default: []].insert(declaration.visibility)
             }
+            for declaration in file.functionDeclarations {
+                autoclosureFunctionNamesByModule[moduleIdentifier, default: []].insert(declaration.name)
+            }
         }
         self.typeVisibilities = typeVisibilities
+        self.autoclosureFunctionNamesByModule = autoclosureFunctionNamesByModule
         let description = files.keys.sorted().compactMap { path -> String? in
             guard let file = files[path] else { return nil }
-            let declarations = file.typeDeclarations
+            let types = file.typeDeclarations
                 .map { "\($0.name):\($0.visibility)" }
                 .sorted()
                 .joined(separator: ",")
-            return "\(file.moduleIdentifier ?? ""):\(declarations)"
+            let functions = file.functionDeclarations
+                .map { declaration in
+                    let labels = declaration.argumentLabels.map { $0 ?? "_" }.joined(separator: ",")
+                    let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
+                    return "\(declaration.name)(\(labels)):\(indices)"
+                }
+                .sorted()
+                .joined(separator: ",")
+            return "\(file.moduleIdentifier ?? ""):\(types):\(functions)"
         }.joined(separator: ";")
         fingerprint = computeHash(description)
     }
@@ -78,6 +131,15 @@ struct ProjectIndex {
         let key = TypeKey(moduleIdentifier: moduleIdentifier, name: name)
         return typeVisibilities[key] == [Visibility.internal.rawValue]
     }
+
+    /// Project functions in the current file's module that have at least one `@autoclosure` argument.
+    func autoclosureFunctionNames(visibleFrom fileURL: URL) -> Set<String> {
+        let path = fileURL.standardizedFileURL.path
+        guard let moduleIdentifier = files[path]?.moduleIdentifier else {
+            return []
+        }
+        return autoclosureFunctionNamesByModule[moduleIdentifier] ?? []
+    }
 }
 
 /// Extracts the subset of declarations required by the initial project-aware rules.
@@ -87,28 +149,44 @@ func makeSourceFileIndex(
 ) -> SourceFileIndex {
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
+    var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
     formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
-        guard let typeDeclaration = declaration.asTypeDeclaration,
-              typeDeclaration.keyword != "extension",
-              typeDeclaration.keyword != "protocol",
-              let name = declaration.fullyQualifiedName
+        if let typeDeclaration = declaration.asTypeDeclaration,
+           typeDeclaration.keyword != "extension",
+           typeDeclaration.keyword != "protocol",
+           let name = declaration.fullyQualifiedName
+        {
+            let insidePublicExtension = declaration.parentDeclarations.contains(where: {
+                $0.keyword == "extension" && $0.visibility() == .public
+            })
+            if !insidePublicExtension {
+                typeDeclarations.append(.init(
+                    name: name,
+                    visibility: (declaration.visibility() ?? .internal).rawValue
+                ))
+            }
+        }
+
+        guard declaration.keyword == "func",
+              let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex),
+              let name = function.name
         else { return }
-
-        let insidePublicExtension = declaration.parentDeclarations.contains(where: {
-            $0.keyword == "extension" && $0.visibility() == .public
-        })
-        guard !insidePublicExtension else { return }
-
-        typeDeclarations.append(.init(
+        let autoclosureArgumentIndices = function.arguments.indices.filter { index in
+            function.arguments[index].type.tokens.contains { $0.string == "@autoclosure" }
+        }
+        guard !autoclosureArgumentIndices.isEmpty else { return }
+        functionDeclarations.append(.init(
             name: name,
-            visibility: (declaration.visibility() ?? .internal).rawValue
+            argumentLabels: function.arguments.map(\.externalLabel),
+            autoclosureArgumentIndices: autoclosureArgumentIndices
         ))
     }
     formatter.clearDerivedCaches()
     return SourceFileIndex(
         contentHash: computeHash(source),
         moduleIdentifier: moduleIdentifier,
-        typeDeclarations: typeDeclarations
+        typeDeclarations: typeDeclarations,
+        functionDeclarations: functionDeclarations
     )
 }
 

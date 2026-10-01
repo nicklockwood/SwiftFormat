@@ -153,6 +153,14 @@ public extension FormatRule {
                 return
             }
 
+            // Don't strip the return from a function that returns `Void`. The `return` gives
+            // its expression the `Void` type, and without it the generic result type of a
+            // call may no longer be inferred (e.g. `withCheckedThrowingContinuation`).
+            // (https://github.com/nicklockwood/SwiftFormat/issues/1818)
+            if !isClosure, formatter.isBodyOfVoidFunction(at: startOfScopeIndex) {
+                return
+            }
+
             // Only strip return from conditional block if conditionalAssignment rule is enabled
             var stripConditionalReturn = formatter.options.enabledRules.contains("conditionalAssignment")
 
@@ -239,6 +247,22 @@ extension Formatter {
         }
 
         return parseClosureArguments(at: closureStartIndex)?.returnTypeRange == nil
+    }
+
+    /// Whether the scope starting at the given index is the body of a function
+    /// that returns `Void`, either implicitly or with an explicit return type.
+    func isBodyOfVoidFunction(at startOfScopeIndex: Int) -> Bool {
+        guard let keywordIndex = indexOfLastSignificantKeyword(
+            at: startOfScopeIndex, excluding: ["throws", "rethrows", "where"]
+        ),
+            tokens[keywordIndex] == .keyword("func"),
+            let function = parseFunctionDeclaration(keywordIndex: keywordIndex),
+            function.bodyRange?.lowerBound == startOfScopeIndex
+        else {
+            return false
+        }
+
+        return [nil, "Void", "Swift.Void", "()"].contains(function.returnType?.string)
     }
 
     func returnKeywordRangesToRemove(atStartOfScope startOfScopeIndex: Int, returnIndices: inout [Int]) -> [Range<Int>]? {

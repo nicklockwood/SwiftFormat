@@ -630,6 +630,64 @@ final class RedundantReturnTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantReturn)
     }
 
+    func testNoRemoveReturnBeforeExpressionInVoidFunction() {
+        // The `return` gives the expression its `Void` type. Without it the
+        // generic result type of the call can no longer be inferred
+        // (https://github.com/nicklockwood/SwiftFormat/issues/1818)
+        let input = """
+        func foo() async throws {
+            return try await withCheckedThrowingContinuation { continuation in
+                bar { continuation.resume() }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.5")
+        testFormatting(for: input, rule: .redundantReturn, options: options)
+    }
+
+    func testNoRemoveReturnBeforeExpressionInFunctionReturningVoid() {
+        let input = """
+        func foo() async throws -> Void {
+            return try await withCheckedThrowingContinuation { continuation in
+                bar { continuation.resume() }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.5")
+        testFormatting(for: input, rule: .redundantReturn, options: options,
+                       exclude: [.redundantVoidReturnType])
+    }
+
+    func testNoRemoveReturnBeforeExpressionInFunctionReturningEmptyTuple() {
+        let input = """
+        func foo() -> () {
+            return bar { baz() }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.5")
+        testFormatting(for: input, rule: .redundantReturn, options: options,
+                       exclude: [.void, .redundantVoidReturnType])
+    }
+
+    func testRemoveReturnBeforeExpressionInFunctionReturningValue() {
+        let input = """
+        func foo() async throws -> Int {
+            return try await withCheckedThrowingContinuation { continuation in
+                bar { continuation.resume(returning: 1) }
+            }
+        }
+        """
+        let output = """
+        func foo() async throws -> Int {
+            try await withCheckedThrowingContinuation { continuation in
+                bar { continuation.resume(returning: 1) }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.5")
+        testFormatting(for: input, output, rule: .redundantReturn, options: options)
+    }
+
     func testNoRemoveVoidReturnInCatch() {
         let input = """
         func foo() {

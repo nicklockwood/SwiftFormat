@@ -12,11 +12,18 @@ public extension FormatRule {
     /// Insert or remove redundant self keyword
     static let redundantSelf = FormatRule(
         help: "Insert/remove explicit `self` where applicable.",
+        usesProjectContext: true,
         options: ["self", "self-required"]
     ) { formatter in
         _ = formatter.options.selfRequired
         _ = formatter.options.explicitSelf
-        formatter.addOrRemoveSelf(static: false)
+        let projectSelfRequired = formatter.currentFileURL.map { fileURL in
+            formatter.projectIndex?.autoclosureFunctionNames(visibleFrom: fileURL) ?? []
+        } ?? []
+        formatter.addOrRemoveSelf(
+            static: false,
+            additionalSelfRequired: projectSelfRequired
+        )
     } examples: {
         """
         ```diff
@@ -32,9 +39,9 @@ public extension FormatRule {
         ```
 
         In the rare case of functions with `@autoclosure` arguments, `self` may be
-        required at the call site, but SwiftFormat is unable to detect this
-        automatically. You can use the `--self-required` command-line option to specify
-        a list of such methods, and the `redundantSelf` rule will then ignore them.
+        required at the call site. SwiftFormat detects project-defined functions when
+        project indexing is available. You can use the `--self-required` command-line
+        option to specify external or otherwise unavailable methods that should be ignored.
 
         An example of such a method is the `expect()` function in the Nimble unit
         testing framework (https://github.com/Quick/Nimble), which is common enough that

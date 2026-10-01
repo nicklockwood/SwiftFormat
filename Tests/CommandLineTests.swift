@@ -466,6 +466,71 @@ final class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
+    func testLegacyCacheIsMigratedToVersionedFormat() throws {
+        try withTmpDirectory([
+            "Input.swift": "let foo = bar\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let legacyCache = ["legacy-entry": "legacy-value"]
+            try JSONEncoder().encode(legacyCache).write(to: cacheURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Input.swift --rules indent --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual(cache["version"] as? Int, 1)
+            let entries = try XCTUnwrap(cache["entries"] as? [String: Any])
+            let legacyEntry = try XCTUnwrap(entries["legacy-entry"] as? [String: Any])
+            XCTAssertEqual(legacyEntry["formatting"] as? String, "legacy-value")
+        }
+    }
+
+    func testProjectIndexReusesCachedSourceSummaryForUnchangedFile() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Extension.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+
+            var cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            var entries = try XCTUnwrap(cache["entries"] as? [String: Any])
+            let typeKey = try XCTUnwrap(entries.keys.first(where: { $0.hasSuffix("/Type.swift") }))
+            var typeEntry = try XCTUnwrap(entries[typeKey] as? [String: Any])
+            var sourceIndex = try XCTUnwrap(typeEntry["sourceIndex"] as? [String: Any])
+            var declarations = try XCTUnwrap(sourceIndex["typeDeclarations"] as? [[String: Any]])
+            declarations[0]["visibility"] = "internal"
+            sourceIndex["typeDeclarations"] = declarations
+            typeEntry["sourceIndex"] = sourceIndex
+            entries[typeKey] = typeEntry
+            cache["entries"] = entries
+            try JSONSerialization.data(withJSONObject: cache).write(to: cacheURL)
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                func bar() {}
+            }
+            """)
+        }
+    }
+
     func testProjectIndexIsNotBuiltWhenEnabledRulesDoNotUseIt() throws {
         try withTmpDirectory([
             "Sources/App/Input.swift": "struct Foo {}\n",

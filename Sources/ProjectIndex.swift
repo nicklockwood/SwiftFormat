@@ -34,24 +34,33 @@ struct SourceFileIndex: Codable, Equatable {
         var autoclosureArgumentIndices: [Int]
     }
 
-    static let schemaVersion = 2
+    struct TypeMembers: Codable, Equatable {
+        var typeName: String
+        var instanceMembers: [String]
+        var staticMembers: [String]
+    }
+
+    static let schemaVersion = 3
 
     var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
     var moduleIdentifier: String?
     var typeDeclarations: [TypeDeclaration]
     var functionDeclarations: [FunctionDeclaration]
+    var typeMembers: [TypeMembers]
 
     init(
         contentHash: String,
         moduleIdentifier: String?,
         typeDeclarations: [TypeDeclaration],
-        functionDeclarations: [FunctionDeclaration]
+        functionDeclarations: [FunctionDeclaration],
+        typeMembers: [TypeMembers]
     ) {
         self.contentHash = contentHash
         self.moduleIdentifier = moduleIdentifier
         self.typeDeclarations = typeDeclarations
         self.functionDeclarations = functionDeclarations
+        self.typeMembers = typeMembers
     }
 
     private enum CodingKeys: CodingKey {
@@ -60,6 +69,7 @@ struct SourceFileIndex: Codable, Equatable {
         case moduleIdentifier
         case typeDeclarations
         case functionDeclarations
+        case typeMembers
     }
 
     init(from decoder: Decoder) throws {
@@ -72,11 +82,19 @@ struct SourceFileIndex: Codable, Equatable {
             [FunctionDeclaration].self,
             forKey: .functionDeclarations
         ) ?? []
+        typeMembers = try container.decodeIfPresent([TypeMembers].self, forKey: .typeMembers) ?? []
     }
 }
 
 /// A read-only view of all source summaries discovered for a formatting run.
 struct ProjectIndex {
+    struct MemberNamesByType: Equatable {
+        static let empty = MemberNamesByType()
+
+        var instance = [String: Set<String>]()
+        var staticOrClass = [String: Set<String>]()
+    }
+
     private struct TypeKey: Hashable {
         var moduleIdentifier: String
         var name: String
@@ -86,11 +104,13 @@ struct ProjectIndex {
     let fingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
     private let autoclosureFunctionNamesByModule: [String: Set<String>]
+    private let memberNamesByModule: [String: MemberNamesByType]
 
     init(files: [String: SourceFileIndex]) {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
         var autoclosureFunctionNamesByModule = [String: Set<String>]()
+        var memberNamesByModule = [String: MemberNamesByType]()
         for file in files.values {
             guard let moduleIdentifier = file.moduleIdentifier else { continue }
             for declaration in file.typeDeclarations {
@@ -100,9 +120,22 @@ struct ProjectIndex {
             for declaration in file.functionDeclarations {
                 autoclosureFunctionNamesByModule[moduleIdentifier, default: []].insert(declaration.name)
             }
+            for members in file.typeMembers {
+                if !members.instanceMembers.isEmpty {
+                    memberNamesByModule[moduleIdentifier, default: .empty]
+                        .instance[members.typeName, default: []]
+                        .formUnion(members.instanceMembers)
+                }
+                if !members.staticMembers.isEmpty {
+                    memberNamesByModule[moduleIdentifier, default: .empty]
+                        .staticOrClass[members.typeName, default: []]
+                        .formUnion(members.staticMembers)
+                }
+            }
         }
         self.typeVisibilities = typeVisibilities
         self.autoclosureFunctionNamesByModule = autoclosureFunctionNamesByModule
+        self.memberNamesByModule = memberNamesByModule
         let description = files.keys.sorted().compactMap { path -> String? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
@@ -117,7 +150,15 @@ struct ProjectIndex {
                 }
                 .sorted()
                 .joined(separator: ",")
-            return "\(file.moduleIdentifier ?? ""):\(types):\(functions)"
+            let members = file.typeMembers
+                .map { members in
+                    let instance = members.instanceMembers.sorted().joined(separator: ",")
+                    let staticMembers = members.staticMembers.sorted().joined(separator: ",")
+                    return "\(members.typeName):\(instance):\(staticMembers)"
+                }
+                .sorted()
+                .joined(separator: ",")
+            return "\(file.moduleIdentifier ?? ""):\(types):\(functions):\(members)"
         }.joined(separator: ";")
         fingerprint = computeHash(description)
     }
@@ -140,6 +181,15 @@ struct ProjectIndex {
         }
         return autoclosureFunctionNamesByModule[moduleIdentifier] ?? []
     }
+
+    /// Project-defined instance and static/class members grouped by type in the current file's module.
+    func memberNamesByType(visibleFrom fileURL: URL) -> MemberNamesByType {
+        let path = fileURL.standardizedFileURL.path
+        guard let moduleIdentifier = files[path]?.moduleIdentifier else {
+            return .empty
+        }
+        return memberNamesByModule[moduleIdentifier] ?? .empty
+    }
 }
 
 /// Extracts the subset of declarations required by the initial project-aware rules.
@@ -150,19 +200,49 @@ func makeSourceFileIndex(
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
     var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
+    var typeMembers = [SourceFileIndex.TypeMembers]()
     formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
         if let typeDeclaration = declaration.asTypeDeclaration,
-           typeDeclaration.keyword != "extension",
-           typeDeclaration.keyword != "protocol",
            let name = declaration.fullyQualifiedName
         {
-            let insidePublicExtension = declaration.parentDeclarations.contains(where: {
-                $0.keyword == "extension" && $0.visibility() == .public
-            })
-            if !insidePublicExtension {
-                typeDeclarations.append(.init(
-                    name: name,
-                    visibility: (declaration.visibility() ?? .internal).rawValue
+            if typeDeclaration.keyword != "extension", typeDeclaration.keyword != "protocol" {
+                let insidePublicExtension = declaration.parentDeclarations.contains(where: {
+                    $0.keyword == "extension" && $0.visibility() == .public
+                })
+                if !insidePublicExtension {
+                    typeDeclarations.append(.init(
+                        name: name,
+                        visibility: (declaration.visibility() ?? .internal).rawValue
+                    ))
+                }
+            }
+
+            var instanceMembers = Set<String>()
+            var staticMembers = Set<String>()
+            func collectMembers(in declarations: [Declaration]) {
+                for declaration in declarations {
+                    if case let .conditionalCompilation(conditionalCompilation) = declaration.kind {
+                        collectMembers(in: conditionalCompilation.body)
+                    } else if ["let", "var", "func"].contains(declaration.keyword),
+                              !([declaration.visibility()] + declaration.parentDeclarations.compactMap { parent in
+                                  parent.asTypeDeclaration?.visibility()
+                              }).contains(where: { $0 == .private || $0 == .fileprivate }),
+                              let names = formatter.namesInDeclaration(at: declaration.keywordIndex)
+                    {
+                        if declaration.modifiers.contains("static") || declaration.modifiers.contains("class") {
+                            staticMembers.formUnion(names)
+                        } else {
+                            instanceMembers.formUnion(names)
+                        }
+                    }
+                }
+            }
+            collectMembers(in: typeDeclaration.body)
+            if !instanceMembers.isEmpty || !staticMembers.isEmpty {
+                typeMembers.append(.init(
+                    typeName: name,
+                    instanceMembers: instanceMembers.sorted(),
+                    staticMembers: staticMembers.sorted()
                 ))
             }
         }
@@ -186,7 +266,8 @@ func makeSourceFileIndex(
         contentHash: computeHash(source),
         moduleIdentifier: moduleIdentifier,
         typeDeclarations: typeDeclarations,
-        functionDeclarations: functionDeclarations
+        functionDeclarations: functionDeclarations,
+        typeMembers: typeMembers
     )
 }
 

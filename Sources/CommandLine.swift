@@ -1068,8 +1068,21 @@ func computeHash(_ source: String) -> String {
     return "\(count)\(hash)"
 }
 
+private struct CacheEntry: Codable {
+    var formatting: String? = nil
+    var sourceIndex: SourceFileIndex? = nil
+}
+
+private struct SwiftFormatCache: Codable {
+    static let currentVersion = 1
+
+    var version = currentVersion
+    var entries = [String: CacheEntry]()
+}
+
 func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool, reporter: Reporter?, logger: Logger? = nil) throws -> [Token]
+                verbose: Bool, lint: Bool, reporter: Reporter?, logger: Logger? = nil,
+                context: FormattingContext = .empty) throws -> [Token]
 {
     // Parse source
     var tokens = tokens ?? tokenize(source)
@@ -1091,7 +1104,8 @@ func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, line
         rules, to: tokens, with: formatOptions,
         trackChanges: lint || verbose || reporter != nil,
         range: range,
-        logger: logger
+        logger: logger,
+        context: context
     )
 
     // Display info
@@ -1178,13 +1192,84 @@ func processInput(_ inputURLs: [URL],
 
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
-    var cache: [String: String]?
+    var cache: SwiftFormatCache?
     if let cacheURL {
         if let data = try? Data(contentsOf: cacheURL) {
-            cache = try? JSONDecoder().decode([String: String].self, from: data)
+            cache = try? JSONDecoder().decode(SwiftFormatCache.self, from: data)
+            if cache?.version != SwiftFormatCache.currentVersion {
+                cache = nil
+            }
+            if cache == nil, let legacyCache = try? JSONDecoder().decode([String: String].self, from: data) {
+                cache = SwiftFormatCache(entries: legacyCache.mapValues {
+                    CacheEntry(formatting: $0, sourceIndex: nil)
+                })
+            }
         }
-        cache = cache ?? [:]
+        cache = cache ?? SwiftFormatCache()
     }
+    func cacheKey(for inputURL: URL) -> String {
+        var path = inputURL.standardizedFileURL.path
+        if let cacheDirectory {
+            let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
+            path = String(path[commonPrefix.endIndex ..< path.endIndex])
+        }
+        return path
+    }
+
+    // Build a complete, immutable project index before any file is formatted.
+    let roots = Set(inputURLs.map(projectRoot(for:)))
+    var discoveredFilesByPath = [String: (URL, ProjectRoot)]()
+    for root in roots {
+        for fileURL in discoverSourceFiles(in: root) {
+            let path = fileURL.path
+            if let existing = discoveredFilesByPath[path],
+               existing.1.url.path.count >= root.url.path.count
+            {
+                continue
+            }
+            discoveredFilesByPath[path] = (fileURL, root)
+        }
+    }
+    let discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
+    let cachedEntries = cache?.entries ?? [:]
+    let indexQueue = DispatchQueue(label: "swiftformat.project-index")
+    let indexGroup = DispatchGroup()
+    let workerQueue = DispatchQueue.global(qos: .userInitiated)
+    var indexedFiles = [(String, SourceFileIndex)]()
+    var updatedIndexEntries = [(String, SourceFileIndex)]()
+    for (fileURL, root) in discoveredFiles {
+        indexGroup.enter()
+        workerQueue.async {
+            defer { indexGroup.leave() }
+            guard let source = try? String(contentsOf: fileURL) else { return }
+            let sourceHash = computeHash(source)
+            let key = cacheKey(for: fileURL)
+            let module = moduleIdentifier(for: fileURL, in: root)
+            let sourceIndex: SourceFileIndex
+            if let cached = cachedEntries[key]?.sourceIndex,
+               cached.schemaVersion == SourceFileIndex.schemaVersion,
+               cached.contentHash == sourceHash,
+               cached.moduleIdentifier == module
+            {
+                sourceIndex = cached
+            } else {
+                sourceIndex = makeSourceFileIndex(from: source, moduleIdentifier: module)
+            }
+            indexQueue.sync {
+                indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
+                updatedIndexEntries.append((key, sourceIndex))
+            }
+        }
+    }
+    indexGroup.wait()
+    if cache != nil {
+        for (key, sourceIndex) in updatedIndexEntries {
+            var entry = cache!.entries[key] ?? CacheEntry()
+            entry.sourceIndex = sourceIndex
+            cache!.entries[key] = entry
+        }
+    }
+    let projectIndex = ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
     // Logging skipped files
     var outputFlags: OutputFlags = (0, 0, 0, 0)
     let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
@@ -1293,21 +1378,16 @@ func processInput(_ inputURLs: [URL],
         // Check cache
         let rules = options.rules ?? defaultRules
         let cachePrefix: String = cache == nil ? "" : {
-            let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
+            let usesProjectContext = rules.contains(where: { FormatRules.byName[$0]?.usesProjectContext == true })
+            let projectFingerprint = usesProjectContext ? projectIndex.fingerprint : ""
+            let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))\(projectFingerprint)")
             return "\(version);\(configHash);"
         }()
-        let cacheKey: String = {
-            var path = inputURL.absoluteURL.path
-            if let cacheDirectory {
-                let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
-                path = String(path[commonPrefix.endIndex ..< path.endIndex])
-            }
-            return path
-        }()
+        let cacheKey = cacheKey(for: inputURL)
         do {
             var cacheHash: String?
             var sourceHash: String?
-            if let cacheEntry = cache?[cacheKey], cacheEntry.hasPrefix(cachePrefix) {
+            if let cacheEntry = cache?.entries[cacheKey]?.formatting, cacheEntry.hasPrefix(cachePrefix) {
                 cacheHash = String(cacheEntry[cachePrefix.endIndex...])
                 sourceHash = computeHash(input)
             }
@@ -1405,7 +1485,11 @@ func processInput(_ inputURLs: [URL],
                 // Regular swift file
                 let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
                                                   verbose: verbose, lint: lint, reporter: reporter,
-                                                  logger: logger)
+                                                  logger: logger,
+                                                  context: FormattingContext(
+                                                      currentFileURL: inputURL,
+                                                      projectIndex: projectIndex
+                                                  ))
                 output = sourceCode(for: outputTokens)
                 if output != input {
                     sourceHash = nil
@@ -1440,7 +1524,11 @@ func processInput(_ inputURLs: [URL],
                 // No changes needed
                 return {
                     outputFlags.filesChecked += 1
-                    cache?[cacheKey] = cacheValue
+                    if cache != nil {
+                        var entry = cache!.entries[cacheKey] ?? CacheEntry()
+                        entry.formatting = cacheValue
+                        cache!.entries[cacheKey] = entry
+                    }
                     showConfigurationWarnings(options)
                 }
             }
@@ -1459,7 +1547,17 @@ func processInput(_ inputURLs: [URL],
                     outputFlags.filesChecked += 1
                     outputFlags.filesFailed += 1
                     outputFlags.filesWritten += 1
-                    cache?[cacheKey] = cacheValue
+                    if cache != nil {
+                        var entry = cache!.entries[cacheKey] ?? CacheEntry()
+                        entry.formatting = cacheValue
+                        if outputURL == inputURL {
+                            entry.sourceIndex = makeSourceFileIndex(
+                                from: output,
+                                moduleIdentifier: projectIndex.files[inputURL.path]?.moduleIdentifier
+                            )
+                        }
+                        cache!.entries[cacheKey] = entry
+                    }
                     showConfigurationWarnings(options)
                 }
             }

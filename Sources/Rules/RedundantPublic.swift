@@ -10,7 +10,8 @@ import Foundation
 
 public extension FormatRule {
     static let redundantPublic = FormatRule(
-        help: "Remove redundant public access control from declarations in internal or private types."
+        help: "Remove redundant public access control from declarations in internal or private types.",
+        usesProjectContext: true
     ) { formatter in
         let declarations = formatter.parseDeclarations()
 
@@ -57,11 +58,16 @@ public extension FormatRule {
             switch parentType.keyword {
             case "extension":
                 // Inside an extension where the extended type is internal, any `public` modifier has no effect.
-                // We can only handle this case if the extension and type are defined in the same file.
-                if let extendedTypeName = parentType.name,
-                   internalTypes.contains(extendedTypeName)
-                {
-                    declaration.removeVisibility(.public)
+                if let extendedTypeName = parentType.name {
+                    let projectTypeIsInternal = formatter.currentFileURL.map { fileURL in
+                        formatter.projectIndex?.isInternalType(
+                            named: extendedTypeName,
+                            from: fileURL
+                        ) == true
+                    } ?? false
+                    if internalTypes.contains(extendedTypeName) || projectTypeIsInternal {
+                        declaration.removeVisibility(.public)
+                    }
                 }
 
             // Inside an internal or private type, any `public` modifier has no effect

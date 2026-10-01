@@ -466,6 +466,27 @@ final class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
+    func testProjectIndexIsNotBuiltWhenEnabledRulesDoNotUseIt() throws {
+        try withTmpDirectory([
+            "Sources/App/Input.swift": "struct Foo {}\n",
+            "Sources/App/Other.swift": "struct Bar {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules indent --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            let entries = try XCTUnwrap(cache["entries"] as? [String: Any])
+            XCTAssertEqual(entries.count, 1)
+        }
+    }
+
     func testProjectIndexIncludesFilesNotBeingFormatted() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

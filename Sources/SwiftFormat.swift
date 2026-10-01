@@ -547,6 +547,26 @@ public func applyRules(
     range originalRange: Range<Int>?,
     maxIterations: Int = 10
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
+    try applyRules(
+        originalRules,
+        to: originalTokens,
+        with: options,
+        trackChanges: trackChanges,
+        range: originalRange,
+        maxIterations: maxIterations,
+        context: .empty
+    )
+}
+
+func applyRules(
+    _ originalRules: [FormatRule],
+    to originalTokens: [Token],
+    with options: FormatOptions,
+    trackChanges: Bool,
+    range originalRange: Range<Int>?,
+    maxIterations: Int = 10,
+    context: FormattingContext
+) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
 
     let originalRules = originalRules.sorted()
@@ -628,7 +648,8 @@ public func applyRules(
     var lastChanges = [Formatter.Change]()
     for iteration in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
-                                  trackChanges: trackChanges, range: range)
+                                  trackChanges: trackChanges, range: range,
+                                  context: context)
         let progress = RuleProgress()
         queue.async(group: group) {
             for (index, rule) in rules.enumerated() {

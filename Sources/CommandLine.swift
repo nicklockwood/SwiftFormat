@@ -216,6 +216,7 @@ func printHelp(as type: CLI.OutputType) {
     --unknown-rules    How unknown rules are handled: "error" (default) or "ignore"
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
+    --project-index    Project symbol indexing: "auto" (default) or "disabled"
     --snapshot         Path to snapshot file (defaults to .swiftformat-snapshot)
     --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
@@ -787,6 +788,19 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             setDefaultCacheURL()
         }
 
+        let projectIndexMode: ProjectIndexMode
+        if let value = args["project-index"] {
+            guard !value.isEmpty else {
+                throw FormatError.options("--project-index option expects a value")
+            }
+            guard let mode = ProjectIndexMode(rawValue: value) else {
+                throw FormatError.options("Invalid --project-index value '\(value)'")
+            }
+            projectIndexMode = mode
+        } else {
+            projectIndexMode = .auto
+        }
+
         func printRunningMessage() {
             print("Running SwiftFormat...", as: .info)
             if lint {
@@ -936,6 +950,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   lint: lint,
                                                   lenient: lenient,
                                                   cacheURL: cacheURL,
+                                                  projectIndexMode: projectIndexMode,
                                                   snapshotMode: snapshotMode,
                                                   reporter: reporter)
             errors += _errors
@@ -1130,6 +1145,7 @@ func processInput(_ inputURLs: [URL],
                   lint: Bool,
                   lenient _: Bool,
                   cacheURL: URL?,
+                  projectIndexMode: ProjectIndexMode,
                   snapshotMode: SnapshotMode,
                   reporter: Reporter?) -> (OutputFlags, [Error])
 {
@@ -1261,26 +1277,28 @@ func processInput(_ inputURLs: [URL],
     // Resolve the effective rules for the selected inputs before scanning the wider project.
     // Rules can vary by directory or source filter, so checking the top-level options isn't sufficient.
     var requiresProjectIndex = false
-    let projectIndexRequirementErrors = enumerateFiles(
-        withInputURLs: inputURLs,
-        options: options,
-        concurrent: !verbose,
-        logger: { print($0, as: .info) }
-    ) { inputURL, _, options in
-        guard inputURL.pathExtension != "md" else { return {} }
-        guard let input = try? String(contentsOf: inputURL) else {
-            throw FormatError.reading("Failed to read file \(inputURL.path)")
+    if projectIndexMode == .auto {
+        let projectIndexRequirementErrors = enumerateFiles(
+            withInputURLs: inputURLs,
+            options: options,
+            concurrent: !verbose,
+            logger: { print($0, as: .info) }
+        ) { inputURL, _, options in
+            guard inputURL.pathExtension != "md" else { return {} }
+            guard let input = try? String(contentsOf: inputURL) else {
+                throw FormatError.reading("Failed to read file \(inputURL.path)")
+            }
+            var options = try applyOverrides(to: options, for: inputURL)
+            try options.addFilterArguments(path: inputURL.path, source: input)
+            let rules = options.rules ?? defaultRules
+            let usesProjectContext = rules.contains {
+                FormatRules.byName[$0]?.usesProjectContext == true
+            }
+            return { requiresProjectIndex = requiresProjectIndex || usesProjectContext }
         }
-        var options = try applyOverrides(to: options, for: inputURL)
-        try options.addFilterArguments(path: inputURL.path, source: input)
-        let rules = options.rules ?? defaultRules
-        let usesProjectContext = rules.contains {
-            FormatRules.byName[$0]?.usesProjectContext == true
+        guard projectIndexRequirementErrors.isEmpty else {
+            return ((0, 0, 0, 0), projectIndexRequirementErrors)
         }
-        return { requiresProjectIndex = requiresProjectIndex || usesProjectContext }
-    }
-    guard projectIndexRequirementErrors.isEmpty else {
-        return ((0, 0, 0, 0), projectIndexRequirementErrors)
     }
 
     // Build a complete, immutable project index before any file is formatted.
@@ -1398,7 +1416,9 @@ func processInput(_ inputURLs: [URL],
         let rules = options.rules ?? defaultRules
         let cachePrefix: String = cache == nil ? "" : {
             let usesProjectContext = rules.contains(where: { FormatRules.byName[$0]?.usesProjectContext == true })
-            let projectFingerprint = usesProjectContext ? projectIndex?.fingerprint ?? "" : ""
+            let projectFingerprint = usesProjectContext ? projectIndex.map {
+                "project-index:\($0.fingerprint)"
+            } ?? "project-index:disabled" : ""
             let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))\(projectFingerprint)")
             return "\(version);\(configHash);"
         }()
@@ -1681,6 +1701,11 @@ private struct Snapshot: Codable {
 
     var version = currentVersion
     var files = [String: String]()
+}
+
+enum ProjectIndexMode: String {
+    case auto
+    case disabled
 }
 
 enum SnapshotMode {

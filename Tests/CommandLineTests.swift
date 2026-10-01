@@ -487,6 +487,28 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexCanBeDisabled() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let input = try String(contentsOf: extensionURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules redundantPublic --project-index disabled --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), input)
+        }
+    }
+
     func testProjectIndexIncludesFilesNotBeingFormatted() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

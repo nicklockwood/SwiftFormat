@@ -20,9 +20,14 @@ public extension FormatRule {
         let projectSelfRequired = formatter.currentFileURL.map { fileURL in
             formatter.projectIndex?.autoclosureFunctionNames(visibleFrom: fileURL) ?? []
         } ?? []
+        let projectMembers = formatter.currentFileURL.map { fileURL in
+            formatter.projectIndex?.memberNamesByType(visibleFrom: fileURL) ?? .empty
+        } ?? .empty
         formatter.addOrRemoveSelf(
             static: false,
-            additionalSelfRequired: projectSelfRequired
+            additionalSelfRequired: projectSelfRequired,
+            additionalMembersByType: projectMembers.instance,
+            additionalClassMembersByType: projectMembers.staticOrClass
         )
     } examples: {
         """

@@ -3222,9 +3222,9 @@ Option | Description
 ```
 
 In the rare case of functions with `@autoclosure` arguments, `self` may be
-required at the call site, but SwiftFormat is unable to detect this
-automatically. You can use the `--self-required` command-line option to specify
-a list of such methods, and the `redundantSelf` rule will then ignore them.
+required at the call site. SwiftFormat detects project-defined functions when
+project indexing is available. You can use the `--self-required` command-line
+option to specify external or otherwise unavailable methods that should be ignored.
 
 An example of such a method is the `expect()` function in the Nimble unit
 testing framework (https://github.com/Quick/Nimble), which is common enough that

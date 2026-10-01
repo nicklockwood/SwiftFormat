@@ -2589,7 +2589,12 @@ extension Formatter {
     }
 
     /// Add or remove self or Self
-    func addOrRemoveSelf(static staticSelf: Bool, additionalSelfRequired: Set<String> = []) {
+    func addOrRemoveSelf(
+        static staticSelf: Bool,
+        additionalSelfRequired: Set<String> = [],
+        additionalMembersByType: [String: Set<String>] = [:],
+        additionalClassMembersByType: [String: Set<String>] = [:]
+    ) {
         let selfKeyword = staticSelf ? "Self" : "self"
         let selfRequired = options.selfRequired.union(additionalSelfRequired)
 
@@ -2806,7 +2811,7 @@ extension Formatter {
                         break
                     }
                     guard let scopeStart = self.index(of: .startOfScope("{"), after: index),
-                          case let .identifier(name)? = next(.identifier, after: index)
+                          let name = declarationName(keywordIndex: index)
                     else {
                         return
                     }
@@ -3510,8 +3515,8 @@ extension Formatter {
         }
         var typeStack = [(name: String, keyword: String)]()
         var closureStack = [(allowsImplicitSelf: Bool, selfCapture: String?)]()
-        var membersByType = [String: Set<String>]()
-        var classMembersByType = [String: Set<String>]()
+        var membersByType = additionalMembersByType
+        var classMembersByType = additionalClassMembersByType
         var index = 0
         processBody(at: &index, localNames: [], members: [], typeStack: &typeStack,
                     closureStack: &closureStack, membersByType: &membersByType,

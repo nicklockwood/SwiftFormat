@@ -505,6 +505,28 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexCanBeDisabled() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let input = try String(contentsOf: extensionURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules redundantPublic --project-index disabled --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), input)
+        }
+    }
+
     func testProjectIndexIncludesFilesNotBeingFormatted() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",
@@ -649,6 +671,7 @@ final class CommandLineTests: XCTestCase {
             XCTAssertEqual(processArguments([
                 "", sourcesURL.path, testsURL.path,
                 "--snapshot",
+                "--project-index", "disabled",
                 "--cache", "ignore",
             ], in: ""), .ok)
             XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
@@ -670,6 +693,7 @@ final class CommandLineTests: XCTestCase {
             XCTAssertEqual(processArguments([
                 "", inputURL.path,
                 "--snapshot",
+                "--project-index", "disabled",
                 "--cache", "ignore",
             ], in: ""), .ok)
             XCTAssertEqual(try readSnapshot(at: snapshotURL).files, [
@@ -911,6 +935,7 @@ final class CommandLineTests: XCTestCase {
             let arguments = [
                 "", directory.path,
                 "--snapshot", snapshotURL.path,
+                "--project-index", "disabled",
                 "--cache", "ignore",
             ]
             CLI.print = { _, _ in }
@@ -1177,7 +1202,7 @@ final class CommandLineTests: XCTestCase {
             CLI.print = { _, _ in }
 
             XCTAssertEqual(
-                CLI.run(in: testDir, with: "test.swift --config config1.swiftformat --config config2.swiftformat"),
+                CLI.run(in: testDir, with: "test.swift --config config1.swiftformat --config config2.swiftformat --project-index disabled"),
                 .ok
             )
 
@@ -1216,7 +1241,7 @@ final class CommandLineTests: XCTestCase {
             CLI.print = { _, _ in }
 
             XCTAssertEqual(
-                CLI.run(in: testDir, with: "test.swift --config config1.swiftformat,config2.swiftformat"),
+                CLI.run(in: testDir, with: "test.swift --config config1.swiftformat,config2.swiftformat --project-index disabled"),
                 .ok
             )
 
@@ -1315,7 +1340,7 @@ final class CommandLineTests: XCTestCase {
         try withTmpFiles([
             "foo/bar/baz.swift": "",
         ]) { url in
-            _ = processArguments(["", url.path, "--trailing-commas", "collections-only", "--swift-version", "6.0"], in: "")
+            _ = processArguments(["", url.path, "--trailing-commas", "collections-only", "--swift-version", "6.0", "--project-index", "disabled"], in: "")
         }
 
         // Should not contain the deprecation warning about --commas
@@ -1496,6 +1521,7 @@ final class CommandLineTests: XCTestCase {
             "",
             configURL.deletingLastPathComponent().path,
             "--config", configURL.path,
+            "--project-index", "disabled",
         ], in: "")
 
         XCTAssertEqual(try String(contentsOf: nonTestFile, encoding: .utf8), """
@@ -1580,6 +1606,7 @@ final class CommandLineTests: XCTestCase {
             "",
             configURL.deletingLastPathComponent().path,
             "--config", configURL.path,
+            "--project-index", "disabled",
         ], in: "")
 
         // Created after 8/31/26, so is converted to Swift Testing
@@ -1702,6 +1729,7 @@ final class CommandLineTests: XCTestCase {
             "",
             configURL.deletingLastPathComponent().path,
             "--base-config", configURL.path,
+            "--project-index", "disabled",
         ], in: "")
 
         XCTAssertEqual(try String(contentsOf: nonTestFile, encoding: .utf8), """
@@ -1979,7 +2007,7 @@ final class CommandLineTests: XCTestCase {
             "build/.swift-version": "5.9\n",
         ]) { url in
             let rootDir = url.deletingLastPathComponent()
-            _ = processArguments(["", rootDir.path], in: rootDir.path)
+            _ = processArguments(["", rootDir.path, "--project-index", "disabled"], in: rootDir.path)
 
             let buildVersionMsgs = logMessages.filter {
                 $0.contains("swift-version") && $0.contains("build")
@@ -2000,7 +2028,7 @@ final class CommandLineTests: XCTestCase {
             "build/.swift-version": "5.9\n",
         ]) { url in
             let rootDir = url.deletingLastPathComponent()
-            _ = processArguments(["", rootDir.path], in: rootDir.path)
+            _ = processArguments(["", rootDir.path, "--project-index", "disabled"], in: rootDir.path)
 
             let buildVersionMsgs = logMessages.filter {
                 $0.contains("swift-version") && $0.contains("build")
@@ -2341,8 +2369,8 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--reporter",
-                "json",
+                "--reporter", "json",
+                "--project-index", "disabled",
                 url.path,
             ], in: "")
         }
@@ -2357,8 +2385,8 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--report",
-                outputURL.path,
+                "--report", outputURL.path,
+                "--project-index", "disabled",
                 url.path,
             ], in: "")
         }
@@ -2385,8 +2413,8 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--reporter",
-                "github-actions-log",
+                "--reporter", "github-actions-log",
+                "--project-index", "disabled",
                 url.path,
             ],
             environment: ["GITHUB_WORKSPACE": url.deletingLastPathComponent().path],
@@ -2411,8 +2439,7 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--reporter",
-                "github-action-log",
+                "--reporter", "github-action-log",
                 url.path,
             ], in: "")
         }
@@ -2437,8 +2464,8 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--reporter",
-                "xml",
+                "--reporter", "xml",
+                "--project-index", "disabled",
                 url.path,
             ], in: "")
         }
@@ -2453,8 +2480,8 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--report",
-                outputURL.path,
+                "--report", outputURL.path,
+                "--project-index", "disabled",
                 url.path,
             ], in: "")
         }
@@ -2481,8 +2508,8 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--reporter",
-                "sarif",
+                "--reporter", "sarif",
+                "--project-index", "disabled",
                 url.path,
             ], in: "")
         }
@@ -2497,8 +2524,8 @@ final class CommandLineTests: XCTestCase {
             _ = processArguments([
                 "",
                 "--lint",
-                "--report",
-                outputURL.path,
+                "--report", outputURL.path,
+                "--project-index", "disabled",
                 url.path,
             ], in: "")
         }

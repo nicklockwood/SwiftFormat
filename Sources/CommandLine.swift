@@ -1216,60 +1216,6 @@ func processInput(_ inputURLs: [URL],
         return path
     }
 
-    // Build a complete, immutable project index before any file is formatted.
-    let roots = Set(inputURLs.map(projectRoot(for:)))
-    var discoveredFilesByPath = [String: (URL, ProjectRoot)]()
-    for root in roots {
-        for fileURL in discoverSourceFiles(in: root) {
-            let path = fileURL.path
-            if let existing = discoveredFilesByPath[path],
-               existing.1.url.path.count >= root.url.path.count
-            {
-                continue
-            }
-            discoveredFilesByPath[path] = (fileURL, root)
-        }
-    }
-    let discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
-    let cachedEntries = cache?.entries ?? [:]
-    let indexQueue = DispatchQueue(label: "swiftformat.project-index")
-    let indexGroup = DispatchGroup()
-    let workerQueue = DispatchQueue.global(qos: .userInitiated)
-    var indexedFiles = [(String, SourceFileIndex)]()
-    var updatedIndexEntries = [(String, SourceFileIndex)]()
-    for (fileURL, root) in discoveredFiles {
-        indexGroup.enter()
-        workerQueue.async {
-            defer { indexGroup.leave() }
-            guard let source = try? String(contentsOf: fileURL) else { return }
-            let sourceHash = computeHash(source)
-            let key = cacheKey(for: fileURL)
-            let module = moduleIdentifier(for: fileURL, in: root)
-            let sourceIndex: SourceFileIndex
-            if let cached = cachedEntries[key]?.sourceIndex,
-               cached.schemaVersion == SourceFileIndex.schemaVersion,
-               cached.contentHash == sourceHash,
-               cached.moduleIdentifier == module
-            {
-                sourceIndex = cached
-            } else {
-                sourceIndex = makeSourceFileIndex(from: source, moduleIdentifier: module)
-            }
-            indexQueue.sync {
-                indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
-                updatedIndexEntries.append((key, sourceIndex))
-            }
-        }
-    }
-    indexGroup.wait()
-    if cache != nil {
-        for (key, sourceIndex) in updatedIndexEntries {
-            var entry = cache!.entries[key] ?? CacheEntry()
-            entry.sourceIndex = sourceIndex
-            cache!.entries[key] = entry
-        }
-    }
-    let projectIndex = ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
     // Logging skipped files
     var outputFlags: OutputFlags = (0, 0, 0, 0)
     let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
@@ -1321,6 +1267,89 @@ func processInput(_ inputURLs: [URL],
         result.formatOptions?.fileInfo = options.formatOptions?.fileInfo ?? .init()
         return result
     }
+
+    // Resolve the effective rules for the selected inputs before scanning the wider project.
+    // Rules can vary by directory or source filter, so checking the top-level options isn't sufficient.
+    var requiresProjectIndex = false
+    let projectIndexRequirementErrors = enumerateFiles(
+        withInputURLs: inputURLs,
+        options: options,
+        concurrent: !verbose,
+        logger: { print($0, as: .info) }
+    ) { inputURL, _, options in
+        guard inputURL.pathExtension != "md" else { return {} }
+        guard let input = try? String(contentsOf: inputURL) else {
+            throw FormatError.reading("Failed to read file \(inputURL.path)")
+        }
+        var options = try applyOverrides(to: options, for: inputURL)
+        try options.addFilterArguments(path: inputURL.path, source: input)
+        let rules = options.rules ?? defaultRules
+        let usesProjectContext = rules.contains {
+            FormatRules.byName[$0]?.usesProjectContext == true
+        }
+        return { requiresProjectIndex = requiresProjectIndex || usesProjectContext }
+    }
+    guard projectIndexRequirementErrors.isEmpty else {
+        return ((0, 0, 0, 0), projectIndexRequirementErrors)
+    }
+
+    // Build a complete, immutable project index before any file is formatted.
+    let projectIndex: ProjectIndex? = requiresProjectIndex ? {
+        let roots = Set(inputURLs.map(projectRoot(for:)))
+        var discoveredFilesByPath = [String: (URL, ProjectRoot)]()
+        for root in roots {
+            for fileURL in discoverSourceFiles(in: root) {
+                let path = fileURL.path
+                if let existing = discoveredFilesByPath[path],
+                   existing.1.url.path.count >= root.url.path.count
+                {
+                    continue
+                }
+                discoveredFilesByPath[path] = (fileURL, root)
+            }
+        }
+        let discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
+        let cachedEntries = cache?.entries ?? [:]
+        let indexQueue = DispatchQueue(label: "swiftformat.project-index")
+        let indexGroup = DispatchGroup()
+        let workerQueue = DispatchQueue.global(qos: .userInitiated)
+        var indexedFiles = [(String, SourceFileIndex)]()
+        var updatedIndexEntries = [(String, SourceFileIndex)]()
+        for (fileURL, root) in discoveredFiles {
+            indexGroup.enter()
+            workerQueue.async {
+                defer { indexGroup.leave() }
+                guard let source = try? String(contentsOf: fileURL) else { return }
+                let sourceHash = computeHash(source)
+                let key = cacheKey(for: fileURL)
+                let module = moduleIdentifier(for: fileURL, in: root)
+                let sourceIndex: SourceFileIndex
+                if let cached = cachedEntries[key]?.sourceIndex,
+                   cached.schemaVersion == SourceFileIndex.schemaVersion,
+                   cached.contentHash == sourceHash,
+                   cached.moduleIdentifier == module
+                {
+                    sourceIndex = cached
+                } else {
+                    sourceIndex = makeSourceFileIndex(from: source, moduleIdentifier: module)
+                }
+                indexQueue.sync {
+                    indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
+                    updatedIndexEntries.append((key, sourceIndex))
+                }
+            }
+        }
+        indexGroup.wait()
+        if cache != nil {
+            for (key, sourceIndex) in updatedIndexEntries {
+                var entry = cache!.entries[key] ?? CacheEntry()
+                entry.sourceIndex = sourceIndex
+                cache!.entries[key] = entry
+            }
+        }
+        return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
+    }() : nil
+
     // Format files
     func fileHandler(
         _ inputURL: URL,
@@ -1379,7 +1408,7 @@ func processInput(_ inputURLs: [URL],
         let rules = options.rules ?? defaultRules
         let cachePrefix: String = cache == nil ? "" : {
             let usesProjectContext = rules.contains(where: { FormatRules.byName[$0]?.usesProjectContext == true })
-            let projectFingerprint = usesProjectContext ? projectIndex.fingerprint : ""
+            let projectFingerprint = usesProjectContext ? projectIndex?.fingerprint ?? "" : ""
             let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))\(projectFingerprint)")
             return "\(version);\(configHash);"
         }()
@@ -1553,7 +1582,7 @@ func processInput(_ inputURLs: [URL],
                         if outputURL == inputURL {
                             entry.sourceIndex = makeSourceFileIndex(
                                 from: output,
-                                moduleIdentifier: projectIndex.files[inputURL.path]?.moduleIdentifier
+                                moduleIdentifier: projectIndex?.files[inputURL.path]?.moduleIdentifier
                             )
                         }
                         cache!.entries[cacheKey] = entry

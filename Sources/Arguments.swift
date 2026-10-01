@@ -1161,6 +1161,7 @@ let commandLineArguments = [
     "line-range",
     "output",
     "cache",
+    "project-index",
     "snapshot",
     "dry-run",
     "lint",

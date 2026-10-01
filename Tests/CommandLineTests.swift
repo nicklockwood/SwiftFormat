@@ -655,6 +655,138 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexPreservesSelfInProjectAutoclosureCall() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let input = try String(contentsOf: useURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), input)
+        }
+    }
+
+    func testProjectIndexDoesNotPreserveSelfForAutoclosureInAnotherModule() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/Library/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(value)
+                }
+            }
+            """)
+        }
+    }
+
+    func testDisabledProjectIndexDoesNotPreserveSelfInProjectAutoclosureCall() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --project-index disabled --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(value)
+                }
+            }
+            """)
+        }
+    }
+
+    func testAutoclosureChangeInvalidatesFormattingCache() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let autoclosureURL = directory.appendingPathComponent("Sources/App/Autoclosure.swift")
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            try "func verify(_ expression: () -> Bool) {}".write(
+                to: autoclosureURL,
+                atomically: true,
+                encoding: .utf8
+            )
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(value)
+                }
+            }
+            """)
+        }
+    }
+
     func testCreatesSnapshotWithoutFormattingFiles() throws {
         let firstInput = """
         let foo=bar

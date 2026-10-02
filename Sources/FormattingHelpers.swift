@@ -157,7 +157,8 @@ extension Formatter {
         at i: Int,
         exclude: Set<String>,
         include: Set<String>? = nil,
-        selfRequired: Set<String>
+        selfRequired: Set<String>,
+        isAdditionalSelfRequired: (Int) -> Bool = { _ in false }
     ) -> Bool {
         guard case let .identifier(selfKeyword) = tokens[i], ["self", "Self"].contains(selfKeyword) else {
             assertionFailure()
@@ -167,7 +168,8 @@ extension Formatter {
         let exclusionList = exclude
             .union(_FormatRules.globalSwiftFunctions)
             .union(staticSelf ? [] : selfRequired)
-        guard let dotIndex = index(of: .nonSpaceOrLinebreak, after: i, if: {
+        guard !isAdditionalSelfRequired(i),
+              let dotIndex = index(of: .nonSpaceOrLinebreak, after: i, if: {
                   $0 == .operator(".", .infix)
               }),
               !exclude.contains(selfKeyword),
@@ -259,7 +261,8 @@ extension Formatter {
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>,
                                   removeSelfKeyword: String?, onlyLocal: Bool,
                                   scopeAllowsImplicitSelfRebinding: Bool,
-                                  selfRequired: Set<String>)
+                                  selfRequired: Set<String>,
+                                  isAdditionalSelfRequired: (Int) -> Bool = { _ in false })
     {
         let isConditional = isConditionalStatement(at: index)
         var declarationIndex: Int? = -1
@@ -275,7 +278,12 @@ extension Formatter {
                     .nonSpaceOrComment,
                     after: nextIndex
                 ) {
-                    _ = removeSelf(at: index, exclude: names.union(locals), selfRequired: selfRequired)
+                    _ = removeSelf(
+                        at: index,
+                        exclude: names.union(locals),
+                        selfRequired: selfRequired,
+                        isAdditionalSelfRequired: isAdditionalSelfRequired
+                    )
                     break
                 }
                 switch next(.nonSpaceOrCommentOrLinebreak, after: index) {
@@ -334,7 +342,8 @@ extension Formatter {
                             at: nextIndex,
                             exclude: names,
                             include: include,
-                            selfRequired: selfRequired
+                            selfRequired: selfRequired,
+                            isAdditionalSelfRequired: isAdditionalSelfRequired
                         )
                     case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
                          .startOfScope where token.isStringDelimiter || isStartOfClosure(at: nextIndex):
@@ -353,7 +362,8 @@ extension Formatter {
                                         at: i,
                                         exclude: names,
                                         include: include,
-                                        selfRequired: selfRequired
+                                        selfRequired: selfRequired,
+                                        isAdditionalSelfRequired: isAdditionalSelfRequired
                                     )
                                 default:
                                     break
@@ -2523,12 +2533,12 @@ extension Formatter {
     /// Add or remove self or Self
     func addOrRemoveSelf(
         static staticSelf: Bool,
-        additionalSelfRequired: Set<String> = [],
         additionalMembersByType: [String: Set<String>] = [:],
-        additionalClassMembersByType: [String: Set<String>] = [:]
+        additionalClassMembersByType: [String: Set<String>] = [:],
+        isAdditionalSelfRequired: (Int) -> Bool = { _ in false }
     ) {
         let selfKeyword = staticSelf ? "Self" : "self"
-        let selfRequired = options.selfRequired.union(additionalSelfRequired)
+        let selfRequired = options.selfRequired
 
         // Must be applied to the entire file to work reliably
         guard !options.fragment else { return }
@@ -2656,7 +2666,8 @@ extension Formatter {
                                                      removeSelfKeyword: removeSelf ? selfKeyword : nil,
                                                      onlyLocal: options.swiftVersion < "5",
                                                      scopeAllowsImplicitSelfRebinding: scopeAllowsImplicitSelfRebinding,
-                                                     selfRequired: selfRequired)
+                                                     selfRequired: selfRequired,
+                                                     isAdditionalSelfRequired: isAdditionalSelfRequired)
                         }
                     case .keyword("func"):
                         guard let nameToken = next(.nonSpaceOrCommentOrLinebreak, after: i) else {
@@ -2802,7 +2813,8 @@ extension Formatter {
                                 removeSelfKeyword: nil,
                                 onlyLocal: false,
                                 scopeAllowsImplicitSelfRebinding: false,
-                                selfRequired: selfRequired
+                                selfRequired: selfRequired,
+                                isAdditionalSelfRequired: isAdditionalSelfRequired
                             )
                         }
                         processDeclaredVariables(
@@ -2810,7 +2822,8 @@ extension Formatter {
                             removeSelfKeyword: removeSelf ? selfKeyword : nil,
                             onlyLocal: false,
                             scopeAllowsImplicitSelfRebinding: scopeAllowsImplicitSelfRebinding,
-                            selfRequired: selfRequired
+                            selfRequired: selfRequired,
+                            isAdditionalSelfRequired: isAdditionalSelfRequired
                         )
                         while let scope = currentScope(at: index) ?? self.token(at: index),
                               case let .startOfScope(name) = scope,
@@ -3150,7 +3163,8 @@ extension Formatter {
                     _ = removeSelf(
                         at: index,
                         exclude: localNames,
-                        selfRequired: selfRequired
+                        selfRequired: selfRequired,
+                        isAdditionalSelfRequired: isAdditionalSelfRequired
                     )
                 case .identifier("type"): // Special case for type(of:)
                     guard let parenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {

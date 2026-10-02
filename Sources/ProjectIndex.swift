@@ -111,13 +111,13 @@ struct SourceFileIndex: Codable, Equatable {
         var staticMembers: [String]
     }
 
-    struct TypoDeclaration: Codable, Equatable {
+    struct SymbolDeclaration: Codable, Equatable {
         var name: String
         var visibility: String
-        var canBeCorrected: Bool
+        var canBeRenamed: Bool
     }
 
-    static let schemaVersion = 7
+    static let schemaVersion = 8
 
     var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
@@ -125,7 +125,7 @@ struct SourceFileIndex: Codable, Equatable {
     var typeDeclarations: [TypeDeclaration]
     var functionDeclarations: [FunctionDeclaration]
     var typeMembers: [TypeMembers]
-    var typoDeclarations: [TypoDeclaration]
+    var symbolDeclarations: [SymbolDeclaration]
 
     init(
         contentHash: String,
@@ -133,14 +133,14 @@ struct SourceFileIndex: Codable, Equatable {
         typeDeclarations: [TypeDeclaration],
         functionDeclarations: [FunctionDeclaration],
         typeMembers: [TypeMembers],
-        typoDeclarations: [TypoDeclaration]
+        symbolDeclarations: [SymbolDeclaration]
     ) {
         self.contentHash = contentHash
         self.moduleIdentifiers = moduleIdentifiers.sorted()
         self.typeDeclarations = typeDeclarations
         self.functionDeclarations = functionDeclarations
         self.typeMembers = typeMembers
-        self.typoDeclarations = typoDeclarations
+        self.symbolDeclarations = symbolDeclarations
     }
 
     private enum CodingKeys: CodingKey {
@@ -151,7 +151,7 @@ struct SourceFileIndex: Codable, Equatable {
         case typeDeclarations
         case functionDeclarations
         case typeMembers
-        case typoDeclarations
+        case symbolDeclarations
     }
 
     init(from decoder: Decoder) throws {
@@ -169,9 +169,9 @@ struct SourceFileIndex: Codable, Equatable {
             forKey: .functionDeclarations
         ) ?? []
         typeMembers = try container.decodeIfPresent([TypeMembers].self, forKey: .typeMembers) ?? []
-        typoDeclarations = try container.decodeIfPresent(
-            [TypoDeclaration].self,
-            forKey: .typoDeclarations
+        symbolDeclarations = try container.decodeIfPresent(
+            [SymbolDeclaration].self,
+            forKey: .symbolDeclarations
         ) ?? []
     }
 
@@ -183,7 +183,7 @@ struct SourceFileIndex: Codable, Equatable {
         try container.encode(typeDeclarations, forKey: .typeDeclarations)
         try container.encode(functionDeclarations, forKey: .functionDeclarations)
         try container.encode(typeMembers, forKey: .typeMembers)
-        try container.encode(typoDeclarations, forKey: .typoDeclarations)
+        try container.encode(symbolDeclarations, forKey: .symbolDeclarations)
     }
 }
 
@@ -214,7 +214,7 @@ struct ProjectIndex {
         var staticOrClass = [String: Set<String>]()
     }
 
-    struct TypoNames: Equatable {
+    struct DeclarationNames: Equatable {
         var declared: Set<String>
         var eligible: Set<String>
         var protected: Set<String>
@@ -230,14 +230,14 @@ struct ProjectIndex {
     private let typeVisibilities: [TypeKey: Set<String>]
     private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
     private let memberNamesByModule: [String: MemberNamesByType]
-    private let typoDeclarationsByModule: [String: [SourceFileIndex.TypoDeclaration]]
+    private let symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]]
 
     init(files: [String: SourceFileIndex]) {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
         var functionDeclarationsByModule = [String: [String: [SourceFileIndex.FunctionDeclaration]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
-        var typoDeclarationsByModule = [String: [SourceFileIndex.TypoDeclaration]]()
+        var symbolDeclarationsByModule = [String: [SourceFileIndex.SymbolDeclaration]]()
         for file in files.values {
             for moduleIdentifier in file.moduleIdentifiers {
                 for declaration in file.typeDeclarations {
@@ -260,15 +260,15 @@ struct ProjectIndex {
                             .formUnion(members.staticMembers)
                     }
                 }
-                typoDeclarationsByModule[moduleIdentifier, default: []].append(
-                    contentsOf: file.typoDeclarations
+                symbolDeclarationsByModule[moduleIdentifier, default: []].append(
+                    contentsOf: file.symbolDeclarations
                 )
             }
         }
         self.typeVisibilities = typeVisibilities
         self.functionDeclarationsByModule = functionDeclarationsByModule
         self.memberNamesByModule = memberNamesByModule
-        self.typoDeclarationsByModule = typoDeclarationsByModule
+        self.symbolDeclarationsByModule = symbolDeclarationsByModule
         let description = files.keys.sorted().compactMap { path -> String? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
@@ -294,12 +294,12 @@ struct ProjectIndex {
                 }
                 .sorted()
                 .joined(separator: ",")
-            let typoDeclarations = file.typoDeclarations
-                .map { "\($0.name):\($0.visibility):\($0.canBeCorrected)" }
+            let symbolDeclarations = file.symbolDeclarations
+                .map { "\($0.name):\($0.visibility):\($0.canBeRenamed)" }
                 .sorted()
                 .joined(separator: ",")
             return "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(functions):" +
-                "\(members):\(typoDeclarations)"
+                "\(members):\(symbolDeclarations)"
         }.joined(separator: ";")
         fingerprint = computeHash(description)
     }
@@ -533,24 +533,24 @@ struct ProjectIndex {
         }
     }
 
-    /// Project declaration names that can participate in typo correction.
-    func typoNames(upTo visibility: Visibility, visibleFrom fileURL: URL) -> TypoNames? {
+    /// Project declaration names that can participate in coordinated renaming.
+    func declarationNames(upTo visibility: Visibility, visibleFrom fileURL: URL) -> DeclarationNames? {
         let path = fileURL.standardizedFileURL.path
         guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
               let firstModule = moduleIdentifiers.first
         else { return nil }
 
-        func names(in moduleIdentifier: String) -> TypoNames {
-            let declarations = typoDeclarationsByModule[moduleIdentifier] ?? []
+        func names(in moduleIdentifier: String) -> DeclarationNames {
+            let declarations = symbolDeclarationsByModule[moduleIdentifier] ?? []
             let declared = Set(declarations.map(\.name))
             let eligible = Set(declarations.compactMap { declaration -> String? in
-                guard declaration.canBeCorrected,
+                guard declaration.canBeRenamed,
                       let declarationVisibility = Visibility(rawValue: declaration.visibility),
                       declarationVisibility <= visibility
                 else { return nil }
                 return declaration.name
             })
-            return TypoNames(
+            return DeclarationNames(
                 declared: declared,
                 eligible: eligible,
                 protected: declared.subtracting(eligible)
@@ -560,7 +560,7 @@ struct ProjectIndex {
         let first = names(in: firstModule)
         return moduleIdentifiers.dropFirst().reduce(first) { result, moduleIdentifier in
             let other = names(in: moduleIdentifier)
-            return TypoNames(
+            return DeclarationNames(
                 declared: result.declared.union(other.declared),
                 eligible: result.eligible.intersection(other.eligible),
                 protected: result.protected.union(other.protected)
@@ -627,25 +627,25 @@ func makeSourceFileIndex(
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
     var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
     var typeMembers = [SourceFileIndex.TypeMembers]()
-    var typoDeclarations = [SourceFileIndex.TypoDeclaration]()
+    var symbolDeclarations = [SourceFileIndex.SymbolDeclaration]()
     formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
-        let typoNames = formatter.namesInDeclaration(at: declaration.keywordIndex)
+        let symbolNames = formatter.namesInDeclaration(at: declaration.keywordIndex)
             ?? declaration.name.map { [$0] }
             ?? []
-        let canCorrectTypos = formatter.declarationCanBeRenamed(
+        let canBeRenamed = formatter.declarationCanBeRenamed(
             declaration,
             upTo: nil
         )
-        let typoVisibility = formatter.effectiveVisibility(of: declaration).rawValue
-        typoDeclarations.append(contentsOf: typoNames.map {
-            .init(name: $0, visibility: typoVisibility, canBeCorrected: canCorrectTypos)
+        let symbolVisibility = formatter.effectiveVisibility(of: declaration).rawValue
+        symbolDeclarations.append(contentsOf: symbolNames.map {
+            .init(name: $0, visibility: symbolVisibility, canBeRenamed: canBeRenamed)
         })
         if ["func", "init", "subscript"].contains(declaration.keyword),
            let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
         {
-            typoDeclarations.append(contentsOf: function.arguments.flatMap { argument in
+            symbolDeclarations.append(contentsOf: function.arguments.flatMap { argument in
                 [argument.externalLabel, argument.internalLabel].compactMap { $0 }.map {
-                    .init(name: $0, visibility: typoVisibility, canBeCorrected: canCorrectTypos)
+                    .init(name: $0, visibility: symbolVisibility, canBeRenamed: canBeRenamed)
                 }
             })
         }
@@ -758,7 +758,7 @@ func makeSourceFileIndex(
         typeDeclarations: typeDeclarations,
         functionDeclarations: functionDeclarations,
         typeMembers: typeMembers,
-        typoDeclarations: typoDeclarations
+        symbolDeclarations: symbolDeclarations
     )
 }
 

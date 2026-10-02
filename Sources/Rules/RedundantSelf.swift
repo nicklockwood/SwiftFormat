@@ -17,17 +17,21 @@ public extension FormatRule {
     ) { formatter in
         _ = formatter.options.selfRequired
         _ = formatter.options.explicitSelf
-        let projectSelfRequired = formatter.currentFileURL.map { fileURL in
-            formatter.projectIndex?.autoclosureFunctionNames(visibleFrom: fileURL) ?? []
-        } ?? []
         let projectMembers = formatter.currentFileURL.map { fileURL in
             formatter.projectIndex?.memberNamesByType(visibleFrom: fileURL) ?? .empty
         } ?? .empty
         formatter.addOrRemoveSelf(
             static: false,
-            additionalSelfRequired: projectSelfRequired,
             additionalMembersByType: projectMembers.instance,
-            additionalClassMembersByType: projectMembers.staticOrClass
+            additionalClassMembersByType: projectMembers.staticOrClass,
+            isAdditionalSelfRequired: { index in
+                guard let fileURL = formatter.currentFileURL else { return false }
+                return formatter.projectIndex?.isAutoclosureArgument(
+                    containing: index,
+                    in: formatter,
+                    visibleFrom: fileURL
+                ) ?? false
+            }
         )
     } examples: {
         """

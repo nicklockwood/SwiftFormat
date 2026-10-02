@@ -10,6 +10,32 @@ import XCTest
 @testable import SwiftFormat
 
 final class AcronymsTests: XCTestCase {
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String,
+        declarations: String,
+        options: FormatOptions = .default,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Declarations.swift")
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            callURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.acronyms],
+            to: tokenize(input),
+            with: options,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: callURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output, file: file, line: line)
+    }
+
     func testUppercaseAcronyms() {
         let input = """
         let url: URL
@@ -255,5 +281,40 @@ final class AcronymsTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .acronyms)
+    }
+
+    func testProjectIndexCapitalizesInternalDeclarationsAndReferencesAcrossFiles() throws {
+        let declarations = """
+        struct UrlRouter {
+            func loadUrl() {}
+        }
+        """
+        let input = """
+        let router = UrlRouter()
+        router.loadUrl()
+        """
+        let output = """
+        let router = URLRouter()
+        router.loadURL()
+        """
+        try testProjectFormatting(for: input, output, declarations: declarations)
+    }
+
+    func testProjectIndexPreservesUnknownExternalReferences() throws {
+        let input = """
+        externalApi.loadUrl(fromUrl: sourceUrl)
+        """
+        try testProjectFormatting(for: input, input, declarations: "")
+    }
+
+    func testProjectIndexPreservesCrossFileCapitalizationCollision() throws {
+        let declarations = """
+        let destinationUrl = ""
+        let destinationURL = ""
+        """
+        let input = """
+        print(destinationUrl, destinationURL)
+        """
+        try testProjectFormatting(for: input, input, declarations: declarations)
     }
 }

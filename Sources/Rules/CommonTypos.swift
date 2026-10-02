@@ -25,9 +25,9 @@ public extension FormatRule {
         var declaredNames = Set<String>()
         var protectedNames = Set<String>()
         var eligibleNames = Set<String>()
-        let projectTypoNames: ProjectIndex.TypoNames? = formatter.currentFileURL.flatMap { fileURL in
+        let projectTypoNames: ProjectIndex.DeclarationNames? = formatter.currentFileURL.flatMap { fileURL in
             guard formatter.options.typoVisibility > .fileprivate else { return nil }
-            return formatter.projectIndex?.typoNames(
+            return formatter.projectIndex?.declarationNames(
                 upTo: formatter.options.typoVisibility,
                 visibleFrom: fileURL
             )

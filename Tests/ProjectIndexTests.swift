@@ -103,6 +103,72 @@ final class ProjectIndexTests: XCTestCase {
         }
     }
 
+    func testXcodeProjectModuleIdentifiersUseSynchronizedGroupsAndExceptions() throws {
+        try withProjectIndexTmpDirectory([
+            "Sync/Included.swift": "struct Included {}",
+            "Sync/Excluded.swift": "struct Excluded {}",
+            "Sync/Shared.swift": "struct Shared {}",
+            "Sync/PhaseOnly.swift": "struct PhaseOnly {}",
+            "Example.xcodeproj/project.pbxproj": """
+            // !$*UTF8*$!
+            {
+                objects = {
+                    APP_EXCEPTIONS = {
+                        isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+                        membershipExceptions = (Excluded.swift,);
+                        target = APP_TARGET;
+                    };
+                    TEST_EXCEPTIONS = {
+                        isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+                        membershipExceptions = (Shared.swift,);
+                        target = TEST_TARGET;
+                    };
+                    TEST_PHASE_EXCEPTIONS = {
+                        isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+                        buildPhase = TEST_SOURCES;
+                        membershipExceptions = (PhaseOnly.swift,);
+                    };
+                    SYNC_GROUP = {
+                        isa = PBXFileSystemSynchronizedRootGroup;
+                        exceptions = (APP_EXCEPTIONS, TEST_EXCEPTIONS, TEST_PHASE_EXCEPTIONS,);
+                        path = Sync;
+                        sourceTree = "<group>";
+                    };
+                    ROOT_GROUP = {
+                        isa = PBXGroup;
+                        children = (SYNC_GROUP,);
+                        sourceTree = "<group>";
+                    };
+                    APP_SOURCES = { isa = PBXSourcesBuildPhase; files = (); };
+                    TEST_SOURCES = { isa = PBXSourcesBuildPhase; files = (); };
+                    APP_TARGET = {
+                        isa = PBXNativeTarget;
+                        buildPhases = (APP_SOURCES,);
+                        fileSystemSynchronizedGroups = (SYNC_GROUP,);
+                        name = App;
+                    };
+                    TEST_TARGET = {
+                        isa = PBXNativeTarget;
+                        buildPhases = (TEST_SOURCES,);
+                        name = AppTests;
+                    };
+                };
+            }
+            """,
+        ]) { directory in
+            let root = ProjectRoot(url: directory, kind: .xcodeProject)
+            let identifiers = moduleIdentifiers(for: discoverSourceFiles(in: root), in: root)
+            let projectPath = directory.appendingPathComponent("Example.xcodeproj").path
+            let app = "\(projectPath):APP_TARGET"
+            let tests = "\(projectPath):TEST_TARGET"
+
+            XCTAssertEqual(identifiers[directory.appendingPathComponent("Sync/Included.swift").path], [app])
+            XCTAssertEqual(identifiers[directory.appendingPathComponent("Sync/Excluded.swift").path], [])
+            XCTAssertEqual(identifiers[directory.appendingPathComponent("Sync/Shared.swift").path], [app, tests])
+            XCTAssertEqual(identifiers[directory.appendingPathComponent("Sync/PhaseOnly.swift").path], [app, tests])
+        }
+    }
+
     func testSourceFileIndexExtractsTypeMemberNames() {
         let source = """
         class Foo {

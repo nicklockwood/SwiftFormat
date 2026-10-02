@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder
     static let redundantSwiftUIGroup = FormatRule(
         help: "Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder.",
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["linebreaks", "prefer-content-builder"]
     ) { formatter in
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             let bodyScope: ClosedRange<Int>?
@@ -75,7 +75,10 @@ public extension FormatRule {
             )
 
             if let addViewBuilderAt {
-                formatter.insertResultBuilderAttribute("@ViewBuilder", at: addViewBuilderAt)
+                // @ContentBuilder requires the Swift 6.4 SDK (Xcode 27)
+                let preferContentBuilder = formatter.options.preferContentBuilder && formatter.options.swiftVersion >= "6.4"
+                let attribute = preferContentBuilder ? "@ContentBuilder" : "@ViewBuilder"
+                formatter.insertResultBuilderAttribute(attribute, at: addViewBuilderAt)
             }
         }
     } examples: {
@@ -93,7 +96,7 @@ public extension FormatRule {
 
         ```diff
           struct MyView: View {
-        +   @ViewBuilder
+        +   @ContentBuilder
             var content: some View {
         -     Group {
                 Text("foo")

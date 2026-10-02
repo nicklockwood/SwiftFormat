@@ -33,12 +33,12 @@ public extension FormatRule {
 
         ```diff
           struct MyView: View {
-        -   @ViewBuilder
+        -   @ContentBuilder
             var body: some View {
               helper
             }
 
-        -   @ViewBuilder
+        -   @ContentBuilder
             var helper: some View {
               VStack {
                 Text("baaz")
@@ -47,7 +47,7 @@ public extension FormatRule {
             }
 
             // Not redundant - multiple top-level views
-            @ViewBuilder
+            @ContentBuilder
             var helper2: some View {
               Text("foo")
               Text("bar")

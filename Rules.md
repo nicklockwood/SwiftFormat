@@ -816,12 +816,12 @@ attributes that Swift applies implicitly, or that aren't needed:
 
 ```diff
   struct MyView: View {
--   @ViewBuilder
+-   @ContentBuilder
     var body: some View {
       helper
     }
 
--   @ViewBuilder
+-   @ContentBuilder
     var helper: some View {
       VStack {
         Text("baaz")
@@ -830,7 +830,7 @@ attributes that Swift applies implicitly, or that aren't needed:
     }
 
     // Not redundant - multiple top-level views
-    @ViewBuilder
+    @ContentBuilder
     var helper2: some View {
       Text("foo")
       Text("bar")
@@ -2834,10 +2834,10 @@ Option | Description
 
 ```diff
   struct MyView<Content: View>: View {
-+     @ViewBuilder let content: Content
++     @ContentBuilder let content: Content
 -     let content: Content
 -
--     init(@ViewBuilder content: () -> Content) {
+-     init(@ContentBuilder content: () -> Content) {
 -         self.content = content()
 -     }
 
@@ -3235,7 +3235,7 @@ Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder.
 
 ```diff
   struct MyView: View {
-+   @ViewBuilder
++   @ContentBuilder
     var content: some View {
 -     Group {
         Text("foo")

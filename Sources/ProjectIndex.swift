@@ -174,6 +174,24 @@ struct SourceFileIndex: Codable, Equatable {
 
 /// A read-only view of all source summaries discovered for a formatting run.
 struct ProjectIndex {
+    enum FunctionCallReceiver: Equatable {
+        /// A call without an explicit receiver. `nil` represents a free function.
+        case unqualified(declaringType: String?, isStatic: Bool)
+        /// A call through `self` or another known instance.
+        case instance(type: String)
+        /// A call through `Self` or an explicit type name.
+        case type(String)
+    }
+
+    struct ResolvedFunctionCall: Equatable {
+        struct Match: Equatable {
+            var declaration: SourceFileIndex.FunctionDeclaration
+            var parameterIndices: [Int]
+        }
+
+        var matches: [Match]
+    }
+
     struct MemberNamesByType: Equatable {
         static let empty = MemberNamesByType()
 
@@ -287,6 +305,37 @@ struct ProjectIndex {
         }
     }
 
+    /// Resolves a project-defined function call in every module containing the current file.
+    ///
+    /// Resolution is intentionally conservative. Calls with an unknown receiver or multiple
+    /// matching overloads aren't resolved, since the index doesn't contain type information.
+    func resolveFunctionCall(
+        named name: String,
+        receiver: FunctionCallReceiver,
+        argumentLabels: [String?],
+        visibleFrom fileURL: URL
+    ) -> ResolvedFunctionCall? {
+        let path = fileURL.standardizedFileURL.path
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
+              !moduleIdentifiers.isEmpty
+        else { return nil }
+
+        var matches = [ResolvedFunctionCall.Match]()
+        for moduleIdentifier in moduleIdentifiers {
+            let declarations = functionDeclarationsByModule[moduleIdentifier]?[name] ?? []
+            let matching = declarations.compactMap { declaration -> ResolvedFunctionCall.Match? in
+                guard declaration.kind == .function,
+                      declaration.matches(receiver: receiver),
+                      let parameterIndices = declaration.parameterIndices(matching: argumentLabels)
+                else { return nil }
+                return .init(declaration: declaration, parameterIndices: parameterIndices)
+            }
+            guard matching.count == 1, let match = matching.first else { return nil }
+            matches.append(match)
+        }
+        return ResolvedFunctionCall(matches: matches)
+    }
+
     /// Whether a same-module declaration makes removing the final closure label unambiguous.
     func supportsTrailingClosure(
         functionNamed name: String,
@@ -334,6 +383,41 @@ struct ProjectIndex {
                 staticOrClass: members.staticOrClass.intersectingValues(with: other.staticOrClass)
             )
         }
+    }
+}
+
+private extension SourceFileIndex.FunctionDeclaration {
+    func matches(receiver: ProjectIndex.FunctionCallReceiver) -> Bool {
+        switch receiver {
+        case let .unqualified(declaringType, isStatic):
+            return self.declaringType == declaringType && self.isStatic == isStatic
+        case let .instance(type):
+            return declaringType == type && !isStatic
+        case let .type(type):
+            return declaringType == type && isStatic
+        }
+    }
+
+    func parameterIndices(matching callLabels: [String?]) -> [Int]? {
+        var parameterIndex = 0
+        var parameterIndices = [Int]()
+        for callLabel in callLabels {
+            while parameterIndex < argumentLabels.count,
+                  argumentLabels[parameterIndex] != callLabel,
+                  defaultArgumentIndices.contains(parameterIndex)
+            {
+                parameterIndex += 1
+            }
+            guard parameterIndex < argumentLabels.count,
+                  argumentLabels[parameterIndex] == callLabel
+            else { return nil }
+            parameterIndices.append(parameterIndex)
+            parameterIndex += 1
+        }
+        guard argumentLabels.indices.dropFirst(parameterIndex).allSatisfy(defaultArgumentIndices.contains) else {
+            return nil
+        }
+        return parameterIndices
     }
 }
 

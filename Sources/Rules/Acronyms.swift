@@ -12,6 +12,7 @@ public extension FormatRule {
     static let acronyms = FormatRule(
         help: "Capitalize acronyms when the first character is capitalized.",
         disabledByDefault: true,
+        usesProjectContext: true,
         options: ["acronyms", "preserve-acronyms", "acronym-visibility"]
     ) { formatter in
         func capitalizingAcronyms(in text: String) -> String {
@@ -83,6 +84,18 @@ public extension FormatRule {
         var declaredNames = Set<String>()
         var protectedNames = Set<String>()
         var eligibleNames = Set<String>()
+        let projectDeclarationNames: ProjectIndex.DeclarationNames? = formatter.currentFileURL.flatMap { fileURL in
+            guard formatter.options.acronymVisibility > .fileprivate else { return nil }
+            return formatter.projectIndex?.declarationNames(
+                upTo: formatter.options.acronymVisibility,
+                visibleFrom: fileURL
+            )
+        }
+        if let projectDeclarationNames {
+            declaredNames.formUnion(projectDeclarationNames.declared)
+            protectedNames.formUnion(projectDeclarationNames.protected)
+            eligibleNames.formUnion(projectDeclarationNames.eligible)
+        }
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             let names = formatter.namesInDeclaration(at: declaration.keywordIndex)
                 ?? declaration.name.map { [$0] }
@@ -154,6 +167,7 @@ public extension FormatRule {
                 if let renamed = renames[name] {
                     capitalizedName = renamed
                 } else if formatter.options.acronymVisibility > .fileprivate,
+                          projectDeclarationNames == nil,
                           !declaredNames.contains(name)
                 {
                     capitalizedName = capitalizingAcronyms(in: name)

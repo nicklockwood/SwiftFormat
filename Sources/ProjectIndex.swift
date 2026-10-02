@@ -290,6 +290,17 @@ struct ProjectIndex {
         }
     }
 
+    /// Whether the given type is declared in every module containing the current file.
+    func containsType(named name: String, visibleFrom fileURL: URL) -> Bool {
+        let path = fileURL.standardizedFileURL.path
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
+              !moduleIdentifiers.isEmpty
+        else { return false }
+        return moduleIdentifiers.allSatisfy { moduleIdentifier in
+            typeVisibilities[TypeKey(moduleIdentifier: moduleIdentifier, name: name)] != nil
+        }
+    }
+
     /// Project functions with `@autoclosure` arguments available in every module containing the current file.
     func autoclosureFunctionNames(visibleFrom fileURL: URL) -> Set<String> {
         let path = fileURL.standardizedFileURL.path
@@ -339,7 +350,7 @@ struct ProjectIndex {
     /// Whether a same-module declaration makes removing the final closure label unambiguous.
     func supportsTrailingClosure(
         functionNamed name: String,
-        declaredInType declaringType: String?,
+        receiver: FunctionCallReceiver,
         argumentLabels: [String?],
         visibleFrom fileURL: URL
     ) -> Bool {
@@ -349,22 +360,75 @@ struct ProjectIndex {
               let finalArgumentIndex = argumentLabels.indices.last
         else { return false }
 
-        let precedingLabels = argumentLabels.dropLast()
+        guard let resolvedCall = resolveFunctionCall(
+            named: name,
+            receiver: receiver,
+            argumentLabels: argumentLabels,
+            visibleFrom: fileURL
+        ), resolvedCall.matches.allSatisfy({ match in
+            guard let parameterIndex = match.parameterIndices.last else { return false }
+            return match.declaration.closureArgumentIndices.contains(parameterIndex)
+        }) else { return false }
+
         return moduleIdentifiers.allSatisfy { moduleIdentifier in
             let declarations = functionDeclarationsByModule[moduleIdentifier]?[name]?
-                .filter { $0.declaringType == declaringType } ?? []
-            guard declarations.contains(where: {
-                $0.argumentLabels == argumentLabels &&
-                    $0.closureArgumentIndices.contains(finalArgumentIndex)
-            }) else { return false }
-            return declarations.allSatisfy { declaration in
-                guard declaration.argumentLabels.count == argumentLabels.count,
-                      declaration.argumentLabels.dropLast().elementsEqual(precedingLabels),
-                      declaration.closureArgumentIndices.contains(finalArgumentIndex)
-                else { return true }
-                return declaration.argumentLabels.last == argumentLabels.last
+                .filter { declaration in
+                    declaration.kind == .function && declaration.matches(receiver: receiver) &&
+                        declaration.parameterIndices(
+                            matching: argumentLabels,
+                            ignoringLabelAt: finalArgumentIndex
+                        ) != nil
+                } ?? []
+            return declarations.count == 1 && declarations[0].argumentLabels[
+                declarations[0].parameterIndices(
+                    matching: argumentLabels,
+                    ignoringLabelAt: finalArgumentIndex
+                )![finalArgumentIndex]
+            ] == argumentLabels[finalArgumentIndex]
+        }
+    }
+
+    /// Classifies the receiver of a call when it can be established without type checking.
+    func functionCallReceiver(
+        at identifierIndex: Int,
+        in formatter: Formatter,
+        visibleFrom fileURL: URL,
+        declarations: [Declaration]? = nil
+    ) -> FunctionCallReceiver? {
+        let enclosingType = formatter.parseEnclosingType(containing: identifierIndex, declarations: declarations)
+        let enclosingTypeName = enclosingType?.fullyQualifiedName
+        if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
+           formatter.tokens[dotIndex] == .operator(".", .infix)
+        {
+            guard let receiverIndex = formatter.index(
+                of: .nonSpaceOrCommentOrLinebreak,
+                before: dotIndex
+            ) else { return nil }
+            switch formatter.tokens[receiverIndex].string {
+            case "self":
+                return enclosingTypeName.map(FunctionCallReceiver.instance(type:))
+            case "Self":
+                return enclosingTypeName.map(FunctionCallReceiver.type)
+            case let typeName where containsType(named: typeName, visibleFrom: fileURL):
+                return .type(typeName)
+            default:
+                return nil
             }
         }
+
+        guard let enclosingType else {
+            return .unqualified(declaringType: nil, isStatic: false)
+        }
+        let containingDeclaration = enclosingType.body.declaration(containing: identifierIndex)
+        let parentDeclarations = containingDeclaration.map {
+            Array($0.parentDeclarations.reversed())
+        } ?? []
+        let declarations = (containingDeclaration.map { [$0] } ?? []) +
+            parentDeclarations
+        let isStatic = declarations.contains(where: {
+            $0.modifiers.contains("static") || $0.modifiers.contains("class")
+        })
+        return .unqualified(declaringType: enclosingTypeName, isStatic: isStatic)
     }
 
     /// Project-defined members available in every module containing the current file, grouped by type.
@@ -398,26 +462,40 @@ private extension SourceFileIndex.FunctionDeclaration {
         }
     }
 
-    func parameterIndices(matching callLabels: [String?]) -> [Int]? {
-        var parameterIndex = 0
-        var parameterIndices = [Int]()
-        for callLabel in callLabels {
-            while parameterIndex < argumentLabels.count,
-                  argumentLabels[parameterIndex] != callLabel,
-                  defaultArgumentIndices.contains(parameterIndex)
-            {
-                parameterIndex += 1
+    func parameterIndices(
+        matching callLabels: [String?],
+        ignoringLabelAt ignoredCallIndex: Int? = nil
+    ) -> [Int]? {
+        func match(
+            callIndex: Int,
+            parameterIndex: Int,
+            parameterIndices: [Int]
+        ) -> [Int]? {
+            guard callIndex < callLabels.count else {
+                return argumentLabels.indices.dropFirst(parameterIndex)
+                    .allSatisfy(defaultArgumentIndices.contains) ? parameterIndices : nil
             }
-            guard parameterIndex < argumentLabels.count,
-                  argumentLabels[parameterIndex] == callLabel
-            else { return nil }
-            parameterIndices.append(parameterIndex)
-            parameterIndex += 1
-        }
-        guard argumentLabels.indices.dropFirst(parameterIndex).allSatisfy(defaultArgumentIndices.contains) else {
+            guard parameterIndex < argumentLabels.count else { return nil }
+
+            if callIndex == ignoredCallIndex || argumentLabels[parameterIndex] == callLabels[callIndex],
+               let result = match(
+                   callIndex: callIndex + 1,
+                   parameterIndex: parameterIndex + 1,
+                   parameterIndices: parameterIndices + [parameterIndex]
+               )
+            {
+                return result
+            }
+            if defaultArgumentIndices.contains(parameterIndex) {
+                return match(
+                    callIndex: callIndex,
+                    parameterIndex: parameterIndex + 1,
+                    parameterIndices: parameterIndices
+                )
+            }
             return nil
         }
-        return parameterIndices
+        return match(callIndex: 0, parameterIndex: 0, parameterIndices: [])
     }
 }
 

@@ -10,6 +10,31 @@ import XCTest
 @testable import SwiftFormat
 
 final class TrailingClosuresTests: XCTestCase {
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String,
+        declarations: String,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Declarations.swift")
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            callURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.trailingClosures],
+            to: tokenize(input),
+            with: .default,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: callURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output, file: file, line: line)
+    }
+
     func testAnonymousClosureArgumentMadeTrailing() {
         let input = """
         foo(foo: 5, { /* some code */ })
@@ -25,6 +50,93 @@ final class TrailingClosuresTests: XCTestCase {
         foo(foo: 5, bar: { /* some code */ })
         """
         testFormatting(for: input, rule: .trailingClosures)
+    }
+
+    func testProjectSignaturesEnableNamedTrailingClosuresForKnownReceivers() throws {
+        let declarations = """
+        func global(value: Int = 0, completion: () -> Void) {}
+        struct Worker {
+            func perform(value: Int = 0, completion: () -> Void) {}
+            static func make(value: Int = 0, completion: () -> Void) {}
+        }
+        """
+        let input = """
+        global(completion: {})
+        extension Worker {
+            func test(worker: Worker) {
+                perform(completion: {})
+                self.perform(completion: {})
+                Self.make(completion: {})
+                Worker.make(completion: {})
+                worker.perform(completion: {})
+            }
+            static func testStatic() {
+                make(completion: {})
+                Self.make(completion: {})
+            }
+        }
+        """
+        let output = """
+        global {}
+        extension Worker {
+            func test(worker: Worker) {
+                perform {}
+                self.perform {}
+                Self.make {}
+                Worker.make {}
+                worker.perform(completion: {})
+            }
+            static func testStatic() {
+                make {}
+                Self.make {}
+            }
+        }
+        """
+
+        try testProjectFormatting(for: input, output, declarations: declarations)
+    }
+
+    func testProjectSignatureDoesNotResolveCallInsideLocalTypeAsOuterType() throws {
+        let declarations = """
+        struct Worker {
+            func perform(completion: () -> Void) {}
+        }
+        """
+        let input = """
+        extension Worker {
+            func test() {
+                struct Local {
+                    func perform(completion: () -> Void) {}
+                    func perform(other: () -> Void) {}
+                    func test() {
+                        perform(completion: {})
+                    }
+                }
+            }
+        }
+        """
+        try testProjectFormatting(for: input, input, declarations: declarations)
+    }
+
+    func testProjectSignaturesDoNotChangeCallsWithoutTrailingClosureLiterals() throws {
+        let declarations = """
+        struct Worker {
+            func perform(completion: () -> Void) {}
+            func perform(completion: () -> Void, value: Int) {}
+            func perform(completion: () -> Void, finished: () -> Void) {}
+        }
+        """
+        let input = """
+        extension Worker {
+            func test(completion: () -> Void) {
+                print(1)
+                perform(completion: completion)
+                perform(completion: {}, value: 1)
+                perform(completion: {}) {}
+            }
+        }
+        """
+        try testProjectFormatting(for: input, input, declarations: declarations)
     }
 
     func testClosureArgumentPassedToFunctionInArgumentsNotMadeTrailing() {

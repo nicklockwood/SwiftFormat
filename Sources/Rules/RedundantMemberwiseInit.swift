@@ -358,10 +358,10 @@ public extension FormatRule {
 
         ```diff
           struct MyView<Content: View>: View {
-        +     @ViewBuilder let content: Content
+        +     @ContentBuilder let content: Content
         -     let content: Content
         -
-        -     init(@ViewBuilder content: () -> Content) {
+        -     init(@ContentBuilder content: () -> Content) {
         -         self.content = content()
         -     }
 

@@ -7,6 +7,9 @@
 //
 
 import Foundation
+#if canImport(FoundationXML)
+    import FoundationXML
+#endif
 
 /// Immutable project information available to rules while formatting a file.
 struct FormattingContext {
@@ -427,12 +430,26 @@ func projectRoot(for inputURL: URL) -> ProjectRoot {
 
 /// Best-effort discovery of Swift source files beneath a project root.
 func discoverSourceFiles(in root: ProjectRoot) -> [URL] {
+    var sourceRoots = [root.url]
+    if root.kind == .xcodeProject {
+        sourceRoots.append(contentsOf: xcodeProjectURLs(in: root.url).map { $0.deletingLastPathComponent() })
+    }
+    var filesByPath = [String: URL]()
+    for sourceRoot in Set(sourceRoots.map(\.standardizedFileURL)) {
+        for fileURL in discoverSourceFiles(beneath: sourceRoot) {
+            filesByPath[fileURL.path] = fileURL
+        }
+    }
+    return filesByPath.values.sorted { $0.path < $1.path }
+}
+
+private func discoverSourceFiles(beneath rootURL: URL) -> [URL] {
     let manager = FileManager.default
     let skippedDirectories: Set = [
         ".build", ".git", ".swiftpm", "DerivedData",
     ]
     guard let enumerator = manager.enumerator(
-        at: root.url,
+        at: rootURL,
         includingPropertiesForKeys: [.isRegularFileKey, .isDirectoryKey, .isSymbolicLinkKey],
         options: [.skipsHiddenFiles]
     ) else { return [] }
@@ -470,17 +487,15 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Se
             return (filePath, ["\(rootPath):\(components[0]):\(components[1])"])
         })
     case .xcodeProject:
-        let projectURLs = (try? FileManager.default.contentsOfDirectory(
-            at: root.url,
-            includingPropertiesForKeys: nil
-        ))?.filter { $0.pathExtension == "xcodeproj" } ?? []
+        let projectURLs = xcodeProjectURLs(in: root.url)
         var targetsByFile = [String: Set<String>]()
         for projectURL in projectURLs {
             let projectFileURL = projectURL.appendingPathComponent("project.pbxproj")
+            let sourceRoot = projectURL.deletingLastPathComponent()
             guard let contents = try? String(contentsOf: projectFileURL),
                   let project = XcodeProject(
                       contents: contents,
-                      sourceRoot: root.url,
+                      sourceRoot: sourceRoot,
                       sourceFiles: fileURLs
                   )
             else { continue }
@@ -497,6 +512,87 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Se
             let path = fileURL.standardizedFileURL.path
             return path.hasPrefix(rootPath + "/") ? (path, [rootPath]) : nil
         })
+    }
+}
+
+private func xcodeProjectURLs(in rootURL: URL) -> [URL] {
+    let manager = FileManager.default
+    let contents = (try? manager.contentsOfDirectory(
+        at: rootURL,
+        includingPropertiesForKeys: nil
+    )) ?? []
+    var projectsByPath = [String: URL]()
+    for projectURL in contents where projectURL.pathExtension == "xcodeproj" {
+        let projectURL = projectURL.standardizedFileURL
+        projectsByPath[projectURL.path] = projectURL
+    }
+    for workspaceURL in contents where workspaceURL.pathExtension == "xcworkspace" {
+        let dataURL = workspaceURL.appendingPathComponent("contents.xcworkspacedata")
+        guard let parser = XMLParser(contentsOf: dataURL) else { continue }
+        let delegate = XcodeWorkspaceParser(rootURL: workspaceURL.deletingLastPathComponent())
+        parser.delegate = delegate
+        guard parser.parse() else { continue }
+        for projectURL in delegate.projectURLs {
+            projectsByPath[projectURL.path] = projectURL
+        }
+    }
+    return projectsByPath.values.sorted { $0.path < $1.path }
+}
+
+private final class XcodeWorkspaceParser: NSObject, XMLParserDelegate {
+    private let rootURL: URL
+    private var groupURLs: [URL]
+    var projectURLs = [URL]()
+
+    init(rootURL: URL) {
+        self.rootURL = rootURL.standardizedFileURL
+        groupURLs = [self.rootURL]
+    }
+
+    func parser(
+        _: XMLParser,
+        didStartElement elementName: String,
+        namespaceURI _: String?,
+        qualifiedName _: String?,
+        attributes attributeDict: [String: String] = [:]
+    ) {
+        if elementName == "Group" {
+            let url = attributeDict["location"].flatMap(resolve) ?? groupURLs.last!
+            groupURLs.append(url)
+        } else if elementName == "FileRef",
+                  let location = attributeDict["location"],
+                  let url = resolve(location),
+                  url.pathExtension == "xcodeproj"
+        {
+            projectURLs.append(url.standardizedFileURL)
+        }
+    }
+
+    func parser(
+        _: XMLParser,
+        didEndElement elementName: String,
+        namespaceURI _: String?,
+        qualifiedName _: String?
+    ) {
+        if elementName == "Group", groupURLs.count > 1 {
+            groupURLs.removeLast()
+        }
+    }
+
+    private func resolve(_ location: String) -> URL? {
+        guard let separator = location.firstIndex(of: ":") else { return nil }
+        let type = String(location[..<separator])
+        let path = String(location[location.index(after: separator)...])
+        switch type {
+        case "group":
+            return groupURLs.last?.appendingPathComponent(path).standardizedFileURL
+        case "container", "self":
+            return rootURL.appendingPathComponent(path).standardizedFileURL
+        case "absolute":
+            return URL(fileURLWithPath: path).standardizedFileURL
+        default:
+            return nil
+        }
     }
 }
 

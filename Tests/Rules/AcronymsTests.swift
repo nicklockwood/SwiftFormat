@@ -163,4 +163,97 @@ final class AcronymsTests: XCTestCase {
         let options = FormatOptions(acronyms: ["ADAM"], preserveAcronyms: ["kMDItemAppStoreAdamID"])
         testFormatting(for: input, rule: .acronyms, options: options)
     }
+
+    func testDefaultVisibilityCapitalizesInternalButNotPublicDeclarations() {
+        let input = """
+        public let publicUrl = ""
+        let internalUrl = ""
+        fileprivate let fileprivateUrl = ""
+        private let privateUrl = ""
+        print(publicUrl, internalUrl, fileprivateUrl, privateUrl)
+        """
+        let output = """
+        public let publicUrl = ""
+        let internalURL = ""
+        fileprivate let fileprivateURL = ""
+        private let privateURL = ""
+        print(publicUrl, internalURL, fileprivateURL, privateURL)
+        """
+        testFormatting(for: input, output, rule: .acronyms, exclude: [.redundantFileprivate])
+    }
+
+    func testPublicVisibilityCapitalizesPublicButNotOpenDeclarations() {
+        let input = """
+        public let publicUrl = ""
+
+        open class UrlProvider {
+            public func loadUrl() {}
+            open func openUrl() {}
+        }
+        """
+        let output = """
+        public let publicURL = ""
+
+        open class UrlProvider {
+            public func loadURL() {}
+            open func openUrl() {}
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .acronyms,
+            options: FormatOptions(acronymVisibility: .public)
+        )
+    }
+
+    func testPrivateVisibilityPreservesUnknownAndWiderDeclarations() {
+        let input = """
+        let internalUrl = externalApi.loadUrl()
+        private let privateUrl = internalUrl
+        """
+        let output = """
+        let internalUrl = externalApi.loadUrl()
+        private let privateURL = internalUrl
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .acronyms,
+            options: FormatOptions(acronymVisibility: .private)
+        )
+    }
+
+    func testPreservesNameWhenCapitalizationWouldCollide() {
+        let input = """
+        let destinationUrl = ""
+        let destinationURL = ""
+        print(destinationUrl, destinationURL)
+        """
+        testFormatting(for: input, rule: .acronyms)
+    }
+
+    func testPreservesProtocolAndOverrideContracts() {
+        let input = """
+        protocol UrlLoading {
+            func loadUrl()
+        }
+
+        class UrlLoader: UrlLoading {
+            func loadUrl() {}
+            override func prepareUrl() {}
+        }
+        """
+        let output = """
+        protocol URLLoading {
+            func loadUrl()
+        }
+
+        class URLLoader: URLLoading {
+            func loadUrl() {}
+            override func prepareUrl() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .acronyms)
+    }
 }

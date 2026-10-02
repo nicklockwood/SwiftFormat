@@ -12,21 +12,11 @@ public extension FormatRule {
     static let acronyms = FormatRule(
         help: "Capitalize acronyms when the first character is capitalized.",
         disabledByDefault: true,
-        options: ["acronyms", "preserve-acronyms"]
+        options: ["acronyms", "preserve-acronyms", "acronym-visibility"]
     ) { formatter in
-        formatter.forEachToken { i, token in
-            let isComment: Bool
-            var updatedText: String
-            switch token {
-            case let .identifier(text) where !formatter.options.preserveAcronyms.contains(text):
-                isComment = false
-                updatedText = text
-            case let .commentBody(text):
-                isComment = true
-                updatedText = text
-            default:
-                return
-            }
+        func capitalizingAcronyms(in text: String) -> String {
+            guard !formatter.options.preserveAcronyms.contains(text) else { return text }
+            var updatedText = text
 
             // Match acronym and return index after
             var index = updatedText.startIndex
@@ -87,12 +77,97 @@ public extension FormatRule {
                 }
                 index = updatedText.index(after: index)
             }
+            return updatedText
+        }
 
-            // Replace token
-            if isComment {
-                formatter.replaceToken(at: i, with: .commentBody(updatedText))
+        var declaredNames = Set<String>()
+        var protectedNames = Set<String>()
+        var eligibleNames = Set<String>()
+        formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
+            let names = formatter.namesInDeclaration(at: declaration.keywordIndex)
+                ?? declaration.name.map { [$0] }
+                ?? []
+            declaredNames.formUnion(names)
+
+            let functionArgumentNames: [String]
+            if ["func", "init", "subscript"].contains(declaration.keyword),
+               let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
+            {
+                functionArgumentNames = function.arguments.flatMap { argument in
+                    [argument.externalLabel, argument.internalLabel].compactMap { $0 }
+                }
+                declaredNames.formUnion(functionArgumentNames)
             } else {
-                formatter.replaceToken(at: i, with: .identifier(updatedText))
+                functionArgumentNames = []
+            }
+
+            if formatter.declarationCanBeRenamed(
+                declaration,
+                upTo: formatter.options.acronymVisibility
+            ) {
+                eligibleNames.formUnion(names)
+                eligibleNames.formUnion(functionArgumentNames)
+            } else {
+                protectedNames.formUnion(names)
+                protectedNames.formUnion(functionArgumentNames)
+            }
+        }
+
+        // Local declarations aren't included in the declaration tree, but are safe to rename.
+        formatter.forEachToken { index, token in
+            guard case .keyword = token,
+                  formatter.declarationScope(at: index) == .local,
+                  let names = formatter.namesInDeclaration(at: index)
+            else { return }
+            declaredNames.formUnion(names)
+            eligibleNames.formUnion(names)
+            if ["func", "init", "subscript"].contains(token.string),
+               let function = formatter.parseFunctionDeclaration(keywordIndex: index)
+            {
+                let argumentNames = function.arguments.flatMap { argument in
+                    [argument.externalLabel, argument.internalLabel].compactMap { $0 }
+                }
+                declaredNames.formUnion(argumentNames)
+                eligibleNames.formUnion(argumentNames)
+            }
+        }
+
+        var renames = [String: String]()
+        var capitalizedNames = [String: [String]]()
+        for name in eligibleNames.subtracting(protectedNames) {
+            let capitalizedName = capitalizingAcronyms(in: name)
+            guard capitalizedName != name else { continue }
+            capitalizedNames[capitalizedName, default: []].append(name)
+        }
+
+        // Avoid introducing an ambiguous reference or combining two distinct declarations.
+        for (capitalizedName, names) in capitalizedNames
+            where names.count == 1 && !declaredNames.contains(capitalizedName)
+        {
+            renames[names[0]] = capitalizedName
+        }
+
+        formatter.forEachToken { index, token in
+            switch token {
+            case let .identifier(name):
+                let capitalizedName: String
+                if let renamed = renames[name] {
+                    capitalizedName = renamed
+                } else if formatter.options.acronymVisibility > .fileprivate,
+                          !declaredNames.contains(name)
+                {
+                    capitalizedName = capitalizingAcronyms(in: name)
+                } else {
+                    return
+                }
+                guard capitalizedName != name else { return }
+                formatter.replaceToken(at: index, with: .identifier(capitalizedName))
+            case let .commentBody(comment):
+                let capitalizedComment = capitalizingAcronyms(in: comment)
+                guard capitalizedComment != comment else { return }
+                formatter.replaceToken(at: index, with: .commentBody(capitalizedComment))
+            default:
+                break
             }
         }
     } examples: {

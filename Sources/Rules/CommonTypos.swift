@@ -31,7 +31,10 @@ public extension FormatRule {
                 ?? []
             declaredNames.formUnion(names)
 
-            guard formatter.declarationCanHaveTyposCorrected(declaration) else {
+            guard formatter.declarationCanBeRenamed(
+                declaration,
+                upTo: formatter.options.typoVisibility
+            ) else {
                 protectedNames.formUnion(names)
                 if let function = formatter.commonTyposFunctionDeclaration(for: declaration) {
                     let argumentNames = function.arguments.flatMap { argument in
@@ -131,56 +134,6 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Whether renaming this declaration cannot affect a public or serialized API contract.
-    func declarationCanHaveTyposCorrected(_ declaration: Declaration) -> Bool {
-        guard declaration.keyword != "extension",
-              !["case", "import", "operator", "precedencegroup"].contains(declaration.keyword),
-              effectiveVisibility(of: declaration) <= options.typoVisibility
-        else { return false }
-
-        let contractModifiers = [
-            "@IBAction", "@IBInspectable", "@IBOutlet", "@NSManaged", "@GKInspectable",
-            "@_cdecl", "@_silgen_name", "@inlinable", "@usableFromInline", "@objc",
-            "dynamic", "override",
-        ]
-        let modifiers = Set(declaration.modifiers)
-        guard contractModifiers.allSatisfy({ !modifiers.contains($0) }),
-              !declaration.parentDeclarations.contains(where: { parent in
-                  parent.keyword == "protocol" ||
-                      parent.name == "CodingKeys" ||
-                      parent.modifiers.contains("@objcMembers")
-              })
-        else { return false }
-
-        if declaration.isStoredProperty {
-            // A property wrapper can expose projected/backing names or persist the property.
-            guard declaration.attributes.isEmpty else { return false }
-
-            // Renaming a synthesized Codable field changes its serialized key.
-            if declaration.parentType?.conformances.contains(where: {
-                let name = $0.conformance.string.split(separator: ".").last.map(String.init)
-                return ["Codable", "Decodable", "Encodable"].contains(name)
-            }) == true {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    /// The declaration's visibility after accounting for enclosing types and extensions.
-    func effectiveVisibility(of declaration: Declaration) -> Visibility {
-        let inheritedVisibility: Visibility?
-        if declaration.visibility() == nil, declaration.parent?.keyword == "extension" {
-            inheritedVisibility = declaration.parent?.visibility()
-        } else {
-            inheritedVisibility = nil
-        }
-        let visibility = declaration.visibility() ?? inheritedVisibility ?? .internal
-        guard let parent = declaration.parent else { return visibility }
-        return min(visibility, effectiveVisibility(of: parent))
-    }
-
     func commonTyposFunctionDeclaration(for declaration: Declaration) -> FunctionDeclaration? {
         guard ["func", "init", "subscript"].contains(declaration.keyword) else { return nil }
         return parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)

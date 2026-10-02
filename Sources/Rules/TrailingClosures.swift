@@ -24,6 +24,8 @@ public extension FormatRule {
             "expect", // Special case to support autoclosure arguments in the Nimble framework
         ] + formatter.options.neverTrailing)
 
+        // Declaration ranges track edits, so receiver resolution can reuse this tree throughout the rule.
+        let declarations = formatter.projectIndex == nil ? nil : formatter.parseDeclarations()
         formatter.forEach(.startOfScope("(")) { functionOpenParen, _ in
             guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: functionOpenParen) else { return }
             let name = formatter.tokens[identifierIndex].string
@@ -36,22 +38,24 @@ public extension FormatRule {
 
             // Parse all arguments to detect multiple trailing closures
             let arguments = formatter.parseFunctionCallArguments(startOfScope: functionOpenParen)
-            let projectSupportsTrailingClosure = formatter.currentFileURL.map { fileURL in
-                guard let projectIndex = formatter.projectIndex else { return false }
-                let previousTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex)
-                let callIsQualified = previousTokenIndex.map {
-                    formatter.tokens[$0] == .operator(".", .infix)
+            // Defer receiver resolution until a labeled closure actually needs project-based opt-in.
+            let projectSupportsTrailingClosure = {
+                formatter.currentFileURL.map { fileURL in
+                    guard let projectIndex = formatter.projectIndex else { return false }
+                    guard let receiver = projectIndex.functionCallReceiver(
+                        at: identifierIndex,
+                        in: formatter,
+                        visibleFrom: fileURL,
+                        declarations: declarations
+                    ) else { return false }
+                    return projectIndex.supportsTrailingClosure(
+                        functionNamed: name,
+                        receiver: receiver,
+                        argumentLabels: arguments.map(\.label),
+                        visibleFrom: fileURL
+                    )
                 } ?? false
-                guard !callIsQualified else { return false }
-                let enclosingTypeName = formatter.parseEnclosingType(containing: identifierIndex)?.fullyQualifiedName
-                return projectIndex.supportsTrailingClosure(
-                    functionNamed: name,
-                    declaredInType: enclosingTypeName,
-                    argumentLabels: arguments.map(\.label),
-                    visibleFrom: fileURL
-                )
-            } ?? false
-
+            }
             let trailingClosures = arguments.suffix(while: { arg in
                 let range = arg.valueRange
                 guard let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range.lowerBound ..< range.upperBound + 1),
@@ -73,7 +77,7 @@ public extension FormatRule {
             // Handle a single trailing closure
             if trailingClosures.count == 1 {
                 guard trailingClosures[0].label == nil || useTrailing.contains(name) ||
-                    projectSupportsTrailingClosure
+                    projectSupportsTrailingClosure()
                 else { return }
 
                 let closure = trailingClosures[0]

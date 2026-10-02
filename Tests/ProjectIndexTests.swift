@@ -385,19 +385,19 @@ final class ProjectIndexTests: XCTestCase {
 
         XCTAssertTrue(projectIndex.supportsTrailingClosure(
             functionNamed: "perform",
-            declaredInType: nil,
+            receiver: .unqualified(declaringType: nil, isStatic: false),
             argumentLabels: ["value", "completion"],
             visibleFrom: callURL
         ))
         XCTAssertFalse(projectIndex.supportsTrailingClosure(
             functionNamed: "ambiguous",
-            declaredInType: nil,
+            receiver: .unqualified(declaringType: nil, isStatic: false),
             argumentLabels: ["value", "completion"],
             visibleFrom: callURL
         ))
         XCTAssertFalse(projectIndex.supportsTrailingClosure(
             functionNamed: "evaluate",
-            declaredInType: nil,
+            receiver: .unqualified(declaringType: nil, isStatic: false),
             argumentLabels: ["expression"],
             visibleFrom: callURL
         ))
@@ -559,13 +559,13 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertEqual(projectIndex.autoclosureFunctionNames(visibleFrom: callURL), ["sharedVerify"])
         XCTAssertFalse(projectIndex.supportsTrailingClosure(
             functionNamed: "appPerform",
-            declaredInType: nil,
+            receiver: .unqualified(declaringType: nil, isStatic: false),
             argumentLabels: ["completion"],
             visibleFrom: callURL
         ))
         XCTAssertTrue(projectIndex.supportsTrailingClosure(
             functionNamed: "sharedPerform",
-            declaredInType: nil,
+            receiver: .unqualified(declaringType: nil, isStatic: false),
             argumentLabels: ["completion"],
             visibleFrom: callURL
         ))

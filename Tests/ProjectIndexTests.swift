@@ -308,11 +308,60 @@ final class ProjectIndexTests: XCTestCase {
                 autoclosureArgumentIndices: []
             ),
             .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
+            .init(name: "identity", argumentLabels: ["value"], autoclosureArgumentIndices: []),
             .init(
                 name: "run",
                 declaringType: "Worker",
                 argumentLabels: ["completion"],
                 closureArgumentIndices: [0],
+                autoclosureArgumentIndices: []
+            ),
+        ])
+    }
+
+    func testSourceFileIndexExtractsCallableSignatures() {
+        let source = """
+        public func load(_ path: String, retries: Int = 3) {}
+        struct Worker {
+            package static func make(configuration: Configuration = .default) -> Worker { Worker() }
+            init(value: Int = 0) {}
+            subscript(index: Int) -> Int { index }
+            private func hidden() {}
+        }
+        """
+
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+
+        XCTAssertEqual(index.functionDeclarations, [
+            .init(
+                name: "load",
+                visibility: Visibility.public.rawValue,
+                argumentLabels: [nil, "retries"],
+                defaultArgumentIndices: [1],
+                autoclosureArgumentIndices: []
+            ),
+            .init(
+                name: "make",
+                declaringType: "Worker",
+                isStatic: true,
+                visibility: Visibility.package.rawValue,
+                argumentLabels: ["configuration"],
+                defaultArgumentIndices: [0],
+                autoclosureArgumentIndices: []
+            ),
+            .init(
+                name: "init",
+                kind: .initializer,
+                declaringType: "Worker",
+                argumentLabels: ["value"],
+                defaultArgumentIndices: [0],
+                autoclosureArgumentIndices: []
+            ),
+            .init(
+                name: "subscript",
+                kind: .subscriptDeclaration,
+                declaringType: "Worker",
+                argumentLabels: ["index"],
                 autoclosureArgumentIndices: []
             ),
         ])

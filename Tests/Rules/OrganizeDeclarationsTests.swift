@@ -467,7 +467,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -535,7 +535,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -609,7 +609,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -2902,7 +2902,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -2969,7 +2969,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantMemberwiseInit, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantMemberwiseInit, .contentBuilder]
         )
     }
 
@@ -3040,7 +3040,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3107,7 +3107,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .contentBuilder]
         )
     }
 
@@ -3210,7 +3210,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3267,7 +3267,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3318,7 +3318,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3375,7 +3375,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3617,7 +3617,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantViewBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .contentBuilder]
         )
     }
 

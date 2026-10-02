@@ -220,6 +220,14 @@ public enum SingleLineTernary: String, CaseIterable {
     case convert
 }
 
+/// Whether the `@ContentBuilder` result builder attribute should be implicit or explicit
+public enum ContentBuilderMode: String, CaseIterable {
+    /// Remove result builder attributes that Swift applies implicitly, or that aren't needed
+    case implicit
+    /// Add an explicit result builder attribute to declarations that return SwiftUI content
+    case explicit
+}
+
 /// Whether to insert, remove, or preserve spaces around operators
 public enum OperatorSpacingMode: String, CaseIterable {
     case insert = "spaced"
@@ -1021,6 +1029,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var booleanGuardsInTests: BooleanGuardsInTests
     public var redundantOptionalBinding: RedundantOptionalBindingMode
     public var singleLineTernary: SingleLineTernary
+    public var contentBuilder: ContentBuilderMode
+    public var preferContentBuilder: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -1180,6 +1190,8 @@ public struct FormatOptions: CustomStringConvertible {
                 booleanGuardsInTests: BooleanGuardsInTests = .preserveXCTest,
                 redundantOptionalBinding: RedundantOptionalBindingMode = .sameNameOnly,
                 singleLineTernary: SingleLineTernary = .convert,
+                contentBuilder: ContentBuilderMode = .implicit,
+                preferContentBuilder: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1328,6 +1340,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.booleanGuardsInTests = booleanGuardsInTests
         self.redundantOptionalBinding = redundantOptionalBinding
         self.singleLineTernary = singleLineTernary
+        self.contentBuilder = contentBuilder
+        self.preferContentBuilder = preferContentBuilder
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

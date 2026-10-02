@@ -79,24 +79,24 @@ struct SourceFileIndex: Codable, Equatable {
         var staticMembers: [String]
     }
 
-    static let schemaVersion = 4
+    static let schemaVersion = 5
 
     var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
-    var moduleIdentifier: String?
+    var moduleIdentifiers: [String]
     var typeDeclarations: [TypeDeclaration]
     var functionDeclarations: [FunctionDeclaration]
     var typeMembers: [TypeMembers]
 
     init(
         contentHash: String,
-        moduleIdentifier: String?,
+        moduleIdentifiers: Set<String>,
         typeDeclarations: [TypeDeclaration],
         functionDeclarations: [FunctionDeclaration],
         typeMembers: [TypeMembers]
     ) {
         self.contentHash = contentHash
-        self.moduleIdentifier = moduleIdentifier
+        self.moduleIdentifiers = moduleIdentifiers.sorted()
         self.typeDeclarations = typeDeclarations
         self.functionDeclarations = functionDeclarations
         self.typeMembers = typeMembers
@@ -105,6 +105,7 @@ struct SourceFileIndex: Codable, Equatable {
     private enum CodingKeys: CodingKey {
         case schemaVersion
         case contentHash
+        case moduleIdentifiers
         case moduleIdentifier
         case typeDeclarations
         case functionDeclarations
@@ -115,13 +116,27 @@ struct SourceFileIndex: Codable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
         contentHash = try container.decode(String.self, forKey: .contentHash)
-        moduleIdentifier = try container.decodeIfPresent(String.self, forKey: .moduleIdentifier)
+        if let identifiers = try container.decodeIfPresent([String].self, forKey: .moduleIdentifiers) {
+            moduleIdentifiers = Set(identifiers).sorted()
+        } else {
+            moduleIdentifiers = try container.decodeIfPresent(String.self, forKey: .moduleIdentifier).map { [$0] } ?? []
+        }
         typeDeclarations = try container.decode([TypeDeclaration].self, forKey: .typeDeclarations)
         functionDeclarations = try container.decodeIfPresent(
             [FunctionDeclaration].self,
             forKey: .functionDeclarations
         ) ?? []
         typeMembers = try container.decodeIfPresent([TypeMembers].self, forKey: .typeMembers) ?? []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schemaVersion, forKey: .schemaVersion)
+        try container.encode(contentHash, forKey: .contentHash)
+        try container.encode(moduleIdentifiers, forKey: .moduleIdentifiers)
+        try container.encode(typeDeclarations, forKey: .typeDeclarations)
+        try container.encode(functionDeclarations, forKey: .functionDeclarations)
+        try container.encode(typeMembers, forKey: .typeMembers)
     }
 }
 
@@ -153,28 +168,29 @@ struct ProjectIndex {
         var functionDeclarationsByModule = [String: [String: [SourceFileIndex.FunctionDeclaration]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
         for file in files.values {
-            guard let moduleIdentifier = file.moduleIdentifier else { continue }
-            for declaration in file.typeDeclarations {
-                let key = TypeKey(moduleIdentifier: moduleIdentifier, name: declaration.name)
-                typeVisibilities[key, default: []].insert(declaration.visibility)
-            }
-            for declaration in file.functionDeclarations {
-                if !declaration.autoclosureArgumentIndices.isEmpty {
-                    autoclosureFunctionNamesByModule[moduleIdentifier, default: []].insert(declaration.name)
+            for moduleIdentifier in file.moduleIdentifiers {
+                for declaration in file.typeDeclarations {
+                    let key = TypeKey(moduleIdentifier: moduleIdentifier, name: declaration.name)
+                    typeVisibilities[key, default: []].insert(declaration.visibility)
                 }
-                functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
-                    .append(declaration)
-            }
-            for members in file.typeMembers {
-                if !members.instanceMembers.isEmpty {
-                    memberNamesByModule[moduleIdentifier, default: .empty]
-                        .instance[members.typeName, default: []]
-                        .formUnion(members.instanceMembers)
+                for declaration in file.functionDeclarations {
+                    if !declaration.autoclosureArgumentIndices.isEmpty {
+                        autoclosureFunctionNamesByModule[moduleIdentifier, default: []].insert(declaration.name)
+                    }
+                    functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
+                        .append(declaration)
                 }
-                if !members.staticMembers.isEmpty {
-                    memberNamesByModule[moduleIdentifier, default: .empty]
-                        .staticOrClass[members.typeName, default: []]
-                        .formUnion(members.staticMembers)
+                for members in file.typeMembers {
+                    if !members.instanceMembers.isEmpty {
+                        memberNamesByModule[moduleIdentifier, default: .empty]
+                            .instance[members.typeName, default: []]
+                            .formUnion(members.instanceMembers)
+                    }
+                    if !members.staticMembers.isEmpty {
+                        memberNamesByModule[moduleIdentifier, default: .empty]
+                            .staticOrClass[members.typeName, default: []]
+                            .formUnion(members.staticMembers)
+                    }
                 }
             }
         }
@@ -205,28 +221,36 @@ struct ProjectIndex {
                 }
                 .sorted()
                 .joined(separator: ",")
-            return "\(file.moduleIdentifier ?? ""):\(types):\(functions):\(members)"
+            return "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(functions):\(members)"
         }.joined(separator: ";")
         fingerprint = computeHash(description)
     }
 
-    /// Whether the given type is unambiguously internal in the current file's module.
+    /// Whether the given type is unambiguously internal in every module containing the current file.
     func isInternalType(named name: String, from fileURL: URL) -> Bool {
         let path = fileURL.standardizedFileURL.path
-        guard let moduleIdentifier = files[path]?.moduleIdentifier else {
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers, !moduleIdentifiers.isEmpty else {
             return false
         }
-        let key = TypeKey(moduleIdentifier: moduleIdentifier, name: name)
-        return typeVisibilities[key] == [Visibility.internal.rawValue]
+        return moduleIdentifiers.allSatisfy { moduleIdentifier in
+            let key = TypeKey(moduleIdentifier: moduleIdentifier, name: name)
+            return typeVisibilities[key] == [Visibility.internal.rawValue]
+        }
     }
 
-    /// Project functions in the current file's module that have at least one `@autoclosure` argument.
+    /// Project functions with `@autoclosure` arguments available in every module containing the current file.
     func autoclosureFunctionNames(visibleFrom fileURL: URL) -> Set<String> {
         let path = fileURL.standardizedFileURL.path
-        guard let moduleIdentifier = files[path]?.moduleIdentifier else {
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
+              let firstModule = moduleIdentifiers.first
+        else {
             return []
         }
-        return autoclosureFunctionNamesByModule[moduleIdentifier] ?? []
+        return moduleIdentifiers.dropFirst().reduce(
+            autoclosureFunctionNamesByModule[firstModule] ?? []
+        ) { names, moduleIdentifier in
+            names.intersection(autoclosureFunctionNamesByModule[moduleIdentifier] ?? [])
+        }
     }
 
     /// Whether a same-module declaration makes removing the final closure label unambiguous.
@@ -237,40 +261,52 @@ struct ProjectIndex {
         visibleFrom fileURL: URL
     ) -> Bool {
         let path = fileURL.standardizedFileURL.path
-        guard let moduleIdentifier = files[path]?.moduleIdentifier,
-              let declarations = functionDeclarationsByModule[moduleIdentifier]?[name]?
-              .filter({ $0.declaringType == declaringType }),
-              let finalArgumentIndex = argumentLabels.indices.last,
-              declarations.contains(where: {
-                  $0.argumentLabels == argumentLabels &&
-                      $0.closureArgumentIndices.contains(finalArgumentIndex)
-              })
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
+              !moduleIdentifiers.isEmpty,
+              let finalArgumentIndex = argumentLabels.indices.last
         else { return false }
 
         let precedingLabels = argumentLabels.dropLast()
-        return declarations.allSatisfy { declaration in
-            guard declaration.argumentLabels.count == argumentLabels.count,
-                  declaration.argumentLabels.dropLast().elementsEqual(precedingLabels),
-                  declaration.closureArgumentIndices.contains(finalArgumentIndex)
-            else { return true }
-            return declaration.argumentLabels.last == argumentLabels.last
+        return moduleIdentifiers.allSatisfy { moduleIdentifier in
+            let declarations = functionDeclarationsByModule[moduleIdentifier]?[name]?
+                .filter { $0.declaringType == declaringType } ?? []
+            guard declarations.contains(where: {
+                $0.argumentLabels == argumentLabels &&
+                    $0.closureArgumentIndices.contains(finalArgumentIndex)
+            }) else { return false }
+            return declarations.allSatisfy { declaration in
+                guard declaration.argumentLabels.count == argumentLabels.count,
+                      declaration.argumentLabels.dropLast().elementsEqual(precedingLabels),
+                      declaration.closureArgumentIndices.contains(finalArgumentIndex)
+                else { return true }
+                return declaration.argumentLabels.last == argumentLabels.last
+            }
         }
     }
 
-    /// Project-defined instance and static/class members grouped by type in the current file's module.
+    /// Project-defined members available in every module containing the current file, grouped by type.
     func memberNamesByType(visibleFrom fileURL: URL) -> MemberNamesByType {
         let path = fileURL.standardizedFileURL.path
-        guard let moduleIdentifier = files[path]?.moduleIdentifier else {
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
+              let firstModule = moduleIdentifiers.first
+        else {
             return .empty
         }
-        return memberNamesByModule[moduleIdentifier] ?? .empty
+        return moduleIdentifiers.dropFirst().reduce(memberNamesByModule[firstModule] ?? .empty) {
+            members, moduleIdentifier in
+            let other = memberNamesByModule[moduleIdentifier] ?? .empty
+            return MemberNamesByType(
+                instance: members.instance.intersectingValues(with: other.instance),
+                staticOrClass: members.staticOrClass.intersectingValues(with: other.staticOrClass)
+            )
+        }
     }
 }
 
 /// Extracts the subset of declarations required by the initial project-aware rules.
 func makeSourceFileIndex(
     from source: String,
-    moduleIdentifier: String?
+    moduleIdentifiers: Set<String>
 ) -> SourceFileIndex {
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
@@ -346,7 +382,7 @@ func makeSourceFileIndex(
     formatter.clearDerivedCaches()
     return SourceFileIndex(
         contentHash: computeHash(source),
-        moduleIdentifier: moduleIdentifier,
+        moduleIdentifiers: moduleIdentifiers,
         typeDeclarations: typeDeclarations,
         functionDeclarations: functionDeclarations,
         typeMembers: typeMembers
@@ -418,7 +454,7 @@ func discoverSourceFiles(in root: ProjectRoot) -> [URL] {
 }
 
 /// Provides conservative module identities from conventional project layout or Xcode target membership.
-func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: String] {
+func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Set<String>] {
     let rootPath = root.url.standardizedFileURL.path
 
     switch root.kind {
@@ -431,7 +467,7 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: St
             guard components.count >= 3, ["Sources", "Tests"].contains(components[0]) else {
                 return nil
             }
-            return (filePath, "\(rootPath):\(components[0]):\(components[1])")
+            return (filePath, ["\(rootPath):\(components[0]):\(components[1])"])
         })
     case .xcodeProject:
         let projectURLs = (try? FileManager.default.contentsOfDirectory(
@@ -451,15 +487,23 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: St
                 })
             }
         }
-        return Dictionary(uniqueKeysWithValues: targetsByFile.compactMap { path, targetIDs in
-            guard targetIDs.count == 1, let targetID = targetIDs.first else { return nil }
-            return (path, targetID)
-        })
+        return targetsByFile
     case .directory:
         return Dictionary(uniqueKeysWithValues: fileURLs.compactMap { fileURL in
             let path = fileURL.standardizedFileURL.path
-            return path.hasPrefix(rootPath + "/") ? (path, rootPath) : nil
+            return path.hasPrefix(rootPath + "/") ? (path, [rootPath]) : nil
         })
+    }
+}
+
+private extension Dictionary where Value == Set<String> {
+    func intersectingValues(with other: Self) -> Self {
+        reduce(into: [:]) { result, entry in
+            let values = entry.value.intersection(other[entry.key] ?? [])
+            if !values.isEmpty {
+                result[entry.key] = values
+            }
+        }
     }
 }
 

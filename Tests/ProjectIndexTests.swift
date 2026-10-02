@@ -27,6 +27,29 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testSourceFileIndexDecodesFunctionDeclarationFromPreviousSchema() throws {
+        let data = Data("""
+        {
+            "schemaVersion": 3,
+            "contentHash": "hash",
+            "moduleIdentifier": "App",
+            "typeDeclarations": [],
+            "functionDeclarations": [{
+                "name": "evaluate",
+                "argumentLabels": [null],
+                "autoclosureArgumentIndices": [0]
+            }],
+            "typeMembers": []
+        }
+        """.utf8)
+
+        let index = try JSONDecoder().decode(SourceFileIndex.self, from: data)
+
+        XCTAssertEqual(index.functionDeclarations, [
+            .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
+        ])
+    }
+
     func testXcodeProjectModuleIdentifiersUseTargetMembership() throws {
         try withProjectIndexTmpDirectory([
             "App/App.swift": "struct App {}",
@@ -134,7 +157,86 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertEqual(index.functionDeclarations, [
             .init(name: "expect", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
             .init(name: "require", argumentLabels: ["message", nil], autoclosureArgumentIndices: [1]),
+            .init(
+                name: "evaluate",
+                argumentLabels: [nil],
+                closureArgumentIndices: [0],
+                autoclosureArgumentIndices: []
+            ),
         ])
+    }
+
+    func testSourceFileIndexExtractsClosureFunctionSignatures() {
+        let source = """
+        func perform(value: Int, completion: () -> Void) {}
+        func optional(completion: (() -> Void)?) {}
+        func evaluate(_ expression: @autoclosure () -> Bool) {}
+        func identity(value: Int) -> Int { value }
+        struct Worker {
+            func run(completion: () -> Void) {}
+        }
+        """
+
+        let index = makeSourceFileIndex(from: source, moduleIdentifier: "App")
+
+        XCTAssertEqual(index.functionDeclarations, [
+            .init(
+                name: "perform",
+                argumentLabels: ["value", "completion"],
+                closureArgumentIndices: [1],
+                autoclosureArgumentIndices: []
+            ),
+            .init(
+                name: "optional",
+                argumentLabels: ["completion"],
+                closureArgumentIndices: [0],
+                autoclosureArgumentIndices: []
+            ),
+            .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
+            .init(
+                name: "run",
+                declaringType: "Worker",
+                argumentLabels: ["completion"],
+                closureArgumentIndices: [0],
+                autoclosureArgumentIndices: []
+            ),
+        ])
+    }
+
+    func testProjectIndexIdentifiesUnambiguousTrailingClosureSignatures() {
+        let sourceURL = URL(fileURLWithPath: "/Project/Sources/App/Functions.swift")
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            sourceURL.path: makeSourceFileIndex(
+                from: """
+                func perform(value: Int, completion: () -> Void) {}
+                func ambiguous(value: Int, completion: () -> Void) {}
+                func ambiguous(value: Int, handler: () -> Void) {}
+                func evaluate(expression: @autoclosure () -> Bool) {}
+                """,
+                moduleIdentifier: "App"
+            ),
+            callURL.path: makeSourceFileIndex(from: "", moduleIdentifier: "App"),
+        ])
+
+        XCTAssertTrue(projectIndex.supportsTrailingClosure(
+            functionNamed: "perform",
+            declaredInType: nil,
+            argumentLabels: ["value", "completion"],
+            visibleFrom: callURL
+        ))
+        XCTAssertFalse(projectIndex.supportsTrailingClosure(
+            functionNamed: "ambiguous",
+            declaredInType: nil,
+            argumentLabels: ["value", "completion"],
+            visibleFrom: callURL
+        ))
+        XCTAssertFalse(projectIndex.supportsTrailingClosure(
+            functionNamed: "evaluate",
+            declaredInType: nil,
+            argumentLabels: ["expression"],
+            visibleFrom: callURL
+        ))
     }
 
     func testProjectIndexReturnsAutoclosureFunctionsFromCurrentModuleOnly() {

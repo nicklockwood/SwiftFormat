@@ -9,7 +9,73 @@
 import XCTest
 @testable import SwiftFormat
 
+private func withProjectIndexTmpDirectory(
+    _ files: [String: String],
+    fn: (URL) throws -> Void
+) throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    for (path, contents) in files {
+        let fileURL = directory.appendingPathComponent(path)
+        try FileManager.default.createDirectory(
+            at: fileURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try contents.write(to: fileURL, atomically: true, encoding: .utf8)
+    }
+    try fn(directory)
+}
+
 final class ProjectIndexTests: XCTestCase {
+    func testXcodeProjectModuleIdentifiersUseTargetMembership() throws {
+        try withProjectIndexTmpDirectory([
+            "App/App.swift": "struct App {}",
+            "Shared/Shared.swift": "struct Shared {}",
+            "Tests/AppTests.swift": "struct AppTests {}",
+            "Example.xcodeproj/project.pbxproj": """
+            // !$*UTF8*$!
+            {
+                objects = {
+                    APP_FILE = { isa = PBXFileReference; path = App.swift; sourceTree = "<group>"; };
+                    SHARED_FILE = { isa = PBXFileReference; path = Shared.swift; sourceTree = "<group>"; };
+                    TEST_FILE = { isa = PBXFileReference; path = AppTests.swift; sourceTree = "<group>"; };
+                    APP_BUILD = { isa = PBXBuildFile; fileRef = APP_FILE; };
+                    SHARED_APP_BUILD = { isa = PBXBuildFile; fileRef = SHARED_FILE; };
+                    SHARED_TEST_BUILD = { isa = PBXBuildFile; fileRef = SHARED_FILE; };
+                    TEST_BUILD = { isa = PBXBuildFile; fileRef = TEST_FILE; };
+                    ROOT_GROUP = {
+                        isa = PBXGroup;
+                        children = (APP_GROUP, SHARED_GROUP, TEST_GROUP,);
+                        sourceTree = "<group>";
+                    };
+                    APP_GROUP = { isa = PBXGroup; children = (APP_FILE,); path = App; sourceTree = "<group>"; };
+                    SHARED_GROUP = { isa = PBXGroup; children = (SHARED_FILE,); path = Shared; sourceTree = "<group>"; };
+                    TEST_GROUP = { isa = PBXGroup; children = (TEST_FILE,); path = Tests; sourceTree = "<group>"; };
+                    APP_SOURCES = { isa = PBXSourcesBuildPhase; files = (APP_BUILD, SHARED_APP_BUILD,); };
+                    TEST_SOURCES = { isa = PBXSourcesBuildPhase; files = (SHARED_TEST_BUILD, TEST_BUILD,); };
+                    APP_TARGET = { isa = PBXNativeTarget; buildPhases = (APP_SOURCES,); name = App; };
+                    TEST_TARGET = { isa = PBXNativeTarget; buildPhases = (TEST_SOURCES,); name = AppTests; };
+                };
+            }
+            """,
+        ]) { directory in
+            let root = ProjectRoot(url: directory, kind: .xcodeProject)
+            let fileURLs = discoverSourceFiles(in: root)
+            let identifiers = moduleIdentifiers(for: fileURLs, in: root)
+
+            let projectPath = directory.appendingPathComponent("Example.xcodeproj").path
+            XCTAssertEqual(
+                identifiers[directory.appendingPathComponent("App/App.swift").path],
+                "\(projectPath):APP_TARGET"
+            )
+            XCTAssertEqual(
+                identifiers[directory.appendingPathComponent("Tests/AppTests.swift").path],
+                "\(projectPath):TEST_TARGET"
+            )
+            XCTAssertNil(identifiers[directory.appendingPathComponent("Shared/Shared.swift").path])
+        }
+    }
+
     func testSourceFileIndexExtractsTypeMemberNames() {
         let source = """
         class Foo {

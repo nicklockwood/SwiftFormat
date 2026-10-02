@@ -4178,6 +4178,9 @@ Option | Description
 + DispatchQueue.main.async { ... }
 ```
 
+When project indexing is available, labeled closure arguments are converted
+for project-defined function signatures that are known to be unambiguous.
+
 ```diff
 - withAnimation(.spring, {
 -   isVisible = true

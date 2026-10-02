@@ -478,7 +478,11 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Se
         for projectURL in projectURLs {
             let projectFileURL = projectURL.appendingPathComponent("project.pbxproj")
             guard let contents = try? String(contentsOf: projectFileURL),
-                  let project = XcodeProject(contents: contents, sourceRoot: root.url)
+                  let project = XcodeProject(
+                      contents: contents,
+                      sourceRoot: root.url,
+                      sourceFiles: fileURLs
+                  )
             else { continue }
             let projectIdentifier = projectURL.standardizedFileURL.path
             for (filePath, targetIDs) in project.targetIDsByFile {
@@ -510,7 +514,7 @@ private extension Dictionary where Value == Set<String> {
 private struct XcodeProject {
     var targetIDsByFile: [String: Set<String>]
 
-    init?(contents: String, sourceRoot: URL) {
+    init?(contents: String, sourceRoot: URL, sourceFiles: [URL]) {
         var parser = OpenStepPropertyListParser(contents)
         guard case let .dictionary(root) = parser.parse(),
               case let .dictionary(objects)? = root["objects"]
@@ -614,14 +618,20 @@ private struct XcodeProject {
         }
 
         var result = [String: Set<String>]()
+        var targetBySourcesBuildPhase = [String: String]()
+        var targetsBySynchronizedGroup = [String: Set<String>]()
         for (targetID, value) in objects {
             guard case let .dictionary(target) = value,
                   string("isa", in: target) == "PBXNativeTarget"
             else { continue }
+            for groupID in strings("fileSystemSynchronizedGroups", in: target) {
+                targetsBySynchronizedGroup[groupID, default: []].insert(targetID)
+            }
             for phaseID in strings("buildPhases", in: target) {
                 guard let phase = dictionary(for: phaseID),
                       string("isa", in: phase) == "PBXSourcesBuildPhase"
                 else { continue }
+                targetBySourcesBuildPhase[phaseID] = targetID
                 for buildFileID in strings("files", in: phase) {
                     guard let fileReference = fileReferenceByBuildFile[buildFileID],
                           let path = filePathsByReference[fileReference],
@@ -629,6 +639,49 @@ private struct XcodeProject {
                     else { continue }
                     result[path, default: []].insert(targetID)
                 }
+            }
+        }
+
+        for (groupID, value) in objects {
+            guard case let .dictionary(group) = value,
+                  string("isa", in: group) == "PBXFileSystemSynchronizedRootGroup",
+                  let groupURL = groupURL(for: groupID)
+            else { continue }
+            let groupPath = groupURL.standardizedFileURL.path
+            var targetMembershipExceptions = [(path: String, targetID: String)]()
+            for exceptionID in strings("exceptions", in: group) {
+                guard let exception = dictionary(for: exceptionID) else { continue }
+                let targetID: String?
+                switch string("isa", in: exception) {
+                case "PBXFileSystemSynchronizedBuildFileExceptionSet":
+                    targetID = string("target", in: exception)
+                case "PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet":
+                    targetID = string("buildPhase", in: exception).flatMap {
+                        targetBySourcesBuildPhase[$0]
+                    }
+                default:
+                    targetID = nil
+                }
+                guard let targetID else { continue }
+                targetMembershipExceptions.append(contentsOf:
+                    strings("membershipExceptions", in: exception).map { ($0, targetID) })
+            }
+
+            for fileURL in sourceFiles {
+                let filePath = fileURL.standardizedFileURL.path
+                guard filePath.hasPrefix(groupPath + "/") else { continue }
+                let relativePath = String(filePath.dropFirst(groupPath.count + 1))
+                var targetIDs = targetsBySynchronizedGroup[groupID] ?? []
+                for exception in targetMembershipExceptions where
+                    relativePath == exception.path || relativePath.hasPrefix(exception.path + "/")
+                {
+                    if targetIDs.contains(exception.targetID) {
+                        targetIDs.remove(exception.targetID)
+                    } else {
+                        targetIDs.insert(exception.targetID)
+                    }
+                }
+                result[filePath, default: []].formUnion(targetIDs)
             }
         }
         targetIDsByFile = result

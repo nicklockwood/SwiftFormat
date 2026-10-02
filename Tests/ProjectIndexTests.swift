@@ -169,6 +169,51 @@ final class ProjectIndexTests: XCTestCase {
         }
     }
 
+    func testXcodeWorkspaceDiscoversProjectsInNestedGroups() throws {
+        try withProjectIndexTmpDirectory([
+            "Example.xcworkspace/contents.xcworkspacedata": """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <Workspace version="1.0">
+                <Group location="group:Projects" name="Projects">
+                    <FileRef location="group:App/App.xcodeproj"></FileRef>
+                </Group>
+            </Workspace>
+            """,
+            "Projects/App/Sources/App.swift": "struct App {}",
+            "Projects/App/App.xcodeproj/project.pbxproj": """
+            // !$*UTF8*$!
+            {
+                objects = {
+                    APP_FILE = { isa = PBXFileReference; path = App.swift; sourceTree = "<group>"; };
+                    APP_BUILD = { isa = PBXBuildFile; fileRef = APP_FILE; };
+                    ROOT_GROUP = {
+                        isa = PBXGroup;
+                        children = (SOURCES_GROUP,);
+                        sourceTree = "<group>";
+                    };
+                    SOURCES_GROUP = {
+                        isa = PBXGroup;
+                        children = (APP_FILE,);
+                        path = Sources;
+                        sourceTree = "<group>";
+                    };
+                    APP_SOURCES = { isa = PBXSourcesBuildPhase; files = (APP_BUILD,); };
+                    APP_TARGET = { isa = PBXNativeTarget; buildPhases = (APP_SOURCES,); name = App; };
+                };
+            }
+            """,
+        ]) { directory in
+            let root = ProjectRoot(url: directory, kind: .xcodeProject)
+            let sourceURL = directory.appendingPathComponent("Projects/App/Sources/App.swift")
+            let fileURLs = discoverSourceFiles(in: root)
+            let identifiers = moduleIdentifiers(for: fileURLs, in: root)
+            let projectPath = directory.appendingPathComponent("Projects/App/App.xcodeproj").path
+
+            XCTAssertTrue(fileURLs.contains(sourceURL))
+            XCTAssertEqual(identifiers[sourceURL.path], ["\(projectPath):APP_TARGET"])
+        }
+    }
+
     func testSourceFileIndexExtractsTypeMemberNames() {
         let source = """
         class Foo {

@@ -335,24 +335,291 @@ func discoverSourceFiles(in root: ProjectRoot) -> [URL] {
     return files.sorted { $0.path < $1.path }
 }
 
-/// Provides a conservative module identity from conventional project layout.
-func moduleIdentifier(for fileURL: URL, in root: ProjectRoot) -> String? {
+/// Provides conservative module identities from conventional project layout or Xcode target membership.
+func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: String] {
     let rootPath = root.url.standardizedFileURL.path
-    let filePath = fileURL.standardizedFileURL.path
-    guard filePath.hasPrefix(rootPath + "/") else { return nil }
 
     switch root.kind {
     case .swiftPackage:
-        let relativePath = String(filePath.dropFirst(rootPath.count + 1))
-        let components = relativePath.split(separator: "/").map(String.init)
-        guard components.count >= 3, ["Sources", "Tests"].contains(components[0]) else {
+        return Dictionary(uniqueKeysWithValues: fileURLs.compactMap { fileURL in
+            let filePath = fileURL.standardizedFileURL.path
+            guard filePath.hasPrefix(rootPath + "/") else { return nil }
+            let relativePath = String(filePath.dropFirst(rootPath.count + 1))
+            let components = relativePath.split(separator: "/").map(String.init)
+            guard components.count >= 3, ["Sources", "Tests"].contains(components[0]) else {
+                return nil
+            }
+            return (filePath, "\(rootPath):\(components[0]):\(components[1])")
+        })
+    case .xcodeProject:
+        let projectURLs = (try? FileManager.default.contentsOfDirectory(
+            at: root.url,
+            includingPropertiesForKeys: nil
+        ))?.filter { $0.pathExtension == "xcodeproj" } ?? []
+        var targetsByFile = [String: Set<String>]()
+        for projectURL in projectURLs {
+            let projectFileURL = projectURL.appendingPathComponent("project.pbxproj")
+            guard let contents = try? String(contentsOf: projectFileURL),
+                  let project = XcodeProject(contents: contents, sourceRoot: root.url)
+            else { continue }
+            let projectIdentifier = projectURL.standardizedFileURL.path
+            for (filePath, targetIDs) in project.targetIDsByFile {
+                targetsByFile[filePath, default: []].formUnion(targetIDs.map {
+                    "\(projectIdentifier):\($0)"
+                })
+            }
+        }
+        return Dictionary(uniqueKeysWithValues: targetsByFile.compactMap { path, targetIDs in
+            guard targetIDs.count == 1, let targetID = targetIDs.first else { return nil }
+            return (path, targetID)
+        })
+    case .directory:
+        return Dictionary(uniqueKeysWithValues: fileURLs.compactMap { fileURL in
+            let path = fileURL.standardizedFileURL.path
+            return path.hasPrefix(rootPath + "/") ? (path, rootPath) : nil
+        })
+    }
+}
+
+private struct XcodeProject {
+    var targetIDsByFile: [String: Set<String>]
+
+    init?(contents: String, sourceRoot: URL) {
+        var parser = OpenStepPropertyListParser(contents)
+        guard case let .dictionary(root) = parser.parse(),
+              case let .dictionary(objects)? = root["objects"]
+        else { return nil }
+
+        func dictionary(for identifier: String) -> [String: OpenStepPropertyListValue]? {
+            guard case let .dictionary(dictionary)? = objects[identifier] else { return nil }
+            return dictionary
+        }
+
+        func string(_ key: String, in dictionary: [String: OpenStepPropertyListValue]) -> String? {
+            guard case let .string(value)? = dictionary[key] else { return nil }
+            return value
+        }
+
+        func strings(_ key: String, in dictionary: [String: OpenStepPropertyListValue]) -> [String] {
+            guard case let .array(values)? = dictionary[key] else { return [] }
+            return values.compactMap {
+                guard case let .string(value) = $0 else { return nil }
+                return value
+            }
+        }
+
+        var parentGroupByChild = [String: String]()
+        for (identifier, value) in objects {
+            guard case let .dictionary(object) = value,
+                  ["PBXGroup", "PBXVariantGroup"].contains(string("isa", in: object))
+            else { continue }
+            for child in strings("children", in: object) {
+                parentGroupByChild[child] = identifier
+            }
+        }
+
+        var cachedGroupURLs = [String: URL]()
+        var resolvingGroups = Set<String>()
+        func groupURL(for identifier: String) -> URL? {
+            if let url = cachedGroupURLs[identifier] {
+                return url
+            }
+            guard !resolvingGroups.contains(identifier),
+                  let group = dictionary(for: identifier)
+            else { return nil }
+            resolvingGroups.insert(identifier)
+            defer { resolvingGroups.remove(identifier) }
+
+            let sourceTree = string("sourceTree", in: group) ?? "<group>"
+            let baseURL: URL
+            switch sourceTree {
+            case "SOURCE_ROOT":
+                baseURL = sourceRoot
+            case "<group>":
+                if let parent = parentGroupByChild[identifier] {
+                    guard let parentURL = groupURL(for: parent) else { return nil }
+                    baseURL = parentURL
+                } else {
+                    baseURL = sourceRoot
+                }
+            case "<absolute>":
+                baseURL = URL(fileURLWithPath: "/")
+            default:
+                return nil
+            }
+            let path = string("path", in: group)
+            let url = path.map { baseURL.appendingPathComponent($0) } ?? baseURL
+            cachedGroupURLs[identifier] = url.standardizedFileURL
+            return url.standardizedFileURL
+        }
+
+        var filePathsByReference = [String: String]()
+        for (identifier, value) in objects {
+            guard case let .dictionary(object) = value,
+                  string("isa", in: object) == "PBXFileReference",
+                  let path = string("path", in: object) ?? string("name", in: object)
+            else { continue }
+            let sourceTree = string("sourceTree", in: object) ?? "<group>"
+            let fileURL: URL?
+            switch sourceTree {
+            case "SOURCE_ROOT":
+                fileURL = sourceRoot.appendingPathComponent(path)
+            case "<group>":
+                fileURL = parentGroupByChild[identifier]
+                    .flatMap(groupURL(for:))?
+                    .appendingPathComponent(path)
+            case "<absolute>":
+                fileURL = URL(fileURLWithPath: path)
+            default:
+                fileURL = nil
+            }
+            if let fileURL {
+                filePathsByReference[identifier] = fileURL.standardizedFileURL.path
+            }
+        }
+
+        var fileReferenceByBuildFile = [String: String]()
+        for (identifier, value) in objects {
+            guard case let .dictionary(object) = value,
+                  string("isa", in: object) == "PBXBuildFile",
+                  let fileReference = string("fileRef", in: object)
+            else { continue }
+            fileReferenceByBuildFile[identifier] = fileReference
+        }
+
+        var result = [String: Set<String>]()
+        for (targetID, value) in objects {
+            guard case let .dictionary(target) = value,
+                  string("isa", in: target) == "PBXNativeTarget"
+            else { continue }
+            for phaseID in strings("buildPhases", in: target) {
+                guard let phase = dictionary(for: phaseID),
+                      string("isa", in: phase) == "PBXSourcesBuildPhase"
+                else { continue }
+                for buildFileID in strings("files", in: phase) {
+                    guard let fileReference = fileReferenceByBuildFile[buildFileID],
+                          let path = filePathsByReference[fileReference],
+                          path.hasSuffix(".swift")
+                    else { continue }
+                    result[path, default: []].insert(targetID)
+                }
+            }
+        }
+        targetIDsByFile = result
+    }
+}
+
+private indirect enum OpenStepPropertyListValue {
+    case string(String)
+    case array([OpenStepPropertyListValue])
+    case dictionary([String: OpenStepPropertyListValue])
+}
+
+private struct OpenStepPropertyListParser {
+    private enum Token: Equatable {
+        case string(String)
+        case symbol(Character)
+    }
+
+    private var tokens: [Token]
+    private var index = 0
+
+    init(_ source: String) {
+        tokens = Self.tokenize(source)
+    }
+
+    mutating func parse() -> OpenStepPropertyListValue? {
+        parseValue()
+    }
+
+    private mutating func parseValue() -> OpenStepPropertyListValue? {
+        guard index < tokens.count else { return nil }
+        switch tokens[index] {
+        case .symbol("{"):
+            index += 1
+            var dictionary = [String: OpenStepPropertyListValue]()
+            while index < tokens.count, tokens[index] != .symbol("}") {
+                guard case let .string(key) = tokens[index] else { return nil }
+                index += 1
+                guard consume("="), let value = parseValue(), consume(";") else { return nil }
+                dictionary[key] = value
+            }
+            guard consume("}") else { return nil }
+            return .dictionary(dictionary)
+        case .symbol("("):
+            index += 1
+            var array = [OpenStepPropertyListValue]()
+            while index < tokens.count, tokens[index] != .symbol(")") {
+                guard let value = parseValue() else { return nil }
+                array.append(value)
+                _ = consume(",")
+            }
+            guard consume(")") else { return nil }
+            return .array(array)
+        case let .string(value):
+            index += 1
+            return .string(value)
+        case .symbol:
             return nil
         }
-        return "\(rootPath):\(components[0]):\(components[1])"
-    case .xcodeProject:
-        // Target membership cannot be inferred safely without parsing the project.
-        return nil
-    case .directory:
-        return rootPath
+    }
+
+    private mutating func consume(_ symbol: Character) -> Bool {
+        guard index < tokens.count, tokens[index] == .symbol(symbol) else { return false }
+        index += 1
+        return true
+    }
+
+    private static func tokenize(_ source: String) -> [Token] {
+        let characters = Array(source)
+        var tokens = [Token]()
+        var index = 0
+        while index < characters.count {
+            if characters[index].isWhitespace {
+                index += 1
+            } else if characters[index] == "/", index + 1 < characters.count,
+                      characters[index + 1] == "/"
+            {
+                index += 2
+                while index < characters.count, characters[index] != "\n" {
+                    index += 1
+                }
+            } else if characters[index] == "/", index + 1 < characters.count,
+                      characters[index + 1] == "*"
+            {
+                index += 2
+                while index + 1 < characters.count,
+                      !(characters[index] == "*" && characters[index + 1] == "/")
+                {
+                    index += 1
+                }
+                index = min(index + 2, characters.count)
+            } else if characters[index] == "\"" {
+                index += 1
+                var value = ""
+                while index < characters.count, characters[index] != "\"" {
+                    if characters[index] == "\\", index + 1 < characters.count {
+                        index += 1
+                    }
+                    value.append(characters[index])
+                    index += 1
+                }
+                index = min(index + 1, characters.count)
+                tokens.append(.string(value))
+            } else if "{}()=;,".contains(characters[index]) {
+                tokens.append(.symbol(characters[index]))
+                index += 1
+            } else {
+                let start = index
+                while index < characters.count,
+                      !characters[index].isWhitespace,
+                      !"{}()=;,\"".contains(characters[index])
+                {
+                    index += 1
+                }
+                tokens.append(.string(String(characters[start ..< index])))
+            }
+        }
+        return tokens
     }
 }

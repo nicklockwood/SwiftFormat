@@ -45,6 +45,7 @@ final class ProjectIndexTests: XCTestCase {
 
         let index = try JSONDecoder().decode(SourceFileIndex.self, from: data)
 
+        XCTAssertEqual(index.moduleIdentifiers, ["App"])
         XCTAssertEqual(index.functionDeclarations, [
             .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
         ])
@@ -89,13 +90,16 @@ final class ProjectIndexTests: XCTestCase {
             let projectPath = directory.appendingPathComponent("Example.xcodeproj").path
             XCTAssertEqual(
                 identifiers[directory.appendingPathComponent("App/App.swift").path],
-                "\(projectPath):APP_TARGET"
+                ["\(projectPath):APP_TARGET"]
             )
             XCTAssertEqual(
                 identifiers[directory.appendingPathComponent("Tests/AppTests.swift").path],
-                "\(projectPath):TEST_TARGET"
+                ["\(projectPath):TEST_TARGET"]
             )
-            XCTAssertNil(identifiers[directory.appendingPathComponent("Shared/Shared.swift").path])
+            XCTAssertEqual(
+                identifiers[directory.appendingPathComponent("Shared/Shared.swift").path],
+                ["\(projectPath):APP_TARGET", "\(projectPath):TEST_TARGET"]
+            )
         }
     }
 
@@ -128,7 +132,7 @@ final class ProjectIndexTests: XCTestCase {
         }
         """
 
-        let index = makeSourceFileIndex(from: source, moduleIdentifier: "App")
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
 
         XCTAssertEqual(index.typeMembers, [
             .init(
@@ -152,7 +156,7 @@ final class ProjectIndexTests: XCTestCase {
         func evaluate(_ expression: () -> Bool) {}
         """
 
-        let index = makeSourceFileIndex(from: source, moduleIdentifier: "App")
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
 
         XCTAssertEqual(index.functionDeclarations, [
             .init(name: "expect", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
@@ -177,7 +181,7 @@ final class ProjectIndexTests: XCTestCase {
         }
         """
 
-        let index = makeSourceFileIndex(from: source, moduleIdentifier: "App")
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
 
         XCTAssertEqual(index.functionDeclarations, [
             .init(
@@ -214,9 +218,9 @@ final class ProjectIndexTests: XCTestCase {
                 func ambiguous(value: Int, handler: () -> Void) {}
                 func evaluate(expression: @autoclosure () -> Bool) {}
                 """,
-                moduleIdentifier: "App"
+                moduleIdentifiers: ["App"]
             ),
-            callURL.path: makeSourceFileIndex(from: "", moduleIdentifier: "App"),
+            callURL.path: makeSourceFileIndex(from: "", moduleIdentifiers: ["App"]),
         ])
 
         XCTAssertTrue(projectIndex.supportsTrailingClosure(
@@ -244,11 +248,11 @@ final class ProjectIndexTests: XCTestCase {
         let libraryURL = URL(fileURLWithPath: "/Project/Sources/Library/Library.swift")
         let appIndex = makeSourceFileIndex(
             from: "func appExpect(_ expression: @autoclosure () -> Bool) {}",
-            moduleIdentifier: "App"
+            moduleIdentifiers: ["App"]
         )
         let libraryIndex = makeSourceFileIndex(
             from: "func libraryExpect(_ expression: @autoclosure () -> Bool) {}",
-            moduleIdentifier: "Library"
+            moduleIdentifiers: ["Library"]
         )
         let projectIndex = ProjectIndex(files: [
             appURL.path: appIndex,
@@ -270,15 +274,15 @@ final class ProjectIndexTests: XCTestCase {
         let projectIndex = ProjectIndex(files: [
             typeURL.path: makeSourceFileIndex(
                 from: "struct Foo { var value = 1; static var shared = 2 }",
-                moduleIdentifier: "App"
+                moduleIdentifiers: ["App"]
             ),
             extensionURL.path: makeSourceFileIndex(
                 from: "extension Foo { func run() {}; static func make() {} }",
-                moduleIdentifier: "App"
+                moduleIdentifiers: ["App"]
             ),
             libraryURL.path: makeSourceFileIndex(
                 from: "struct Foo { var libraryValue = 1 }",
-                moduleIdentifier: "Library"
+                moduleIdentifiers: ["Library"]
             ),
         ])
 
@@ -296,6 +300,51 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertEqual(
             projectIndex.memberNamesByType(visibleFrom: URL(fileURLWithPath: "/unknown.swift")),
             .empty
+        )
+    }
+
+    func testProjectIndexRequiresFactsInEveryModuleForSharedFiles() {
+        let callURL = URL(fileURLWithPath: "/Project/Shared/Call.swift")
+        let appURL = URL(fileURLWithPath: "/Project/App/App.swift")
+        let sharedURL = URL(fileURLWithPath: "/Project/Shared/Declarations.swift")
+        let projectIndex = ProjectIndex(files: [
+            callURL.path: makeSourceFileIndex(from: "", moduleIdentifiers: ["App", "Library"]),
+            appURL.path: makeSourceFileIndex(
+                from: """
+                struct AppType { var appValue = 0 }
+                func appVerify(_ expression: @autoclosure () -> Bool) {}
+                func appPerform(completion: () -> Void) {}
+                """,
+                moduleIdentifiers: ["App"]
+            ),
+            sharedURL.path: makeSourceFileIndex(
+                from: """
+                struct SharedType { var sharedValue = 0 }
+                func sharedVerify(_ expression: @autoclosure () -> Bool) {}
+                func sharedPerform(completion: () -> Void) {}
+                """,
+                moduleIdentifiers: ["App", "Library"]
+            ),
+        ])
+
+        XCTAssertFalse(projectIndex.isInternalType(named: "AppType", from: callURL))
+        XCTAssertTrue(projectIndex.isInternalType(named: "SharedType", from: callURL))
+        XCTAssertEqual(projectIndex.autoclosureFunctionNames(visibleFrom: callURL), ["sharedVerify"])
+        XCTAssertFalse(projectIndex.supportsTrailingClosure(
+            functionNamed: "appPerform",
+            declaredInType: nil,
+            argumentLabels: ["completion"],
+            visibleFrom: callURL
+        ))
+        XCTAssertTrue(projectIndex.supportsTrailingClosure(
+            functionNamed: "sharedPerform",
+            declaredInType: nil,
+            argumentLabels: ["completion"],
+            visibleFrom: callURL
+        ))
+        XCTAssertEqual(
+            projectIndex.memberNamesByType(visibleFrom: callURL),
+            .init(instance: ["SharedType": ["sharedValue"]])
         )
     }
 }

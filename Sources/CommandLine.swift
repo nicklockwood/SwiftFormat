@@ -1344,16 +1344,16 @@ func processInput(_ inputURLs: [URL],
                 guard let source = try? String(contentsOf: fileURL) else { return }
                 let sourceHash = computeHash(source)
                 let key = cacheKey(for: fileURL)
-                let module = moduleIdentifiersByRoot[root]?[fileURL.path]
+                let modules = moduleIdentifiersByRoot[root]?[fileURL.path] ?? []
                 let sourceIndex: SourceFileIndex
                 if let cached = cachedEntries[key]?.sourceIndex,
                    cached.schemaVersion == SourceFileIndex.schemaVersion,
                    cached.contentHash == sourceHash,
-                   cached.moduleIdentifier == module
+                   cached.moduleIdentifiers == modules.sorted()
                 {
                     sourceIndex = cached
                 } else {
-                    sourceIndex = makeSourceFileIndex(from: source, moduleIdentifier: module)
+                    sourceIndex = makeSourceFileIndex(from: source, moduleIdentifiers: modules)
                 }
                 indexQueue.sync {
                     indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
@@ -1606,7 +1606,7 @@ func processInput(_ inputURLs: [URL],
                         if outputURL == inputURL {
                             entry.sourceIndex = makeSourceFileIndex(
                                 from: output,
-                                moduleIdentifier: projectIndex?.files[inputURL.path]?.moduleIdentifier
+                                moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? [])
                             )
                         }
                         cache!.entries[cacheKey] = entry

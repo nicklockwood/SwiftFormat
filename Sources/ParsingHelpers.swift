@@ -2530,7 +2530,7 @@ extension Formatter {
     }
 
     /// Parses the inner-most type that contains the given index.
-    func parseEnclosingType(containing index: Int) -> TypeDeclaration? {
+    func parseEnclosingType(containing index: Int, declarations: [Declaration]? = nil) -> TypeDeclaration? {
         guard let startOfScope = startOfScope(at: index) else { return nil }
 
         if let typeKeyword = indexOfLastSignificantKeyword(at: startOfScope, excluding: ["where"]),
@@ -2538,6 +2538,11 @@ extension Formatter {
            let bodyOpenBrace = self.index(of: .startOfScope("{"), after: typeKeyword),
            let endOfScope = endOfScope(at: bodyOpenBrace)
         {
+            if let type = declarations?.declaration(containing: typeKeyword)?.asTypeDeclaration,
+               type.keywordIndex == typeKeyword
+            {
+                return type
+            }
             // When parsing the body, use `_useForEachToken: false` to enable
             // `parseEnclosingType` to be called from within `forEachToken` loops.
             return TypeDeclaration(
@@ -2549,7 +2554,7 @@ extension Formatter {
         }
 
         else {
-            return parseEnclosingType(containing: startOfScope)
+            return parseEnclosingType(containing: startOfScope, declarations: declarations)
         }
     }
 

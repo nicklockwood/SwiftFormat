@@ -182,6 +182,7 @@ Option | Description
 --- | ---
 `--acronyms` | Acronyms to auto-capitalize. Defaults to "ID,URL,UUID"
 `--preserve-acronyms` | List of symbols to be ignored by the acronyms rule
+`--acronym-visibility` | Capitalize acronyms at or below this visibility threshold: "public", "package", "internal" (default), "fileprivate" or "private"
 
 <details>
 <summary>Examples</summary>

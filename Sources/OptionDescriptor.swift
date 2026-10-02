@@ -1290,6 +1290,19 @@ struct _Descriptors {
         help: "List of symbols to be ignored by the acronyms rule",
         keyPath: \.preserveAcronyms
     )
+    let acronymVisibility = OptionDescriptor(
+        argumentName: "acronym-visibility",
+        displayName: "Acronym Visibility",
+        help: "Capitalize acronyms at or below this visibility threshold:",
+        keyPath: \.acronymVisibility,
+        options: [
+            "public": .public,
+            "package": .package,
+            "internal": .internal,
+            "fileprivate": .fileprivate,
+            "private": .private,
+        ]
+    )
     let typoVisibility = OptionDescriptor(
         argumentName: "typo-visibility",
         displayName: "Typo Visibility",

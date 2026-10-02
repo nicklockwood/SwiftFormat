@@ -383,6 +383,24 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertEqual(options.typoVisibility, .private)
     }
 
+    func testAcronymVisibilityAcceptsSupportedVisibilityThresholds() throws {
+        let descriptor = Descriptors.acronymVisibility
+        XCTAssertEqual(descriptor.defaultArgument, "internal")
+        XCTAssertEqual(descriptor.validArguments, ["public", "package", "internal", "fileprivate", "private"])
+
+        var options: FormatOptions = .default
+        try descriptor.toOptions("public", &options)
+        XCTAssertEqual(options.acronymVisibility, .public)
+        try descriptor.toOptions("fileprivate", &options)
+        XCTAssertEqual(options.acronymVisibility, .fileprivate)
+        try descriptor.toOptions("private", &options)
+        XCTAssertEqual(options.acronymVisibility, .private)
+    }
+
+    func testAcronymVisibilityRejectsOpenVisibility() {
+        XCTAssertFalse(Descriptors.acronymVisibility.validateArgument("open"))
+    }
+
     func testTypoVisibilityRejectsUnsupportedVisibilityThresholds() {
         let descriptor = Descriptors.typoVisibility
         for visibility in ["open"] {

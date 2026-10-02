@@ -990,6 +990,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var emptyBracesSpacing: EmptyBracesSpacing
     public var acronyms: Set<String>
     public var preserveAcronyms: Set<String>
+    public var acronymVisibility: Visibility
     public var typoVisibility: Visibility
     public var typos: [String: String]
     public var ignoredTypos: Set<String>
@@ -1151,6 +1152,7 @@ public struct FormatOptions: CustomStringConvertible {
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 preserveAcronyms: Set<String> = [],
+                acronymVisibility: Visibility = .internal,
                 typoVisibility: Visibility = .fileprivate,
                 typos: [String: String] = [:],
                 ignoredTypos: Set<String> = [],
@@ -1301,6 +1303,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.emptyBracesSpacing = emptyBracesSpacing
         self.acronyms = acronyms
         self.preserveAcronyms = preserveAcronyms
+        self.acronymVisibility = acronymVisibility
         self.typoVisibility = typoVisibility
         self.typos = typos
         self.ignoredTypos = ignoredTypos

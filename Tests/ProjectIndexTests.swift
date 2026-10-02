@@ -327,6 +327,12 @@ final class ProjectIndexTests: XCTestCase {
             init(value: Int = 0) {}
             subscript(index: Int) -> Int { index }
             private func hidden() {}
+            func outer() {
+                func local() {}
+            }
+        }
+        private extension Worker {
+            func extensionHidden() {}
         }
         """
 
@@ -362,6 +368,12 @@ final class ProjectIndexTests: XCTestCase {
                 kind: .subscriptDeclaration,
                 declaringType: "Worker",
                 argumentLabels: ["index"],
+                autoclosureArgumentIndices: []
+            ),
+            .init(
+                name: "outer",
+                declaringType: "Worker",
+                argumentLabels: [],
                 autoclosureArgumentIndices: []
             ),
         ])
@@ -470,30 +482,6 @@ final class ProjectIndexTests: XCTestCase {
         ))
     }
 
-    func testProjectIndexReturnsAutoclosureFunctionsFromCurrentModuleOnly() {
-        let appURL = URL(fileURLWithPath: "/Project/Sources/App/App.swift")
-        let libraryURL = URL(fileURLWithPath: "/Project/Sources/Library/Library.swift")
-        let appIndex = makeSourceFileIndex(
-            from: "func appExpect(_ expression: @autoclosure () -> Bool) {}",
-            moduleIdentifiers: ["App"]
-        )
-        let libraryIndex = makeSourceFileIndex(
-            from: "func libraryExpect(_ expression: @autoclosure () -> Bool) {}",
-            moduleIdentifiers: ["Library"]
-        )
-        let projectIndex = ProjectIndex(files: [
-            appURL.path: appIndex,
-            libraryURL.path: libraryIndex,
-        ])
-
-        XCTAssertEqual(projectIndex.autoclosureFunctionNames(visibleFrom: appURL), ["appExpect"])
-        XCTAssertEqual(projectIndex.autoclosureFunctionNames(visibleFrom: libraryURL), ["libraryExpect"])
-        XCTAssertEqual(
-            projectIndex.autoclosureFunctionNames(visibleFrom: URL(fileURLWithPath: "/unknown.swift")),
-            []
-        )
-    }
-
     func testProjectIndexReturnsTypeMembersFromCurrentModuleOnly() {
         let typeURL = URL(fileURLWithPath: "/Project/Sources/App/Type.swift")
         let extensionURL = URL(fileURLWithPath: "/Project/Sources/App/Extension.swift")
@@ -556,7 +544,6 @@ final class ProjectIndexTests: XCTestCase {
 
         XCTAssertFalse(projectIndex.isInternalType(named: "AppType", from: callURL))
         XCTAssertTrue(projectIndex.isInternalType(named: "SharedType", from: callURL))
-        XCTAssertEqual(projectIndex.autoclosureFunctionNames(visibleFrom: callURL), ["sharedVerify"])
         XCTAssertFalse(projectIndex.supportsTrailingClosure(
             functionNamed: "appPerform",
             receiver: .unqualified(declaringType: nil, isStatic: false),

@@ -46,6 +46,7 @@ final class ProjectIndexTests: XCTestCase {
         let index = try JSONDecoder().decode(SourceFileIndex.self, from: data)
 
         XCTAssertEqual(index.moduleIdentifiers, ["App"])
+        XCTAssertEqual(index.typoDeclarations, [])
         XCTAssertEqual(index.functionDeclarations, [
             .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
         ])
@@ -516,6 +517,27 @@ final class ProjectIndexTests: XCTestCase {
             projectIndex.memberNamesByType(visibleFrom: URL(fileURLWithPath: "/unknown.swift")),
             .empty
         )
+    }
+
+    func testProjectIndexReturnsTypoDeclarationsFromCurrentModuleOnly() throws {
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let appURL = URL(fileURLWithPath: "/Project/Sources/App/App.swift")
+        let libraryURL = URL(fileURLWithPath: "/Project/Sources/Library/Library.swift")
+        let projectIndex = ProjectIndex(files: [
+            callURL.path: makeSourceFileIndex(from: "", moduleIdentifiers: ["App"]),
+            appURL.path: makeSourceFileIndex(
+                from: "struct AppReciever {}",
+                moduleIdentifiers: ["App"]
+            ),
+            libraryURL.path: makeSourceFileIndex(
+                from: "struct LibraryReciever {}",
+                moduleIdentifiers: ["Library"]
+            ),
+        ])
+
+        let names = try XCTUnwrap(projectIndex.typoNames(upTo: .internal, visibleFrom: callURL))
+        XCTAssertTrue(names.eligible.contains("AppReciever"))
+        XCTAssertFalse(names.declared.contains("LibraryReciever"))
     }
 
     func testProjectIndexRequiresFactsInEveryModuleForSharedFiles() {

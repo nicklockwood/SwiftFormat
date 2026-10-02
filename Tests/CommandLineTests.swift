@@ -695,6 +695,23 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexCorrectsKnownInternalTypoReference() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Declaration.swift": "struct Reciever {}\n",
+            "Sources/App/Use.swift": "let receiver = Reciever()\n",
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules commonTypos --typo-visibility internal --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), "let receiver = Receiver()\n")
+        }
+    }
+
     func testProjectIndexConvertsLabeledTrailingClosureForKnownMemberSignature() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

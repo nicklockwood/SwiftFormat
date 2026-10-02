@@ -621,6 +621,63 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexUsesXcodeTargetMembership() throws {
+        try withTmpDirectory([
+            "App/Type.swift": "struct Foo {}\n",
+            "App/Extension.swift": "extension Foo { public func bar() {} }\n",
+            "Library/Type.swift": "public struct Foo {}\n",
+            "Example.xcodeproj/project.pbxproj": """
+            // !$*UTF8*$!
+            {
+                objects = {
+                    APP_TYPE_REF = { isa = PBXFileReference; path = Type.swift; sourceTree = "<group>"; };
+                    APP_EXTENSION_REF = { isa = PBXFileReference; path = Extension.swift; sourceTree = "<group>"; };
+                    LIBRARY_TYPE_REF = { isa = PBXFileReference; path = Type.swift; sourceTree = "<group>"; };
+                    APP_TYPE_BUILD = { isa = PBXBuildFile; fileRef = APP_TYPE_REF; };
+                    APP_EXTENSION_BUILD = { isa = PBXBuildFile; fileRef = APP_EXTENSION_REF; };
+                    LIBRARY_TYPE_BUILD = { isa = PBXBuildFile; fileRef = LIBRARY_TYPE_REF; };
+                    ROOT_GROUP = {
+                        isa = PBXGroup;
+                        children = (APP_GROUP, LIBRARY_GROUP,);
+                        sourceTree = "<group>";
+                    };
+                    APP_GROUP = {
+                        isa = PBXGroup;
+                        children = (APP_TYPE_REF, APP_EXTENSION_REF,);
+                        path = App;
+                        sourceTree = "<group>";
+                    };
+                    LIBRARY_GROUP = {
+                        isa = PBXGroup;
+                        children = (LIBRARY_TYPE_REF,);
+                        path = Library;
+                        sourceTree = "<group>";
+                    };
+                    APP_SOURCES = {
+                        isa = PBXSourcesBuildPhase;
+                        files = (APP_TYPE_BUILD, APP_EXTENSION_BUILD,);
+                    };
+                    LIBRARY_SOURCES = {
+                        isa = PBXSourcesBuildPhase;
+                        files = (LIBRARY_TYPE_BUILD,);
+                    };
+                    APP_TARGET = { isa = PBXNativeTarget; buildPhases = (APP_SOURCES,); name = App; };
+                    LIBRARY_TARGET = { isa = PBXNativeTarget; buildPhases = (LIBRARY_SOURCES,); name = Library; };
+                };
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("App/Extension.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "App/Extension.swift --rules redundantPublic --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), "extension Foo { func bar() {} }\n")
+        }
+    }
+
     func testProjectIndexChangeInvalidatesFormattingCache() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

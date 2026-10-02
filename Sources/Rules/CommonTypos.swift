@@ -13,6 +13,7 @@ public extension FormatRule {
     static let commonTypos = FormatRule(
         help: "Correct common spelling mistakes in comments and identifiers.",
         disabledByDefault: true,
+        usesProjectContext: true,
         options: ["typo-visibility", "typos", "ignore-typos"]
     ) { formatter in
         let ignoredTypos = Set(formatter.options.ignoredTypos.map { $0.lowercased() })
@@ -24,6 +25,18 @@ public extension FormatRule {
         var declaredNames = Set<String>()
         var protectedNames = Set<String>()
         var eligibleNames = Set<String>()
+        let projectTypoNames: ProjectIndex.TypoNames? = formatter.currentFileURL.flatMap { fileURL in
+            guard formatter.options.typoVisibility > .fileprivate else { return nil }
+            return formatter.projectIndex?.typoNames(
+                upTo: formatter.options.typoVisibility,
+                visibleFrom: fileURL
+            )
+        }
+        if let projectTypoNames {
+            declaredNames.formUnion(projectTypoNames.declared)
+            protectedNames.formUnion(projectTypoNames.protected)
+            eligibleNames.formUnion(projectTypoNames.eligible)
+        }
 
         declarations.forEachRecursiveDeclaration { declaration in
             let names = formatter.namesInDeclaration(at: declaration.keywordIndex)
@@ -98,7 +111,10 @@ public extension FormatRule {
                 let correctedName: String
                 if let renamed = renames[name] {
                     correctedName = renamed
-                } else if formatter.options.typoVisibility > .fileprivate, !declaredNames.contains(name) {
+                } else if formatter.options.typoVisibility > .fileprivate,
+                          projectTypoNames == nil,
+                          !declaredNames.contains(name)
+                {
                     correctedName = formatter.correctingCommonTypos(
                         in: name,
                         using: typoCorrections,

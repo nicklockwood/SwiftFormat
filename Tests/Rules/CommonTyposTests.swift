@@ -10,6 +10,32 @@ import XCTest
 @testable import SwiftFormat
 
 final class CommonTyposTests: XCTestCase {
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String,
+        declarations: String,
+        options: FormatOptions,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Declarations.swift")
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            callURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.commonTypos],
+            to: tokenize(input),
+            with: options,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: callURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output, file: file, line: line)
+    }
+
     func testCorrectsTyposInComments() {
         let input = """
         // Retreive the value immediatly
@@ -91,6 +117,74 @@ final class CommonTyposTests: XCTestCase {
             for: input,
             output,
             rule: .commonTypos,
+            options: FormatOptions(typoVisibility: .internal)
+        )
+    }
+
+    func testProjectIndexCorrectsKnownInternalDeclarationsInOtherFiles() throws {
+        let declarations = """
+        struct ExternalReciever {
+            func retreiveValue(for identifer: String) {}
+        }
+
+        public struct PublicAdress {}
+        """
+        let input = """
+        let receiver: ExternalReciever = .init()
+        receiver.retreiveValue(for: identifer)
+        let address = PublicAdress()
+        unknownRetreiveValue()
+        """
+        let output = """
+        let receiver: ExternalReceiver = .init()
+        receiver.retrieveValue(for: identifier)
+        let address = PublicAdress()
+        unknownRetreiveValue()
+        """
+
+        try testProjectFormatting(
+            for: input,
+            output,
+            declarations: declarations,
+            options: FormatOptions(typoVisibility: .internal)
+        )
+    }
+
+    func testProjectIndexCorrectsKnownPublicDeclarations() throws {
+        let declarations = """
+        public struct PublicReciever {}
+        open class OpenAdress {}
+        """
+        let input = """
+        let receiver = PublicReciever()
+        let address = OpenAdress()
+        """
+        let output = """
+        let receiver = PublicReceiver()
+        let address = OpenAdress()
+        """
+
+        try testProjectFormatting(
+            for: input,
+            output,
+            declarations: declarations,
+            options: FormatOptions(typoVisibility: .public)
+        )
+    }
+
+    func testProjectIndexPreservesCorrectionThatWouldCollideInOtherFile() throws {
+        let declarations = """
+        struct Reciever {}
+        struct Receiver {}
+        """
+        let input = """
+        let receiver = Reciever()
+        """
+
+        try testProjectFormatting(
+            for: input,
+            input,
+            declarations: declarations,
             options: FormatOptions(typoVisibility: .internal)
         )
     }

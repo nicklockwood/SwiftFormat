@@ -403,6 +403,73 @@ final class ProjectIndexTests: XCTestCase {
         ))
     }
 
+    func testProjectIndexResolvesCallsWithDefaultArguments() throws {
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Functions.swift")
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(
+                from: """
+                func perform(value: Int = 0, completion: () -> Void) {}
+                struct Worker {
+                    func run(value: Int = 0, completion: () -> Void) {}
+                    static func make(value: Int = 0, completion: () -> Void) {}
+                }
+                """,
+                moduleIdentifiers: ["App"]
+            ),
+            callURL.path: makeSourceFileIndex(from: "", moduleIdentifiers: ["App"]),
+        ])
+
+        let freeFunction = try XCTUnwrap(projectIndex.resolveFunctionCall(
+            named: "perform",
+            receiver: .unqualified(declaringType: nil, isStatic: false),
+            argumentLabels: ["completion"],
+            visibleFrom: callURL
+        ))
+        XCTAssertEqual(freeFunction.matches.map(\.parameterIndices), [[1]])
+
+        XCTAssertNotNil(projectIndex.resolveFunctionCall(
+            named: "run",
+            receiver: .instance(type: "Worker"),
+            argumentLabels: ["completion"],
+            visibleFrom: callURL
+        ))
+        XCTAssertNotNil(projectIndex.resolveFunctionCall(
+            named: "make",
+            receiver: .type("Worker"),
+            argumentLabels: ["completion"],
+            visibleFrom: callURL
+        ))
+        XCTAssertNil(projectIndex.resolveFunctionCall(
+            named: "run",
+            receiver: .type("Worker"),
+            argumentLabels: ["completion"],
+            visibleFrom: callURL
+        ))
+    }
+
+    func testProjectIndexDoesNotResolveAmbiguousOverloads() {
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Functions.swift")
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(
+                from: """
+                func perform(value: Int, completion: () -> Void) {}
+                func perform(value: String, completion: () -> Void) {}
+                """,
+                moduleIdentifiers: ["App"]
+            ),
+            callURL.path: makeSourceFileIndex(from: "", moduleIdentifiers: ["App"]),
+        ])
+
+        XCTAssertNil(projectIndex.resolveFunctionCall(
+            named: "perform",
+            receiver: .unqualified(declaringType: nil, isStatic: false),
+            argumentLabels: ["value", "completion"],
+            visibleFrom: callURL
+        ))
+    }
+
     func testProjectIndexReturnsAutoclosureFunctionsFromCurrentModuleOnly() {
         let appURL = URL(fileURLWithPath: "/Project/Sources/App/App.swift")
         let libraryURL = URL(fileURLWithPath: "/Project/Sources/Library/Library.swift")

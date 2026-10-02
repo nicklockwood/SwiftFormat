@@ -1477,6 +1477,19 @@ extension Formatter {
         return Token.swiftTypeKeywords.contains(lastKeyword)
     }
 
+    /// Whether the given index is a `startOfScope("{")` that represents the body of a declaration
+    /// like a function, computed property or type, rather than a branch of the enclosing statement
+    func isStartOfDeclarationBody(at scopeIndex: Int) -> Bool {
+        guard tokens[scopeIndex] == .startOfScope("{"),
+              let keywordIndex = indexOfLastSignificantKeyword(at: scopeIndex, excluding: ["where"]),
+              tokens[keywordIndex].isDeclarationTypeKeyword
+        else { return false }
+
+        // Conditions like `if let foo = bar {` also have a declaration keyword as their last
+        // significant keyword, but their braces belong to the conditional statement.
+        return !isConditionalStatement(at: scopeIndex)
+    }
+
     func isTrailingClosureLabel(at i: Int) -> Bool {
         if case .identifier? = token(at: i),
            last(.nonSpaceOrCommentOrLinebreak, before: i) == .endOfScope("}"),
@@ -2590,6 +2603,115 @@ extension Formatter {
         }
         return nil
     }
+
+    // MARK: - Result builders
+
+    /// Keywords that can't appear in a result builder body. Result builders support `if` and
+    /// `switch` statements, but have no equivalent for other control flow, and the result
+    /// builder transform is skipped entirely for bodies with an explicit `return`.
+    static let resultBuilderIncompatibleKeywords: Set<String> = [
+        "return", "guard", "for", "while", "repeat", "do", "defer", "throw",
+    ]
+
+    /// The scope that a result builder attribute on the given declaration would apply to,
+    /// along with the type that scope returns. A result builder can only be applied to a
+    /// read-only `var`, `func` or `subscript`, so this is `nil` for any other declaration.
+    func resultBuilderTarget(of declaration: Declaration) -> (returnType: TypeName, scopeRange: ClosedRange<Int>)? {
+        let returnType: TypeName?
+        let bodyScope: ClosedRange<Int>?
+
+        switch declaration.keyword {
+        case "var":
+            let property = declaration.parsePropertyDeclaration()
+            returnType = property?.type
+            bodyScope = property?.body?.scopeRange
+        case "func", "subscript":
+            let function = parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
+            returnType = function?.returnType
+            bodyScope = function?.bodyRange
+        default:
+            return nil
+        }
+
+        guard let returnType, let bodyScope, let scopeRange = getterScope(inBodyScope: bodyScope) else {
+            return nil
+        }
+
+        return (returnType, scopeRange)
+    }
+
+    /// The scope of the getter within the given declaration body, which is either the body
+    /// itself or the body of an explicit `get` accessor. `nil` if the declaration is stored,
+    /// or has any other accessor, since those can't have a result builder applied.
+    func getterScope(inBodyScope bodyScope: ClosedRange<Int>) -> ClosedRange<Int>? {
+        guard let firstIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: bodyScope.lowerBound),
+              firstIndex != bodyScope.upperBound
+        else { return nil }
+
+        guard isAccessorKeyword(at: firstIndex) else { return bodyScope }
+
+        guard tokens[firstIndex].string == "get",
+              let startOfGetter = index(of: .nonSpaceOrCommentOrLinebreak, after: firstIndex),
+              tokens[startOfGetter] == .startOfScope("{"),
+              let endOfGetter = endOfScope(at: startOfGetter),
+              index(of: .nonSpaceOrCommentOrLinebreak, after: endOfGetter) == bodyScope.upperBound
+        else { return nil }
+
+        return startOfGetter ... endOfGetter
+    }
+
+    /// Whether the body of the scope at the given index would behave the same if a
+    /// result builder attribute like `@ViewBuilder` was applied to the declaration.
+    func scopeBodySupportsResultBuilder(at startOfScopeIndex: Int) -> Bool {
+        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
+
+        // `if` / `switch` branches are built by the result builder, so this walks into them,
+        // but closures and nested declarations are their own scope and are stepped over.
+        var index = startOfScopeIndex + 1
+        while index < endOfScopeIndex {
+            if tokens[index] == .startOfScope("{"),
+               isStartOfClosure(at: index) || isStartOfDeclarationBody(at: index),
+               let endOfNestedScope = endOfScope(at: index)
+            {
+                index = endOfNestedScope
+            } else if case let .keyword(keyword) = tokens[index],
+                      Formatter.resultBuilderIncompatibleKeywords.contains(keyword)
+            {
+                return false
+            }
+            index += 1
+        }
+
+        return true
+    }
+
+    /// Whether the given declaration already has a result builder attribute like `@ViewBuilder`.
+    /// Result builder types conventionally have names ending in `Builder`.
+    func hasResultBuilderAttribute(_ declaration: Declaration) -> Bool {
+        let startOfModifiers = declaration.startOfModifiersIndex(includingAttributes: true)
+        return (startOfModifiers ..< declaration.keywordIndex).contains(where: {
+            tokens[$0].string.hasSuffix("Builder")
+        })
+    }
+
+    /// Inserts a result builder attribute like `@ViewBuilder` on its own line at the given index,
+    /// which must be the start of the declaration's modifiers.
+    func insertResultBuilderAttribute(_ attribute: String, at index: Int) {
+        // Any existing indentation before the insertion point now indents the attribute,
+        // so the declaration that follows needs its own copy of the indentation.
+        let currentIndent = currentIndentForLine(at: index)
+
+        // Attributes are represented as `.keyword` tokens (e.g. `@objc`, `@main`). Inserting an
+        // `.identifier` instead causes other rules like `organizeDeclarations` to misparse the
+        // declaration and insert a spurious blank line after the attribute.
+        var tokensToInsert: [Token] = [.keyword(attribute), linebreakToken(for: index)]
+        if !currentIndent.isEmpty {
+            tokensToInsert.append(.space(currentIndent))
+        }
+        insert(tokensToInsert, at: index)
+    }
+
+    // MARK: -
 
     /// Whether or not the comment starting at the given index is a doc comment
     func isDocComment(startOfComment: Int) -> Bool {

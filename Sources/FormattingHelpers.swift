@@ -3482,6 +3482,96 @@ extension Formatter {
             insert([.keyword("private"), .space(" ")], at: keywordIndex)
         }
     }
+
+    // MARK: - Content builders
+
+    /// Removes SwiftUI result builder attributes that Swift applies implicitly, or that aren't needed
+    func removeRedundantContentBuilderAttributes() {
+        // Collect all attributes to remove first (to avoid re-entrancy issues)
+        var attributeIndicesToRemove = [Int]()
+
+        parseDeclarations().forEachRecursiveDeclaration { declaration in
+            guard let viewBuilderIndex = indexOfViewBuilderAttribute(for: declaration)
+            else { return }
+
+            // Never remove @ViewBuilder from protocol members, as conforming types
+            // rely on the implicit result builder being added
+            if isInsideProtocol(at: declaration.keywordIndex) {
+                return
+            }
+
+            let bodyScope: ClosedRange<Int>?
+            let isBodyMember: Bool
+
+            // Parse the declaration to get body scope and check if it's a body member
+            if declaration.keyword == "var" || declaration.keyword == "let",
+               let property = declaration.parsePropertyDeclaration()
+            {
+                bodyScope = property.body?.scopeRange
+                // A var named "body" is only the protocol body if it's on a View
+                // (ViewModifier.body must be a function, not a property)
+                isBodyMember = property.identifier == "body" && isViewType(declaration.parentType)
+            } else if declaration.keyword == "func",
+                      let function = parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
+            {
+                bodyScope = function.bodyRange
+                // A func named "body" is only the protocol body if it's on a ViewModifier
+                // (View.body must be a property, not a function)
+                isBodyMember = function.name == "body" && isViewModifierType(declaration.parentType)
+            } else {
+                return
+            }
+
+            guard let bodyScope else { return }
+
+            // The attribute is redundant if:
+            // 1. It's the body protocol requirement of a View/ViewModifier, OR
+            // 2. The body contains only a single non-conditional expression
+            let isRedundant = isBodyMember
+                || scopeBodyIsSingleNonConditionalExpression(at: bodyScope.lowerBound)
+
+            if isRedundant {
+                attributeIndicesToRemove.append(viewBuilderIndex)
+            }
+        }
+
+        // Remove the attributes in reverse order to not invalidate indices
+        for attributeIndex in attributeIndicesToRemove.reversed() {
+            removeViewBuilderAttribute(at: attributeIndex)
+        }
+    }
+
+    /// Removes a @ViewBuilder attribute at the given index, including the trailing linebreak if on its own line
+    func removeViewBuilderAttribute(at attributeIndex: Int) {
+        var startIndex = attributeIndex
+        var endIndex = attributeIndex
+
+        // Check if there's a leading space (between another attribute and this one)
+        let hasLeadingSpace = attributeIndex > 0 && tokens[attributeIndex - 1].isSpace
+        let leadingSpaceIsAfterAttribute = hasLeadingSpace && attributeIndex > 1 && !tokens[attributeIndex - 2].isLinebreak
+
+        let nextNonSpaceIndex = index(of: .nonSpace, after: attributeIndex)
+        let hasTrailingLinebreak = nextNonSpaceIndex != nil && tokens[nextNonSpaceIndex!].isLinebreak
+        let hasTrailingSpace = attributeIndex + 1 < tokens.count && tokens[attributeIndex + 1].isSpace
+
+        if leadingSpaceIsAfterAttribute {
+            // Remove the space before @ViewBuilder (space between attributes)
+            startIndex = attributeIndex - 1
+            // Don't remove trailing linebreak - preserve the line structure
+            // Don't remove trailing space - it separates from the next token
+        } else if hasTrailingLinebreak, let nextIndex = nextNonSpaceIndex {
+            // @ViewBuilder is at the start of the line (possibly with indentation)
+            endIndex = nextIndex
+            // Also remove leading indentation
+            if hasLeadingSpace, attributeIndex > 1, tokens[attributeIndex - 2].isLinebreak {
+                startIndex = attributeIndex - 1
+            }
+        } else if hasTrailingSpace {
+            endIndex = attributeIndex + 1
+        }
+
+        removeTokens(in: startIndex ... endIndex)
+    }
 }
 
 extension RandomAccessCollection<Token> where Index == Int {

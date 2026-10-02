@@ -19,6 +19,7 @@
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [consistentSwitchCaseSpacing](#consistentSwitchCaseSpacing)
+* [contentBuilder](#contentBuilder)
 * [docComments](#docComments)
 * [docCommentsBeforeModifiers](#docCommentsBeforeModifiers)
 * [duplicateImports](#duplicateImports)
@@ -46,7 +47,6 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
-* [preferContentBuilder](#preferContentBuilder)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
@@ -79,7 +79,6 @@
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVariable](#redundantVariable)
-* [redundantViewBuilder](#redundantViewBuilder)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [simplifyGenericConstraints](#simplifyGenericConstraints)
@@ -166,6 +165,7 @@
 
 * [privateStateVariables](#privateStateVariables)
 * [redundantProperty](#redundantProperty)
+* [redundantViewBuilder](#redundantViewBuilder)
 * [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
@@ -793,6 +793,94 @@ Ensures consistent spacing among all of the cases in a switch statement.
       "Venus"
   case .earth:
       "Earth"
+  }
+```
+
+</details>
+<br/>
+
+## contentBuilder
+
+Use implicit or explicit SwiftUI result builder attributes like `@ContentBuilder`.
+
+Option | Description
+--- | ---
+`--content-builder` | SwiftUI result builder attributes: "implicit" (default) or "explicit"
+`--prefer-content-builder` | Replace legacy builders like @ViewBuilder with @ContentBuilder: "true" or "false" (default)
+
+<details>
+<summary>Examples</summary>
+
+With `--content-builder implicit` (default), removes result builder
+attributes that Swift applies implicitly, or that aren't needed:
+
+```diff
+  struct MyView: View {
+-   @ViewBuilder
+    var body: some View {
+      helper
+    }
+
+-   @ViewBuilder
+    var helper: some View {
+      VStack {
+        Text("baaz")
+        Text("quux")
+      }
+    }
+
+    // Not redundant - multiple top-level views
+    @ViewBuilder
+    var helper2: some View {
+      Text("foo")
+      Text("bar")
+    }
+  }
+```
+
+With `--content-builder explicit`, instead adds an explicit result builder
+attribute to declarations that return SwiftUI content:
+
+```diff
+  struct MyView: View {
++   @ContentBuilder
+    var body: some View {
+      content
+    }
+
++   @ContentBuilder
+    var content: some View {
+      if showDetail {
+        Text("foo")
+      }
+    }
+
+    // Not applied: an explicit `return` disables the result builder transform
+    var footer: some View {
+      return Text("bar")
+    }
+  }
+```
+
+With `--prefer-content-builder true`, replaces legacy result builders with the
+equivalent `@ContentBuilder`, which requires Swift 6.4 or later. This can be
+combined with either `--content-builder` mode:
+
+```diff
+  struct MyView: View {
+-   @ViewBuilder
++   @ContentBuilder
+    var content: some View {
+      Text("foo")
+      Text("bar")
+    }
+
+-   @ToolbarContentBuilder
++   @ContentBuilder
+    var toolbarItems: some ToolbarContent {
+      ToolbarItem { Button("Save") {} }
+      ToolbarItem { Button("Cancel") {} }
+    }
   }
 ```
 
@@ -1991,41 +2079,6 @@ Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(
 ```diff
 - if text.range(of: "needle") != nil {
 + if text.contains("needle") {
-```
-
-</details>
-<br/>
-
-## preferContentBuilder
-
-Replace legacy SwiftUI result builder attributes like `@ViewBuilder` with the equivalent `@ContentBuilder`.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  struct MyView: View {
-    var body: some View {
-      NavigationStack {
-        content
-      }
-      .toolbar { toolbarItems }
-    }
-
--   @ViewBuilder
-+   @ContentBuilder
-    var content: some View {
-      Text("foo")
-      Text("bar")
-    }
-
--   @ToolbarContentBuilder
-+   @ContentBuilder
-    var toolbarItems: some ToolbarContent {
-      ToolbarItem { Button("Save") {} }
-      ToolbarItem { Button("Cancel") {} }
-    }
-  }
 ```
 
 </details>
@@ -3335,35 +3388,7 @@ Simplifies redundant variable definitions that are immediately returned.
 
 Remove redundant @ViewBuilder attribute when it's not needed.
 
-<details>
-<summary>Examples</summary>
-
-```diff
-  struct MyView: View {
--   @ViewBuilder
-    var body: some View {
-      helper
-    }
-
--   @ViewBuilder
-    var helper: some View {
-      VStack {
-        Text("baaz")
-        Text("quux")
-      }
-    }
-
-    // Not redundant - multiple top-level views
-    @ViewBuilder
-    var helper2: some View {
-      Text("foo")
-      Text("bar")
-    }
-  }
-```
-
-</details>
-<br/>
+*Note: redundantViewBuilder rule is deprecated. Use contentBuilder with `--content-builder implicit` instead.*
 
 ## redundantVoidReturnType
 

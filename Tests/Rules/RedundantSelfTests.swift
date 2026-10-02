@@ -10,6 +10,31 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantSelfTests: XCTestCase {
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String,
+        declarations: String,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Declarations.swift")
+        let callURL = URL(fileURLWithPath: "/Project/Sources/App/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            callURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.redundantSelf],
+            to: tokenize(input),
+            with: .default,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: callURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output, file: file, line: line)
+    }
+
     // explicitSelf = .remove
 
     func testSimpleRemoveRedundantSelf() {
@@ -20,6 +45,47 @@ final class RedundantSelfTests: XCTestCase {
         func foo() { bar() }
         """
         testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies])
+    }
+
+    func testProjectAutoclosureSignaturesPreserveSelfOnlyInMatchingArguments() throws {
+        let declarations = """
+        func verify(expression: @autoclosure () -> Bool, message: String = "") {}
+        func verify(value: Bool) {}
+        func check(message: String = "", expression: @autoclosure () -> Bool) {}
+        func ambiguous(expression: @autoclosure () -> Bool) {}
+        func ambiguous(expression: Bool) {}
+        func nested(_ value: Bool) -> Bool { value }
+        """
+        let input = """
+        struct Example {
+            var value: Bool
+            var message: String
+
+            func test() {
+                verify(expression: self.value, message: self.message)
+                verify(value: self.value)
+                check(expression: self.value)
+                verify(expression: nested(self.value))
+                ambiguous(expression: self.value)
+            }
+        }
+        """
+        let output = """
+        struct Example {
+            var value: Bool
+            var message: String
+
+            func test() {
+                verify(expression: self.value, message: message)
+                verify(value: value)
+                check(expression: self.value)
+                verify(expression: nested(self.value))
+                ambiguous(expression: self.value)
+            }
+        }
+        """
+
+        try testProjectFormatting(for: input, output, declarations: declarations)
     }
 
     func testRemoveSelfInsideStringInterpolation() {

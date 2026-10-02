@@ -30,8 +30,47 @@ struct SourceFileIndex: Codable, Equatable {
 
     struct FunctionDeclaration: Codable, Equatable {
         var name: String
+        var declaringType: String?
         var argumentLabels: [String?]
+        var closureArgumentIndices: [Int]
         var autoclosureArgumentIndices: [Int]
+
+        init(
+            name: String,
+            declaringType: String? = nil,
+            argumentLabels: [String?],
+            closureArgumentIndices: [Int] = [],
+            autoclosureArgumentIndices: [Int]
+        ) {
+            self.name = name
+            self.declaringType = declaringType
+            self.argumentLabels = argumentLabels
+            self.closureArgumentIndices = closureArgumentIndices
+            self.autoclosureArgumentIndices = autoclosureArgumentIndices
+        }
+
+        private enum CodingKeys: CodingKey {
+            case name
+            case declaringType
+            case argumentLabels
+            case closureArgumentIndices
+            case autoclosureArgumentIndices
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+            declaringType = try container.decodeIfPresent(String.self, forKey: .declaringType)
+            argumentLabels = try container.decode([String?].self, forKey: .argumentLabels)
+            closureArgumentIndices = try container.decodeIfPresent(
+                [Int].self,
+                forKey: .closureArgumentIndices
+            ) ?? []
+            autoclosureArgumentIndices = try container.decode(
+                [Int].self,
+                forKey: .autoclosureArgumentIndices
+            )
+        }
     }
 
     struct TypeMembers: Codable, Equatable {
@@ -40,7 +79,7 @@ struct SourceFileIndex: Codable, Equatable {
         var staticMembers: [String]
     }
 
-    static let schemaVersion = 3
+    static let schemaVersion = 4
 
     var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
@@ -104,12 +143,14 @@ struct ProjectIndex {
     let fingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
     private let autoclosureFunctionNamesByModule: [String: Set<String>]
+    private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
     private let memberNamesByModule: [String: MemberNamesByType]
 
     init(files: [String: SourceFileIndex]) {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
         var autoclosureFunctionNamesByModule = [String: Set<String>]()
+        var functionDeclarationsByModule = [String: [String: [SourceFileIndex.FunctionDeclaration]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
         for file in files.values {
             guard let moduleIdentifier = file.moduleIdentifier else { continue }
@@ -118,7 +159,11 @@ struct ProjectIndex {
                 typeVisibilities[key, default: []].insert(declaration.visibility)
             }
             for declaration in file.functionDeclarations {
-                autoclosureFunctionNamesByModule[moduleIdentifier, default: []].insert(declaration.name)
+                if !declaration.autoclosureArgumentIndices.isEmpty {
+                    autoclosureFunctionNamesByModule[moduleIdentifier, default: []].insert(declaration.name)
+                }
+                functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
+                    .append(declaration)
             }
             for members in file.typeMembers {
                 if !members.instanceMembers.isEmpty {
@@ -135,6 +180,7 @@ struct ProjectIndex {
         }
         self.typeVisibilities = typeVisibilities
         self.autoclosureFunctionNamesByModule = autoclosureFunctionNamesByModule
+        self.functionDeclarationsByModule = functionDeclarationsByModule
         self.memberNamesByModule = memberNamesByModule
         let description = files.keys.sorted().compactMap { path -> String? in
             guard let file = files[path] else { return nil }
@@ -145,8 +191,9 @@ struct ProjectIndex {
             let functions = file.functionDeclarations
                 .map { declaration in
                     let labels = declaration.argumentLabels.map { $0 ?? "_" }.joined(separator: ",")
+                    let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
-                    return "\(declaration.name)(\(labels)):\(indices)"
+                    return "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(closures):\(indices)"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -180,6 +227,34 @@ struct ProjectIndex {
             return []
         }
         return autoclosureFunctionNamesByModule[moduleIdentifier] ?? []
+    }
+
+    /// Whether a same-module declaration makes removing the final closure label unambiguous.
+    func supportsTrailingClosure(
+        functionNamed name: String,
+        declaredInType declaringType: String?,
+        argumentLabels: [String?],
+        visibleFrom fileURL: URL
+    ) -> Bool {
+        let path = fileURL.standardizedFileURL.path
+        guard let moduleIdentifier = files[path]?.moduleIdentifier,
+              let declarations = functionDeclarationsByModule[moduleIdentifier]?[name]?
+              .filter({ $0.declaringType == declaringType }),
+              let finalArgumentIndex = argumentLabels.indices.last,
+              declarations.contains(where: {
+                  $0.argumentLabels == argumentLabels &&
+                      $0.closureArgumentIndices.contains(finalArgumentIndex)
+              })
+        else { return false }
+
+        let precedingLabels = argumentLabels.dropLast()
+        return declarations.allSatisfy { declaration in
+            guard declaration.argumentLabels.count == argumentLabels.count,
+                  declaration.argumentLabels.dropLast().elementsEqual(precedingLabels),
+                  declaration.closureArgumentIndices.contains(finalArgumentIndex)
+            else { return true }
+            return declaration.argumentLabels.last == argumentLabels.last
+        }
     }
 
     /// Project-defined instance and static/class members grouped by type in the current file's module.
@@ -248,16 +323,23 @@ func makeSourceFileIndex(
         }
 
         guard declaration.keyword == "func",
+              ![Visibility.private, .fileprivate].contains(declaration.visibility()),
               let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex),
               let name = function.name
         else { return }
         let autoclosureArgumentIndices = function.arguments.indices.filter { index in
             function.arguments[index].type.tokens.contains { $0.string == "@autoclosure" }
         }
-        guard !autoclosureArgumentIndices.isEmpty else { return }
+        let closureArgumentIndices = function.arguments.indices.filter { index in
+            !autoclosureArgumentIndices.contains(index) &&
+                function.arguments[index].type.tokens.contains { $0.string == "->" }
+        }
+        guard !closureArgumentIndices.isEmpty || !autoclosureArgumentIndices.isEmpty else { return }
         functionDeclarations.append(.init(
             name: name,
+            declaringType: declaration.parentType?.fullyQualifiedName,
             argumentLabels: function.arguments.map(\.externalLabel),
+            closureArgumentIndices: closureArgumentIndices,
             autoclosureArgumentIndices: autoclosureArgumentIndices
         ))
     }

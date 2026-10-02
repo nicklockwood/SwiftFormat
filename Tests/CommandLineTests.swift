@@ -678,6 +678,153 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexConvertsLabeledTrailingClosureForKnownSignature() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Functions.swift": "func perform(value: Int, completion: () -> Void) {}\n",
+            "Sources/App/Call.swift": "perform(value: 1, completion: {})\n",
+        ]) { directory in
+            let callURL = directory.appendingPathComponent("Sources/App/Call.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Call.swift --rules trailingClosures --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: callURL), "perform(value: 1) {}\n")
+        }
+    }
+
+    func testProjectIndexConvertsLabeledTrailingClosureForKnownMemberSignature() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Worker.swift": """
+            struct Worker {
+                func perform(value: Int, completion: () -> Void) {}
+            }
+            """,
+            "Sources/App/Extension.swift": """
+            extension Worker {
+                func test() {
+                    perform(value: 1, completion: {})
+                }
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules trailingClosures --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Worker {
+                func test() {
+                    perform(value: 1) {}
+                }
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexDoesNotUseMemberSignatureForQualifiedCallWithUnknownReceiver() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Worker.swift": """
+            struct Worker {
+                func perform(value: Int, completion: () -> Void) {}
+            }
+            """,
+            "Sources/App/Call.swift": "external.perform(value: 1, completion: {})\n",
+        ]) { directory in
+            let callURL = directory.appendingPathComponent("Sources/App/Call.swift")
+            let input = try String(contentsOf: callURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Call.swift --rules trailingClosures --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: callURL), input)
+        }
+    }
+
+    func testProjectIndexDoesNotConvertAmbiguousLabeledTrailingClosure() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Functions.swift": """
+            func perform(value: Int, completion: () -> Void) {}
+            func perform(value: Int, handler: () -> Void) {}
+            """,
+            "Sources/App/Call.swift": "perform(value: 1, completion: {})\n",
+        ]) { directory in
+            let callURL = directory.appendingPathComponent("Sources/App/Call.swift")
+            let input = try String(contentsOf: callURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Call.swift --rules trailingClosures --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: callURL), input)
+        }
+    }
+
+    func testProjectIndexDoesNotConvertTrailingClosureForSignatureInAnotherModule() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/Library/Functions.swift": "func perform(value: Int, completion: () -> Void) {}\n",
+            "Sources/App/Call.swift": "perform(value: 1, completion: {})\n",
+        ]) { directory in
+            let callURL = directory.appendingPathComponent("Sources/App/Call.swift")
+            let input = try String(contentsOf: callURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Call.swift --rules trailingClosures --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: callURL), input)
+        }
+    }
+
+    func testDisabledProjectIndexDoesNotConvertKnownLabeledTrailingClosure() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Functions.swift": "func perform(value: Int, completion: () -> Void) {}\n",
+            "Sources/App/Call.swift": "perform(value: 1, completion: {})\n",
+        ]) { directory in
+            let callURL = directory.appendingPathComponent("Sources/App/Call.swift")
+            let input = try String(contentsOf: callURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Call.swift --rules trailingClosures --project-index disabled --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: callURL), input)
+        }
+    }
+
+    func testNeverTrailingOverridesKnownProjectSignature() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Functions.swift": "func perform(value: Int, completion: () -> Void) {}\n",
+            "Sources/App/Call.swift": "perform(value: 1, completion: {})\n",
+        ]) { directory in
+            let callURL = directory.appendingPathComponent("Sources/App/Call.swift")
+            let input = try String(contentsOf: callURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Call.swift --rules trailingClosures --never-trailing perform --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: callURL), input)
+        }
+    }
+
     func testProjectIndexChangeInvalidatesFormattingCache() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

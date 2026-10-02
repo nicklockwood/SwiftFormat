@@ -12,6 +12,7 @@ public extension FormatRule {
     /// Convert closure arguments to trailing closure syntax where possible
     static let trailingClosures = FormatRule(
         help: "Use trailing closure syntax where applicable.",
+        usesProjectContext: true,
         options: ["trailing-closures", "never-trailing"]
     ) { formatter in
         let useTrailing = Set([
@@ -35,6 +36,21 @@ public extension FormatRule {
 
             // Parse all arguments to detect multiple trailing closures
             let arguments = formatter.parseFunctionCallArguments(startOfScope: functionOpenParen)
+            let projectSupportsTrailingClosure = formatter.currentFileURL.map { fileURL in
+                guard let projectIndex = formatter.projectIndex else { return false }
+                let previousTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex)
+                let callIsQualified = previousTokenIndex.map {
+                    formatter.tokens[$0] == .operator(".", .infix)
+                } ?? false
+                guard !callIsQualified else { return false }
+                let enclosingTypeName = formatter.parseEnclosingType(containing: identifierIndex)?.fullyQualifiedName
+                return projectIndex.supportsTrailingClosure(
+                    functionNamed: name,
+                    declaredInType: enclosingTypeName,
+                    argumentLabels: arguments.map(\.label),
+                    visibleFrom: fileURL
+                )
+            } ?? false
 
             let trailingClosures = arguments.suffix(while: { arg in
                 let range = arg.valueRange
@@ -56,7 +72,9 @@ public extension FormatRule {
 
             // Handle a single trailing closure
             if trailingClosures.count == 1 {
-                guard trailingClosures[0].label == nil || useTrailing.contains(name) else { return }
+                guard trailingClosures[0].label == nil || useTrailing.contains(name) ||
+                    projectSupportsTrailingClosure
+                else { return }
 
                 let closure = trailingClosures[0]
                 let range = closure.valueRange
@@ -158,6 +176,9 @@ public extension FormatRule {
         - DispatchQueue.main.async(execute: { ... })
         + DispatchQueue.main.async { ... }
         ```
+
+        When project indexing is available, labeled closure arguments are converted
+        for project-defined function signatures that are known to be unambiguous.
 
         ```diff
         - withAnimation(.spring, {

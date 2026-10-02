@@ -1191,7 +1191,7 @@ Known issues
 
 * The `--self insert` option recognizes locally declared members and, when project indexing is available, members declared in the same type or its extensions in other files. It still cannot recognize inherited members or members unavailable to the project index, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 
-* The `trailingClosures` rule can generate ambiguous code if a function has multiple optional closure arguments, or if multiple functions have signatures differing only by the name of the closure argument. For this reason, the rule is limited to anonymous closure arguments by default. You can use the `--trailing-closures` and `--never-trailing` arguments to explicitly opt in or out of trailing closure support for specific functions.
+* The `trailingClosures` rule can generate ambiguous code if a function has multiple optional closure arguments, or if multiple functions have signatures differing only by the name of the closure argument. SwiftFormat uses project indexing to convert labeled closure arguments when a project-defined signature is unambiguous. Calls without project context, including external APIs, remain limited to anonymous closure arguments by default. You can use the `--trailing-closures` and `--never-trailing` arguments to explicitly opt in or out of trailing closure support for specific functions.
 
 * The `isEmpty` rule will convert `count == 0` to `isEmpty` even for types that do not have an `isEmpty` method, such as `NSArray`/`NSDictionary`/etc. Use of Foundation collections in Swift code is pretty rare, but just in case, the rule is disabled by default.
 

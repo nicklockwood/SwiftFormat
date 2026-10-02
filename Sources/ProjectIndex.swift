@@ -32,30 +32,52 @@ struct SourceFileIndex: Codable, Equatable {
     }
 
     struct FunctionDeclaration: Codable, Equatable {
+        enum Kind: String, Codable {
+            case function
+            case initializer
+            case subscriptDeclaration
+        }
+
         var name: String
+        var kind: Kind
         var declaringType: String?
+        var isStatic: Bool
+        var visibility: String
         var argumentLabels: [String?]
+        var defaultArgumentIndices: [Int]
         var closureArgumentIndices: [Int]
         var autoclosureArgumentIndices: [Int]
 
         init(
             name: String,
+            kind: Kind = .function,
             declaringType: String? = nil,
+            isStatic: Bool = false,
+            visibility: String = Visibility.internal.rawValue,
             argumentLabels: [String?],
+            defaultArgumentIndices: [Int] = [],
             closureArgumentIndices: [Int] = [],
             autoclosureArgumentIndices: [Int]
         ) {
             self.name = name
+            self.kind = kind
             self.declaringType = declaringType
+            self.isStatic = isStatic
+            self.visibility = visibility
             self.argumentLabels = argumentLabels
+            self.defaultArgumentIndices = defaultArgumentIndices
             self.closureArgumentIndices = closureArgumentIndices
             self.autoclosureArgumentIndices = autoclosureArgumentIndices
         }
 
         private enum CodingKeys: CodingKey {
             case name
+            case kind
             case declaringType
+            case isStatic
+            case visibility
             case argumentLabels
+            case defaultArgumentIndices
             case closureArgumentIndices
             case autoclosureArgumentIndices
         }
@@ -63,8 +85,15 @@ struct SourceFileIndex: Codable, Equatable {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             name = try container.decode(String.self, forKey: .name)
+            kind = try container.decodeIfPresent(Kind.self, forKey: .kind) ?? .function
             declaringType = try container.decodeIfPresent(String.self, forKey: .declaringType)
+            isStatic = try container.decodeIfPresent(Bool.self, forKey: .isStatic) ?? false
+            visibility = try container.decodeIfPresent(String.self, forKey: .visibility) ?? Visibility.internal.rawValue
             argumentLabels = try container.decode([String?].self, forKey: .argumentLabels)
+            defaultArgumentIndices = try container.decodeIfPresent(
+                [Int].self,
+                forKey: .defaultArgumentIndices
+            ) ?? []
             closureArgumentIndices = try container.decodeIfPresent(
                 [Int].self,
                 forKey: .closureArgumentIndices
@@ -82,7 +111,7 @@ struct SourceFileIndex: Codable, Equatable {
         var staticMembers: [String]
     }
 
-    static let schemaVersion = 5
+    static let schemaVersion = 6
 
     var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
@@ -210,9 +239,11 @@ struct ProjectIndex {
             let functions = file.functionDeclarations
                 .map { declaration in
                     let labels = declaration.argumentLabels.map { $0 ?? "_" }.joined(separator: ",")
+                    let defaults = declaration.defaultArgumentIndices.map(String.init).joined(separator: ",")
                     let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
-                    return "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(closures):\(indices)"
+                    return "\(declaration.visibility):\(declaration.isStatic):\(declaration.kind.rawValue):" +
+                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(indices)"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -361,11 +392,35 @@ func makeSourceFileIndex(
             }
         }
 
-        guard declaration.keyword == "func",
+        guard ["func", "init", "subscript"].contains(declaration.keyword),
               ![Visibility.private, .fileprivate].contains(declaration.visibility()),
-              let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex),
-              let name = function.name
+              let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
         else { return }
+        let kind: SourceFileIndex.FunctionDeclaration.Kind
+        let name: String
+        switch declaration.keyword {
+        case "init":
+            kind = .initializer
+            name = "init"
+        case "subscript":
+            kind = .subscriptDeclaration
+            name = "subscript"
+        default:
+            guard let functionName = function.name else { return }
+            kind = .function
+            name = functionName
+        }
+        let defaultArgumentIndices = function.arguments.indices.filter { index in
+            let argument = function.arguments[index]
+            let endOfArgument = formatter.index(
+                of: .delimiter(","),
+                in: argument.type.range.upperBound + 1 ..< function.argumentsRange.upperBound
+            ) ?? function.argumentsRange.upperBound
+            return formatter.index(
+                of: .operator("=", .infix),
+                in: argument.type.range.upperBound + 1 ..< endOfArgument
+            ) != nil
+        }
         let autoclosureArgumentIndices = function.arguments.indices.filter { index in
             function.arguments[index].type.tokens.contains { $0.string == "@autoclosure" }
         }
@@ -373,11 +428,14 @@ func makeSourceFileIndex(
             !autoclosureArgumentIndices.contains(index) &&
                 function.arguments[index].type.tokens.contains { $0.string == "->" }
         }
-        guard !closureArgumentIndices.isEmpty || !autoclosureArgumentIndices.isEmpty else { return }
         functionDeclarations.append(.init(
             name: name,
+            kind: kind,
             declaringType: declaration.parentType?.fullyQualifiedName,
+            isStatic: declaration.modifiers.contains("static") || declaration.modifiers.contains("class"),
+            visibility: (declaration.visibility() ?? .internal).rawValue,
             argumentLabels: function.arguments.map(\.externalLabel),
+            defaultArgumentIndices: defaultArgumentIndices,
             closureArgumentIndices: closureArgumentIndices,
             autoclosureArgumentIndices: autoclosureArgumentIndices
         ))

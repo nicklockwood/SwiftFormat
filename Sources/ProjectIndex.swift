@@ -207,14 +207,12 @@ struct ProjectIndex {
     let files: [String: SourceFileIndex]
     let fingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
-    private let autoclosureFunctionNamesByModule: [String: Set<String>]
     private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
     private let memberNamesByModule: [String: MemberNamesByType]
 
     init(files: [String: SourceFileIndex]) {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
-        var autoclosureFunctionNamesByModule = [String: Set<String>]()
         var functionDeclarationsByModule = [String: [String: [SourceFileIndex.FunctionDeclaration]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
         for file in files.values {
@@ -224,9 +222,6 @@ struct ProjectIndex {
                     typeVisibilities[key, default: []].insert(declaration.visibility)
                 }
                 for declaration in file.functionDeclarations {
-                    if !declaration.autoclosureArgumentIndices.isEmpty {
-                        autoclosureFunctionNamesByModule[moduleIdentifier, default: []].insert(declaration.name)
-                    }
                     functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
                         .append(declaration)
                 }
@@ -245,7 +240,6 @@ struct ProjectIndex {
             }
         }
         self.typeVisibilities = typeVisibilities
-        self.autoclosureFunctionNamesByModule = autoclosureFunctionNamesByModule
         self.functionDeclarationsByModule = functionDeclarationsByModule
         self.memberNamesByModule = memberNamesByModule
         let description = files.keys.sorted().compactMap { path -> String? in
@@ -301,21 +295,6 @@ struct ProjectIndex {
         }
     }
 
-    /// Project functions with `@autoclosure` arguments available in every module containing the current file.
-    func autoclosureFunctionNames(visibleFrom fileURL: URL) -> Set<String> {
-        let path = fileURL.standardizedFileURL.path
-        guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
-              let firstModule = moduleIdentifiers.first
-        else {
-            return []
-        }
-        return moduleIdentifiers.dropFirst().reduce(
-            autoclosureFunctionNamesByModule[firstModule] ?? []
-        ) { names, moduleIdentifier in
-            names.intersection(autoclosureFunctionNamesByModule[moduleIdentifier] ?? [])
-        }
-    }
-
     /// Resolves a project-defined function call in every module containing the current file.
     ///
     /// Resolution is intentionally conservative. Calls with an unknown receiver or multiple
@@ -326,25 +305,49 @@ struct ProjectIndex {
         argumentLabels: [String?],
         visibleFrom fileURL: URL
     ) -> ResolvedFunctionCall? {
+        guard let matchesByModule = functionCallMatches(
+            named: name,
+            receiver: receiver,
+            argumentLabels: argumentLabels,
+            visibleFrom: fileURL
+        ), matchesByModule.allSatisfy({ $0.count == 1 })
+        else { return nil }
+        return ResolvedFunctionCall(matches: matchesByModule.compactMap(\.first))
+    }
+
+    private func functionCallMatches(
+        named name: String,
+        receiver: FunctionCallReceiver,
+        argumentLabels: [String?],
+        visibleFrom fileURL: URL
+    ) -> [[ResolvedFunctionCall.Match]]? {
         let path = fileURL.standardizedFileURL.path
         guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
               !moduleIdentifiers.isEmpty
         else { return nil }
 
-        var matches = [ResolvedFunctionCall.Match]()
+        var matchesByModule = [[ResolvedFunctionCall.Match]]()
         for moduleIdentifier in moduleIdentifiers {
             let declarations = functionDeclarationsByModule[moduleIdentifier]?[name] ?? []
-            let matching = declarations.compactMap { declaration -> ResolvedFunctionCall.Match? in
-                guard declaration.kind == .function,
-                      declaration.matches(receiver: receiver),
-                      let parameterIndices = declaration.parameterIndices(matching: argumentLabels)
-                else { return nil }
-                return .init(declaration: declaration, parameterIndices: parameterIndices)
+            func matches(for receiver: FunctionCallReceiver) -> [ResolvedFunctionCall.Match] {
+                declarations.compactMap { declaration -> ResolvedFunctionCall.Match? in
+                    guard declaration.kind == .function,
+                          declaration.matches(receiver: receiver),
+                          let parameterIndices = declaration.parameterIndices(matching: argumentLabels)
+                    else { return nil }
+                    return .init(declaration: declaration, parameterIndices: parameterIndices)
+                }
             }
-            guard matching.count == 1, let match = matching.first else { return nil }
-            matches.append(match)
+            var matching = matches(for: receiver)
+            if matching.isEmpty,
+               case .unqualified(declaringType: .some, isStatic: _) = receiver
+            {
+                matching = matches(for: .unqualified(declaringType: nil, isStatic: false))
+            }
+            guard !matching.isEmpty else { return nil }
+            matchesByModule.append(matching)
         }
-        return ResolvedFunctionCall(matches: matches)
+        return matchesByModule
     }
 
     /// Whether a same-module declaration makes removing the final closure label unambiguous.
@@ -371,14 +374,22 @@ struct ProjectIndex {
         }) else { return false }
 
         return moduleIdentifiers.allSatisfy { moduleIdentifier in
-            let declarations = functionDeclarationsByModule[moduleIdentifier]?[name]?
-                .filter { declaration in
+            let allDeclarations = functionDeclarationsByModule[moduleIdentifier]?[name] ?? []
+            func matching(_ receiver: FunctionCallReceiver) -> [SourceFileIndex.FunctionDeclaration] {
+                allDeclarations.filter { declaration in
                     declaration.kind == .function && declaration.matches(receiver: receiver) &&
                         declaration.parameterIndices(
                             matching: argumentLabels,
                             ignoringLabelAt: finalArgumentIndex
                         ) != nil
-                } ?? []
+                }
+            }
+            var declarations = matching(receiver)
+            if declarations.isEmpty,
+               case .unqualified(declaringType: .some, isStatic: _) = receiver
+            {
+                declarations = matching(.unqualified(declaringType: nil, isStatic: false))
+            }
             return declarations.count == 1 && declarations[0].argumentLabels[
                 declarations[0].parameterIndices(
                     matching: argumentLabels,
@@ -429,6 +440,47 @@ struct ProjectIndex {
             $0.modifiers.contains("static") || $0.modifiers.contains("class")
         })
         return .unqualified(declaringType: enclosingTypeName, isStatic: isStatic)
+    }
+
+    /// Whether an expression is nested inside a resolved `@autoclosure` argument.
+    func isAutoclosureArgument(
+        containing expressionIndex: Int,
+        in formatter: Formatter,
+        visibleFrom fileURL: URL
+    ) -> Bool {
+        var scopeIndex = expressionIndex
+        while let startOfScope = formatter.index(of: .startOfScope, before: scopeIndex) {
+            defer { scopeIndex = startOfScope }
+            guard formatter.tokens[startOfScope] == .startOfScope("("),
+                  let identifierIndex = formatter.parseFunctionIdentifier(
+                      beforeStartOfScope: startOfScope
+                  )
+            else { continue }
+            let arguments = formatter.parseFunctionCallArguments(startOfScope: startOfScope)
+            guard let argumentIndex = arguments.firstIndex(where: { argument in
+                argument.valueRange.contains(expressionIndex)
+            }),
+                let receiver = functionCallReceiver(
+                    at: identifierIndex,
+                    in: formatter,
+                    visibleFrom: fileURL
+                ),
+                let matchesByModule = functionCallMatches(
+                    named: formatter.tokens[identifierIndex].string,
+                    receiver: receiver,
+                    argumentLabels: arguments.map(\.label),
+                    visibleFrom: fileURL
+                )
+            else { continue }
+            if matchesByModule.joined().contains(where: { match in
+                match.declaration.autoclosureArgumentIndices.contains(
+                    match.parameterIndices[argumentIndex]
+                )
+            }) {
+                return true
+            }
+        }
+        return false
     }
 
     /// Project-defined members available in every module containing the current file, grouped by type.
@@ -554,8 +606,16 @@ func makeSourceFileIndex(
             }
         }
 
+        let declarationVisibilities = [declaration.visibility()] + declaration.parentDeclarations.compactMap {
+            $0.asTypeDeclaration?.visibility()
+        }
         guard ["func", "init", "subscript"].contains(declaration.keyword),
-              ![Visibility.private, .fileprivate].contains(declaration.visibility()),
+              !declaration.parentDeclarations.contains(where: {
+                  ["func", "init", "subscript"].contains($0.keyword)
+              }),
+              !declarationVisibilities.contains(where: {
+                  $0 == .private || $0 == .fileprivate
+              }),
               let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
         else { return }
         let kind: SourceFileIndex.FunctionDeclaration.Kind

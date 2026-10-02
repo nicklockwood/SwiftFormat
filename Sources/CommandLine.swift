@@ -1327,6 +1327,10 @@ func processInput(_ inputURLs: [URL],
             }
         }
         let discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
+        let discoveredFilesByRoot = Dictionary(grouping: discoveredFiles, by: \.1)
+        let moduleIdentifiersByRoot = discoveredFilesByRoot.mapValues { files in
+            moduleIdentifiers(for: files.map(\.0), in: files[0].1)
+        }
         let cachedEntries = cache?.entries ?? [:]
         let indexQueue = DispatchQueue(label: "swiftformat.project-index")
         let indexGroup = DispatchGroup()
@@ -1340,7 +1344,7 @@ func processInput(_ inputURLs: [URL],
                 guard let source = try? String(contentsOf: fileURL) else { return }
                 let sourceHash = computeHash(source)
                 let key = cacheKey(for: fileURL)
-                let module = moduleIdentifier(for: fileURL, in: root)
+                let module = moduleIdentifiersByRoot[root]?[fileURL.path]
                 let sourceIndex: SourceFileIndex
                 if let cached = cachedEntries[key]?.sourceIndex,
                    cached.schemaVersion == SourceFileIndex.schemaVersion,

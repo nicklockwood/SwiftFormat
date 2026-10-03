@@ -20,7 +20,7 @@ public extension FormatRule {
 
         formatter.forEach(.keyword) { keywordIndex, keyword in
             guard case let .keyword(keyword) = keyword,
-                  ["func", "init", "subscript"].contains(keyword),
+                  keyword.isFunctionDeclarationKeyword,
                   let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
                   functionDecl.effects.contains(where: { $0.hasPrefix("async") }),
                   let bodyRange = functionDecl.bodyRange

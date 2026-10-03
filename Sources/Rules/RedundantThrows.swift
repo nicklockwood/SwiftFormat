@@ -20,7 +20,7 @@ public extension FormatRule {
         }
 
         formatter.forEach(.keyword) { keywordIndex, keyword in
-            guard case let .keyword(keyword) = keyword, ["func", "init", "subscript"].contains(keyword),
+            guard keyword.isFunctionDeclarationKeyword,
                   let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
                   functionDecl.effects.contains(where: { $0.hasPrefix("throws") }),
                   let bodyRange = functionDecl.bodyRange
@@ -35,7 +35,7 @@ public extension FormatRule {
 
             if formatter.options.redundantThrows == .testsOnly {
                 // Only process test functions
-                guard keyword == "func", let testFramework,
+                guard keyword == .keyword("func"), let testFramework,
                       formatter.isTestCase(at: keywordIndex, in: functionDecl, for: testFramework)
                 else { return }
             }

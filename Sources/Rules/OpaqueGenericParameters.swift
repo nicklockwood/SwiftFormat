@@ -22,7 +22,7 @@ public extension FormatRule {
             guard // Opaque generic parameter syntax is only supported in Swift 5.7+
                 formatter.options.swiftVersion >= "5.7",
                 // Apply this rule to any function-like declaration
-                [.keyword("func"), .keyword("init"), .keyword("subscript")].contains(keyword),
+                keyword.isFunctionDeclarationKeyword,
                 // Validate that this is a generic method using angle bracket syntax,
                 // and find the indices for all of the key tokens
                 let declaration = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),

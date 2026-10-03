@@ -2992,7 +2992,7 @@ final class WrapArgumentsTests: XCTestCase {
         let input = """
         guard
             // Apply this rule to any function-like declaration
-            ["func", "init", "subscript"].contains(keyword.string),
+            keyword.isFunctionDeclarationKeyword,
             // Opaque generic parameter syntax is only supported in Swift 5.7+
             formatter.options.swiftVersion >= "5.7",
             // Validate that this is a generic method using angle bracket syntax,
@@ -3009,7 +3009,7 @@ final class WrapArgumentsTests: XCTestCase {
         """
         let output = """
         guard // Apply this rule to any function-like declaration
-            ["func", "init", "subscript"].contains(keyword.string),
+            keyword.isFunctionDeclarationKeyword,
             // Opaque generic parameter syntax is only supported in Swift 5.7+
             formatter.options.swiftVersion >= "5.7",
             // Validate that this is a generic method using angle bracket syntax,

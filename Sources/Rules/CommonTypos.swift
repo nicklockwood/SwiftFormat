@@ -64,7 +64,7 @@ public extension FormatRule {
             else { return }
             declaredNames.formUnion(names)
             eligibleNames.formUnion(names)
-            if ["func", "init", "subscript"].contains(token.string),
+            if token.isFunctionDeclarationKeyword,
                let function = formatter.parseFunctionDeclaration(keywordIndex: index)
             {
                 let argumentNames = function.arguments.flatMap { argument in
@@ -135,7 +135,7 @@ public extension FormatRule {
 
 extension Formatter {
     func commonTyposFunctionDeclaration(for declaration: Declaration) -> FunctionDeclaration? {
-        guard ["func", "init", "subscript"].contains(declaration.keyword) else { return nil }
+        guard declaration.keyword.isFunctionDeclarationKeyword else { return nil }
         return parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
     }
 

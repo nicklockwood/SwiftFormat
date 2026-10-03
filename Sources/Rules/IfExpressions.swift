@@ -41,7 +41,7 @@ public extension FormatRule {
 
             // For func/subscript/init, verify there's a return type (-> before the body).
             // Void functions can't use if expressions as their body value.
-            if ["func", "subscript", "init"].contains(lastKeyword ?? "") {
+            if lastKeyword?.isFunctionDeclarationKeyword == true {
                 guard let arrowIndex = formatter.index(of: .operator("->", .infix), before: startOfScopeIndex) else {
                     return
                 }

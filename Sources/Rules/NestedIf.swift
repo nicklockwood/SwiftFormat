@@ -11,7 +11,8 @@ import Foundation
 public extension FormatRule {
     /// Merge nested if statements when each outer branch contains only another if statement.
     static let nestedIf = FormatRule(
-        help: "Merge nested if statements into a single statement with comma-delimited conditions."
+        help: "Merge nested if statements into a single statement with comma-delimited conditions.",
+        sharedOptions: ["linebreaks", "indent", "tab-width", "smart-tabs"]
     ) { formatter in
         formatter.forEach(.keyword("if")) { ifIndex, _ in
             while formatter.mergeNestedIf(at: ifIndex) {}
@@ -52,16 +53,20 @@ extension Formatter {
               index(of: .nonSpaceOrCommentOrLinebreak, after: nestedBodyEnd).map({
                   tokens[$0] != .keyword("else")
               }) ?? true,
-              let outerConditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: outerBodyStart)
+              let outerConditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: outerBodyStart),
+              let outerConditionStart = parseConditionalStatement(at: ifIndex).first?.range.lowerBound,
+              let nestedConditionStart = parseConditionalStatement(at: nestedIfIndex).first?.range.lowerBound,
+              let nestedConditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: nestedBodyStart),
+              let conditionCommentLines = nestedIfCommentLines(
+                  in: outerBodyStart + 1 ..< nestedIfIndex
+              ),
+              !tokens[outerConditionEnd + 1 ... outerBodyStart].contains(where: \.isComment)
         else {
             return false
         }
 
         let separatorRange = outerConditionEnd + 1 ... nestedIfIndex
         let trailingRange = nestedBodyEnd + 1 ... outerBodyEnd
-        guard !tokens[separatorRange].contains(where: \.isComment) else {
-            return false
-        }
 
         let outerIndent = currentIndentForLine(at: ifIndex)
         let nestedIndent = currentIndentForLine(at: nestedIfIndex)
@@ -83,7 +88,31 @@ extension Formatter {
         } else {
             removeTokens(in: trailingRange)
         }
-        replaceTokens(in: separatorRange, with: .delimiter(","))
+
+        if conditionCommentLines.isEmpty {
+            replaceTokens(in: separatorRange, with: .delimiter(","))
+        } else {
+            let linebreak = linebreakToken(for: ifIndex)
+            let conditionIndent = spaceEquivalentToTokens(
+                from: startOfLine(at: ifIndex),
+                upTo: outerConditionStart
+            )
+            let indentedLinebreak: [Token] = conditionIndent.isEmpty ?
+                [linebreak] : [linebreak, .space(conditionIndent)]
+
+            replaceTokens(
+                in: nestedConditionEnd + 1 ..< nestedBodyStart,
+                with: outerIndent.isEmpty ? [linebreak] : [linebreak, .space(outerIndent)]
+            )
+
+            var separator = [Token.delimiter(",")]
+            separator.append(contentsOf: indentedLinebreak)
+            for commentLine in conditionCommentLines {
+                separator.append(contentsOf: commentLine)
+                separator.append(contentsOf: indentedLinebreak)
+            }
+            replaceTokens(in: outerConditionEnd + 1 ..< nestedConditionStart, with: separator)
+        }
 
         if let mergedBodyStart = startOfConditionalBranchBody(after: ifIndex),
            let mergedBodyEnd = endOfScope(at: mergedBodyStart)
@@ -99,6 +128,31 @@ extension Formatter {
             )
         }
         return true
+    }
+
+    /// Returns standalone comment lines in a range, without their original indentation.
+    func nestedIfCommentLines(in range: Range<Int>) -> [[Token]]? {
+        guard tokens[range].contains(where: \.isComment) else {
+            return []
+        }
+        guard !tokens[range].contains(where: { token in
+            if case let .commentBody(body) = token {
+                return body.isCommentDirective
+            }
+            return false
+        }) else {
+            return nil
+        }
+
+        var commentLines = [[Token]]()
+        for line in tokens[range].split(omittingEmptySubsequences: false, whereSeparator: \.isLinebreak) {
+            let content = line.drop(while: \.isSpace).reversed().drop(while: \.isSpace).reversed()
+            guard content.allSatisfy({ $0.isComment || $0.isSpace }) else { return nil }
+            if !content.isEmpty {
+                commentLines.append(Array(content))
+            }
+        }
+        return commentLines
     }
 
     /// Replaces the indentation prefix on each line in a range, working backwards to keep indices stable.

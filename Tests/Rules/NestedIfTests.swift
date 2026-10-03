@@ -149,7 +149,7 @@ final class NestedIfTests: XCTestCase {
         testFormatting(for: input, rule: .nestedIf)
     }
 
-    func testDoesNotMergeAcrossComment() {
+    func testMovesCommentBeforeNestedIfToCondition() {
         let input = """
         if isValid {
             // Enabling may perform additional work.
@@ -158,7 +158,102 @@ final class NestedIfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .nestedIf)
+        let output = """
+        if isValid,
+           // Enabling may perform additional work.
+           isEnabled
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
+    func testPreservesCommentBeforeOuterIf() {
+        let input = """
+        // Only perform the action when both conditions are met.
+        if isValid {
+            if isEnabled {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        // Only perform the action when both conditions are met.
+        if isValid, isEnabled {
+            performAction()
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
+    func testPreservesCommentsBeforeOuterAndNestedIf() {
+        let input = """
+        // The value must be valid.
+        if isValid {
+            // The feature must be enabled.
+            if isEnabled {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        // The value must be valid.
+        if isValid,
+           // The feature must be enabled.
+           isEnabled
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
+    func testMovesMultipleCommentsBeforeNestedIfToCondition() {
+        let input = """
+        if isValid {
+            // The feature must be enabled.
+            // Enabling may perform additional work.
+            if isEnabled {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        if isValid,
+           // The feature must be enabled.
+           // Enabling may perform additional work.
+           isEnabled
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
+    func testMovesCommentsAtMultipleNestingLevelsToConditions() {
+        let input = """
+        if isValid {
+            // The feature must be enabled.
+            if isEnabled {
+                // The user must be authorized.
+                if isAuthorized {
+                    performAction()
+                }
+            }
+        }
+        """
+        let output = """
+        if isValid,
+           // The feature must be enabled.
+           isEnabled,
+           // The user must be authorized.
+           isAuthorized
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
     }
 
     func testPreservesTrailingCommentInOuterBody() {

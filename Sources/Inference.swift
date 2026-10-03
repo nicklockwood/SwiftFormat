@@ -1159,7 +1159,7 @@ private struct Inference {
                     localNames.insert(varToken.unescaped())
                 } else {
                     switch formatter.tokens[nextIndex].string {
-                    case "get":
+                    case "get", "_read", "_modify":
                         localNames.insert(name)
                     case "set":
                         localNames.insert(name)
@@ -1245,7 +1245,7 @@ private struct Inference {
             }
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
-                processAccessors({ ["get", "set"].contains($0.string) }, for: "", at: &index, localNames: localNames,
+                processAccessors({ $0.isSubscriptAccessorKeyword }, for: "", at: &index, localNames: localNames,
                                  members: members, typeStack: &typeStack, membersByType: &membersByType,
                                  classMembersByType: &classMembersByType,
                                  removed: &removed, unremoved: &unremoved,

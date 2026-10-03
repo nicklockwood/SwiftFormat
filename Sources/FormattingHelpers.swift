@@ -3270,7 +3270,7 @@ extension Formatter {
                         token = tokens[nextIndex]
                     }
                     switch token.string {
-                    case "get", "_modify":
+                    case "get", "_read", "_modify":
                         localNames.insert(name)
                     case "set", "init":
                         localNames.insert(name)
@@ -3392,7 +3392,7 @@ extension Formatter {
 
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
-                processAccessors({ ["get", "set"].contains($0.string) }, for: "", at: &index, localNames: localNames,
+                processAccessors({ $0.isSubscriptAccessorKeyword }, for: "", at: &index, localNames: localNames,
                                  members: members, typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                  classMembersByType: &classMembersByType,
                                  usingDynamicLookup: usingDynamicLookup,

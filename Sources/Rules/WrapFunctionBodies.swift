@@ -15,7 +15,7 @@ public extension FormatRule {
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         formatter.forEach(.keyword) { keywordIndex, keyword in
-            guard ["func", "init", "subscript"].contains(keyword.string),
+            guard keyword.isFunctionDeclarationKeyword,
                   let declaration = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
                   let bodyRange = declaration.bodyRange,
                   // Protocol subscript declarations have `{ get }` or `{ get set }` which

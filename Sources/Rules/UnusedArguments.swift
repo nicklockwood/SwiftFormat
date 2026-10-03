@@ -19,7 +19,7 @@ public extension FormatRule {
         // Function arguments
         formatter.forEach(.keyword) { i, token in
             guard formatter.options.stripUnusedArguments != .closureOnly,
-                  ["func", "init", "subscript"].contains(token.string)
+                  token.isFunctionDeclarationKeyword
             else { return }
 
             // In subscripts and operators, external function labels are unnecessary

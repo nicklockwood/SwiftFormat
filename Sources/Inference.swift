@@ -593,7 +593,7 @@ private struct Inference {
         }
         // Function arguments
         formatter.forEachToken { i, token in
-            guard case let .keyword(keyword) = token, ["func", "init", "subscript"].contains(keyword),
+            guard case let .keyword(keyword) = token, keyword.isFunctionDeclarationKeyword,
                   let startIndex = formatter.index(of: .startOfScope("("), after: i),
                   let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex)
             else {

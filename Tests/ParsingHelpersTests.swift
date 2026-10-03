@@ -10,6 +10,16 @@ import XCTest
 @testable import SwiftFormat
 
 final class ParsingHelpersTests: XCTestCase {
+    func testFunctionDeclarationKeywords() {
+        for keyword in ["func", "init", "subscript"] {
+            XCTAssertTrue(keyword.isFunctionDeclarationKeyword)
+            XCTAssertTrue(Token.keyword(keyword).isFunctionDeclarationKeyword)
+        }
+        XCTAssertFalse("var".isFunctionDeclarationKeyword)
+        XCTAssertFalse(Token.keyword("var").isFunctionDeclarationKeyword)
+        XCTAssertFalse(Token.identifier("func").isFunctionDeclarationKeyword)
+    }
+
     // MARK: isStartOfClosure
 
     // types

@@ -90,7 +90,7 @@ public extension FormatRule {
             declaredNames.formUnion(names)
 
             let functionArgumentNames: [String]
-            if ["func", "init", "subscript"].contains(declaration.keyword),
+            if declaration.keyword.isFunctionDeclarationKeyword,
                let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
             {
                 functionArgumentNames = function.arguments.flatMap { argument in
@@ -121,7 +121,7 @@ public extension FormatRule {
             else { return }
             declaredNames.formUnion(names)
             eligibleNames.formUnion(names)
-            if ["func", "init", "subscript"].contains(token.string),
+            if token.isFunctionDeclarationKeyword,
                let function = formatter.parseFunctionDeclaration(keywordIndex: index)
             {
                 let argumentNames = function.arguments.flatMap { argument in

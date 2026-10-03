@@ -1003,7 +1003,7 @@ extension Formatter {
         // If the containing scope belongs to a func/subscript/init without a return type,
         // the if is a statement, not an expression
         if let funcKeywordIndex = indexOfLastSignificantKeyword(at: containingScope, excluding: ["where"]),
-           ["func", "subscript", "init"].contains(tokens[funcKeywordIndex].string)
+           tokens[funcKeywordIndex].isFunctionDeclarationKeyword
         {
             if let funcDecl = parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
                funcDecl.returnType == nil
@@ -2420,7 +2420,7 @@ extension Formatter {
                 searchIndex = propertyDeclaration.range.upperBound
                 endOfDeclaration = propertyDeclaration.range.upperBound
             }
-        case .keyword("func"), .keyword("subscript"), .keyword("init"):
+        case let keyword where keyword.isFunctionDeclarationKeyword:
             if let functionDeclaration = parseFunctionDeclaration(keywordIndex: declarationKeywordIndex) {
                 searchIndex = functionDeclaration.range.upperBound
                 endOfDeclaration = functionDeclaration.range.upperBound
@@ -3905,7 +3905,7 @@ extension Formatter {
 
     /// Parses the function or function-like declaration (`func`, `subscript`, `init`) at the given keyword index
     func parseFunctionDeclaration(keywordIndex: Int) -> FunctionDeclaration? {
-        assert(["func", "subscript", "init"].contains(tokens[keywordIndex].string))
+        assert(tokens[keywordIndex].isFunctionDeclarationKeyword)
         var currentIndex = keywordIndex
 
         var nameIndex: Int?
@@ -4655,6 +4655,12 @@ extension _FormatRules {
 }
 
 extension Token {
+    /// Whether this token is the keyword for a function or function-like declaration.
+    var isFunctionDeclarationKeyword: Bool {
+        guard case let .keyword(keyword) = self else { return false }
+        return keyword.isFunctionDeclarationKeyword
+    }
+
     /// Whether or not this token "defines" the specific type of declaration
     ///  - A valid declaration will usually include exactly one of these keywords in its outermost scope.
     ///  - Notable exceptions are `class func` and symbol imports (like `import class Module.Type`)
@@ -4724,14 +4730,19 @@ extension Token {
             return false
         }
     }
-}
 
-extension Token {
     /// The access level this token sets on an `import` (SE-0409); `package` is tokenized as an identifier, not a keyword
     var importAccessLevel: String? {
         guard isKeyword || isIdentifier, _FormatRules.aclModifiers.contains(string) else {
             return nil
         }
         return string
+    }
+}
+
+extension String {
+    /// Whether this string is the keyword for a function or function-like declaration.
+    var isFunctionDeclarationKeyword: Bool {
+        self == "func" || self == "init" || self == "subscript"
     }
 }

@@ -73,6 +73,7 @@ let ruleRegistry: [String: FormatRule] = [
     "preferFirstWhere": .preferFirstWhere,
     "preferFlatMap": .preferFlatMap,
     "preferForLoop": .preferForLoop,
+    "preferForWhere": .preferForWhere,
     "preferKeyPath": .preferKeyPath,
     "preferLazyMap": .preferLazyMap,
     "preferMinOverSorted": .preferMinOverSorted,

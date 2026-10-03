@@ -325,6 +325,25 @@ final class ConsistentSwitchCaseSpacingTests: XCTestCase {
         testFormatting(for: input, rule: .consistentSwitchCaseSpacing, exclude: [.blankLineAfterSwitchCase])
     }
 
+    func testSwitchStatementWithMultilineCase_blankLineAfterSwitchCaseNever() {
+        let input = """
+        switch action {
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        testFormatting(for: input,
+                       rules: [.blankLineAfterSwitchCase, .consistentSwitchCaseSpacing],
+                       options: FormatOptions(blankLineAfterSwitchCase: .never))
+    }
+
     func testConsistentSpacingWithIfdefWrappedCase() {
         // When the case inside #if already has a blank line after #endif (matching the
         // other cases), consistentSwitchCaseSpacing should make no changes.

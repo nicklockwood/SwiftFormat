@@ -12,7 +12,8 @@ public extension FormatRule {
     static let blankLineAfterSwitchCase = FormatRule(
         help: """
         Insert a blank line after switch cases (excluding the last case,
-        which is followed by a closing brace).
+        which is followed by a closing brace), or remove them with
+        `--blank-line-after-switch-case never`.
         """,
         disabledByDefault: true,
         orderAfter: [.redundantBreak],
@@ -22,7 +23,16 @@ public extension FormatRule {
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
 
             let shouldAlwaysInsertBlankLineAfterSwitchCase = formatter.options.blankLineAfterSwitchCase == .always
+            let shouldNeverInsertBlankLineAfterSwitchCase = formatter.options.blankLineAfterSwitchCase == .never
             for switchCase in switchCases.reversed() {
+                // With the `never` option, blank lines are removed from after every switch case.
+                if shouldNeverInsertBlankLineAfterSwitchCase {
+                    if switchCase.isFollowedByBlankLine {
+                        switchCase.removeTrailingBlankLine(using: formatter)
+                    }
+                    continue
+                }
+
                 // Any switch statement should be followed by a blank line, depending on the
                 // `blankLineAfterSwitchCase` option.
                 // (excluding the last case, which is followed by a closing brace).
@@ -64,6 +74,19 @@ public extension FormatRule {
           case .engageWarpDrive:
               warpDrive.activate()
         +
+          case .handleIncomingEnergyBlast:
+              energyShields.engage()
+          }
+        ```
+
+        `--blank-line-after-switch-case never`
+
+        ```diff
+          switch action {
+          case .engageWarpDrive:
+              navigationComputer.destination = targetedDestination
+              warpDrive.activate()
+        -
           case .handleIncomingEnergyBlast:
               energyShields.engage()
           }

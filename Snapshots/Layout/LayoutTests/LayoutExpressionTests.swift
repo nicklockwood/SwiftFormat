@@ -142,19 +142,7 @@ final class LayoutExpressionTests: XCTestCase {
 
     func testParseStringExpressionWithBracesAndWhitespace() {
         let parts = (try? parseStringExpression(" {4 + 5} ")) ?? []
-        guard parts.count == 3 else {
-            XCTFail()
-            return
-        }
-        guard case let .string(a) = parts[0], a == " " else {
-            XCTFail()
-            return
-        }
-        guard case let .expression(b) = parts[1], b.symbols == [.infix("+")] else {
-            XCTFail()
-            return
-        }
-        guard case let .string(c) = parts[2], c == " " else {
+        guard parts.count == 3, case let .string(a) = parts[0], a == " ", case let .expression(b) = parts[1], b.symbols == [.infix("+")], case let .string(c) = parts[2], c == " " else {
             XCTFail()
             return
         }
@@ -162,19 +150,7 @@ final class LayoutExpressionTests: XCTestCase {
 
     func testParseStringExpressionWithMultipleBraces() {
         let parts = (try? parseStringExpression("{4} + {5}")) ?? []
-        guard parts.count == 3 else {
-            XCTFail()
-            return
-        }
-        guard case let .expression(a) = parts[0], a.symbols == [] else {
-            XCTFail()
-            return
-        }
-        guard case let .string(b) = parts[1], b == " + " else {
-            XCTFail()
-            return
-        }
-        guard case let .expression(c) = parts[2], c.symbols == [] else {
+        guard parts.count == 3, case let .expression(a) = parts[0], a.symbols == [], case let .string(b) = parts[1], b == " + ", case let .expression(c) = parts[2], c.symbols == [] else {
             XCTFail()
             return
         }
@@ -296,26 +272,14 @@ final class LayoutExpressionTests: XCTestCase {
     func testParseStringExpressionWithComment() throws {
         let expression = "foo {4 + 5 // hello } bar"
         let parts = try parseStringExpression(expression)
-        guard parts.count == 3 else {
-            XCTFail()
-            return
-        }
-        guard case .string("foo ") = parts[0] else {
-            XCTFail()
-            return
-        }
-        guard case let .expression(exp) = parts[1] else {
+        guard parts.count == 3, case .string("foo ") = parts[0], case let .expression(exp) = parts[1] else {
             XCTFail()
             return
         }
         XCTAssertEqual(exp.symbols, [.infix("+")])
         XCTAssertEqual(exp.description, "4 + 5 // hello")
         XCTAssertNil(exp.error)
-        guard case .string(" bar") = parts[2] else {
-            XCTFail()
-            return
-        }
-        guard let layoutExpression = LayoutExpression(stringExpression: expression, for: LayoutNode()) else {
+        guard case .string(" bar") = parts[2], let layoutExpression = LayoutExpression(stringExpression: expression, for: LayoutNode()) else {
             XCTFail()
             return
         }
@@ -325,15 +289,7 @@ final class LayoutExpressionTests: XCTestCase {
     func testParseStringExpressionWithCommentedOutClause() throws {
         let expression = "foo {// 4 + 5} bar"
         let parts = try parseStringExpression(expression)
-        guard parts.count == 3 else {
-            XCTFail()
-            return
-        }
-        guard case .string("foo ") = parts[0] else {
-            XCTFail()
-            return
-        }
-        guard case let .expression(exp) = parts[1] else {
+        guard parts.count == 3, case .string("foo ") = parts[0], case let .expression(exp) = parts[1] else {
             XCTFail()
             return
         }
@@ -350,11 +306,7 @@ final class LayoutExpressionTests: XCTestCase {
     func testCommentedOutStringExpression() throws {
         let expression = " //hello {'world'}"
         let parts = try parseStringExpression(expression)
-        guard parts.count == 1 else {
-            XCTFail()
-            return
-        }
-        guard case let .comment(comment) = parts[0] else {
+        guard parts.count == 1, case let .comment(comment) = parts[0] else {
             XCTFail()
             return
         }

@@ -106,10 +106,8 @@ func enumerateFiles(withInputURL inputURL: URL,
                    block: @escaping (URL, URL) throws -> () throws -> Void)
     {
         let inputURL = inputURL.standardizedFileURL
-        for excludedURL in excludedURLs {
-            if inputURL.absoluteString.hasPrefix(excludedURL.standardizedFileURL.absoluteString) {
-                return
-            }
+        for excludedURL in excludedURLs where inputURL.absoluteString.hasPrefix(excludedURL.standardizedFileURL.absoluteString) {
+            return
         }
         guard let resourceValues = try? inputURL.resourceValues(forKeys: Set(keys)) else {
             onComplete { throw FormatError.reading("failed to read attributes for \(inputURL.path)") }

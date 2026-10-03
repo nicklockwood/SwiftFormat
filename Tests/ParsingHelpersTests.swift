@@ -21,12 +21,25 @@ final class ParsingHelpersTests: XCTestCase {
     }
 
     func testPropertyAccessorKeywords() {
-        for keyword in ["get", "set", "willSet", "didSet", "init", "_modify"] {
+        for keyword in ["get", "set", "willSet", "didSet", "init", "_read", "_modify"] {
             XCTAssertTrue(Token.identifier(keyword).isPropertyAccessorKeyword)
             XCTAssertTrue(Token.keyword(keyword).isPropertyAccessorKeyword)
         }
         XCTAssertFalse(Token.identifier("func").isPropertyAccessorKeyword)
         XCTAssertFalse(Token.stringBody("get").isPropertyAccessorKeyword)
+    }
+
+    func testSubscriptAccessorKeywords() {
+        for keyword in ["get", "set", "_read", "_modify"] {
+            XCTAssertTrue(Token.identifier(keyword).isSubscriptAccessorKeyword)
+            XCTAssertTrue(Token.keyword(keyword).isSubscriptAccessorKeyword)
+        }
+        for keyword in ["willSet", "didSet", "init"] {
+            XCTAssertFalse(Token.identifier(keyword).isSubscriptAccessorKeyword)
+            XCTAssertFalse(Token.keyword(keyword).isSubscriptAccessorKeyword)
+        }
+        XCTAssertFalse(Token.identifier("func").isSubscriptAccessorKeyword)
+        XCTAssertFalse(Token.stringBody("get").isSubscriptAccessorKeyword)
     }
 
     // MARK: isStartOfClosure

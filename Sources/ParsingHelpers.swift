@@ -4657,15 +4657,23 @@ extension _FormatRules {
 extension Token {
     /// Whether this token is a property accessor or observer keyword.
     var isPropertyAccessorKeyword: Bool {
-        let keyword: String
-        switch self {
-        case let .identifier(value), let .keyword(value):
-            keyword = value
+        if isSubscriptAccessorKeyword {
+            return true
+        }
+        guard isIdentifierOrKeyword else { return false }
+        switch string {
+        case "willSet", "didSet", "init":
+            return true
         default:
             return false
         }
-        switch keyword {
-        case "get", "set", "willSet", "didSet", "init", "_modify":
+    }
+
+    /// Whether this token is a subscript accessor keyword.
+    var isSubscriptAccessorKeyword: Bool {
+        guard isIdentifierOrKeyword else { return false }
+        switch string {
+        case "get", "set", "_read", "_modify":
             return true
         default:
             return false

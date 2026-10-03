@@ -466,6 +466,522 @@ final class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
+    func testLegacyCacheIsMigratedToVersionedFormat() throws {
+        try withTmpDirectory([
+            "Input.swift": "let foo = bar\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let legacyCache = ["legacy-entry": "legacy-value"]
+            try JSONEncoder().encode(legacyCache).write(to: cacheURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Input.swift --rules indent --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual(cache["version"] as? Int, 1)
+            let entries = try XCTUnwrap(cache["entries"] as? [String: Any])
+            let legacyEntry = try XCTUnwrap(entries["legacy-entry"] as? [String: Any])
+            XCTAssertEqual(legacyEntry["formatting"] as? String, "legacy-value")
+        }
+    }
+
+    func testProjectIndexReusesCachedSourceSummaryForUnchangedFile() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Extension.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+
+            var cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            var entries = try XCTUnwrap(cache["entries"] as? [String: Any])
+            let typeKey = try XCTUnwrap(entries.keys.first(where: { $0.hasSuffix("/Type.swift") }))
+            var typeEntry = try XCTUnwrap(entries[typeKey] as? [String: Any])
+            var sourceIndex = try XCTUnwrap(typeEntry["sourceIndex"] as? [String: Any])
+            var declarations = try XCTUnwrap(sourceIndex["typeDeclarations"] as? [[String: Any]])
+            declarations[0]["visibility"] = "internal"
+            sourceIndex["typeDeclarations"] = declarations
+            typeEntry["sourceIndex"] = sourceIndex
+            entries[typeKey] = typeEntry
+            cache["entries"] = entries
+            try JSONSerialization.data(withJSONObject: cache).write(to: cacheURL)
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                func bar() {}
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexIsNotBuiltWhenEnabledRulesDoNotUseIt() throws {
+        try withTmpDirectory([
+            "Sources/App/Input.swift": "struct Foo {}\n",
+            "Sources/App/Other.swift": "struct Bar {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules indent --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            let entries = try XCTUnwrap(cache["entries"] as? [String: Any])
+            XCTAssertEqual(entries.count, 1)
+        }
+    }
+
+    func testProjectIndexCanBeDisabled() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let input = try String(contentsOf: extensionURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules redundantPublic --project-index disabled --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), input)
+        }
+    }
+
+    func testProjectIndexIncludesFilesNotBeingFormatted() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules redundantPublic --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                func bar() {}
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexDoesNotCombineSwiftPackageTargets() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/Library/Type.swift": "struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let input = try String(contentsOf: extensionURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Extension.swift --rules redundantPublic --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), input)
+        }
+    }
+
+    func testProjectIndexChangeInvalidatesFormattingCache() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let typeURL = directory.appendingPathComponent("Sources/App/Type.swift")
+            let extensionURL = directory.appendingPathComponent("Sources/App/Extension.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Extension.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                public func bar() {}
+            }
+            """)
+
+            try "struct Foo {}".write(to: typeURL, atomically: true, encoding: .utf8)
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: extensionURL), """
+            extension Foo {
+                func bar() {}
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexPreservesSelfInProjectAutoclosureCall() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let input = try String(contentsOf: useURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), input)
+        }
+    }
+
+    func testProjectIndexDoesNotPreserveSelfForAutoclosureInAnotherModule() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/Library/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(value)
+                }
+            }
+            """)
+        }
+    }
+
+    func testDisabledProjectIndexDoesNotPreserveSelfInProjectAutoclosureCall() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --project-index disabled --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(value)
+                }
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexInsertsSelfForMembersDeclaredInOtherFiles() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": """
+            struct Foo {
+                var value = 0
+                static var shared = 0
+                func update() {}
+            }
+            """,
+            "Sources/App/Members.swift": """
+            extension Foo {
+                func extensionMethod() {}
+            }
+            """,
+            "Sources/App/Use.swift": """
+            var globalValue = 0
+            func globalFunction() {}
+
+            extension Foo {
+                mutating func run() {
+                    value += 1
+                    update()
+                    extensionMethod()
+                    globalValue += 1
+                    globalFunction()
+                }
+
+                static func reset() {
+                    shared = 0
+                }
+
+                func shadowed() {
+                    let value = 1
+                    print(value)
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --self insert --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            var globalValue = 0
+            func globalFunction() {}
+
+            extension Foo {
+                mutating func run() {
+                    self.value += 1
+                    self.update()
+                    self.extensionMethod()
+                    globalValue += 1
+                    globalFunction()
+                }
+
+                static func reset() {
+                    self.shared = 0
+                }
+
+                func shadowed() {
+                    let value = 1
+                    print(value)
+                }
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexInsertsSelfInQualifiedExtension() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": """
+            struct Outer {
+                struct Inner {
+                    var value = 0
+                }
+            }
+            """,
+            "Sources/App/Use.swift": """
+            extension Outer.Inner {
+                mutating func update() {
+                    value = 1
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --self insert --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            extension Outer.Inner {
+                mutating func update() {
+                    self.value = 1
+                }
+            }
+            """)
+        }
+    }
+
+    func testProjectIndexDoesNotInsertSelfForMemberInAnotherModule() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/Library/Type.swift": "struct Foo { var value = 0 }",
+            "Sources/App/Use.swift": """
+            extension Foo {
+                func update() {
+                    value = 1
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let input = try String(contentsOf: useURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --self insert --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), input)
+        }
+    }
+
+    func testDisabledProjectIndexDoesNotInsertSelfForMemberInOtherFile() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Foo { var value = 0 }",
+            "Sources/App/Use.swift": """
+            extension Foo {
+                func update() {
+                    value = 1
+                }
+            }
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let input = try String(contentsOf: useURL)
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantSelf --self insert --project-index disabled --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), input)
+        }
+    }
+
+    func testProjectMemberChangeInvalidatesFormattingCache() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Foo {}",
+            "Sources/App/Use.swift": """
+            extension Foo {
+                func update() {
+                    value = 1
+                }
+            }
+            """,
+        ]) { directory in
+            let typeURL = directory.appendingPathComponent("Sources/App/Type.swift")
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Use.swift --rules redundantSelf --self insert --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            extension Foo {
+                func update() {
+                    value = 1
+                }
+            }
+            """)
+
+            try "struct Foo { var value = 0 }".write(to: typeURL, atomically: true, encoding: .utf8)
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            extension Foo {
+                func update() {
+                    self.value = 1
+                }
+            }
+            """)
+        }
+    }
+
+    func testAutoclosureChangeInvalidatesFormattingCache() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Autoclosure.swift": """
+            func verify(_ expression: @autoclosure () -> Bool) {}
+            """,
+            "Sources/App/Use.swift": """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(self.value)
+                }
+            }
+            """,
+        ]) { directory in
+            let autoclosureURL = directory.appendingPathComponent("Sources/App/Autoclosure.swift")
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Use.swift --rules redundantSelf --swift-version 5.4 --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            try "func verify(_ expression: () -> Bool) {}".write(
+                to: autoclosureURL,
+                atomically: true,
+                encoding: .utf8
+            )
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            class Foo {
+                let value = true
+                func run() {
+                    verify(value)
+                }
+            }
+            """)
+        }
+    }
+
     func testCreatesSnapshotWithoutFormattingFiles() throws {
         let firstInput = """
         let foo=bar

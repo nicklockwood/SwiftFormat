@@ -41,6 +41,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     let examples: String?
     let runOnceOnly: Bool
     let disabledByDefault: Bool
+    let usesProjectContext: Bool
     let orderAfter: [FormatRule]
     let options: [String]
     let sharedOptions: [String]
@@ -61,6 +62,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
          deprecationMessage: String? = nil,
          runOnceOnly: Bool = false,
          disabledByDefault: Bool = false,
+         usesProjectContext: Bool = false,
          orderAfter: [FormatRule] = [],
          options: [String] = [],
          sharedOptions: [String] = [],
@@ -71,6 +73,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
         self.help = help
         self.runOnceOnly = runOnceOnly
         self.disabledByDefault = disabledByDefault || deprecationMessage != nil
+        self.usesProjectContext = usesProjectContext
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions

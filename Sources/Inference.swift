@@ -1018,7 +1018,7 @@ private struct Inference {
                         prevIndex -= 1
                     }
                     if let name {
-                        processAccessors(["get", "set", "willSet", "didSet", "init", "_modify"], for: name,
+                        processAccessors({ $0.isPropertyAccessorKeyword }, for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, membersByType: &membersByType,
                                          classMembersByType: &classMembersByType,
@@ -1134,7 +1134,7 @@ private struct Inference {
                 index += 1
             }
         }
-        func processAccessors(_ names: [String], for name: String, at index: inout Int,
+        func processAccessors(_ isAccessor: (Token) -> Bool, for name: String, at index: inout Int,
                               localNames: Set<String>, members: Set<String>,
                               typeStack: inout [String],
                               membersByType: inout [String: Set<String>],
@@ -1145,7 +1145,7 @@ private struct Inference {
             var foundAccessors = false
             var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                if case let .identifier(name) = $0, names.contains(name) {
+                if case .identifier = $0, isAccessor($0) {
                     return true
                 } else {
                     return false
@@ -1245,7 +1245,7 @@ private struct Inference {
             }
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
-                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames,
+                processAccessors({ ["get", "set"].contains($0.string) }, for: "", at: &index, localNames: localNames,
                                  members: members, typeStack: &typeStack, membersByType: &membersByType,
                                  classMembersByType: &classMembersByType,
                                  removed: &removed, unremoved: &unremoved,

@@ -239,11 +239,9 @@ final class DesignViewController: UIViewController, UIToolbarDelegate, EditViewC
         // Tree
         if let navigationController = splitViewController?.viewControllers[0] as? UINavigationController {
             for controller in navigationController.viewControllers {
-                if let controller = controller as? TreeViewController {
-                    if controller.layoutNode === newNode.parent {
-                        controller.layoutNode = newNode.parent // Refresh
-                        break
-                    }
+                if let controller = controller as? TreeViewController, controller.layoutNode === newNode.parent {
+                    controller.layoutNode = newNode.parent // Refresh
+                    break
                 }
             }
         }
@@ -264,12 +262,10 @@ final class DesignViewController: UIViewController, UIToolbarDelegate, EditViewC
             // Tree
             if let navigationController = splitViewController?.viewControllers[0] as? UINavigationController {
                 for controller in navigationController.viewControllers {
-                    if let controller = controller as? TreeViewController {
-                        if controller.layoutNode === parentNode {
-                            navigationController.popToViewController(controller, animated: true)
-                            controller.layoutNode = parentNode
-                            break
-                        }
+                    if let controller = controller as? TreeViewController, controller.layoutNode === parentNode {
+                        navigationController.popToViewController(controller, animated: true)
+                        controller.layoutNode = parentNode
+                        break
                     }
                 }
             }
@@ -298,12 +294,10 @@ final class DesignViewController: UIViewController, UIToolbarDelegate, EditViewC
         // Tree
         if let navigationController = splitViewController?.viewControllers[0] as? UINavigationController {
             for controller in navigationController.viewControllers {
-                if let controller = controller as? TreeViewController {
-                    if controller.layoutNode === node.parent {
-                        controller.layoutNode = node.parent
-                        navigationController.popToViewController(controller, animated: true)
-                        break
-                    }
+                if let controller = controller as? TreeViewController, controller.layoutNode === node.parent {
+                    controller.layoutNode = node.parent
+                    navigationController.popToViewController(controller, animated: true)
+                    break
                 }
             }
         }

@@ -408,11 +408,9 @@ extension NSObject {
                     rect.origin = value
                     newValue = rect as NSValue
                 }
-            } else if key == "size" {
-                if let value = value as? CGSize {
-                    rect.size = value
-                    newValue = rect as NSValue
-                }
+            } else if key == "size", let value = value as? CGSize {
+                rect.size = value
+                newValue = rect as NSValue
             }
         case is CGAffineTransform where value is NSNumber &&
             ((prevTarget is UIView && prevKey == "transform") ||

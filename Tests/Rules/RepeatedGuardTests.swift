@@ -67,11 +67,93 @@ final class RepeatedGuardTests: XCTestCase {
         testFormatting(for: input, rule: .repeatedGuard)
     }
 
-    func testDoesNotMergeGuardsSeparatedByComment() {
+    func testMergesGuardsSeparatedByComment() {
         let input = """
         guard isValid else { return }
 
         // Enabling may perform additional work.
+        guard isEnabled else { return }
+        """
+        let output = """
+        guard isValid,
+              // Enabling may perform additional work.
+              isEnabled
+        else { return }
+        """
+        testFormatting(for: input, output, rule: .repeatedGuard)
+    }
+
+    func testMergesWhenFirstGuardHasComment() {
+        let input = """
+        // The value must be valid.
+        guard isValid else { return }
+        guard isEnabled else { return }
+        """
+        let output = """
+        guard
+            // The value must be valid.
+            isValid,
+            isEnabled
+        else { return }
+        """
+        testFormatting(for: input, output, rule: .repeatedGuard)
+    }
+
+    func testMergesWhenBothGuardsHaveComments() {
+        let input = """
+        // The value must be valid.
+        guard isValid else { return }
+        // The feature must be enabled.
+        guard isEnabled else { return }
+        """
+        let output = """
+        guard
+            // The value must be valid.
+            isValid,
+            // The feature must be enabled.
+            isEnabled
+        else { return }
+        """
+        testFormatting(for: input, output, rule: .repeatedGuard)
+    }
+
+    func testMergesMoreThanTwoGuardsSeparatedByComments() {
+        let input = """
+        guard isValid else { return }
+        // Enabling may perform additional work.
+        guard isEnabled else { return }
+        // Authorization may perform additional work.
+        guard isAuthorized else { return }
+        """
+        let output = """
+        guard isValid,
+              // Enabling may perform additional work.
+              isEnabled,
+              // Authorization may perform additional work.
+              isAuthorized
+        else { return }
+        """
+        testFormatting(for: input, output, rule: .repeatedGuard)
+    }
+
+    func testDoesNotMoveTrailingCommentFromPreviousGuard() {
+        let input = """
+        guard isValid else { return } // Validates the input.
+
+        guard isEnabled else { return }
+        """
+        testFormatting(
+            for: input,
+            rule: .repeatedGuard,
+            exclude: [.blankLinesAfterGuardStatements]
+        )
+    }
+
+    func testDoesNotMergeAcrossFormattingDirective() {
+        let input = """
+        guard isValid else { return }
+
+        // swiftformat:disable:next repeatedGuard
         guard isEnabled else { return }
         """
         testFormatting(for: input, rule: .repeatedGuard)

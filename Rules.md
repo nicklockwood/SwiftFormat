@@ -3467,6 +3467,17 @@ Merge consecutive guard statements that have identical bodies.
 + guard isValid, isEnabled else { return }
 ```
 
+```diff
+- // The value must be valid.
+- guard isValid else { return }
+- guard isEnabled else { return }
++ guard
++     // The value must be valid.
++     isValid,
++     isEnabled
++ else { return }
+```
+
 </details>
 <br/>
 

@@ -3155,9 +3155,9 @@ final class IndentTests: XCTestCase {
         guard aBool,
               anotherBool,
               aTestArray
-                  .map { $0 * 2 }
-                  .filter { $0 == 4 }
-                  .isEmpty,
+                .map { $0 * 2 }
+                .filter { $0 == 4 }
+                .isEmpty,
               yetAnotherBool
         else { return }
         """
@@ -3211,8 +3211,29 @@ final class IndentTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .indent,
                        exclude: [.wrapMultilineStatementBraces, .wrapConditionalBodies])
+        let xcodeOutput = """
+        func someMethod() {
+            if let bar = foo.removingPercentEncoding,
+               let baz = bar
+                .uppercased()
+                .removingPercentEncoding,
+               let qux = baz
+                .lowercased()
+                .removingPercentEncoding
+            {}
+
+            guard let bar = foo.removingPercentEncoding,
+                  let baz = bar
+                    .uppercased()
+                    .removingPercentEncoding,
+                  let qux = baz
+                    .lowercased()
+                    .removingPercentEncoding
+            else { return }
+        }
+        """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: .indent, options: options,
+        testFormatting(for: input, xcodeOutput, rule: .indent, options: options,
                        exclude: [.wrapMultilineStatementBraces, .wrapConditionalBodies])
     }
 

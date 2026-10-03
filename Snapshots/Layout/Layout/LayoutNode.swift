@@ -1658,7 +1658,7 @@ public final class LayoutNode: NSObject {
         for name in expressions.keys {
             if let expression = _layoutExpressions[name] ??
                 _viewControllerExpressions[name] ?? _viewExpressions[name],
-                symbols.contains(where: { expression.symbols.contains($0) })
+               symbols.contains(where: { expression.symbols.contains($0) })
             {
                 return true
             }

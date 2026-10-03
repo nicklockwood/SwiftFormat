@@ -81,7 +81,7 @@ extension Formatter {
         return lhsTokens == rhsTokens
     }
 
-    /// Returns names introduced by a guard, or nil for patterns that can't be compared safely.
+    /// Returns names that may be introduced by a guard.
     func namesDeclaredByRepeatedGuard(at guardIndex: Int) -> Set<String>? {
         let conditions = parseConditionalStatement(at: guardIndex)
         guard !conditions.isEmpty else { return nil }
@@ -91,8 +91,14 @@ extension Formatter {
             switch condition {
             case let .optionalBinding(_, property):
                 names.insert(property.identifier)
-            case .patternMatching:
-                return nil
+            case let .patternMatching(range):
+                guard let equalsIndex = index(of: .operator("=", .infix), in: range) else {
+                    return nil
+                }
+                names.formUnion(tokens[range.lowerBound ..< equalsIndex].compactMap { token in
+                    guard case let .identifier(name) = token, name != "_" else { return nil }
+                    return name
+                })
             case .availabilityCondition, .booleanExpression:
                 break
             }

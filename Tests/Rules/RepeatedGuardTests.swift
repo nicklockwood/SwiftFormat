@@ -116,10 +116,22 @@ final class RepeatedGuardTests: XCTestCase {
         testFormatting(for: input, rule: .repeatedGuard)
     }
 
-    func testDoesNotMergePatternMatchingGuards() {
+    func testMergesPatternMatchingGuards() {
         let input = """
         guard case let .success(value) = firstResult else { return }
         guard case let .success(otherValue) = secondResult else { return }
+        """
+        let output = """
+        guard case let .success(value) = firstResult, case let .success(otherValue) = secondResult else { return }
+        """
+        testFormatting(for: input, output, rule: .repeatedGuard)
+    }
+
+    func testDoesNotMergeWhenBodyReferencesBindingFromFirstPattern() {
+        let input = """
+        let value = 0
+        guard case let .success(value) = result else { print(value); return }
+        guard isValid else { print(value); return }
         """
         testFormatting(for: input, rule: .repeatedGuard)
     }

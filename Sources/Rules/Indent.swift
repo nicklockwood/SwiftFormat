@@ -605,7 +605,14 @@ public extension FormatRule {
                                    } ?? false
                            )
                         {
-                            indent += formatter.options.indent
+                            if formatter.options.xcodeIndentation {
+                                let column = formatter.tokenLength(.space(indent))
+                                let indentWidth = max(1, formatter.tokenLength(.space(formatter.options.indent)))
+                                let spaces = indentWidth - column % indentWidth
+                                indent += formatter.spaceEquivalentToWidth(spaces)
+                            } else {
+                                indent += formatter.options.indent
+                            }
                             indentStack[indentStack.count - 1] = indent
                         }
 

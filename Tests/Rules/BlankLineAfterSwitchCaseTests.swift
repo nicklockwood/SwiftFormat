@@ -403,4 +403,124 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .blankLineAfterSwitchCase, exclude: [.consistentSwitchCaseSpacing])
     }
+
+    func testNeverOptionRemovesBlankLinesAfterSwitchCases() {
+        let input = """
+        func handle(_ action: SpaceshipAction) {
+            switch action {
+            case .engageWarpDrive:
+                navigationComputer.destination = targetedDestination
+                await warpDrive.spinUp()
+                warpDrive.activate()
+
+            case let .scanPlanet(planet):
+                scanner.scan(planet)
+
+            case .handleIncomingEnergyBlast:
+                await energyShields.prepare()
+                energyShields.engage()
+
+            }
+        }
+        """
+
+        let output = """
+        func handle(_ action: SpaceshipAction) {
+            switch action {
+            case .engageWarpDrive:
+                navigationComputer.destination = targetedDestination
+                await warpDrive.spinUp()
+                warpDrive.activate()
+            case let .scanPlanet(planet):
+                scanner.scan(planet)
+            case .handleIncomingEnergyBlast:
+                await energyShields.prepare()
+                energyShields.engage()
+            }
+        }
+        """
+        testFormatting(for: input,
+                       output,
+                       rule: .blankLineAfterSwitchCase,
+                       options: FormatOptions(blankLineAfterSwitchCase: .never))
+    }
+
+    func testNeverOptionDoesntAddBlankLineAfterMultilineSwitchCase() {
+        let input = """
+        func handle(_ action: SpaceshipAction) {
+            switch action {
+            case .engageWarpDrive:
+                navigationComputer.destination = targetedDestination
+                await warpDrive.spinUp()
+                warpDrive.activate()
+            case .handleIncomingEnergyBlast:
+                await energyShields.prepare()
+                energyShields.engage()
+            }
+        }
+        """
+        testFormatting(for: input,
+                       rule: .blankLineAfterSwitchCase,
+                       options: FormatOptions(blankLineAfterSwitchCase: .never))
+    }
+
+    func testNeverOptionRemovesBlankLineBeforeCommentPrecedingNextCase() {
+        let input = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            warpDrive.activate()
+
+        // Triggered automatically whenever we detect an energy blast was fired in our direction
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        let output = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            warpDrive.activate()
+        // Triggered automatically whenever we detect an energy blast was fired in our direction
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+        testFormatting(for: input,
+                       output,
+                       rule: .blankLineAfterSwitchCase,
+                       options: FormatOptions(blankLineAfterSwitchCase: .never))
+    }
+
+    func testNeverOptionRemovesBlankLineAfterIfdefInsideSwitchCase() {
+        let input = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                print("foo")
+            #endif
+            print("bar")
+
+        case .baaz:
+            print("baaz")
+        }
+        """
+
+        let output = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                print("foo")
+            #endif
+            print("bar")
+        case .baaz:
+            print("baaz")
+        }
+        """
+        testFormatting(for: input,
+                       output,
+                       rule: .blankLineAfterSwitchCase,
+                       options: FormatOptions(blankLineAfterSwitchCase: .never))
+    }
 }

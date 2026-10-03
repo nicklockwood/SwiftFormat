@@ -803,6 +803,8 @@ public enum BlankLineAfterSwitchCase: String, CaseIterable {
     case always
     /// Add blank lines after multiline switch cases only
     case multilineOnly = "multiline-only"
+    /// Remove blank lines after switch cases
+    case never
 }
 
 public enum URLMacro: Equatable, RawRepresentable, CustomStringConvertible {

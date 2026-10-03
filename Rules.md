@@ -300,11 +300,12 @@ Insert blank line after import statements.
 ## blankLineAfterSwitchCase
 
 Insert a blank line after switch cases (excluding the last case,
-which is followed by a closing brace).
+which is followed by a closing brace), or remove them with
+`--blank-line-after-switch-case never`.
 
 Option | Description
 --- | ---
-`--blank-line-after-switch-case` | Insert line After switch cases: "always" or "multiline-only" (default)
+`--blank-line-after-switch-case` | Insert line After switch cases: "always", "multiline-only" (default) or "never"
 
 <details>
 <summary>Examples</summary>
@@ -329,6 +330,19 @@ Option | Description
   case .engageWarpDrive:
       warpDrive.activate()
 +
+  case .handleIncomingEnergyBlast:
+      energyShields.engage()
+  }
+```
+
+`--blank-line-after-switch-case never`
+
+```diff
+  switch action {
+  case .engageWarpDrive:
+      navigationComputer.destination = targetedDestination
+      warpDrive.activate()
+-
   case .handleIncomingEnergyBlast:
       energyShields.engage()
   }
@@ -768,6 +782,10 @@ Replace consecutive spaces with a single space.
 ## consistentSwitchCaseSpacing
 
 Ensures consistent spacing among all of the cases in a switch statement.
+
+Option | Description
+--- | ---
+`--blank-line-after-switch-case` | Insert line After switch cases: "always", "multiline-only" (default) or "never"
 
 <details>
 <summary>Examples</summary>

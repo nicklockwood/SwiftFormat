@@ -20,6 +20,15 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(Token.identifier("func").isFunctionDeclarationKeyword)
     }
 
+    func testPropertyAccessorKeywords() {
+        for keyword in ["get", "set", "willSet", "didSet", "init", "_modify"] {
+            XCTAssertTrue(Token.identifier(keyword).isPropertyAccessorKeyword)
+            XCTAssertTrue(Token.keyword(keyword).isPropertyAccessorKeyword)
+        }
+        XCTAssertFalse(Token.identifier("func").isPropertyAccessorKeyword)
+        XCTAssertFalse(Token.stringBody("get").isPropertyAccessorKeyword)
+    }
+
     // MARK: isStartOfClosure
 
     // types

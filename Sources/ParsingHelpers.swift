@@ -905,7 +905,7 @@ extension Formatter {
 
     func isAccessorKeyword(at i: Int, checkKeyword: Bool = true) -> Bool {
         guard !checkKeyword ||
-            ["get", "set", "willSet", "didSet", "init", "_modify"].contains(token(at: i)?.string ?? ""),
+            token(at: i)?.isPropertyAccessorKeyword == true,
             var prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i)
         else {
             return false
@@ -1616,7 +1616,7 @@ extension Formatter {
                     return true
                 }
                 return false
-            case "get", "set", "willSet", "didSet", "init", "_modify":
+            case let keyword where Token.identifier(keyword).isPropertyAccessorKeyword:
                 return isAccessorKeyword(at: i, checkKeyword: false)
             case "actor":
                 if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(ofType: .infix) == true {
@@ -4655,6 +4655,23 @@ extension _FormatRules {
 }
 
 extension Token {
+    /// Whether this token is a property accessor or observer keyword.
+    var isPropertyAccessorKeyword: Bool {
+        let keyword: String
+        switch self {
+        case let .identifier(value), let .keyword(value):
+            keyword = value
+        default:
+            return false
+        }
+        switch keyword {
+        case "get", "set", "willSet", "didSet", "init", "_modify":
+            return true
+        default:
+            return false
+        }
+    }
+
     /// Whether this token is the keyword for a function or function-like declaration.
     var isFunctionDeclarationKeyword: Bool {
         guard case let .keyword(keyword) = self else { return false }

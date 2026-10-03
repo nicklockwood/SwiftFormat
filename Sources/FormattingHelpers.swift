@@ -2933,7 +2933,7 @@ extension Formatter {
                         ["static", "class"].contains(string)
                     })
                     if let name, classOrStatic || !staticSelf {
-                        processAccessors(["get", "set", "willSet", "didSet", "init", "_modify"], for: name,
+                        processAccessors({ $0.isPropertyAccessorKeyword }, for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, closureStack: &closureStack,
                                          membersByType: &membersByType,
@@ -3220,7 +3220,7 @@ extension Formatter {
                 index += 1
             }
         }
-        func processAccessors(_ names: [String], for name: String, at index: inout Int,
+        func processAccessors(_ isAccessor: (Token) -> Bool, for name: String, at index: inout Int,
                               localNames: Set<String>, members: Set<String>,
                               typeStack: inout [(name: String, keyword: String)],
                               closureStack: inout [(allowsImplicitSelf: Bool, selfCapture: String?)],
@@ -3236,8 +3236,8 @@ extension Formatter {
                 switch $0 {
                 case .keyword where $0.isAttribute:
                     return true
-                case let .identifier(name), let .keyword(name):
-                    return names.contains(name)
+                case let token where token.isIdentifierOrKeyword:
+                    return isAccessor(token)
                 default:
                     return false
                 }
@@ -3392,7 +3392,7 @@ extension Formatter {
 
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
-                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames,
+                processAccessors({ ["get", "set"].contains($0.string) }, for: "", at: &index, localNames: localNames,
                                  members: members, typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                  classMembersByType: &classMembersByType,
                                  usingDynamicLookup: usingDynamicLookup,

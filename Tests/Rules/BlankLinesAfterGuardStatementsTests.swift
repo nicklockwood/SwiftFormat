@@ -719,9 +719,9 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         guard aBool,
               anotherBool,
               aTestArray
-              .map { $0 * 2 }
-              .filter { $0 == 4 }
-              .isEmpty,
+                  .map { $0 * 2 }
+                  .filter { $0 == 4 }
+                  .isEmpty,
               yetAnotherBool
         else { return }
         """
@@ -734,9 +734,9 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         guard aBool,
               anotherBool,
               aTestArray
-              .map { $0 * 2 }
-              .filter { $0 == 4 }
-              .isEmpty,
+                  .map { $0 * 2 }
+                  .filter { $0 == 4 }
+                  .isEmpty,
               yetAnotherBool
         else { return }
         """

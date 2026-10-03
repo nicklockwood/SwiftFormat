@@ -96,12 +96,15 @@ final class RepeatedGuardTests: XCTestCase {
         )
     }
 
-    func testDoesNotMergeGuardsThatRedeclareBinding() {
+    func testMergesGuardsThatRedeclareBinding() {
         let input = """
         guard let value = firstValue else { return }
         guard let value = secondValue else { return }
         """
-        testFormatting(for: input, rule: .repeatedGuard)
+        let output = """
+        guard let value = firstValue, let value = secondValue else { return }
+        """
+        testFormatting(for: input, output, rule: .repeatedGuard)
     }
 
     func testDoesNotMergeWhenBodyReferencesBindingFromFirstGuard() {

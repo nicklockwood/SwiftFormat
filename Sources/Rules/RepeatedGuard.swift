@@ -36,8 +36,7 @@ extension Formatter {
               let secondGuard = repeatedGuardParts(at: nextGuardIndex),
               repeatedGuardBodiesMatch(firstGuard.bodyRange, secondGuard.bodyRange),
               let firstNames = namesDeclaredByRepeatedGuard(at: guardIndex),
-              let secondNames = namesDeclaredByRepeatedGuard(at: nextGuardIndex),
-              firstNames.isDisjoint(with: secondNames),
+              namesDeclaredByRepeatedGuard(at: nextGuardIndex) != nil,
               !firstNames.contains(where: { name in
                   tokens[secondGuard.bodyRange].contains(.identifier(name))
               }),

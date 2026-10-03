@@ -111,11 +111,7 @@ final class RuntimeTypeTests: XCTestCase {
     }
 
     func testArrayTypeByName() {
-        guard let runtimeType = RuntimeType.type(named: "Array<Int>") else {
-            XCTFail()
-            return
-        }
-        guard case let .array(subtype) = runtimeType.kind else {
+        guard let runtimeType = RuntimeType.type(named: "Array<Int>"), case let .array(subtype) = runtimeType.kind else {
             XCTFail()
             return
         }
@@ -124,11 +120,7 @@ final class RuntimeTypeTests: XCTestCase {
     }
 
     func testArrayTypeByShortName() {
-        guard let runtimeType = RuntimeType.type(named: "[Int]") else {
-            XCTFail()
-            return
-        }
-        guard case let .array(subtype) = runtimeType.kind else {
+        guard let runtimeType = RuntimeType.type(named: "[Int]"), case let .array(subtype) = runtimeType.kind else {
             XCTFail()
             return
         }
@@ -137,11 +129,7 @@ final class RuntimeTypeTests: XCTestCase {
     }
 
     func testNSArrayTypeByName() {
-        guard let runtimeType = RuntimeType.type(named: "NSArray") else {
-            XCTFail()
-            return
-        }
-        guard case .array = runtimeType.kind else {
+        guard let runtimeType = RuntimeType.type(named: "NSArray"), case .array = runtimeType.kind else {
             XCTFail()
             return
         }
@@ -149,11 +137,7 @@ final class RuntimeTypeTests: XCTestCase {
     }
 
     func testStringTypeByName() {
-        guard let runtimeType = RuntimeType.type(named: "String") else {
-            XCTFail()
-            return
-        }
-        guard case let .any(type) = runtimeType.kind else {
+        guard let runtimeType = RuntimeType.type(named: "String"), case let .any(type) = runtimeType.kind else {
             XCTFail()
             return
         }
@@ -162,11 +146,7 @@ final class RuntimeTypeTests: XCTestCase {
     }
 
     func testNSStringTypeByName() {
-        guard let runtimeType = RuntimeType.type(named: "NSString") else {
-            XCTFail()
-            return
-        }
-        guard case let .any(type) = runtimeType.kind else {
+        guard let runtimeType = RuntimeType.type(named: "NSString"), case let .any(type) = runtimeType.kind else {
             XCTFail()
             return
         }

@@ -14,7 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 // swiftformat:options --indent 2 --max-width 100 --wrap-parameters afterfirst
-// swiftformat:disable sortedImports unusedArguments wrapMultilineStatementBraces redundantParens
+// swiftformat:disable sortedImports unusedArguments wrapMultilineStatementBraces redundantParens nestedIf
 
 import FirebaseFirestore
 import Foundation

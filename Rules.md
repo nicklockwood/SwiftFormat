@@ -43,6 +43,7 @@
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
 * [modifiersOnSameLine](#modifiersOnSameLine)
+* [nestedIf](#nestedIf)
 * [noForceTryInTests](#noForceTryInTests)
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
@@ -1736,6 +1737,25 @@ Ensure that all modifiers are on the same line as the declaration keyword.
 - func bar() {}
 
 + nonisolated func bar() {}
+```
+
+</details>
+<br/>
+
+## nestedIf
+
+Merge nested if statements into a single statement with comma-delimited conditions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if isValid {
+-     if isEnabled {
++ if isValid, isEnabled {
+          performAction()
+-     }
+  }
 ```
 
 </details>

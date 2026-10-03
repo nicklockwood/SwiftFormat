@@ -86,12 +86,10 @@ struct ContentView: View {
 
   func startGame() {
     usedWords.removeAll()
-    if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
-      if let startWords = try? String(contentsOf: startWordsURL) {
-        let allWords = startWords.components(separatedBy: "\n")
-        rootWord = allWords.randomElement() ?? "silkworm"
-        return
-      }
+    if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt"), let startWords = try? String(contentsOf: startWordsURL) {
+      let allWords = startWords.components(separatedBy: "\n")
+      rootWord = allWords.randomElement() ?? "silkworm"
+      return
     }
 
     fatalError("Could not load start.txt")

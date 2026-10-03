@@ -80,6 +80,7 @@
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVariable](#redundantVariable)
 * [redundantVoidReturnType](#redundantVoidReturnType)
+* [repeatedGuard](#repeatedGuard)
 * [semicolons](#semicolons)
 * [simplifyGenericConstraints](#simplifyGenericConstraints)
 * [sortDeclarations](#sortDeclarations)
@@ -3410,6 +3411,22 @@ Option | Description
 + func foo() {
     // returns nothing
   }
+```
+
+</details>
+<br/>
+
+## repeatedGuard
+
+Merge consecutive guard statements that have identical bodies.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- guard isValid else { return }
+- guard isEnabled else { return }
++ guard isValid, isEnabled else { return }
 ```
 
 </details>

@@ -501,15 +501,13 @@ func subpathIndicesFor(_ points: [PathPoint]) -> [Int] {
     var lastIndex = 0
     var indices = [Int]()
     for (i, p) in points.enumerated() {
-        for j in lastIndex ..< i {
-            if points[j].position == p.position {
-                if j > lastIndex, j < i - 1 {
-                    indices.append(j)
-                }
-                indices.append(i)
-                lastIndex = i
-                break
+        for j in lastIndex ..< i where points[j].position == p.position {
+            if j > lastIndex, j < i - 1 {
+                indices.append(j)
             }
+            indices.append(i)
+            lastIndex = i
+            break
         }
     }
     if !indices.isEmpty, indices.last != points.count - 1 {

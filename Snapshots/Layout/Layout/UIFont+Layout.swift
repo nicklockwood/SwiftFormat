@@ -36,11 +36,9 @@ extension UIFont {
         }
         // Do string-based match first, as this is more reliable
         let name = fontName.lowercased()
-        for (suffix, weight) in weightsBySuffix {
-            if name.contains(suffix) {
-                fontWeights[fontName] = weight
-                return weight
-            }
+        for (suffix, weight) in weightsBySuffix where name.contains(suffix) {
+            fontWeights[fontName] = weight
+            return weight
         }
         // Use the weight attribute as a fallback, but this is not very reliable for 3rd party fonts
         guard let traits = fontDescriptor.object(forKey: UIFontDescriptor.AttributeName.traits) as? [UIFontDescriptor.TraitKey: Any],

@@ -78,11 +78,9 @@ private func staticPropertyMatches(for key: String) -> [String]? {
         return bestMatches(for: tail, in: Set(values.keys))
     case let .any(type as NSObject.Type):
         var suffix = head.components(separatedBy: ".").last!
-        for prefix in ["UI", "NS"] {
-            if suffix.hasPrefix(prefix) {
-                suffix = String(suffix[prefix.endIndex ..< suffix.endIndex])
-                break
-            }
+        for prefix in ["UI", "NS"] where suffix.hasPrefix(prefix) {
+            suffix = String(suffix[prefix.endIndex ..< suffix.endIndex])
+            break
         }
         var keys = Set<String>()
         var numberOfMethods: CUnsignedInt = 0

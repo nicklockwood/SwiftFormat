@@ -43,6 +43,7 @@ let ruleRegistry: [String: FormatRule] = [
     "extensionAttributes": .extensionAttributes,
     "fileHeader": .fileHeader,
     "fileMacro": .fileMacro,
+    "forWhere": .forWhere,
     "genericExtensions": .genericExtensions,
     "headerFileName": .headerFileName,
     "hoistAwait": .hoistAwait,

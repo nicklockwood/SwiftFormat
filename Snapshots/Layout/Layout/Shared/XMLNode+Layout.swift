@@ -62,10 +62,8 @@ public extension XMLNode {
 
 extension Collection where Iterator.Element == XMLNode {
     var isLayout: Bool {
-        for node in self {
-            if node.isLayout {
-                return true
-            }
+        for node in self where node.isLayout {
+            return true
         }
         return false
     }

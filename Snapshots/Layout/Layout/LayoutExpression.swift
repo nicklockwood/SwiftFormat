@@ -412,11 +412,9 @@ struct LayoutExpression {
                     if !tail.isEmpty {
                         if !type.responds(to: Selector(tail)) {
                             var suffix = head.components(separatedBy: ".").last!
-                            for prefix in ["UI", "NS"] {
-                                if suffix.hasPrefix(prefix) {
-                                    suffix = String(suffix[prefix.endIndex ..< suffix.endIndex])
-                                    break
-                                }
+                            for prefix in ["UI", "NS"] where suffix.hasPrefix(prefix) {
+                                suffix = String(suffix[prefix.endIndex ..< suffix.endIndex])
+                                break
                             }
                             let newTail = tail + suffix
                             guard type.responds(to: Selector(newTail)) else {

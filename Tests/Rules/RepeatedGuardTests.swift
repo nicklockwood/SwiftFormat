@@ -96,6 +96,48 @@ final class RepeatedGuardTests: XCTestCase {
         )
     }
 
+    func testDoesNotMergeGuardsThatCallXCTFail() {
+        let input = """
+        guard let e1 = p1.error else { return XCTFail() }
+        guard let e2 = p2.error else { return XCTFail() }
+        guard case PMKError.badInput = e1 else { return XCTFail() }
+        guard case PMKError.badInput = e2 else { return XCTFail() }
+        """
+        testFormatting(for: input, rule: .repeatedGuard)
+    }
+
+    func testDoesNotMergeGuardsThatCallDiagnosticFunction() {
+        let input = """
+        guard isValid else { fatalError() }
+        guard isEnabled else { fatalError() }
+        """
+        testFormatting(for: input, rule: .repeatedGuard)
+    }
+
+    func testDoesNotMergeGuardsThatCallCustomFailureHelper() {
+        let input = """
+        guard isValid else { return fail() }
+        guard isEnabled else { return fail() }
+        """
+        testFormatting(for: input, rule: .repeatedGuard)
+    }
+
+    func testDoesNotMergeGuardsThatCreateError() {
+        let input = """
+        guard isValid else { throw ValidationError() }
+        guard isEnabled else { throw ValidationError() }
+        """
+        testFormatting(for: input, rule: .repeatedGuard)
+    }
+
+    func testDoesNotMergeGuardsWithSourceLocationExpression() {
+        let input = """
+        guard isValid else { return #line }
+        guard isEnabled else { return #line }
+        """
+        testFormatting(for: input, rule: .repeatedGuard)
+    }
+
     func testMergesGuardsThatRedeclareBinding() {
         let input = """
         guard let value = firstValue else { return }

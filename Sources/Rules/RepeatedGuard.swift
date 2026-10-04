@@ -74,11 +74,29 @@ extension Formatter {
         let lhsTokens = tokens[lhs].filter { !$0.isSpaceOrLinebreak }
         let rhsTokens = tokens[rhs].filter { !$0.isSpaceOrLinebreak }
         guard !lhsTokens.contains(where: \.isComment),
-              !rhsTokens.contains(where: \.isComment)
+              !rhsTokens.contains(where: \.isComment),
+              !repeatedGuardBodyContainsCallOrSourceLocation(in: lhs)
         else {
             return false
         }
         return lhsTokens == rhsTokens
+    }
+
+    /// Whether a guard body contains a call or source-location expression whose behavior
+    /// could depend on which guard it appears in.
+    func repeatedGuardBodyContainsCallOrSourceLocation(in range: ClosedRange<Int>) -> Bool {
+        tokens[range].indices.contains { index in
+            switch tokens[index] {
+            case .startOfScope("("):
+                return isFunctionCall(at: index)
+            case .startOfScope("{"):
+                return index != range.lowerBound && isStartOfClosure(at: index)
+            case let .keyword(keyword):
+                return ["#column", "#file", "#fileID", "#filePath", "#line"].contains(keyword)
+            default:
+                return false
+            }
+        }
     }
 
     /// Returns names that may be introduced by a guard.

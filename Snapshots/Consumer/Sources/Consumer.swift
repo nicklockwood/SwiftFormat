@@ -360,13 +360,11 @@ private extension Consumer {
             case let .any(consumers):
                 let startIndex = index
                 var matched = false
-                for consumer in consumers {
-                    if _skip(consumer) {
-                        if index > startIndex {
-                            return true
-                        }
-                        matched = true
+                for consumer in consumers where _skip(consumer) {
+                    if index > startIndex {
+                        return true
                     }
+                    matched = true
                 }
                 return matched || consumers.isEmpty
             case let .sequence(consumers):

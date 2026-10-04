@@ -430,10 +430,8 @@ final class DesignViewController: UIViewController, UIToolbarDelegate, EditViewC
     func didUpdateClass(_ cls: NSObject.Type, for node: LayoutNode) {
         error = nil
         var expressions = node.expressions
-        for name in expressions.keys {
-            if !LayoutNode.isValidExpressionName(name, for: cls) {
-                expressions[name] = nil
-            }
+        for name in expressions.keys where !LayoutNode.isValidExpressionName(name, for: cls) {
+            expressions[name] = nil
         }
         // TODO: update once class-based init is public
         let newNode: LayoutNode

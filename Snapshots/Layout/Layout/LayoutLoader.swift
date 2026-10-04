@@ -61,11 +61,9 @@ private extension Layout {
                 layout.children.insert(contentsOf: children, at: index)
                 return true
             }
-            for (index, var child) in layout.children.enumerated() {
-                if _insertChildren(children, into: &child) {
-                    layout.children[index] = child
-                    return true
-                }
+            for (index, var child) in layout.children.enumerated() where _insertChildren(children, into: &child) {
+                layout.children[index] = child
+                return true
             }
             return false
         }
@@ -284,11 +282,9 @@ final class LayoutLoader {
                 if let projectDirectory = _projectDirectory {
                     let xmlPath = xmlURL.absoluteString
                     var parts = xmlPath[bundlePath.endIndex ..< xmlPath.endIndex].components(separatedBy: "/")
-                    for (i, part) in parts.enumerated().reversed() {
-                        if part.hasSuffix(".bundle") {
-                            parts.removeFirst(i + 1)
-                            break
-                        }
+                    for (i, part) in parts.enumerated().reversed() where part.hasSuffix(".bundle") {
+                        parts.removeFirst(i + 1)
+                        break
                     }
                     let path = parts.joined(separator: "/")
                     do {

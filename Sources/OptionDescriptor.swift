@@ -1424,6 +1424,12 @@ struct _Descriptors {
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
+    let forWhere = OptionDescriptor(
+        argumentName: "for-where",
+        displayName: "For loop where clauses",
+        help: "Use a where clause instead of a nested if to filter for loops:",
+        keyPath: \.forWhere
+    )
     let docComments = OptionDescriptor(
         argumentName: "doc-comments",
         displayName: "Doc comments",

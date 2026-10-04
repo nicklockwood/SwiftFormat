@@ -1,5 +1,5 @@
 //
-//  PreferForWhereTests.swift
+//  ForWhereTests.swift
 //  SwiftFormatTests
 //
 //  Created by Nick Lockwood on 04/10/2026.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-final class PreferForWhereTests: XCTestCase {
+final class ForWhereTests: XCTestCase {
     func testMovesSingleIfConditionIntoForWhereClause() {
         let input = """
         for child in visibleChildren {
@@ -23,7 +23,7 @@ final class PreferForWhereTests: XCTestCase {
             return false
         }
         """
-        testFormatting(for: input, output, rule: .preferForWhere)
+        testFormatting(for: input, output, rule: .forWhere)
     }
 
     func testMovesSingleLineIfConditionIntoForWhereClause() {
@@ -38,7 +38,7 @@ final class PreferForWhereTests: XCTestCase {
             render(child)
         }
         """
-        testFormatting(for: input, [output, allRulesOutput], rules: [.preferForWhere])
+        testFormatting(for: input, [output, allRulesOutput], rules: [.forWhere])
     }
 
     func testJoinsMultipleBooleanConditionsWithAndOperator() {
@@ -54,7 +54,7 @@ final class PreferForWhereTests: XCTestCase {
             render(child)
         }
         """
-        testFormatting(for: input, output, rule: .preferForWhere)
+        testFormatting(for: input, output, rule: .forWhere)
     }
 
     func testRunsAfterAndOperatorRule() {
@@ -70,7 +70,7 @@ final class PreferForWhereTests: XCTestCase {
             render(child)
         }
         """
-        testFormatting(for: input, [output], rules: [.andOperator, .preferForWhere])
+        testFormatting(for: input, [output], rules: [.andOperator, .forWhere])
     }
 
     func testAdjustsIndentationInNestedScope() {
@@ -90,7 +90,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferForWhere)
+        testFormatting(for: input, output, rule: .forWhere)
     }
 
     func testPreservesCommentsInIfBody() {
@@ -108,7 +108,7 @@ final class PreferForWhereTests: XCTestCase {
             render(child)
         }
         """
-        testFormatting(for: input, output, rule: .preferForWhere)
+        testFormatting(for: input, output, rule: .forWhere)
     }
 
     func testHandlesClosureInForLoopSequence() {
@@ -124,7 +124,7 @@ final class PreferForWhereTests: XCTestCase {
             render(child)
         }
         """
-        testFormatting(for: input, output, rule: .preferForWhere)
+        testFormatting(for: input, output, rule: .forWhere)
     }
 
     func testDoesNotChangeForLoopWithExistingWhereClause() {
@@ -135,7 +135,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotChangeIfWithElseBranch() {
@@ -148,7 +148,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotChangeLoopWithStatementBeforeIf() {
@@ -160,7 +160,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotChangeLoopWithStatementAfterIf() {
@@ -172,7 +172,7 @@ final class PreferForWhereTests: XCTestCase {
             finish(child)
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotMoveOptionalBindingIntoWhereClause() {
@@ -183,7 +183,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotMovePatternMatchingConditionIntoWhereClause() {
@@ -194,7 +194,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotMoveAvailabilityConditionIntoWhereClause() {
@@ -205,7 +205,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotRemoveCommentBeforeIf() {
@@ -217,7 +217,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotMoveCommentedCondition() {
@@ -228,7 +228,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testPreservesCommentInForLoopSequence() {
@@ -244,7 +244,7 @@ final class PreferForWhereTests: XCTestCase {
             render(child)
         }
         """
-        testFormatting(for: input, output, rule: .preferForWhere)
+        testFormatting(for: input, output, rule: .forWhere)
     }
 
     func testDoesNotMoveCommentBetweenSequenceAndLoopBody() {
@@ -255,7 +255,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotRemoveCommentAfterIf() {
@@ -267,7 +267,7 @@ final class PreferForWhereTests: XCTestCase {
             // Finished rendering.
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testPreservesCommentsOutsideForLoop() {
@@ -289,7 +289,7 @@ final class PreferForWhereTests: XCTestCase {
 
         // Rendering complete.
         """
-        testFormatting(for: input, output, rule: .preferForWhere)
+        testFormatting(for: input, output, rule: .forWhere)
     }
 
     func testDoesNotMoveMultilineCondition() {
@@ -301,7 +301,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere, exclude: [.wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .forWhere, exclude: [.wrapMultilineStatementBraces])
     }
 
     func testDoesNotMoveConditionWithTrailingClosure() {
@@ -312,7 +312,7 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 
     func testDoesNotChangeMultilineStringIndentation() {
@@ -325,6 +325,6 @@ final class PreferForWhereTests: XCTestCase {
             }
         }
         """#
-        testFormatting(for: input, rule: .preferForWhere)
+        testFormatting(for: input, rule: .forWhere)
     }
 }

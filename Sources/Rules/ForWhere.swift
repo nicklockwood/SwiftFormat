@@ -1,5 +1,5 @@
 //
-//  PreferForWhere.swift
+//  ForWhere.swift
 //  SwiftFormat
 //
 //  Created by Nick Lockwood on 04/10/2026.
@@ -10,8 +10,9 @@ import Foundation
 
 public extension FormatRule {
     /// Move a single if statement inside a for loop into the loop's where clause.
-    static let preferForWhere = FormatRule(
+    static let forWhere = FormatRule(
         help: "Prefer a `where` clause over a single `if` statement inside a `for` loop.",
+        disabledByDefault: true,
         orderAfter: [.andOperator, .preferForLoop]
     ) { formatter in
         formatter.forEach(.keyword("for")) { forIndex, _ in

@@ -49,7 +49,6 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferForLoop](#preferForLoop)
-* [preferForWhere](#preferForWhere)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
@@ -129,6 +128,7 @@
 * [blockComments](#blockComments)
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
+* [forWhere](#forWhere)
 * [ifExpressions](#ifExpressions)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
@@ -1321,6 +1321,25 @@ Option | Description
 </details>
 <br/>
 
+## forWhere
+
+Prefer a `where` clause over a single `if` statement inside a `for` loop.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- for child in visibleChildren {
+-     if !child.buildPreview(progress) {
++ for child in visibleChildren where !child.buildPreview(progress) {
+          return false
+-     }
+  }
+```
+
+</details>
+<br/>
+
 ## genericExtensions
 
 Use angle brackets (`extension Array<Foo>`) for generic type extensions
@@ -2260,25 +2279,6 @@ Option | Description
       .filter { $0.style == .fooBar }
       .map { $0.uppercased() }
       .forEach { print($0) }
-```
-
-</details>
-<br/>
-
-## preferForWhere
-
-Prefer a `where` clause over a single `if` statement inside a `for` loop.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- for child in visibleChildren {
--     if !child.buildPreview(progress) {
-+ for child in visibleChildren where !child.buildPreview(progress) {
-          return false
--     }
-  }
 ```
 
 </details>

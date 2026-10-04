@@ -41,6 +41,190 @@ final class ForWhereTests: XCTestCase {
         testFormatting(for: input, [output, allRulesOutput], rules: [.forWhere])
     }
 
+    func testMovesForWhereClauseIntoNestedIf() {
+        let input = """
+        for child in visibleChildren where child.isVisible {
+            render(child)
+        }
+        """
+        let output = """
+        for child in visibleChildren {
+            if child.isVisible {
+                render(child)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere, options: .init(forWhere: .never))
+    }
+
+    func testMovesSingleLineForWhereClauseIntoNestedIf() {
+        let input = """
+        for child in visibleChildren where child.isVisible { render(child) }
+        """
+        let output = """
+        for child in visibleChildren { if child.isVisible { render(child) } }
+        """
+        let allRulesOutput = """
+        for child in visibleChildren {
+            if child.isVisible { render(child) }
+        }
+        """
+        testFormatting(
+            for: input,
+            [output, allRulesOutput],
+            rules: [.forWhere],
+            options: .init(forWhere: .never)
+        )
+    }
+
+    func testMovesForWhereClauseIntoNestedIfInNestedScope() {
+        let input = """
+        func renderChildren() {
+            for child in visibleChildren where child.isVisible {
+                render(child)
+            }
+        }
+        """
+        let output = """
+        func renderChildren() {
+            for child in visibleChildren {
+                if child.isVisible {
+                    render(child)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere, options: .init(forWhere: .never))
+    }
+
+    func testMovesForWhereClauseWithBraceOnNextLineIntoNestedIf() {
+        let input = """
+        for child in visibleChildren where child.isVisible
+        {
+            render(child)
+        }
+        """
+        let output = """
+        for child in visibleChildren
+        {
+            if child.isVisible {
+                render(child)
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .forWhere,
+            options: .init(forWhere: .never),
+            exclude: [.braces]
+        )
+    }
+
+    func testPreservesCommentInBodyWhenMovingForWhereClauseIntoNestedIf() {
+        let input = """
+        for child in visibleChildren where child.isVisible {
+            // Render visible children.
+            render(child)
+        }
+        """
+        let output = """
+        for child in visibleChildren {
+            if child.isVisible {
+                // Render visible children.
+                render(child)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere, options: .init(forWhere: .never))
+    }
+
+    func testForWhereNeverDoesNotChangeLoopWithoutWhereClause() {
+        let input = """
+        for child in visibleChildren {
+            render(child)
+        }
+        """
+        testFormatting(for: input, rule: .forWhere, options: .init(forWhere: .never))
+    }
+
+    func testMovesForWhereClauseOnEmptyLoopIntoNestedIf() {
+        let input = """
+        for child in visibleChildren where child.isVisible {
+        }
+        """
+        let output = """
+        for child in visibleChildren {
+            if child.isVisible {
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .forWhere,
+            options: .init(forWhere: .never),
+            exclude: [.emptyBraces]
+        )
+    }
+
+    func testMovesForWhereClauseIntoNestedIfWithCustomIndent() {
+        let input = """
+        for child in visibleChildren where child.isVisible {
+          render(child)
+        }
+        """
+        let output = """
+        for child in visibleChildren {
+          if child.isVisible {
+            render(child)
+          }
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .forWhere,
+            options: .init(indent: "  ", forWhere: .never)
+        )
+    }
+
+    func testForWhereNeverDoesNotChangeMultilineStringIndentation() {
+        let input = #"""
+        for value in values where value.isValid {
+            print("""
+            value
+            """)
+        }
+        """#
+        testFormatting(for: input, rule: .forWhere, options: .init(forWhere: .never))
+    }
+
+    func testForWhereNeverDoesNotMoveCommentedCondition() {
+        let input = """
+        for child in visibleChildren where /* cached */ child.isVisible {
+            render(child)
+        }
+        """
+        testFormatting(for: input, rule: .forWhere, options: .init(forWhere: .never))
+    }
+
+    func testForWhereNeverDoesNotMoveMultilineCondition() {
+        let input = """
+        for child in visibleChildren
+            where child.isVisible
+        {
+            render(child)
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .forWhere,
+            options: .init(forWhere: .never),
+            exclude: [.braces, .indent, .wrapMultilineStatementBraces]
+        )
+    }
+
     func testJoinsMultipleBooleanConditionsWithAndOperator() {
         let input = """
         for child in visibleChildren {

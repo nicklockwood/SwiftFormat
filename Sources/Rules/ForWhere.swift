@@ -9,23 +9,43 @@
 import Foundation
 
 public extension FormatRule {
-    /// Move a single if statement inside a for loop into the loop's where clause.
+    /// Use a where clause or nested if statement to filter a for loop.
     static let forWhere = FormatRule(
-        help: "Prefer a `where` clause over a single `if` statement inside a `for` loop.",
+        help: "Prefer a `where` clause or nested `if` statement when filtering a `for` loop.",
         disabledByDefault: true,
-        orderAfter: [.andOperator, .preferForLoop]
+        orderAfter: [.andOperator, .preferForLoop],
+        options: ["for-where"],
+        sharedOptions: ["indent", "linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword("for")) { forIndex, _ in
-            formatter.convertIfToForWhere(at: forIndex)
+            switch formatter.options.forWhere {
+            case .always:
+                formatter.convertIfToForWhere(at: forIndex)
+            case .never:
+                formatter.convertForWhereToIf(at: forIndex)
+            }
         }
     } examples: {
         """
+        `--for-where always` (default)
+
         ```diff
         - for child in visibleChildren {
         -     if !child.buildPreview(progress) {
         + for child in visibleChildren where !child.buildPreview(progress) {
                   return false
         -     }
+          }
+        ```
+
+        `--for-where never`
+
+        ```diff
+        - for child in visibleChildren where !child.buildPreview(progress) {
+        + for child in visibleChildren {
+        +     if !child.buildPreview(progress) {
+                  return false
+        +     }
           }
         ```
         """
@@ -102,6 +122,71 @@ extension Formatter {
                 through: bodyEnd
             )
         }
+    }
+
+    /// Converts a where clause on a for loop to a nested if statement.
+    func convertForWhereToIf(at forIndex: Int) {
+        guard tokens[forIndex] == .keyword("for"),
+              let inIndex = index(of: .keyword("in"), after: forIndex),
+              let loopBodyStart = startOfForLoopBody(after: inIndex),
+              let loopBodyEnd = endOfScope(at: loopBodyStart),
+              let whereIndex = index(of: .keyword("where"), in: inIndex + 1 ..< loopBodyStart),
+              let sequenceEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: whereIndex),
+              let conditionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: whereIndex),
+              conditionStart < loopBodyStart,
+              let conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: loopBodyStart),
+              conditionStart <= conditionEnd,
+              !tokens[sequenceEnd + 1 ..< loopBodyStart].contains(where: \.isComment),
+              !tokens[sequenceEnd + 1 ... conditionEnd].contains(where: \.isLinebreak),
+              !tokens[loopBodyStart ... loopBodyEnd].contains(where: \.isMultilineStringDelimiter)
+        else {
+            return
+        }
+
+        let condition = Array(tokens[conditionStart ... conditionEnd])
+        let loopIndent = currentIndentForLine(at: forIndex)
+        let loopBodyStartIndex = loopBodyStart.autoUpdating(in: self)
+        let loopBodyEndIndex = loopBodyEnd.autoUpdating(in: self)
+
+        if tokens[loopBodyStart ... loopBodyEnd].contains(where: \.isLinebreak) {
+            let firstBodyToken = index(of: .nonSpaceOrCommentOrLinebreak, after: loopBodyStart)
+            let bodyIndent = firstBodyToken.flatMap { index in
+                index < loopBodyEnd ? currentIndentForLine(at: index) : nil
+            } ?? loopIndent + options.indent
+            let closingLineStart = startOfLine(at: loopBodyEndIndex.index)
+
+            replaceForWhereIndentation(
+                bodyIndent,
+                with: bodyIndent + options.indent,
+                after: loopBodyStartIndex.index,
+                through: closingLineStart - 1
+            )
+
+            var closingIf: [Token] = []
+            if !bodyIndent.isEmpty {
+                closingIf.append(.space(bodyIndent))
+            }
+            closingIf.append(contentsOf: [.endOfScope("}"), linebreakToken(for: loopBodyEndIndex.index)])
+            insert(closingIf, at: startOfLine(at: loopBodyEndIndex.index))
+
+            var openingIf: [Token] = [linebreakToken(for: loopBodyStartIndex.index)]
+            if !bodyIndent.isEmpty {
+                openingIf.append(.space(bodyIndent))
+            }
+            openingIf.append(contentsOf: [.keyword("if"), .space(" ")])
+            openingIf.append(contentsOf: condition)
+            openingIf.append(contentsOf: [.space(" "), .startOfScope("{")])
+            insert(openingIf, at: loopBodyStartIndex.index + 1)
+        } else {
+            insert([.endOfScope("}"), .space(" ")], at: loopBodyEndIndex.index)
+
+            var openingIf: [Token] = [.space(" "), .keyword("if"), .space(" ")]
+            openingIf.append(contentsOf: condition)
+            openingIf.append(contentsOf: [.space(" "), .startOfScope("{")])
+            insert(openingIf, at: loopBodyStartIndex.index + 1)
+        }
+
+        removeTokens(in: sequenceEnd + 1 ... conditionEnd)
     }
 
     /// Returns the opening brace of the for loop body, skipping closures in the sequence expression.

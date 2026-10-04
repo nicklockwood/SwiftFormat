@@ -1323,10 +1323,16 @@ Option | Description
 
 ## forWhere
 
-Prefer a `where` clause over a single `if` statement inside a `for` loop.
+Prefer a `where` clause or nested `if` statement when filtering a `for` loop.
+
+Option | Description
+--- | ---
+`--for-where` | Use a where clause instead of a nested if to filter for loops: "always" (default) or "never"
 
 <details>
 <summary>Examples</summary>
+
+`--for-where always` (default)
 
 ```diff
 - for child in visibleChildren {
@@ -1334,6 +1340,17 @@ Prefer a `where` clause over a single `if` statement inside a `for` loop.
 + for child in visibleChildren where !child.buildPreview(progress) {
           return false
 -     }
+  }
+```
+
+`--for-where never`
+
+```diff
+- for child in visibleChildren where !child.buildPreview(progress) {
++ for child in visibleChildren {
++     if !child.buildPreview(progress) {
+          return false
++     }
   }
 ```
 

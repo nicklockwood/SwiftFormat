@@ -212,6 +212,12 @@ public enum TrailingCommas: String, CaseIterable {
     case multiElementLists = "multi-element-lists"
 }
 
+/// Whether to use a where clause or nested if statement to filter a for loop
+public enum ForWhereMode: String, CaseIterable {
+    case always
+    case never
+}
+
 /// How to handle single-line ternary expressions in the ifExpressions rule
 public enum SingleLineTernary: String, CaseIterable {
     /// Preserve single-line ternaries as-is
@@ -1006,6 +1012,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapEffects: WrapEffects
     public var preserveAnonymousForEach: Bool
     public var preserveSingleLineForEach: Bool
+    public var forWhere: ForWhereMode
     public var docComments: DocCommentMode
     public var conditionalAssignmentOnlyAfterNewProperties: Bool
     public var typeDelimiterSpacing: DelimiterSpacing
@@ -1168,6 +1175,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapEffects: WrapEffects = .preserve,
                 preserveAnonymousForEach: Bool = false,
                 preserveSingleLineForEach: Bool = true,
+                forWhere: ForWhereMode = .always,
                 docComments: DocCommentMode = .beforeDeclarations,
                 conditionalAssignmentOnlyAfterNewProperties: Bool = true,
                 typeDelimiterSpacing: DelimiterSpacing = .spaceAfter,
@@ -1319,6 +1327,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapEffects = wrapEffects
         self.preserveAnonymousForEach = preserveAnonymousForEach
         self.preserveSingleLineForEach = preserveSingleLineForEach
+        self.forWhere = forWhere
         self.docComments = docComments
         self.conditionalAssignmentOnlyAfterNewProperties = conditionalAssignmentOnlyAfterNewProperties
         self.typeDelimiterSpacing = typeDelimiterSpacing

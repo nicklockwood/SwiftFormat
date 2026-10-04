@@ -95,6 +95,7 @@ Rule names use lower camel case and describe either a fixed transformation or a 
 
 * Use `redundant<Construct>` only for rules whose edits exclusively remove a semantically unnecessary construct.
 * Use `prefer<PreferredForm>` for rules that consistently replace one valid idiom with a preferred alternative. Add `Over<Alternative>` only when needed for clarity.
+  * Only use the `prefer` prefix when the inverse transformation is unlikely to be supported in the future. If both directions are plausible, use a neutral name even if the initial implementation only supports one direction. For example, use `ifExpressions` rather than `preferIfExpressions` to leave room for converting if expressions to ternary expressions later.
 * Use `no<Construct>` only for categorical prohibitions.
 * Use an imperative verb such as `sort`, `wrap`, `hoist`, `organize`, or `simplify` for a single-direction mechanical transformation.
 * If options can select opposing outputs, use a neutral subject or style dimension instead. Do not encode the default option value in the rule name.
@@ -122,10 +123,11 @@ Before accepting a new rule name, reviewers should ask:
 2. Does an option merely narrow applicability, or does it change the direction of the transformation?
 3. If the name begins with `redundant`, does every edit remove the named construct?
 4. If the name begins with `prefer`, does every edit move toward the named form?
-5. If the name begins with `no`, is the named construct categorically prohibited within the rule’s scope?
-6. If the name uses an imperative verb, does the rule always perform that operation rather than its inverse?
-7. Is the name independent of the current default option value?
-8. Does the name avoid unnecessary abbreviations and match Swift terminology where possible?
+5. If the name begins with `prefer`, is the inverse transformation unlikely to be supported in the future?
+6. If the name begins with `no`, is the named construct categorically prohibited within the rule’s scope?
+7. If the name uses an imperative verb, does the rule always perform that operation rather than its inverse?
+8. Is the name independent of the current default option value?
+9. Does the name avoid unnecessary abbreviations and match Swift terminology where possible?
 
 ## Credits
 

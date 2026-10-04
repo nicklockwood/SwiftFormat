@@ -89,11 +89,43 @@ $ ./Scripts/test_rule.sh wrap
 
 If you contribute a new rule or option, it would be published in the following major version release. To start using the new rule or option right away in your own project, you could use a prerelease build of the `develop` branch. More information is available [here](https://github.com/nicklockwood/SwiftFormat#prerelease-builds).
 
+## Naming Rules
+
+Rule names use lower camel case and describe either a fixed transformation or a configurable formatting concern.
+
+* Use `redundant<Construct>` only for rules whose edits exclusively remove a semantically unnecessary construct.
+* Use `prefer<PreferredForm>` for rules that consistently replace one valid idiom with a preferred alternative. Add `Over<Alternative>` only when needed for clarity.
+* Use `no<Construct>` only for categorical prohibitions.
+* Use an imperative verb such as `sort`, `wrap`, `hoist`, `organize`, or `simplify` for a single-direction mechanical transformation.
+* If options can select opposing outputs, use a neutral subject or style dimension instead. Do not encode the default option value in the rule name.
+* Options may narrow a directional rule’s applicability, but must not reverse the meaning of its name. If a reverse mode is added later, rename the rule and retain the old name as a deprecated alias.
+
+## Renaming a Rule
+
+* Rename the rule file, `FormatRule` property, tests, and all references to use the new name.
+* Retain the old rule in a separate, correspondingly named file with a `deprecationMessage`, and have both rules call the same `Formatter` helper. Preserve the original default-enabled status on the new rule.
+* Add tests confirming the old name is deprecated and both names produce the same output.
+* Run the rule tests and full test suite until they pass. Tests regenerate `RuleRegistry.generated.swift` and `Rules.md`; do not edit these files manually.
+* Deprecated rules are separate identifiers rather than true aliases. Renaming an enabled-by-default rule is a breaking change because `--disable oldRule` and `swiftformat:disable oldRule` do not disable `newRule`.
+
 ## Renaming a Rule Option
 
 * Add a copy of the option in `OptionDescriptor.swift` under the `// MARK: - RENAMED` section
 * Add `.renamed(to: "newPropertyName")` to the renamed copy of the option
 * Rename the `propertyName` of the original option property to the new name
+
+## Review Checklist for New Rule Names
+
+Before accepting a new rule name, reviewers should ask:
+
+1. Does the name remain accurate for every supported option value?
+2. Does an option merely narrow applicability, or does it change the direction of the transformation?
+3. If the name begins with `redundant`, does every edit remove the named construct?
+4. If the name begins with `prefer`, does every edit move toward the named form?
+5. If the name begins with `no`, is the named construct categorically prohibited within the rule’s scope?
+6. If the name uses an imperative verb, does the rule always perform that operation rather than its inverse?
+7. Is the name independent of the current default option value?
+8. Does the name avoid unnecessary abbreviations and match Swift terminology where possible?
 
 ## Credits
 

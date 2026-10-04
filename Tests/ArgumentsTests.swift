@@ -861,6 +861,23 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(rules, ["strongOutlets"])
     }
 
+    func testRenamedRuleInRulesUsesReplacement() throws {
+        let rules = try rulesFor(["rules": "sortedImports"], lint: false)
+        XCTAssertEqual(rules, [FormatRule.sortImports.name])
+    }
+
+    func testDisablingRenamedRuleDisablesReplacement() throws {
+        let rules = try rulesFor(["disable": "sortedImports"], lint: false)
+        XCTAssertFalse(rules.contains(FormatRule.sortedImports.name))
+        XCTAssertFalse(rules.contains(FormatRule.sortImports.name))
+    }
+
+    func testEnablingRenamedRuleEnablesReplacement() throws {
+        let rules = try rulesFor(["enable": "privateStateVariables"], lint: false)
+        XCTAssertFalse(rules.contains(FormatRule.privateStateVariables.name))
+        XCTAssertTrue(rules.contains(FormatRule.privateSwiftUIDynamicProperties.name))
+    }
+
     func testParseAllRule() throws {
         let rules = try parseRules("all", ignoreUnknown: false)
         XCTAssertEqual(rules, FormatRules.all.compactMap {

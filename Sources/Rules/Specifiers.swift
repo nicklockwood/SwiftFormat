@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Deprecated
     static let specifiers = FormatRule(
         help: "Use consistent ordering for member modifiers.",
-        deprecationMessage: "Use modifierOrder instead.",
+        renamedTo: .modifierOrder,
         options: ["modifier-order"]
     ) { formatter in
         _ = formatter.options.modifierOrder

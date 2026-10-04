@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Deprecated
     static let redundantProperty = FormatRule(
         help: "Simplifies redundant variable definitions that are immediately returned.",
-        deprecationMessage: "Use redundantVariable instead."
+        renamedTo: .redundantVariable
     ) { formatter in
         FormatRule.redundantVariable.apply(with: formatter)
     } examples: {

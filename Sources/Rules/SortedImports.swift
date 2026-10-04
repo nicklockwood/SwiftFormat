@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Deprecated
     static let sortedImports = FormatRule(
         help: "Sort import statements alphabetically.",
-        deprecationMessage: "Use sortImports instead.",
+        renamedTo: .sortImports,
         options: ["import-grouping"],
         sharedOptions: ["linebreaks"]
     ) { formatter in

@@ -839,27 +839,27 @@ private func processOption(_ key: String,
 /// Parse rule names from arguments
 public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>? = nil) throws -> Set<String> {
     let parseRules = curryParseRules(config: args)
-    var rules = initial ?? allRules
+    var rules = initial.map(FormatRules.canonicalNames) ?? allRules
 
     if let specifiedRules = try args["rules"].map({ try Set(parseRules($0)) }) {
-        rules = specifiedRules
+        rules = FormatRules.canonicalNames(specifiedRules)
     } else if initial == nil {
         rules = rules.subtracting(FormatRules.disabledByDefault.map(\.name))
     }
 
     try args["disable"].map {
-        try rules.subtract(parseRules($0))
+        try rules.subtract(FormatRules.canonicalNames(parseRules($0)))
     }
 
     try args["enable"].map {
-        try rules.formUnion(parseRules($0))
+        try rules.formUnion(FormatRules.canonicalNames(parseRules($0)))
     }
 
     try args["lint-only"].map { rulesString in
         if lint {
-            try rules.formUnion(parseRules(rulesString))
+            try rules.formUnion(FormatRules.canonicalNames(parseRules(rulesString)))
         } else {
-            try rules.subtract(parseRules(rulesString))
+            try rules.subtract(FormatRules.canonicalNames(parseRules(rulesString)))
         }
     }
 

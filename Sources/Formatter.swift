@@ -143,7 +143,7 @@ public final class Formatter: NSObject {
             }
             switch type {
             case let .enable(rules), let .disable(rules):
-                return rules.contains("all") || rules.contains(rule.name.lowercased())
+                return rules.contains("all") || !rules.isDisjoint(with: FormatRules.directiveNames(for: rule))
             case .options:
                 return false
             }

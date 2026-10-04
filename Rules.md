@@ -3102,7 +3102,7 @@ Remove redundant pattern matching parameter syntax.
 
 Simplifies redundant variable definitions that are immediately returned.
 
-*Note: redundantProperty rule is deprecated. Use redundantVariable instead.*
+*Note: redundantProperty rule is deprecated. Renamed to `redundantVariable`.*
 
 ## redundantPublic
 
@@ -3729,13 +3729,13 @@ Sort protocol composition typealiases alphabetically.
 
 Sort import statements alphabetically.
 
-*Note: sortedImports rule is deprecated. Use sortImports instead.*
+*Note: sortedImports rule is deprecated. Renamed to `sortImports`.*
 
 ## sortedSwitchCases
 
 Sort switch cases alphabetically.
 
-*Note: sortedSwitchCases rule is deprecated. Use sortSwitchCases instead.*
+*Note: sortedSwitchCases rule is deprecated. Renamed to `sortSwitchCases`.*
 
 ## spaceAroundBraces
 
@@ -3948,7 +3948,7 @@ Remove space inside parentheses.
 
 Use consistent ordering for member modifiers.
 
-*Note: specifiers rule is deprecated. Use modifierOrder instead.*
+*Note: specifiers rule is deprecated. Renamed to `modifierOrder`.*
 
 ## strongOutlets
 

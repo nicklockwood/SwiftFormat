@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let privateStateVariables = FormatRule(
         help: "Adds `private` access control to SwiftUI state properties without existing access control modifiers.",
-        deprecationMessage: "Renamed to `privateSwiftUIDynamicProperties`."
+        renamedTo: .privateSwiftUIDynamicProperties
     ) { formatter in
         formatter.makeSwiftUIDynamicPropertiesPrivate()
     } examples: { nil }

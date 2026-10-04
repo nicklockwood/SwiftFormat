@@ -37,6 +37,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     private let fn: (Formatter) -> Void
     fileprivate(set) var name = FormatRule.unnamedRule
     fileprivate(set) var index = 0
+    fileprivate(set) var directiveNames = Set<String>()
     let help: String
     let examples: String?
     let runOnceOnly: Bool
@@ -44,13 +45,25 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     let orderAfter: [FormatRule]
     let options: [String]
     let sharedOptions: [String]
-    let deprecationMessage: String?
+    fileprivate(set) var deprecationMessage: String?
+    let renamedTo: FormatRule?
 
     /// Null rule, used for testing
     static let none: FormatRule = .init(help: "") { _ in } examples: { nil }
 
     var isDeprecated: Bool {
-        deprecationMessage != nil
+        deprecationMessage != nil || renamedTo != nil
+    }
+
+    var canonicalRule: FormatRule {
+        var rule = self
+        var visited = Set<ObjectIdentifier>()
+        while let renamedTo = rule.renamedTo,
+              visited.insert(ObjectIdentifier(rule)).inserted
+        {
+            rule = renamedTo
+        }
+        return rule
     }
 
     public var description: String {
@@ -59,6 +72,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
 
     init(help: String,
          deprecationMessage: String? = nil,
+         renamedTo: FormatRule? = nil,
          runOnceOnly: Bool = false,
          disabledByDefault: Bool = false,
          orderAfter: [FormatRule] = [],
@@ -70,11 +84,12 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
         self.fn = fn
         self.help = help
         self.runOnceOnly = runOnceOnly
-        self.disabledByDefault = disabledByDefault || deprecationMessage != nil
+        self.disabledByDefault = disabledByDefault || deprecationMessage != nil || renamedTo != nil
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions
         self.deprecationMessage = deprecationMessage
+        self.renamedTo = renamedTo
         self.examples = examples()
     }
 
@@ -107,6 +122,10 @@ private let rulesByName: [String: FormatRule] = {
     }
     for rule in rules.values {
         assert(rule.name != "[unnamed rule]")
+        if rule.deprecationMessage == nil, let renamedTo = rule.renamedTo {
+            rule.deprecationMessage = "Renamed to `\(renamedTo.name)`."
+        }
+        rule.canonicalRule.directiveNames.insert(rule.name.lowercased())
     }
     let values = rules.values.sorted(by: { $0.name < $1.name })
     for (index, value) in values.enumerated() {
@@ -164,7 +183,7 @@ public extension _FormatRules {
 
     /// Just the specified rules
     func named(_ names: [String]) -> [FormatRule] {
-        Array(names.sorted().compactMap { rulesByName[$0] })
+        Array(Set(names.compactMap { rulesByName[$0]?.canonicalRule })).sorted()
     }
 
     /// All rules except those specified
@@ -174,6 +193,16 @@ public extension _FormatRules {
 }
 
 extension _FormatRules {
+    /// Resolve renamed rules to their canonical replacement names.
+    func canonicalNames(_ names: some Sequence<String>) -> Set<String> {
+        Set(names.map { rulesByName[$0]?.canonicalRule.name ?? $0 })
+    }
+
+    /// Lowercased current and deprecated names that refer to the same rule.
+    func directiveNames(for rule: FormatRule) -> Set<String> {
+        rule.canonicalRule.directiveNames
+    }
+
     /// Get all format options used by a given set of rules
     func optionsForRules(_ rules: [FormatRule]) -> [String] {
         var options = Set<String>()

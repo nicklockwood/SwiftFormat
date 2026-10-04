@@ -125,6 +125,34 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [.spaceAroundOperators]).output, input)
     }
 
+    func testDeprecatedRuleNameDirectiveDisablesReplacement() {
+        let input = """
+        // swiftformat:disable sortedImports
+        import B
+        import A
+        """
+        XCTAssertEqual(try format(input, rules: [.sortImports]).output, input)
+    }
+
+    func testDeprecatedRuleNameDirectiveEnablesReplacement() {
+        let input = """
+        // swiftformat:disable all
+        // swiftformat:enable redundantProperty
+        func foo() -> Int {
+            let value = 1
+            return value
+        }
+        """
+        let output = """
+        // swiftformat:disable all
+        // swiftformat:enable redundantProperty
+        func foo() -> Int {
+            return 1
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [.redundantVariable]).output, output)
+    }
+
     func testDisableRuleNameMustBeACompleteWord() {
         let input = "// swiftformat:disable spaceAroundOperators_suffix\nlet foo=bar"
         let output = "// swiftformat:disable spaceAroundOperators_suffix\nlet foo = bar"

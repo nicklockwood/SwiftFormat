@@ -104,10 +104,10 @@ Rule names use lower camel case and describe either a fixed transformation or a 
 ## Renaming a Rule
 
 * Rename the rule file, `FormatRule` property, tests, and all references to use the new name.
-* Retain the old rule in a separate, correspondingly named file with a `deprecationMessage`, and have both rules call the same `Formatter` helper. Preserve the original default-enabled status on the new rule.
-* Add tests confirming the old name is deprecated and both names produce the same output.
+* Retain the old rule in a separate, correspondingly named file with `renamedTo` set to the replacement, and have both rules call the same `Formatter` helper. This makes command-line options, configuration, and inline enable/disable directives using the old name apply to the replacement. Preserve the original default-enabled status on the new rule.
+* Add tests confirming the old name is deprecated, resolves to the replacement, and both names produce the same output.
 * Run the rule tests and full test suite until they pass. Tests regenerate `RuleRegistry.generated.swift` and `Rules.md`; do not edit these files manually.
-* Deprecated rules are separate identifiers rather than true aliases. Renaming an enabled-by-default rule is a breaking change because `--disable oldRule` and `swiftformat:disable oldRule` do not disable `newRule`.
+* Use `deprecationMessage` without `renamedTo` when the old rule does not map directly to a single replacement, such as when its behavior was split across several rules or requires a particular option value.
 
 ## Renaming a Rule Option
 

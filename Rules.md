@@ -55,6 +55,7 @@
 * [redundantBreak](#redundantBreak)
 * [redundantClosure](#redundantClosure)
 * [redundantEmptyView](#redundantEmptyView)
+* [redundantEnumerated](#redundantEnumerated)
 * [redundantEquatable](#redundantEquatable)
 * [redundantExtensionACL](#redundantExtensionACL)
 * [redundantFileprivate](#redundantFileprivate)
@@ -2681,6 +2682,23 @@ Remove redundant `else { EmptyView() }` branches in SwiftUI result builders.
 -     } else {
 -         EmptyView()
       }
+  }
+```
+
+</details>
+<br/>
+
+## redundantEnumerated
+
+Remove `.enumerated()` from for loops where the index is unused.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- for (_, element) in elements.enumerated() {
++ for element in elements {
+      print(element)
   }
 ```
 

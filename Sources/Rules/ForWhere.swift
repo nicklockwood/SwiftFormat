@@ -189,17 +189,6 @@ extension Formatter {
         removeTokens(in: sequenceEnd + 1 ... conditionEnd)
     }
 
-    /// Returns the opening brace of the for loop body, skipping closures in the sequence expression.
-    func startOfForLoopBody(after index: Int) -> Int? {
-        guard let startOfBody = self.index(of: .startOfScope("{"), after: index) else {
-            return nil
-        }
-        if isStartOfClosure(at: startOfBody), let endOfClosure = endOfScope(at: startOfBody) {
-            return startOfForLoopBody(after: endOfClosure)
-        }
-        return startOfBody
-    }
-
     /// Replaces the indentation prefix on each line after removing the nested if scope.
     func replaceForWhereIndentation(
         _ oldIndent: String,

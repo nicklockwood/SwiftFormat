@@ -4771,3 +4771,160 @@ extension String {
         self == "func" || self == "init" || self == "subscript"
     }
 }
+
+extension Formatter {
+    func removeUsed(from argNames: inout [String], with associatedData: inout [some Any],
+                    locals: Set<String> = [], in range: CountableRange<Int>)
+    {
+        var isDeclaration = false
+        var wasDeclaration = false
+        var isConditional = false
+        var isGuard = false
+        var locals = locals
+        var tempLocals = Set<String>()
+        func pushLocals() {
+            if isDeclaration, isConditional {
+                for name in tempLocals {
+                    if let index = argNames.firstIndex(of: name),
+                       !locals.contains(name)
+                    {
+                        argNames.remove(at: index)
+                        associatedData.remove(at: index)
+                    }
+                }
+            }
+            wasDeclaration = isDeclaration
+            isDeclaration = false
+            locals.formUnion(tempLocals)
+            tempLocals.removeAll()
+        }
+        var i = range.lowerBound
+        while i < range.upperBound {
+            if isStartOfStatement(at: i, treatingCollectionKeysAsStart: false),
+               // Immediately following an `=` operator, if or switch keywords
+               // are expressions rather than statements.
+               lastToken(before: i, where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("=") != true
+            {
+                pushLocals()
+                wasDeclaration = false
+            }
+            let token = tokens[i]
+            outer: switch token {
+            case .keyword("guard"):
+                isGuard = true
+            case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
+                isDeclaration = true
+                var i = i
+                while let scopeStart = index(of: .startOfScope("("), before: i) {
+                    i = scopeStart
+                }
+                isConditional = isConditionalStatement(at: i)
+            case .identifier:
+                let name = token.unescaped()
+                guard let index = argNames.firstIndex(of: name), !locals.contains(name) else {
+                    break
+                }
+                if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
+                   next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") || startOfScope(at: i).map({
+                       scopeType(at: $0) == .dictionary
+                   }) ?? false
+                {
+                    if isDeclaration {
+                        switch next(.nonSpaceOrCommentOrLinebreak, after: i) {
+                        case .delimiter(",")? where !isConditional, .endOfScope(")")?, .operator("=", .infix)?:
+                            tempLocals.insert(name)
+                            break outer
+                        default:
+                            break
+                        }
+                    }
+                    argNames.remove(at: index)
+                    associatedData.remove(at: index)
+                    if argNames.isEmpty {
+                        return
+                    }
+                }
+            case .keyword("if"), .keyword("switch"):
+                guard isConditionalAssignment(at: i),
+                      let conditinalBranches = conditionalBranches(at: i),
+                      let endIndex = conditinalBranches.last?.endOfBranch
+                else { fallthrough }
+
+                removeUsed(from: &argNames, with: &associatedData,
+                           locals: locals, in: i + 1 ..< endIndex)
+            case .startOfScope("{"):
+                guard let endIndex = endOfScope(at: i) else {
+                    return fatalError("Expected }", at: i)
+                }
+                if isStartOfClosure(at: i) {
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
+                } else if isGuard {
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
+                    pushLocals()
+                } else {
+                    let prevLocals = locals
+                    pushLocals()
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
+                    locals = prevLocals
+                }
+
+                isGuard = false
+                i = endIndex
+            case .endOfScope("case"), .endOfScope("default"):
+                pushLocals()
+                guard let colonIndex = index(of: .startOfScope(":"), after: i) else {
+                    return fatalError("Expected :", at: i)
+                }
+                guard let endIndex = endOfScope(at: colonIndex) else {
+                    return fatalError("Expected end of case statement",
+                                      at: colonIndex)
+                }
+                removeUsed(from: &argNames, with: &associatedData,
+                           locals: locals, in: i + 1 ..< endIndex)
+                i = endIndex - 1
+            case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
+                 .keyword("in"), .keyword("where"):
+                wasDeclaration = isDeclaration
+                isDeclaration = false
+            case .delimiter(","):
+                if let scope = currentScope(at: i), [
+                    .startOfScope("("), .startOfScope("["), .startOfScope("<"),
+                ].contains(scope) {
+                    break
+                }
+                if isConditional {
+                    if isGuard, wasDeclaration {
+                        pushLocals()
+                    }
+                    wasDeclaration = false
+                } else {
+                    let _wasDeclaration = wasDeclaration
+                    pushLocals()
+                    isDeclaration = _wasDeclaration
+                }
+            case .delimiter(";"):
+                pushLocals()
+                wasDeclaration = false
+            default:
+                break
+            }
+            i += 1
+        }
+    }
+}
+
+extension Formatter {
+    /// Returns the opening brace of the for loop body, skipping closures in the sequence expression.
+    func startOfForLoopBody(after index: Int) -> Int? {
+        guard let startOfBody = self.index(of: .startOfScope("{"), after: index) else {
+            return nil
+        }
+        if isStartOfClosure(at: startOfBody), let endOfClosure = endOfScope(at: startOfBody) {
+            return startOfForLoopBody(after: endOfClosure)
+        }
+        return startOfBody
+    }
+}

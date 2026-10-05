@@ -88,6 +88,7 @@ extension XCTestCase {
             .nestedIf,
             .repeatedGuard,
             .wrapCaseBodies,
+            .wrapDoBodies,
             .wrapIfStatementBodies,
             .wrapGuardStatementBodies,
             .wrapIfExpressionBodies,

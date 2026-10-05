@@ -157,6 +157,7 @@
 * [urlMacro](#urlMacro)
 * [validateTestCases](#validateTestCases)
 * [wrapCaseBodies](#wrapCaseBodies)
+* [wrapDoBodies](#wrapDoBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapGuardStatementBodies](#wrapGuardStatementBodies)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -4563,6 +4564,25 @@ Wrap the bodies of inline switch cases onto a new line.
 Wrap the bodies of inline conditional statements onto a new line.
 
 *Note: wrapConditionalBodies rule is deprecated. Use wrapIfStatementBodies, wrapGuardStatementBodies, or wrapIfExpressionBodies instead.*
+
+## wrapDoBodies
+
+Wrap the bodies of inline do and catch statements onto multiple lines.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- do { try performOperation() } catch { handleError(error) }
++ do {
++     try performOperation()
++ } catch {
++     handleError(error)
++ }
+```
+
+</details>
+<br/>
 
 ## wrapEnumCases
 

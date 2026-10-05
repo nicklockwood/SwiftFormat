@@ -160,6 +160,7 @@ let ruleRegistry: [String: FormatRule] = [
     "wrapAttributes": .wrapAttributes,
     "wrapCaseBodies": .wrapCaseBodies,
     "wrapConditionalBodies": .wrapConditionalBodies,
+    "wrapDoBodies": .wrapDoBodies,
     "wrapEnumCases": .wrapEnumCases,
     "wrapFunctionBodies": .wrapFunctionBodies,
     "wrapGuardStatementBodies": .wrapGuardStatementBodies,

@@ -228,15 +228,15 @@ final class OptionDescriptorTests: XCTestCase {
         validateFromOptionalArguments(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
     }
 
-    func testUnknownRules() {
-        let descriptor = Descriptors.unknownRules
-        let expectations: [OptionArgumentMapping<UnknownRulesMode>] = [
+    func testUnknownOptions() {
+        let descriptor = Descriptors.unknownOptions
+        let expectations: [OptionArgumentMapping<UnknownOptionsMode>] = [
             (optionValue: .ignore, argumentValue: "ignore"),
             (optionValue: .warn, argumentValue: "warn"),
             (optionValue: .error, argumentValue: "error"),
         ]
-        validateFromOptions(descriptor, keyPath: \FormatOptions.unknownRules, expectations: expectations)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.unknownRules, expectations: expectations)
+        validateFromOptions(descriptor, keyPath: \FormatOptions.unknownOptions, expectations: expectations)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.unknownOptions, expectations: expectations)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 

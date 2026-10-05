@@ -547,7 +547,7 @@ extension _Descriptors {
             swiftVersion,
             languageMode,
             markdownFiles,
-            unknownRules,
+            unknownOptions,
         ]
     }
 
@@ -1670,11 +1670,11 @@ struct _Descriptors {
         keyPath: \.markdownFiles,
         altOptions: ["format-lenient": .lenient, "format-strict": .strict]
     )
-    let unknownRules = OptionDescriptor(
-        argumentName: "unknown-rules",
-        displayName: "Unknown Rules",
-        help: "Handling of unknown rules/option:",
-        keyPath: \.unknownRules
+    let unknownOptions = OptionDescriptor(
+        argumentName: "unknown-options",
+        displayName: "Unknown Options",
+        help: "Unknown rules or options:",
+        keyPath: \.unknownOptions
     )
 
     // MARK: - DEPRECATED
@@ -1736,6 +1736,13 @@ struct _Descriptors {
     )
 
     // MARK: - RENAMED
+
+    let legacyUnknownRules = OptionDescriptor(
+        argumentName: "unknown-rules",
+        displayName: "Unknown Rules",
+        help: "deprecated",
+        keyPath: \.unknownOptions
+    ).renamed(to: "unknown-options")
 
     let empty = OptionDescriptor(
         argumentName: "empty",

@@ -31,7 +31,7 @@
 
 import Foundation
 
-public enum UnknownRulesMode: String, CaseIterable {
+public enum UnknownOptionsMode: String, CaseIterable {
     case error
     case warn
     case ignore
@@ -1058,9 +1058,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var languageMode: Version
     public var fileInfo: FileInfo
     public var markdownFiles: MarkdownFormattingMode
-    public var unknownRules: UnknownRulesMode
-    public var ignoreUnknownRules: Bool {
-        unknownRules != .error
+    public var unknownOptions: UnknownOptionsMode
+    public var ignoreUnknownOptions: Bool {
+        unknownOptions != .error
     }
 
     public var timeout: TimeInterval
@@ -1222,7 +1222,7 @@ public struct FormatOptions: CustomStringConvertible {
                 languageMode: Version? = nil,
                 fileInfo: FileInfo = FileInfo(),
                 markdownFiles: MarkdownFormattingMode = .ignore,
-                unknownRules: UnknownRulesMode = .error,
+                unknownOptions: UnknownOptionsMode = .error,
                 timeout: TimeInterval = 1)
     {
         self.lineAfterMarks = lineAfterMarks
@@ -1375,7 +1375,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.languageMode = languageMode ?? defaultLanguageMode(for: swiftVersion)
         self.fileInfo = fileInfo
         self.markdownFiles = markdownFiles
-        self.unknownRules = unknownRules
+        self.unknownOptions = unknownOptions
         self.timeout = timeout
     }
 

@@ -213,7 +213,7 @@ func printHelp(as type: CLI.OutputType) {
     --conflict-markers \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
     --swift-version    \(stripMarkdown(Descriptors.swiftVersion.help))
     --language-mode    \(stripMarkdown(Descriptors.languageMode.help))
-    --unknown-rules    \(stripMarkdown(Descriptors.unknownRules.help))
+    --unknown-options  \(stripMarkdown(Descriptors.unknownOptions.help))
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --snapshot         Path to snapshot file (defaults to .swiftformat-snapshot)
@@ -1342,7 +1342,7 @@ func processInput(_ inputURLs: [URL],
                         let arguments = try preprocessArguments(
                             args,
                             commandLineArguments,
-                            unknownRules: options.formatOptions?.unknownRules ?? .error,
+                            unknownOptions: options.formatOptions?.unknownOptions ?? .error,
                             logger: logger
                         )
                         try applyArguments(arguments, lint: lint, to: &options, logger: logger)

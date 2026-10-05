@@ -219,7 +219,7 @@ public final class Formatter: NSObject {
                         let args = try preprocessArguments(
                             parseArguments(args),
                             formattingArguments + internalArguments,
-                            unknownRules: cumulativeOptions.unknownRules,
+                            unknownOptions: cumulativeOptions.unknownOptions,
                             logger: logger
                         )
                         if let arg = args["1"] {

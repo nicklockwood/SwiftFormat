@@ -1329,7 +1329,11 @@ func processInput(_ inputURLs: [URL],
                     if swiftCodeBlock.noFormat {
                         continue
                     } else if let args = swiftCodeBlock.options?.components(separatedBy: " "), !args.isEmpty {
-                        let arguments = try preprocessArguments(args, commandLineArguments)
+                        let arguments = try preprocessArguments(
+                            args,
+                            commandLineArguments,
+                            ignoreUnknownOptions: options.formatOptions?.ignoreUnknownRules ?? false
+                        )
                         try applyArguments(arguments, lint: lint, to: &options)
                     }
 

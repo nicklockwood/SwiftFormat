@@ -194,6 +194,12 @@ final class ArgumentsTests: XCTestCase {
         }
     }
 
+    func testUnknownRulesOptionIgnoresUnknownArgument() {
+        let input = ["", "--unknown-rules", "ignore", "--future-option", "value", "--indent", "4"]
+        let output = ["0": "", "unknown-rules": "ignore", "indent": "4"]
+        XCTAssertEqual(try preprocessArguments(input, commandLineArguments), output)
+    }
+
     // merging
 
     func testDuplicateDisableArgumentsAreMerged() {
@@ -532,6 +538,43 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(options.formatOptions?.ignoreUnknownRules, true)
     }
 
+    func testUnknownRulesOptionIgnoresUnknownOption() throws {
+        let config = """
+        --unknown-rules ignore
+        --future-option value
+        --semicolons never
+        """
+        let args = try parseConfigFile(Data(config.utf8))[0]
+        let options = try Options(args, in: "/")
+        XCTAssertNil(args["future-option"])
+        XCTAssertEqual(options.formatOptions?.semicolons, .never)
+    }
+
+    func testUnknownRulesOptionIgnoresUnknownOptionValue() throws {
+        let options = try Options([
+            "unknown-rules": "ignore",
+            "indent": "future-value",
+            "semicolons": "never",
+        ], in: "/")
+        XCTAssertEqual(options.formatOptions?.indent, FormatOptions.default.indent)
+        XCTAssertEqual(options.formatOptions?.semicolons, .never)
+    }
+
+    func testUnknownRulesOptionAppliesToUnknownOptionInFilteredConfig() throws {
+        let config = """
+        --unknown-rules ignore
+
+        [Tests]
+        --filter **/Tests/**
+        --future-option value
+        --semicolons never
+        """
+        let configs = try parseConfigFile(Data(config.utf8))
+        XCTAssertEqual(configs.count, 2)
+        XCTAssertNil(configs[1]["future-option"])
+        XCTAssertEqual(configs[1]["semicolons"], "never")
+    }
+
     func testUnknownRulesOptionAppliesToSubsequentConfig() throws {
         var options = Options.default
         try options.addArguments(["unknown-rules": "ignore"], in: "/")
@@ -546,6 +589,26 @@ final class ArgumentsTests: XCTestCase {
         try applyArguments(["enable": "futureRule,isEmpty"], lint: false, to: &options)
         XCTAssertEqual(options.rules?.contains("isEmpty"), true)
         XCTAssertEqual(options.formatOptions?.ignoreUnknownRules, true)
+    }
+
+    func testUnknownRulesOptionIgnoresUnknownOptionValueInFilteredConfig() throws {
+        var options = Options.default
+        try options.addArguments(["unknown-rules": "ignore"], in: "/")
+        try applyArguments([
+            "indent": "future-value",
+            "semicolons": "never",
+        ], lint: false, to: &options)
+        XCTAssertEqual(options.formatOptions?.indent, FormatOptions.default.indent)
+        XCTAssertEqual(options.formatOptions?.semicolons, .never)
+    }
+
+    func testUnknownRulesErrorOverridesIgnoreForUnknownOptionValue() throws {
+        var options = Options.default
+        try options.addArguments(["unknown-rules": "ignore"], in: "/")
+        XCTAssertThrowsError(try applyArguments([
+            "unknown-rules": "error",
+            "indent": "future-value",
+        ], lint: false, to: &options))
     }
 
     func testPopulatesDefaultLanguageMode() {

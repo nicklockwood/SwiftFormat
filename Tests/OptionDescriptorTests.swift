@@ -228,6 +228,17 @@ final class OptionDescriptorTests: XCTestCase {
         validateFromOptionalArguments(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
     }
 
+    func testUnknownRules() {
+        let descriptor = Descriptors.ignoreUnknownRules
+        let expectations: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "ignore"),
+            (optionValue: false, argumentValue: "error"),
+        ]
+        validateFromOptions(descriptor, keyPath: \FormatOptions.ignoreUnknownRules, expectations: expectations)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.ignoreUnknownRules, expectations: expectations)
+        validateDescriptorThrowsOptionsError(descriptor)
+    }
+
     func testLocale() {
         let descriptor = Descriptors.locale
         let expectations: [OptionArgumentMapping<FormatLocale>] = [

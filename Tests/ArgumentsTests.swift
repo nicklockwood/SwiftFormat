@@ -137,6 +137,7 @@ final class ArgumentsTests: XCTestCase {
             ("extensionACL", "extension-acl"),
             ("propertyTypes", "property-types"),
             ("swiftVersion", "swift-version"),
+            ("unknownrules", "unknown-rules"),
         ]
 
         for (legacy, current) in testCases {
@@ -517,6 +518,34 @@ final class ArgumentsTests: XCTestCase {
         let args = try parseConfigFile(data)[0]
         let options = try Options(args, in: "/")
         XCTAssertEqual(options.rules, [])
+    }
+
+    func testParseConfigFileContainingUnknownRulesOption() throws {
+        let config = """
+        --unknown-rules ignore
+        --enable futureRule,isEmpty
+        """
+        let args = try parseConfigFile(Data(config.utf8))[0]
+        var options = Options.default
+        try options.addArguments(args, in: "/")
+        XCTAssertEqual(options.rules?.contains("isEmpty"), true)
+        XCTAssertEqual(options.formatOptions?.ignoreUnknownRules, true)
+    }
+
+    func testUnknownRulesOptionAppliesToSubsequentConfig() throws {
+        var options = Options.default
+        try options.addArguments(["unknown-rules": "ignore"], in: "/")
+        try options.addArguments(["enable": "futureRule,isEmpty"], in: "/")
+        XCTAssertEqual(options.rules?.contains("isEmpty"), true)
+        XCTAssertEqual(options.formatOptions?.ignoreUnknownRules, true)
+    }
+
+    func testUnknownRulesOptionAppliesToFilteredConfig() throws {
+        var options = Options.default
+        try options.addArguments(["unknown-rules": "ignore"], in: "/")
+        try applyArguments(["enable": "futureRule,isEmpty"], lint: false, to: &options)
+        XCTAssertEqual(options.rules?.contains("isEmpty"), true)
+        XCTAssertEqual(options.formatOptions?.ignoreUnknownRules, true)
     }
 
     func testPopulatesDefaultLanguageMode() {

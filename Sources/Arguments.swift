@@ -512,16 +512,14 @@ func parseRules(_ rules: String, ignoreUnknown: Bool) throws -> [String] {
     }
 }
 
-func curryParseRules(config: [String: String]) -> (String) throws -> [String] {
-    {
-        try parseRules($0, ignoreUnknown: config["unknown-rules"].map {
-            switch $0 {
-            case "ignore": return true
-            case "error": return false
-            default: throw FormatError.options("Unknown value '\($0)' for --unknown-rules option")
-            }
-        } ?? false)
-    }
+func curryParseRules(config: [String: String]) throws -> (String) throws -> [String] {
+    let ignoreUnknown = try shouldIgnoreUnknownRules(in: config)
+    return { try parseRules($0, ignoreUnknown: ignoreUnknown) }
+}
+
+func shouldIgnoreUnknownRules(in config: [String: String]) throws -> Bool {
+    guard let value = config["unknown-rules"] else { return false }
+    return try formatOptionsFor(["unknown-rules": value])?.ignoreUnknownRules ?? false
 }
 
 /// Parse single file path, disallowing globs or commas
@@ -545,7 +543,7 @@ func parsePaths(_ paths: String, in directory: String) throws -> [URL] {
 
 /// Merge two dictionaries of arguments
 func mergeArguments(_ args: [String: String], into config: [String: String]) throws -> [String: String] {
-    let parseRules = curryParseRules(config: config)
+    let parseRules = try curryParseRules(config: config.merging(args) { $1 })
     var input = config
     var output = args
     // Merge excluded urls
@@ -838,7 +836,7 @@ private func processOption(_ key: String,
 
 /// Parse rule names from arguments
 public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>? = nil) throws -> Set<String> {
-    let parseRules = curryParseRules(config: args)
+    let parseRules = try curryParseRules(config: args)
     var rules = initial.map(FormatRules.canonicalNames) ?? allRules
 
     if let specifiedRules = try args["rules"].map({ try Set(parseRules($0)) }) {
@@ -941,6 +939,10 @@ public func applyFormatOptions(from args: [String: String], to formatOptions: in
 
 /// Applies additional arguments to the given `Options` struct
 func applyArguments(_ args: [String: String], lint: Bool, to options: inout Options) throws {
+    var args = args
+    if args["unknown-rules"] == nil, options.formatOptions?.ignoreUnknownRules == true {
+        args["unknown-rules"] = "ignore"
+    }
     options.rules = try rulesFor(args, lint: lint, initial: options.rules)
 
     var formatOptions = options.formatOptions ?? .default
@@ -958,7 +960,9 @@ func warningsForArguments(_ args: [String: String], ignoreUnusedOptions: Bool = 
             warnings.append("--\(option.argumentName) option is deprecated. \(message)")
         }
     }
-    let parseRules = curryParseRules(config: args)
+    guard let parseRules = try? curryParseRules(config: args) else {
+        return warnings
+    }
     for name in Set(rulesArguments.flatMap { (try? args[$0].map(parseRules) ?? []) ?? [] }) {
         if let message = FormatRules.byName[name]?.deprecationMessage {
             warnings.append("\(name) rule is deprecated. \(message)")
@@ -1038,7 +1042,6 @@ let commandLineArguments = [
     "strict",
     "verbose",
     "quiet",
-    "unknown-rules",
     "reporter",
     "report",
     // Misc

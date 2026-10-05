@@ -213,7 +213,7 @@ func printHelp(as type: CLI.OutputType) {
     --conflict-markers \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
     --swift-version    \(stripMarkdown(Descriptors.swiftVersion.help))
     --language-mode    \(stripMarkdown(Descriptors.languageMode.help))
-    --unknown-rules    How unknown rules are handled: "error" (default) or "ignore"
+    --unknown-rules    \(stripMarkdown(Descriptors.ignoreUnknownRules.help))
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --snapshot         Path to snapshot file (defaults to .swiftformat-snapshot)

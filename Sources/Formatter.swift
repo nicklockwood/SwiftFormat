@@ -215,7 +215,8 @@ public final class Formatter: NSObject {
                     do {
                         let args = try preprocessArguments(
                             parseArguments(args),
-                            formattingArguments + internalArguments
+                            formattingArguments + internalArguments,
+                            ignoreUnknownOptions: cumulativeOptions.ignoreUnknownRules
                         )
                         if let arg = args["1"] {
                             throw FormatError.options("Unknown option \(arg)")

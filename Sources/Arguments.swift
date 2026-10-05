@@ -403,12 +403,20 @@ func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [S
 }
 
 /// Parse a flat array of command-line arguments into a dictionary of flags and values
-func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String: String] {
+func preprocessArguments(
+    _ args: [String],
+    _ names: [String],
+    ignoreUnknownOptions inheritedIgnoreUnknownOptions: Bool = false
+) throws -> [String: String] {
+    let ignoreUnknownOptions = unknownRulesValue(in: args) ?? inheritedIgnoreUnknownOptions
     var anonymousArgs = 0
     var namedArgs: [String: String] = [:]
     var name = ""
+    var ignoringUnknownOption = false
     for arg in args {
         if arg.hasPrefix("--") {
+            ignoringUnknownOption = false
+            name = ""
             let key = String(arg.unicodeScalars.dropFirst(2)).lowercased()
 
             if names.contains(key) {
@@ -428,6 +436,10 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             }
 
             if name.isEmpty {
+                if ignoreUnknownOptions {
+                    ignoringUnknownOption = true
+                    continue
+                }
                 guard let match = key.bestMatches(in: names).first else {
                     throw FormatError.options("Unknown option --\(key)")
                 }
@@ -437,6 +449,8 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             namedArgs[name] = namedArgs[name] ?? ""
             continue
         } else if arg.hasPrefix("-") {
+            ignoringUnknownOption = false
+            name = ""
             // Short argument names
             let flag = String(arg.unicodeScalars.dropFirst()).lowercased()
             guard let match = names.first(where: { $0.hasPrefix(flag) }) else {
@@ -444,6 +458,12 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             }
             name = match
             namedArgs[name] = namedArgs[name] ?? ""
+            continue
+        }
+        if ignoringUnknownOption {
+            if !arg.hasSuffix(",") {
+                ignoringUnknownOption = false
+            }
             continue
         }
         if name == "" {
@@ -472,6 +492,22 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         }
     }
     return namedArgs
+}
+
+private func unknownRulesValue(in args: [String]) -> Bool? {
+    var result: Bool?
+    for index in args.indices.dropLast() {
+        let argument = args[index].lowercased()
+        guard argument == "--unknown-rules" || argument == "--unknownrules" else {
+            continue
+        }
+        switch args[args.index(after: index)].lowercased() {
+        case "ignore": result = true
+        case "error": result = false
+        default: break
+        }
+    }
+    return result
 }
 
 /// Parse a comma-delimited list of items
@@ -519,7 +555,9 @@ func curryParseRules(config: [String: String]) throws -> (String) throws -> [Str
 
 func shouldIgnoreUnknownRules(in config: [String: String]) throws -> Bool {
     guard let value = config["unknown-rules"] else { return false }
-    return try formatOptionsFor(["unknown-rules": value])?.ignoreUnknownRules ?? false
+    var options = FormatOptions.default
+    try Descriptors.ignoreUnknownRules.toOptions(value, &options)
+    return options.ignoreUnknownRules
 }
 
 /// Parse single file path, disallowing globs or commas
@@ -638,6 +676,7 @@ public func parseConfigFile(_ data: Data) throws -> ([[String: String]]) {
     }
 
     var configOptions = [[String: String]]()
+    var ignoreUnknownOptions = false
 
     for configSegmentLines in configSegments {
         let arguments = try configSegmentLines.flatMap { line -> [String] in
@@ -655,7 +694,12 @@ public func parseConfigFile(_ data: Data) throws -> ([[String: String]]) {
             return [key, parts.dropFirst().joined(separator: " ")]
         }
         do {
-            try configOptions.append(preprocessArguments(arguments, optionsArguments))
+            try configOptions.append(preprocessArguments(
+                arguments,
+                optionsArguments,
+                ignoreUnknownOptions: ignoreUnknownOptions
+            ))
+            ignoreUnknownOptions = unknownRulesValue(in: arguments) ?? ignoreUnknownOptions
         } catch let FormatError.options(message) {
             throw FormatError.options("\(message) in configuration file")
         }
@@ -866,20 +910,22 @@ public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>?
 
 /// Parse FileOptions from arguments
 func fileOptionsFor(_ args: [String: String], in directory: String) throws -> FileOptions? {
+    let ignoreUnknownOptions = try shouldIgnoreUnknownRules(in: args)
     var options = FileOptions()
     var arguments = Set(fileArguments)
 
     var containsFileOption = false
     try processOption("symlinks", in: args, from: &arguments) {
-        containsFileOption = true
         switch $0.lowercased() {
         case "follow":
             options.followSymlinks = true
         case "ignore":
             options.followSymlinks = false
         default:
+            guard !ignoreUnknownOptions else { return }
             throw FormatError.options("")
         }
+        containsFileOption = true
     }
     try processOption("exclude", in: args, from: &arguments) {
         containsFileOption = true
@@ -890,19 +936,24 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         options.unexcludedGlobs += expandGlobs($0, in: directory)
     }
     try processOption("min-version", in: args, from: &arguments) {
-        containsFileOption = true
         guard let minVersion = Version(rawValue: $0) else {
+            guard !ignoreUnknownOptions else { return }
             throw FormatError.options("Unsupported --min-version value '\($0)'")
         }
         guard minVersion <= Version(stringLiteral: swiftFormatVersion) else {
             throw FormatError.options("Project specifies SwiftFormat --min-version of \(minVersion)")
         }
         options.minVersion = minVersion
+        containsFileOption = true
     }
 
     try processOption("filter", in: args, from: &arguments, handler: {
         // Validate the value eagerly. Filters themselves are applied in `Options.addFilterArguments`.
-        _ = try ConfigFilter.parseList($0, in: directory)
+        do {
+            _ = try ConfigFilter.parseList($0, in: directory)
+        } catch {
+            guard ignoreUnknownOptions else { throw error }
+        }
     })
 
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
@@ -920,17 +971,30 @@ public func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? 
 public func applyFormatOptions(from args: [String: String], to formatOptions: inout FormatOptions) throws -> Bool {
     var arguments = Set(formattingArguments)
     var containsFormatOption = false
+    let ignoreUnknownOptions: Bool
+    if args["unknown-rules"] != nil {
+        ignoreUnknownOptions = try shouldIgnoreUnknownRules(in: args)
+    } else {
+        ignoreUnknownOptions = formatOptions.ignoreUnknownRules
+    }
     for option in Descriptors.all {
         try processOption(option.argumentName, in: args, from: &arguments) {
-            containsFormatOption = true
+            var updatedOptions = formatOptions
             do {
-                try option.toOptions($0, &formatOptions)
+                try option.toOptions($0, &updatedOptions)
             } catch {
+                if ignoreUnknownOptions,
+                   option.argumentName != Descriptors.ignoreUnknownRules.argumentName
+                {
+                    return
+                }
                 guard let names = option.validArguments else {
                     throw error
                 }
                 throw FormatError.invalidOption($0, for: option.argumentName, with: names)
             }
+            formatOptions = updatedOptions
+            containsFormatOption = true
         }
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")

@@ -1673,7 +1673,7 @@ struct _Descriptors {
     let ignoreUnknownRules = OptionDescriptor(
         argumentName: "unknown-rules",
         displayName: "Unknown Rules",
-        help: "How unknown rules are handled:",
+        help: "Handling of unknown rules/option:",
         keyPath: \.ignoreUnknownRules,
         trueValues: ["ignore"],
         falseValues: ["error"]

@@ -229,13 +229,14 @@ final class OptionDescriptorTests: XCTestCase {
     }
 
     func testUnknownRules() {
-        let descriptor = Descriptors.ignoreUnknownRules
-        let expectations: [OptionArgumentMapping<Bool>] = [
-            (optionValue: true, argumentValue: "ignore"),
-            (optionValue: false, argumentValue: "error"),
+        let descriptor = Descriptors.unknownRules
+        let expectations: [OptionArgumentMapping<UnknownRulesMode>] = [
+            (optionValue: .ignore, argumentValue: "ignore"),
+            (optionValue: .warn, argumentValue: "warn"),
+            (optionValue: .error, argumentValue: "error"),
         ]
-        validateFromOptions(descriptor, keyPath: \FormatOptions.ignoreUnknownRules, expectations: expectations)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.ignoreUnknownRules, expectations: expectations)
+        validateFromOptions(descriptor, keyPath: \FormatOptions.unknownRules, expectations: expectations)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.unknownRules, expectations: expectations)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 

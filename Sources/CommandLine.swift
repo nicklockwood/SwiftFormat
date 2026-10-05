@@ -213,7 +213,7 @@ func printHelp(as type: CLI.OutputType) {
     --conflict-markers \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
     --swift-version    \(stripMarkdown(Descriptors.swiftVersion.help))
     --language-mode    \(stripMarkdown(Descriptors.languageMode.help))
-    --unknown-rules    \(stripMarkdown(Descriptors.ignoreUnknownRules.help))
+    --unknown-rules    \(stripMarkdown(Descriptors.unknownRules.help))
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --snapshot         Path to snapshot file (defaults to .swiftformat-snapshot)
@@ -280,7 +280,8 @@ private func readConfigArg(
     _ name: String,
     with args: inout [String: String],
     filterOptions: inout [[ConfigFilter]: [String: String]],
-    in directory: String
+    in directory: String,
+    logger: Logger? = nil
 ) throws -> URL? {
     guard let configPath = args[name] else {
         return nil
@@ -289,7 +290,7 @@ private func readConfigArg(
         throw FormatError.options("--\(name) argument expects a value")
     }
 
-    let (url, configs) = try processConfigFile(at: configPath, for: name, in: directory)
+    let (url, configs) = try processConfigFile(at: configPath, for: name, in: directory, logger: logger)
 
     var config = [String: String]()
 
@@ -301,15 +302,17 @@ private func readConfigArg(
                 filterOptions[filters] = configArgs
             }
         } else {
-            config = try mergeArguments(configArgs, into: config)
+            config = try mergeArguments(configArgs, into: config, logger: logger)
         }
     }
 
-    args = try mergeArguments(args, into: config)
+    args = try mergeArguments(args, into: config, logger: logger)
     return url
 }
 
-private func processConfigFile(at path: String, for argumentName: String, in directory: String) throws -> (URL, [[String: String]]) {
+private func processConfigFile(at path: String, for argumentName: String, in directory: String,
+                               logger: Logger? = nil) throws -> (URL, [[String: String]])
+{
     let url = try parsePath(path, for: "--\(argumentName)", in: directory)
 
     if !FileManager.default.fileExists(atPath: url.path) {
@@ -323,7 +326,7 @@ private func processConfigFile(at path: String, for argumentName: String, in dir
         throw FormatError.reading("Failed to read config file at \(url.path), \(error)")
     }
 
-    var configs = try parseConfigFile(data)
+    var configs = try parseConfigFile(data, logger: logger)
 
     // Ensure exclude paths in config file are treated as relative to the file itself
     let configDirectory = url.deletingLastPathComponent().path
@@ -358,7 +361,8 @@ private func readMultipleConfigArgs(
     _ name: String,
     with args: inout [String: String],
     filterOptions: inout [[ConfigFilter]: [String: String]],
-    in directory: String
+    in directory: String,
+    logger: Logger? = nil
 ) throws -> [URL] {
     guard let configPaths = args[name] else {
         return []
@@ -375,7 +379,7 @@ private func readMultipleConfigArgs(
 
     // Process each config file in order (first as base, subsequent override)
     for (index, path) in paths.enumerated() {
-        let (url, configs) = try processConfigFile(at: path, for: name, in: directory)
+        let (url, configs) = try processConfigFile(at: path, for: name, in: directory, logger: logger)
         for config in configs {
             // For first config file, use it as base; for subsequent files, merge them in.
             // If the config file has a `--filter` option, store it separately under those filters.
@@ -387,7 +391,7 @@ private func readMultipleConfigArgs(
             } else if index == 0 {
                 mergedConfig = config
             } else {
-                mergedConfig = try mergeArguments(config, into: mergedConfig)
+                mergedConfig = try mergeArguments(config, into: mergedConfig, logger: logger)
             }
         }
 
@@ -395,7 +399,7 @@ private func readMultipleConfigArgs(
     }
 
     // Merge final config into args
-    args = try mergeArguments(args, into: mergedConfig)
+    args = try mergeArguments(args, into: mergedConfig, logger: logger)
     return configURLs
 }
 
@@ -417,10 +421,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         // Reset quiet mode on exit to prevent side-effects between unit tests
         quietMode = false
     }
+    let logger = Logger(print: print)
 
     do {
         // Get arguments
-        var args = try preprocessArguments(args, commandLineArguments)
+        var args = try preprocessArguments(args, commandLineArguments, logger: logger)
 
         // Quiet mode
         quietMode = (args["quiet"] != nil)
@@ -520,7 +525,8 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Config files (support multiple)
         var filterOptions = [[ConfigFilter]: [String: String]]()
-        let configURLs = try readMultipleConfigArgs("config", with: &args, filterOptions: &filterOptions, in: directory)
+        let configURLs = try readMultipleConfigArgs("config", with: &args, filterOptions: &filterOptions,
+                                                    in: directory, logger: logger)
 
         // FormatOption overrides
         var overrides = [String: String]()
@@ -529,10 +535,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Base config
-        _ = try readConfigArg("base-config", with: &args, filterOptions: &filterOptions, in: directory)
+        _ = try readConfigArg("base-config", with: &args, filterOptions: &filterOptions,
+                              in: directory, logger: logger)
 
         // Options
-        var options = try Options(args, filterOptions: filterOptions, in: directory)
+        var options = try Options(args, filterOptions: filterOptions, in: directory, logger: logger)
         options.configURLs = configURLs.isEmpty ? nil : configURLs
 
         // Show rules
@@ -821,7 +828,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 } else {
                     printRunningMessage()
                     if let stdinURL = options.formatOptions?.fileInfo.filePath.map(URL.init(fileURLWithPath:)) {
-                        try gatherOptions(&options, for: stdinURL, with: { print($0, as: .info) })
+                        try gatherOptions(&options, for: stdinURL, with: logger)
                         if options.shouldSkipFile(stdinURL) {
                             print(input, as: .raw)
                             status = .finished(.ok)
@@ -839,11 +846,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                        resourceValues: resourceValues)
 
                         options.formatOptions?.fileInfo = fileInfo
-                        try options.addFilterArguments(path: stdinURL.path, source: input)
+                        try options.addFilterArguments(path: stdinURL.path, source: input, logger: logger)
                     }
                     let outputTokens = try applyRules(
                         input, options: options, lineRange: lineRange,
-                        verbose: verbose, lint: lint, reporter: reporter
+                        verbose: verbose, lint: lint, reporter: reporter, logger: logger
                     )
                     let output = sourceCode(for: outputTokens)
                     if let outputURL, !useStdout {
@@ -937,7 +944,8 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   lenient: lenient,
                                                   cacheURL: cacheURL,
                                                   snapshotMode: snapshotMode,
-                                                  reporter: reporter)
+                                                  reporter: reporter,
+                                                  logger: logger)
             errors += _errors
         })
 
@@ -1036,7 +1044,7 @@ func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOp
     let errors = enumerateFiles(
         withInputURLs: inputURLs,
         options: baseOptions,
-        logger: { print($0, as: .info) }
+        logger: Logger(print: print)
     ) { inputURL, _, _ in
         guard let input = try? String(contentsOf: inputURL) else {
             throw FormatError.reading("Failed to read file \(inputURL.path)")
@@ -1061,7 +1069,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool, reporter: Reporter?) throws -> [Token]
+                verbose: Bool, lint: Bool, reporter: Reporter?, logger: Logger? = nil) throws -> [Token]
 {
     // Parse source
     var tokens = tokens ?? tokenize(source)
@@ -1082,7 +1090,8 @@ func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, line
     (tokens, changes) = try applyRules(
         rules, to: tokens, with: formatOptions,
         trackChanges: lint || verbose || reporter != nil,
-        range: range
+        range: range,
+        logger: logger
     )
 
     // Display info
@@ -1117,7 +1126,8 @@ func processInput(_ inputURLs: [URL],
                   lenient _: Bool,
                   cacheURL: URL?,
                   snapshotMode: SnapshotMode,
-                  reporter: Reporter?) -> (OutputFlags, [Error])
+                  reporter: Reporter?,
+                  logger: Logger? = nil) -> (OutputFlags, [Error])
 {
     // Discover and load snapshots before formatting, so an invalid snapshot can't result in partial changes.
     var snapshotURLByInputURL = [URL: URL]()
@@ -1132,7 +1142,7 @@ func processInput(_ inputURLs: [URL],
             withInputURLs: inputURLs,
             options: options,
             concurrent: !verbose,
-            logger: { print($0, as: .info) }
+            logger: logger
         ) { inputURL, _, _ in
             { inputFileURLs.append(inputURL.standardizedFileURL) }
         }
@@ -1218,7 +1228,7 @@ func processInput(_ inputURLs: [URL],
         var result = try overriddenOptionsQueue.sync { () throws -> Options in
             try overriddenOptionsCache[directory] ?? {
                 var overridden = options
-                try overridden.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
+                try overridden.addArguments(overrides, in: "", logger: logger) // No need for directory as overrides are formatOptions only
                 overriddenOptionsCache[directory] = overridden
                 return overridden
             }()
@@ -1277,7 +1287,7 @@ func processInput(_ inputURLs: [URL],
         }
         // Override options
         var options = try applyOverrides(to: options, for: inputURL)
-        try options.addFilterArguments(path: inputURL.path, source: input)
+        try options.addFilterArguments(path: inputURL.path, source: input, logger: logger)
         let formatOptions = options.formatOptions ?? .default
         let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
         // Check cache
@@ -1332,9 +1342,10 @@ func processInput(_ inputURLs: [URL],
                         let arguments = try preprocessArguments(
                             args,
                             commandLineArguments,
-                            ignoreUnknownOptions: options.formatOptions?.ignoreUnknownRules ?? false
+                            unknownRules: options.formatOptions?.unknownRules ?? .error,
+                            logger: logger
                         )
-                        try applyArguments(arguments, lint: lint, to: &options)
+                        try applyArguments(arguments, lint: lint, to: &options, logger: logger)
                     }
 
                     // Set fragment mode
@@ -1366,7 +1377,8 @@ func processInput(_ inputURLs: [URL],
                         if parsingError == nil {
                             outputTokens = try? applyRules(swiftCodeBlock.text, tokens: inputTokens,
                                                            options: options, lineRange: lineRange,
-                                                           verbose: verbose, lint: lint, reporter: reporter)
+                                                           verbose: verbose, lint: lint, reporter: reporter,
+                                                           logger: logger)
                         }
                     case .strict:
                         if let parsingError {
@@ -1375,7 +1387,8 @@ func processInput(_ inputURLs: [URL],
 
                         outputTokens = try applyRules(swiftCodeBlock.text, tokens: inputTokens,
                                                       options: options, lineRange: lineRange,
-                                                      verbose: verbose, lint: lint, reporter: reporter)
+                                                      verbose: verbose, lint: lint, reporter: reporter,
+                                                      logger: logger)
                     }
 
                     if let outputTokens {
@@ -1391,7 +1404,8 @@ func processInput(_ inputURLs: [URL],
             } else {
                 // Regular swift file
                 let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
-                                                  verbose: verbose, lint: lint, reporter: reporter)
+                                                  verbose: verbose, lint: lint, reporter: reporter,
+                                                  logger: logger)
                 output = sourceCode(for: outputTokens)
                 if output != input {
                     sourceHash = nil
@@ -1481,7 +1495,7 @@ func processInput(_ inputURLs: [URL],
         outputURL: outputURL,
         options: options,
         concurrent: !verbose,
-        logger: { print($0, as: .info) },
+        logger: logger,
         skipped: skippedHandler,
         handler: fileHandler
     )

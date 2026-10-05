@@ -116,8 +116,22 @@ public typealias FileEnumerationHandler = (
     _ options: Options
 ) throws -> () throws -> Void
 
-/// Callback for info-level logging
-public typealias Logger = (String) -> Void
+/// Callback for logging info and warnings
+public struct Logger {
+    let print: (String, CLI.OutputType) -> Void
+
+    public func info(_ message: String) {
+        print(message, .info)
+    }
+
+    public func warn(_ message: String) {
+        print(message, .warning)
+    }
+}
+
+/// Deprecated callback for informational messages.
+@available(*, deprecated, message: "Use Logger instead")
+public typealias LegacyLogger = (String) -> Void
 
 /// Enumerate all Swift files at the specified location and (optionally) calculate an output file URL for each.
 /// Ignores the file if any of the excluded file URLs is a prefix of the input file URL.
@@ -312,6 +326,30 @@ public func enumerateFiles(withInputURL inputURL: URL,
                    handler: handler)
 }
 
+@available(*, deprecated, message: "Use the Logger overload")
+public func enumerateFiles(withInputURLs inputURLs: [URL], outputURL: URL? = nil,
+                           options baseOptions: Options = .default, concurrent: Bool = true,
+                           logger: @escaping LegacyLogger, skipped: FileEnumerationHandler? = nil,
+                           handler: @escaping FileEnumerationHandler) -> [Error]
+{
+    enumerateFiles(withInputURLs: inputURLs, outputURL: outputURL, options: baseOptions,
+                   concurrent: concurrent, logger: Logger { message, type in
+                       if type == .info {
+                           logger(message)
+                       }
+                   }, skipped: skipped, handler: handler)
+}
+
+@available(*, deprecated, message: "Use the Logger overload")
+public func enumerateFiles(withInputURL inputURL: URL, outputURL: URL? = nil,
+                           options baseOptions: Options = .default, concurrent: Bool = true,
+                           logger: @escaping LegacyLogger, skipped: FileEnumerationHandler? = nil,
+                           handler: @escaping FileEnumerationHandler) -> [Error]
+{
+    enumerateFiles(withInputURLs: [inputURL], outputURL: outputURL, options: baseOptions,
+                   concurrent: concurrent, logger: logger, skipped: skipped, handler: handler)
+}
+
 func collectFileInfo(inputURL: URL, options: Options, resourceValues: URLResourceValues?) -> FileInfo {
     let fileHeaderRuleEnabled = options.rules?.contains(FormatRule.fileHeader.name) ?? false
     let shouldGetGitInfo = fileHeaderRuleEnabled &&
@@ -358,7 +396,7 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     }
 
     assert(options.formatOptions != nil)
-    try options.addArguments(args, in: inputURL.path)
+    try options.addArguments(args, in: inputURL.path, logger: logger)
 }
 
 private func parseConfigArguments(in inputURL: URL, options: Options, logger: Logger?) throws -> [[String: String]] {
@@ -369,26 +407,26 @@ private func parseConfigArguments(in inputURL: URL, options: Options, logger: Lo
         if let configURLs = options.configURLs {
             let standardizedConfigFile = configFile.standardizedFileURL
             if !configURLs.contains(where: { $0.standardizedFileURL == standardizedConfigFile }) {
-                logger?("Ignoring config file at \(configFile.path)")
+                logger?.info("Ignoring config file at \(configFile.path)")
             }
         } else {
-            logger?("Reading config file at \(configFile.path)")
+            logger?.info("Reading config file at \(configFile.path)")
             let data = try Data(contentsOf: configFile)
-            args = try parseConfigFile(data)
+            args = try parseConfigFile(data, logger: logger)
         }
     }
     let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
     if manager.fileExists(atPath: versionFile.path) {
         // Don't read .swift-version from directories that will be excluded (affects no files)
         var tempOptions = options
-        try tempOptions.addArguments(args, in: inputURL.standardizedFileURL.path)
+        try tempOptions.addArguments(args, in: inputURL.standardizedFileURL.path, logger: logger)
         if !tempOptions.shouldSkipFile(inputURL) {
             let versionString = try String(contentsOf: versionFile, encoding: .utf8)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if args.contains(where: { $0["swift-version"] != nil }) {
-                logger?("Ignoring swift-version file at \(versionFile.path)")
+                logger?.info("Ignoring swift-version file at \(versionFile.path)")
             } else if Version(rawValue: versionString) != nil {
-                logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
+                logger?.info("Reading swift-version file at \(versionFile.path) (version \(versionString))")
 
                 if args.isEmpty {
                     args = [["swift-version": versionString]]
@@ -402,7 +440,7 @@ private func parseConfigArguments(in inputURL: URL, options: Options, logger: Lo
             } else {
                 // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
                 // TODO: find a better solution for logging warnings here
-                logger?("Unrecognized swift version string '\(versionString)' in \(versionFile.path)")
+                logger?.warn("Unrecognized swift version string '\(versionString)' in \(versionFile.path)")
             }
         }
     }
@@ -598,6 +636,7 @@ public func applyRules(
     with options: FormatOptions,
     trackChanges: Bool,
     range originalRange: Range<Int>?,
+    logger: Logger? = nil,
     maxIterations: Int = 10
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
@@ -681,7 +720,8 @@ public func applyRules(
     var lastChanges = [Formatter.Change]()
     for iteration in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
-                                  trackChanges: trackChanges, range: range)
+                                  trackChanges: trackChanges, range: range,
+                                  logger: logger)
         let progress = RuleProgress()
         queue.async(group: group) {
             for (index, rule) in rules.enumerated() {

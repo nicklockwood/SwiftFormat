@@ -40,6 +40,7 @@ import Foundation
 public final class Formatter: NSObject {
     private var enumerationIndex = -1
     private var autoUpdatingReferences = [ObjectIdentifier: WeakAutoUpdatingReference]()
+    private let logger: Logger?
 
     /// Formatting range
     public var range: Range<Int>?
@@ -102,12 +103,14 @@ public final class Formatter: NSObject {
 
     /// Create a new formatter instance from a token array
     public init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
-                trackChanges: Bool = false, range: Range<Int>? = nil)
+                trackChanges: Bool = false, range: Range<Int>? = nil,
+                logger: Logger? = nil)
     {
         self.tokens = tokens
         self.options = options
         self.trackChanges = trackChanges
         self.range = range
+        self.logger = logger
 
         // TODO: why is this an NSObject?
         super.init()
@@ -216,13 +219,14 @@ public final class Formatter: NSObject {
                         let args = try preprocessArguments(
                             parseArguments(args),
                             formattingArguments + internalArguments,
-                            ignoreUnknownOptions: cumulativeOptions.ignoreUnknownRules
+                            unknownRules: cumulativeOptions.unknownRules,
+                            logger: logger
                         )
                         if let arg = args["1"] {
                             throw FormatError.options("Unknown option \(arg)")
                         }
                         var options = Options(formatOptions: cumulativeOptions)
-                        try options.addArguments(args, in: "")
+                        try options.addArguments(args, in: "", logger: logger)
                         if toggle {
                             cumulativeOptions = options.formatOptions ?? cumulativeOptions
                             type = .options(cumulativeOptions)

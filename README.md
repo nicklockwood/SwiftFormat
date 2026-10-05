@@ -37,6 +37,7 @@ Table of Contents
     - [Linting](#linting)
     - [Error codes](#error-codes)
     - [Cache](#cache)
+    - [Project indexing](#project-indexing)
     - [Snapshot](#snapshot)
     - [File headers](#file-headers)
     - [Markdown formatting](#markdown-formatting)
@@ -917,9 +918,31 @@ SwiftFormat uses a cache file to avoid reformatting files that haven't changed. 
 
 By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftformat` on macOS, or `/tmp/com.charcoaldesign.swiftformat` on Linux. Use the command-line option `--cache ignore` to ignore the cached version and re-apply formatting to all files. Alternatively, you can use `--cache clear` to delete the cache (or you can just manually delete the cache file).
 
-The cache is shared between all projects. The file is fairly small, as it only stores the path and size for each file, not the contents. If you do start experiencing slowdown due to the cache growing too large, you might want to consider using a separate cache file for each project.
+The cache is shared between all projects. It stores formatting-cache entries and, when [project indexing](#project-indexing) is enabled, summaries of source declarations rather than complete file contents. If you do start experiencing slowdown due to the cache growing too large, you might want to consider using a separate cache file for each project.
 
 You can specify a custom cache file location by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
+
+
+Project indexing
+----------------
+
+When formatting files from the command line, SwiftFormat can build an index of declarations in the surrounding project. This gives some rules information about code in other files, without compiling the project or requiring a successful build.
+
+Project indexing is enabled automatically (`--project-index auto`, the default) when an enabled rule uses it. Currently, this lets `redundantPublic` recognize internal types declared in other files, and lets `redundantSelf` recognize project-defined autoclosure arguments and members declared in a type or its extensions in other files.
+
+SwiftFormat searches upwards from each input for a `Package.swift` file or a directory containing an `.xcodeproj` or `.xcworkspace`. If none is found, it uses the input directory, or the containing directory for a single file. It scans Swift files beneath that root, skipping hidden files, common build directories, and symbolic-link directories. Files outside the formatting inputs, including files excluded from formatting, may still be read for indexing. Only the selected formatting inputs are modified.
+
+The index is conservative, not a replacement for Swift's type checker. Swift package modules are identified using the conventional `Sources/<target>` and `Tests/<target>` directory layout. Xcode target membership is not currently resolved, so module-dependent cross-file information is unavailable for Xcode projects. External APIs, inherited members, and declarations whose module or visibility cannot be established may still require the workarounds described under [Known issues](#known-issues). Standard-input formatting and the Xcode Source Editor Extension do not build a project index.
+
+Index summaries are stored in the regular [cache](#cache), avoiding repeated parsing of unchanged files. SwiftFormat still discovers and reads project files to validate cached summaries, so indexing adds overhead even when formatting only a few files. Changes to indexed declarations can also invalidate cached formatting for rules that use project information.
+
+To disable indexing and use only the information available in each file, pass `--project-index disabled`:
+
+```sh
+swiftformat Sources --project-index disabled
+```
+
+Disabling indexing can improve performance for large projects, but removes the cross-file support described above. `--cache ignore` disables caching, not project indexing.
 
 
 Snapshot

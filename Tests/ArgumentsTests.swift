@@ -200,6 +200,24 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(try preprocessArguments(input, commandLineArguments), output)
     }
 
+    func testUnknownRulesOptionWarnsForUnknownArgument() {
+        var expectedWarning = ""
+        XCTAssertThrowsError(try preprocessArguments(["", "--future-option", "value"], commandLineArguments)) {
+            expectedWarning = "\($0)"
+        }
+
+        var warnings = [String]()
+        let logger = Logger { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+
+        let input = ["", "--unknown-rules", "warn", "--future-option", "value"]
+        XCTAssertEqual(try preprocessArguments(input, commandLineArguments, logger: logger), ["0": "", "unknown-rules": "warn"])
+        XCTAssertEqual(warnings, [expectedWarning])
+    }
+
     // merging
 
     func testDuplicateDisableArgumentsAreMerged() {
@@ -560,6 +578,91 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(options.formatOptions?.semicolons, .never)
     }
 
+    func testUnknownRulesWarnsForUnknownRule() throws {
+        var expectedWarning = ""
+        XCTAssertThrowsError(try rulesFor(["enable": "futureRule"], lint: false)) {
+            expectedWarning = "\($0)"
+        }
+
+        var warnings = [String]()
+        let logger = Logger { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+
+        let rules = try rulesFor([
+            "unknown-rules": "warn",
+            "enable": "futureRule,isEmpty",
+        ], lint: false, logger: logger)
+        XCTAssertTrue(rules.contains("isEmpty"))
+        XCTAssertEqual(warnings, [expectedWarning])
+    }
+
+    func testUnknownRulesWarnsForUnknownOptionValue() throws {
+        var expectedWarning = ""
+        XCTAssertThrowsError(try Options(["indent": "future-value"], in: "/")) {
+            expectedWarning = "\($0)"
+        }
+
+        var warnings = [String]()
+        let logger = Logger { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        _ = try Options([
+            "unknown-rules": "warn",
+            "indent": "future-value",
+        ], in: "/", logger: logger)
+        XCTAssertEqual(warnings, [expectedWarning])
+    }
+
+    func testUnknownRulesWarnsWhenMergingArguments() throws {
+        var expectedWarning = ""
+        XCTAssertThrowsError(try mergeArguments(["enable": "futureRule"], into: [:])) {
+            expectedWarning = "\($0)"
+        }
+
+        var warnings = [String]()
+        let logger = Logger { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        let result = try mergeArguments([
+            "enable": "futureRule,isEmpty",
+        ], into: [
+            "unknown-rules": "warn",
+        ], logger: logger)
+
+        XCTAssertEqual(result["enable"], "futureRule,isEmpty")
+        XCTAssertEqual(warnings, [expectedWarning])
+    }
+
+    func testUnknownRulesWarnsWhenParsingConfigFile() throws {
+        let config = """
+        --unknown-rules warn
+        --future-option value
+        """
+        var expectedWarning = ""
+        XCTAssertThrowsError(try parseConfigFile(Data("--future-option value".utf8))) {
+            expectedWarning = "\($0)"
+        }
+
+        var warnings = [String]()
+        let logger = Logger { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        let arguments = try parseConfigFile(Data(config.utf8), logger: logger)
+
+        XCTAssertEqual(arguments[0]["unknown-rules"], "warn")
+        XCTAssertNil(arguments[0]["future-option"])
+        XCTAssertEqual(warnings, [expectedWarning])
+    }
+
     func testUnknownRulesOptionAppliesToUnknownOptionInFilteredConfig() throws {
         let config = """
         --unknown-rules ignore
@@ -589,6 +692,30 @@ final class ArgumentsTests: XCTestCase {
         try applyArguments(["enable": "futureRule,isEmpty"], lint: false, to: &options)
         XCTAssertEqual(options.rules?.contains("isEmpty"), true)
         XCTAssertEqual(options.formatOptions?.ignoreUnknownRules, true)
+    }
+
+    func testUnknownRulesWarnsForUnknownOptionValueInFilteredConfig() throws {
+        var strictOptions = Options.default
+        var expectedWarning = ""
+        XCTAssertThrowsError(try applyArguments(["indent": "future-value"], lint: false, to: &strictOptions)) {
+            expectedWarning = "\($0)"
+        }
+
+        var warnings = [String]()
+        let logger = Logger { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        var options = Options.default
+        try options.addArguments(["unknown-rules": "warn"], in: "/", logger: logger)
+        try applyArguments([
+            "indent": "future-value",
+            "semicolons": "never",
+        ], lint: false, to: &options, logger: logger)
+
+        XCTAssertEqual(options.formatOptions?.semicolons, .never)
+        XCTAssertEqual(warnings, [expectedWarning])
     }
 
     func testUnknownRulesOptionIgnoresUnknownOptionValueInFilteredConfig() throws {

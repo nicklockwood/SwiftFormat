@@ -1103,8 +1103,10 @@ final class CommandLineTests: XCTestCase {
             DispatchQueue.concurrentPerform(iterations: 50) { _ in
                 var options = Options.default
                 do {
-                    try gatherOptions(&options, for: url, with: { message in
-                        logQueue.sync { logMessages.append(message) }
+                    try gatherOptions(&options, for: url, with: Logger { message, type in
+                        if type == .info {
+                            logQueue.sync { logMessages.append(message) }
+                        }
                     })
                 } catch {
                     logQueue.sync { errors.append(error) }

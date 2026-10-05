@@ -33,31 +33,34 @@ import Foundation
 import RegexBuilder
 
 extension Options {
-    init(_ args: [String: String], filterOptions: [[ConfigFilter]: [String: String]] = [:], in directory: String) throws {
-        fileOptions = try fileOptionsFor(args, in: directory)
-        formatOptions = try formatOptionsFor(args)
+    init(_ args: [String: String], filterOptions: [[ConfigFilter]: [String: String]] = [:],
+         in directory: String, logger: Logger? = nil) throws
+    {
+        fileOptions = try fileOptionsFor(args, in: directory, logger: logger)
+        formatOptions = try formatOptionsFor(args, logger: logger)
         configURLs = args["config"].map {
             parseCommaDelimitedList($0).map { expandPath($0, in: directory) }
         }
         let lint = args.keys.contains("lint")
         self.lint = lint
-        rules = try rulesFor(args, lint: lint)
+        rules = try rulesFor(args, lint: lint, logger: logger)
         self.filterOptions = filterOptions
     }
 
-    mutating func addArguments(_ args: [[String: String]], in directory: String) throws {
+    mutating func addArguments(_ args: [[String: String]], in directory: String, logger: Logger? = nil) throws {
         for args in args {
-            try addArguments(args, in: directory)
+            try addArguments(args, in: directory, logger: logger)
         }
     }
 
-    mutating func addArguments(_ args: [String: String], in directory: String) throws {
+    mutating func addArguments(_ args: [String: String], in directory: String, logger: Logger? = nil) throws {
         guard !args.isEmpty else {
             return
         }
         let oldArguments = argumentsFor(self)
-        let newArguments = try mergeArguments(args, into: oldArguments)
-        var newOptions = try Options(newArguments, filterOptions: filterOptions, in: directory)
+        let newArguments = try mergeArguments(args, into: oldArguments, logger: logger)
+        var newOptions = try Options(newArguments, filterOptions: filterOptions, in: directory,
+                                     logger: logger)
         if let fileInfo = formatOptions?.fileInfo {
             newOptions.formatOptions?.fileInfo = fileInfo
         }
@@ -66,11 +69,11 @@ extension Options {
     }
 
     /// Adds arguments from any `--filter`ed config that applies to this file
-    mutating func addFilterArguments(path: String, source: String) throws {
+    mutating func addFilterArguments(path: String, source: String, logger: Logger? = nil) throws {
         let locale = (formatOptions ?? .default).locale
         for (filters, options) in filterOptions {
             if filters.allSatisfy({ $0.matches(path: path, source: source, locale: locale) }) {
-                try applyArguments(options, lint: lint, to: &self)
+                try applyArguments(options, lint: lint, to: &self, logger: logger)
             }
         }
     }
@@ -406,9 +409,10 @@ func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [S
 func preprocessArguments(
     _ args: [String],
     _ names: [String],
-    ignoreUnknownOptions inheritedIgnoreUnknownOptions: Bool = false
+    unknownRules inheritedUnknownRules: UnknownRulesMode = .error,
+    logger: Logger? = nil
 ) throws -> [String: String] {
-    let ignoreUnknownOptions = unknownRulesValue(in: args) ?? inheritedIgnoreUnknownOptions
+    let unknownRules = unknownRulesMode(in: args) ?? inheritedUnknownRules
     var anonymousArgs = 0
     var namedArgs: [String: String] = [:]
     var name = ""
@@ -436,7 +440,16 @@ func preprocessArguments(
             }
 
             if name.isEmpty {
-                if ignoreUnknownOptions {
+                if unknownRules != .error {
+                    let error: FormatError
+                    if let match = key.bestMatches(in: names).first {
+                        error = .options("Unknown option --\(key). Did you mean --\(match)?")
+                    } else {
+                        error = .options("Unknown option --\(key)")
+                    }
+                    if unknownRules == .warn {
+                        logger?.warn("\(error)")
+                    }
                     ignoringUnknownOption = true
                     continue
                 }
@@ -494,18 +507,14 @@ func preprocessArguments(
     return namedArgs
 }
 
-private func unknownRulesValue(in args: [String]) -> Bool? {
-    var result: Bool?
+private func unknownRulesMode(in args: [String]) -> UnknownRulesMode? {
+    var result: UnknownRulesMode?
     for index in args.indices.dropLast() {
         let argument = args[index].lowercased()
         guard argument == "--unknown-rules" || argument == "--unknownrules" else {
             continue
         }
-        switch args[args.index(after: index)].lowercased() {
-        case "ignore": result = true
-        case "error": result = false
-        default: break
-        }
+        result = UnknownRulesMode(rawValue: args[args.index(after: index)].lowercased())
     }
     return result
 }
@@ -548,16 +557,28 @@ func parseRules(_ rules: String, ignoreUnknown: Bool) throws -> [String] {
     }
 }
 
-func curryParseRules(config: [String: String]) throws -> (String) throws -> [String] {
-    let ignoreUnknown = try shouldIgnoreUnknownRules(in: config)
-    return { try parseRules($0, ignoreUnknown: ignoreUnknown) }
+func curryParseRules(config: [String: String], logger: Logger?) throws -> (String) throws -> [String] {
+    let unknownRules = try unknownRulesMode(in: config)
+    return { rules in
+        guard unknownRules == .warn, let logger else {
+            return try parseRules(rules, ignoreUnknown: unknownRules != .error)
+        }
+        return parseCommaDelimitedList(rules).flatMap { rule in
+            do {
+                return try parseRules(rule, ignoreUnknown: false)
+            } catch {
+                logger.warn("\(error)")
+                return []
+            }
+        }
+    }
 }
 
-func shouldIgnoreUnknownRules(in config: [String: String]) throws -> Bool {
-    guard let value = config["unknown-rules"] else { return false }
+func unknownRulesMode(in config: [String: String]) throws -> UnknownRulesMode {
+    guard let value = config["unknown-rules"] else { return .error }
     var options = FormatOptions.default
-    try Descriptors.ignoreUnknownRules.toOptions(value, &options)
-    return options.ignoreUnknownRules
+    try Descriptors.unknownRules.toOptions(value, &options)
+    return options.unknownRules
 }
 
 /// Parse single file path, disallowing globs or commas
@@ -580,8 +601,10 @@ func parsePaths(_ paths: String, in directory: String) throws -> [URL] {
 }
 
 /// Merge two dictionaries of arguments
-func mergeArguments(_ args: [String: String], into config: [String: String]) throws -> [String: String] {
-    let parseRules = try curryParseRules(config: config.merging(args) { $1 })
+func mergeArguments(_ args: [String: String], into config: [String: String],
+                    logger: Logger? = nil) throws -> [String: String]
+{
+    let parseRules = try curryParseRules(config: config.merging(args) { $1 }, logger: logger)
     var input = config
     var output = args
     // Merge excluded urls
@@ -661,7 +684,7 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
 /// --filter **/Tests/**
 /// --indent 2
 /// ```
-public func parseConfigFile(_ data: Data) throws -> ([[String: String]]) {
+public func parseConfigFile(_ data: Data, logger: Logger? = nil) throws -> [[String: String]] {
     guard let input = String(data: data, encoding: .utf8) else {
         throw FormatError.reading("Unable to read data for configuration file")
     }
@@ -676,7 +699,7 @@ public func parseConfigFile(_ data: Data) throws -> ([[String: String]]) {
     }
 
     var configOptions = [[String: String]]()
-    var ignoreUnknownOptions = false
+    var unknownRules = UnknownRulesMode.error
 
     for configSegmentLines in configSegments {
         let arguments = try configSegmentLines.flatMap { line -> [String] in
@@ -697,9 +720,14 @@ public func parseConfigFile(_ data: Data) throws -> ([[String: String]]) {
             try configOptions.append(preprocessArguments(
                 arguments,
                 optionsArguments,
-                ignoreUnknownOptions: ignoreUnknownOptions
+                unknownRules: unknownRules,
+                logger: logger.map { logger in
+                    Logger { message, type in
+                        logger.print(type == .warning ? "\(message) in configuration file" : message, type)
+                    }
+                }
             ))
-            ignoreUnknownOptions = unknownRulesValue(in: arguments) ?? ignoreUnknownOptions
+            unknownRules = unknownRulesMode(in: arguments) ?? unknownRules
         } catch let FormatError.options(message) {
             throw FormatError.options("\(message) in configuration file")
         }
@@ -761,9 +789,7 @@ public func serialize(options: Options,
 }
 
 /// Serialize arguments
-func serialize(arguments: [String: String],
-               separator: String = "\n") -> String
-{
+func serialize(arguments: [String: String], separator: String = "\n") -> String {
     arguments.map {
         var value = $1
         if value.contains(" ") {
@@ -879,8 +905,10 @@ private func processOption(_ key: String,
 }
 
 /// Parse rule names from arguments
-public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>? = nil) throws -> Set<String> {
-    let parseRules = try curryParseRules(config: args)
+public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>? = nil,
+                     logger: Logger? = nil) throws -> Set<String>
+{
+    let parseRules = try curryParseRules(config: args, logger: logger)
     var rules = initial.map(FormatRules.canonicalNames) ?? allRules
 
     if let specifiedRules = try args["rules"].map({ try Set(parseRules($0)) }) {
@@ -908,9 +936,19 @@ public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>?
     return rules
 }
 
+private extension UnknownRulesMode {
+    func handle(_ error: Error, logger: Logger?) throws {
+        switch self {
+        case .error: throw error
+        case .warn: logger?.warn("\(error)")
+        case .ignore: break
+        }
+    }
+}
+
 /// Parse FileOptions from arguments
-func fileOptionsFor(_ args: [String: String], in directory: String) throws -> FileOptions? {
-    let ignoreUnknownOptions = try shouldIgnoreUnknownRules(in: args)
+func fileOptionsFor(_ args: [String: String], in directory: String, logger: Logger?) throws -> FileOptions? {
+    let unknownRules = try unknownRulesMode(in: args)
     var options = FileOptions()
     var arguments = Set(fileArguments)
 
@@ -922,8 +960,9 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         case "ignore":
             options.followSymlinks = false
         default:
-            guard !ignoreUnknownOptions else { return }
-            throw FormatError.options("")
+            let error = FormatError.options("Unsupported --symlinks value '\($0)'")
+            try unknownRules.handle(error, logger: logger)
+            return
         }
         containsFileOption = true
     }
@@ -937,8 +976,9 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
     }
     try processOption("min-version", in: args, from: &arguments) {
         guard let minVersion = Version(rawValue: $0) else {
-            guard !ignoreUnknownOptions else { return }
-            throw FormatError.options("Unsupported --min-version value '\($0)'")
+            let error = FormatError.options("Unsupported --min-version value '\($0)'")
+            try unknownRules.handle(error, logger: logger)
+            return
         }
         guard minVersion <= Version(stringLiteral: swiftFormatVersion) else {
             throw FormatError.options("Project specifies SwiftFormat --min-version of \(minVersion)")
@@ -952,7 +992,7 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         do {
             _ = try ConfigFilter.parseList($0, in: directory)
         } catch {
-            guard ignoreUnknownOptions else { throw error }
+            try unknownRules.handle(error, logger: logger)
         }
     })
 
@@ -962,36 +1002,44 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
 
 /// Parse FormatOptions from arguments
 /// Returns nil if the arguments dictionary does not contain any formatting arguments
-public func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
+public func formatOptionsFor(_ args: [String: String], logger: Logger? = nil) throws -> FormatOptions? {
     var options = FormatOptions.default
-    let containsFormatOption = try applyFormatOptions(from: args, to: &options)
+    let containsFormatOption = try applyFormatOptions(from: args, to: &options, logger: logger)
     return containsFormatOption ? options : nil
 }
 
-public func applyFormatOptions(from args: [String: String], to formatOptions: inout FormatOptions) throws -> Bool {
+public func applyFormatOptions(from args: [String: String], to formatOptions: inout FormatOptions,
+                               logger: Logger? = nil) throws -> Bool
+{
     var arguments = Set(formattingArguments)
     var containsFormatOption = false
-    let ignoreUnknownOptions: Bool
+    let unknownRules: UnknownRulesMode
     if args["unknown-rules"] != nil {
-        ignoreUnknownOptions = try shouldIgnoreUnknownRules(in: args)
+        unknownRules = try unknownRulesMode(in: args)
     } else {
-        ignoreUnknownOptions = formatOptions.ignoreUnknownRules
+        unknownRules = formatOptions.unknownRules
     }
     for option in Descriptors.all {
-        try processOption(option.argumentName, in: args, from: &arguments) {
+        try processOption(option.argumentName, in: args, from: &arguments) { value in
             var updatedOptions = formatOptions
             do {
-                try option.toOptions($0, &updatedOptions)
+                try option.toOptions(value, &updatedOptions)
             } catch {
-                if ignoreUnknownOptions,
-                   option.argumentName != Descriptors.ignoreUnknownRules.argumentName
+                if unknownRules != .error,
+                   option.argumentName != Descriptors.unknownRules.argumentName
                 {
+                    if unknownRules == .warn {
+                        let warning: Error = option.validArguments.map {
+                            FormatError.invalidOption(value, for: option.argumentName, with: $0)
+                        } ?? FormatError.options("Unsupported --\(option.argumentName) value '\(value)'")
+                        logger?.warn("\(warning)")
+                    }
                     return
                 }
                 guard let names = option.validArguments else {
                     throw error
                 }
-                throw FormatError.invalidOption($0, for: option.argumentName, with: names)
+                throw FormatError.invalidOption(value, for: option.argumentName, with: names)
             }
             formatOptions = updatedOptions
             containsFormatOption = true
@@ -1002,15 +1050,15 @@ public func applyFormatOptions(from args: [String: String], to formatOptions: in
 }
 
 /// Applies additional arguments to the given `Options` struct
-func applyArguments(_ args: [String: String], lint: Bool, to options: inout Options) throws {
+func applyArguments(_ args: [String: String], lint: Bool, to options: inout Options, logger: Logger? = nil) throws {
     var args = args
-    if args["unknown-rules"] == nil, options.formatOptions?.ignoreUnknownRules == true {
-        args["unknown-rules"] = "ignore"
+    if args["unknown-rules"] == nil, let unknownRules = options.formatOptions?.unknownRules {
+        args["unknown-rules"] = unknownRules.rawValue
     }
-    options.rules = try rulesFor(args, lint: lint, initial: options.rules)
+    options.rules = try rulesFor(args, lint: lint, initial: options.rules, logger: logger)
 
     var formatOptions = options.formatOptions ?? .default
-    let containsFormatOption = try applyFormatOptions(from: args, to: &formatOptions)
+    let containsFormatOption = try applyFormatOptions(from: args, to: &formatOptions, logger: logger)
     if containsFormatOption {
         options.formatOptions = formatOptions
     }
@@ -1024,7 +1072,7 @@ func warningsForArguments(_ args: [String: String], ignoreUnusedOptions: Bool = 
             warnings.append("--\(option.argumentName) option is deprecated. \(message)")
         }
     }
-    guard let parseRules = try? curryParseRules(config: args) else {
+    guard let parseRules = try? curryParseRules(config: args, logger: nil) else {
         return warnings
     }
     for name in Set(rulesArguments.flatMap { (try? args[$0].map(parseRules) ?? []) ?? [] }) {

@@ -31,6 +31,12 @@
 
 import Foundation
 
+public enum UnknownRulesMode: String, CaseIterable {
+    case error
+    case warn
+    case ignore
+}
+
 /// The indenting mode to use for #if/#endif statements
 public enum IndentMode: String, CaseIterable {
     case indent
@@ -1052,7 +1058,11 @@ public struct FormatOptions: CustomStringConvertible {
     public var languageMode: Version
     public var fileInfo: FileInfo
     public var markdownFiles: MarkdownFormattingMode
-    public var ignoreUnknownRules: Bool
+    public var unknownRules: UnknownRulesMode
+    public var ignoreUnknownRules: Bool {
+        unknownRules != .error
+    }
+
     public var timeout: TimeInterval
 
     /// Enabled rules - this is a hack used to allow rules to vary their behavior
@@ -1212,7 +1222,7 @@ public struct FormatOptions: CustomStringConvertible {
                 languageMode: Version? = nil,
                 fileInfo: FileInfo = FileInfo(),
                 markdownFiles: MarkdownFormattingMode = .ignore,
-                ignoreUnknownRules: Bool = false,
+                unknownRules: UnknownRulesMode = .error,
                 timeout: TimeInterval = 1)
     {
         self.lineAfterMarks = lineAfterMarks
@@ -1365,7 +1375,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.languageMode = languageMode ?? defaultLanguageMode(for: swiftVersion)
         self.fileInfo = fileInfo
         self.markdownFiles = markdownFiles
-        self.ignoreUnknownRules = ignoreUnknownRules
+        self.unknownRules = unknownRules
         self.timeout = timeout
     }
 

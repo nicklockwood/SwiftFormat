@@ -27,6 +27,37 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testProjectRootIsSharedByTargetedFilesAndDirectories() throws {
+        try withProjectIndexTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "struct Input {}",
+        ]) { directory in
+            let sourceDirectory = directory.appendingPathComponent("Sources/App")
+            let sourceFile = sourceDirectory.appendingPathComponent("Input.swift")
+            let fileRoot = projectRoot(for: sourceFile)
+            let directoryRoot = projectRoot(for: sourceDirectory)
+
+            XCTAssertEqual(fileRoot.url.path, directory.path)
+            XCTAssertEqual(fileRoot.kind, .swiftPackage)
+            XCTAssertEqual(directoryRoot.url.path, directory.path)
+            XCTAssertEqual(directoryRoot.kind, .swiftPackage)
+        }
+    }
+
+    func testProjectRootUsesGitRepositoryAsFallback() throws {
+        try withProjectIndexTmpDirectory([
+            ".git/config": "",
+            "Sources/App/Input.swift": "struct Input {}",
+        ]) { directory in
+            let sourceFile = directory.appendingPathComponent("Sources/App/Input.swift")
+
+            let root = projectRoot(for: sourceFile)
+
+            XCTAssertEqual(root.url.path, directory.path)
+            XCTAssertEqual(root.kind, .gitRepository)
+        }
+    }
+
     func testSourceFileIndexDecodesFunctionDeclarationFromPreviousSchema() throws {
         let data = Data("""
         {

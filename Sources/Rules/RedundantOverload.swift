@@ -12,9 +12,24 @@ public extension FormatRule {
     /// Replaces forwarding overloads with default arguments on the original declaration
     static let redundantOverload = FormatRule(
         help: "Replace forwarding overloads with default arguments.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        usesProjectContext: true
     ) { formatter in
-        let candidates = formatter.redundantOverloadCandidates()
+        let candidates = formatter.redundantOverloadCandidates().filter { candidate in
+            guard let fileURL = formatter.currentFileURL,
+                  let projectIndex = formatter.projectIndex,
+                  let function = formatter.parseFunctionDeclaration(keywordIndex: candidate.wrapper.keywordIndex),
+                  let name = function.name
+            else { return true }
+            return !projectIndex.containsFunctionReference(
+                named: name,
+                argumentLabels: function.arguments.map(\.externalLabel),
+                declaringType: candidate.wrapper.parentType?.fullyQualifiedName,
+                declaringTypeKind: candidate.wrapper.parentType?.keyword,
+                visibility: formatter.effectiveVisibility(of: candidate.wrapper),
+                visibleFrom: fileURL
+            )
+        }
 
         // A pair of overloads can each appear to default a different argument of the
         // same declaration. Applying both would introduce a new call that omits both

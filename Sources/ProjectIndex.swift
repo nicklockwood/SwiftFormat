@@ -105,6 +105,46 @@ struct SourceFileIndex: Codable, Equatable {
         }
     }
 
+    struct FunctionReference: Codable, Hashable {
+        var name: String
+        /// `nil` when the function signature isn't explicit, as with a bare name or key path.
+        var argumentLabels: [String?]?
+        /// A receiver or enclosing type that can be established without type checking.
+        var receiverType: String?
+        /// Whether an unqualified reference is known to be in global scope.
+        var isUnqualifiedGlobal: Bool
+
+        init(
+            name: String,
+            argumentLabels: [String?]?,
+            receiverType: String? = nil,
+            isUnqualifiedGlobal: Bool = false
+        ) {
+            self.name = name
+            self.argumentLabels = argumentLabels
+            self.receiverType = receiverType
+            self.isUnqualifiedGlobal = isUnqualifiedGlobal
+        }
+
+        private enum CodingKeys: CodingKey {
+            case name
+            case argumentLabels
+            case receiverType
+            case isUnqualifiedGlobal
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+            argumentLabels = try container.decodeIfPresent([String?].self, forKey: .argumentLabels)
+            receiverType = try container.decodeIfPresent(String.self, forKey: .receiverType)
+            isUnqualifiedGlobal = try container.decodeIfPresent(
+                Bool.self,
+                forKey: .isUnqualifiedGlobal
+            ) ?? false
+        }
+    }
+
     struct TypeMembers: Codable, Equatable {
         var typeName: String
         var instanceMembers: [String]
@@ -117,7 +157,7 @@ struct SourceFileIndex: Codable, Equatable {
         var canBeRenamed: Bool
     }
 
-    static let schemaVersion = 8
+    static let schemaVersion = 9
 
     var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
@@ -126,6 +166,7 @@ struct SourceFileIndex: Codable, Equatable {
     var functionDeclarations: [FunctionDeclaration]
     var typeMembers: [TypeMembers]
     var symbolDeclarations: [SymbolDeclaration]
+    var functionReferences: [FunctionReference]
 
     init(
         contentHash: String,
@@ -133,7 +174,8 @@ struct SourceFileIndex: Codable, Equatable {
         typeDeclarations: [TypeDeclaration],
         functionDeclarations: [FunctionDeclaration],
         typeMembers: [TypeMembers],
-        symbolDeclarations: [SymbolDeclaration]
+        symbolDeclarations: [SymbolDeclaration],
+        functionReferences: [FunctionReference] = []
     ) {
         self.contentHash = contentHash
         self.moduleIdentifiers = moduleIdentifiers.sorted()
@@ -141,6 +183,7 @@ struct SourceFileIndex: Codable, Equatable {
         self.functionDeclarations = functionDeclarations
         self.typeMembers = typeMembers
         self.symbolDeclarations = symbolDeclarations
+        self.functionReferences = functionReferences
     }
 
     private enum CodingKeys: CodingKey {
@@ -152,6 +195,7 @@ struct SourceFileIndex: Codable, Equatable {
         case functionDeclarations
         case typeMembers
         case symbolDeclarations
+        case functionReferences
     }
 
     init(from decoder: Decoder) throws {
@@ -173,6 +217,10 @@ struct SourceFileIndex: Codable, Equatable {
             [SymbolDeclaration].self,
             forKey: .symbolDeclarations
         ) ?? []
+        functionReferences = try container.decodeIfPresent(
+            [FunctionReference].self,
+            forKey: .functionReferences
+        ) ?? []
     }
 
     func encode(to encoder: Encoder) throws {
@@ -184,6 +232,7 @@ struct SourceFileIndex: Codable, Equatable {
         try container.encode(functionDeclarations, forKey: .functionDeclarations)
         try container.encode(typeMembers, forKey: .typeMembers)
         try container.encode(symbolDeclarations, forKey: .symbolDeclarations)
+        try container.encode(functionReferences, forKey: .functionReferences)
     }
 }
 
@@ -229,6 +278,7 @@ struct ProjectIndex {
     let fingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
     private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
+    private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
     private let memberNamesByModule: [String: MemberNamesByType]
     private let symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]]
 
@@ -236,6 +286,7 @@ struct ProjectIndex {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
         var functionDeclarationsByModule = [String: [String: [SourceFileIndex.FunctionDeclaration]]]()
+        var functionReferencesByModule = [String: [String: [SourceFileIndex.FunctionReference]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
         var symbolDeclarationsByModule = [String: [SourceFileIndex.SymbolDeclaration]]()
         for file in files.values {
@@ -247,6 +298,10 @@ struct ProjectIndex {
                 for declaration in file.functionDeclarations {
                     functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
                         .append(declaration)
+                }
+                for reference in file.functionReferences {
+                    functionReferencesByModule[moduleIdentifier, default: [:]][reference.name, default: []]
+                        .append(reference)
                 }
                 for members in file.typeMembers {
                     if !members.instanceMembers.isEmpty {
@@ -267,6 +322,7 @@ struct ProjectIndex {
         }
         self.typeVisibilities = typeVisibilities
         self.functionDeclarationsByModule = functionDeclarationsByModule
+        self.functionReferencesByModule = functionReferencesByModule
         self.memberNamesByModule = memberNamesByModule
         self.symbolDeclarationsByModule = symbolDeclarationsByModule
         let description = files.keys.sorted().compactMap { path -> String? in
@@ -298,10 +354,57 @@ struct ProjectIndex {
                 .map { "\($0.name):\($0.visibility):\($0.canBeRenamed)" }
                 .sorted()
                 .joined(separator: ",")
+            let functionReferences = file.functionReferences
+                .map { reference in
+                    let labels = reference.argumentLabels?.map { $0 ?? "_" }.joined(separator: ",") ?? "*"
+                    let receiver = reference.receiverType ?? (reference.isUnqualifiedGlobal ? "<global>" : "?")
+                    return "\(receiver).\(reference.name)(\(labels))"
+                }
+                .sorted()
+                .joined(separator: ",")
             return "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(functions):" +
-                "\(members):\(symbolDeclarations)"
+                "\(members):\(symbolDeclarations):\(functionReferences)"
         }.joined(separator: ";")
         fingerprint = computeHash(description)
+    }
+
+    /// Whether a function is used as a value in any module containing the current file.
+    func containsFunctionReference(
+        named name: String,
+        argumentLabels: [String?],
+        declaringType: String?,
+        declaringTypeKind: String?,
+        visibility: Visibility,
+        visibleFrom fileURL: URL
+    ) -> Bool {
+        let path = fileURL.standardizedFileURL.path
+        let references: [SourceFileIndex.FunctionReference]
+        if visibility <= .fileprivate {
+            references = files[path]?.functionReferences.filter { $0.name == name } ?? []
+        } else {
+            guard let moduleIdentifiers = files[path]?.moduleIdentifiers else { return false }
+            references = moduleIdentifiers.flatMap {
+                functionReferencesByModule[$0]?[name] ?? []
+            }
+        }
+        return references.contains { reference in
+            guard reference.argumentLabels == nil || reference.argumentLabels == argumentLabels else {
+                return false
+            }
+            guard let declaringType else { return true }
+            if reference.isUnqualifiedGlobal {
+                return false
+            }
+            guard let receiverType = reference.receiverType else {
+                return true
+            }
+            if receiverType == declaringType ||
+                declaringType.split(separator: ".").last.map(String.init) == receiverType
+            {
+                return true
+            }
+            return !["actor", "enum", "struct"].contains(declaringTypeKind)
+        }
     }
 
     /// Whether the given type is unambiguously internal in every module containing the current file.
@@ -628,7 +731,9 @@ func makeSourceFileIndex(
     var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
     var typeMembers = [SourceFileIndex.TypeMembers]()
     var symbolDeclarations = [SourceFileIndex.SymbolDeclaration]()
-    formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
+    let declarations = formatter.parseDeclarations()
+    let functionReferences = formatter.indexedFunctionReferences(declarations: declarations)
+    declarations.forEachRecursiveDeclaration { declaration in
         let symbolNames = formatter.namesInDeclaration(at: declaration.keywordIndex)
             ?? declaration.name.map { [$0] }
             ?? []
@@ -758,8 +863,195 @@ func makeSourceFileIndex(
         typeDeclarations: typeDeclarations,
         functionDeclarations: functionDeclarations,
         typeMembers: typeMembers,
-        symbolDeclarations: symbolDeclarations
+        symbolDeclarations: symbolDeclarations,
+        functionReferences: functionReferences
     )
+}
+
+extension Formatter {
+    /// Function-value references whose signatures can be identified without type checking.
+    func indexedFunctionReferences(declarations: [Declaration]) -> [SourceFileIndex.FunctionReference] {
+        var references = [SourceFileIndex.FunctionReference]()
+        var explicitReferenceRanges = [ClosedRange<Int>]()
+        var localDeclarations = [String: [Int]]()
+
+        forEachToken(where: { ["let", "var", "func"].contains($0.string) }) { index, _ in
+            guard declarationScope(at: index) == .local else { return }
+            namesInDeclaration(at: index)?.forEach { name in
+                localDeclarations[name, default: []].append(index)
+            }
+        }
+
+        // An explicitly qualified function value, such as `someMethod(_:)`.
+        forEach(.startOfScope("(")) { openParen, _ in
+            guard let identifierIndex = parseFunctionIdentifier(beforeStartOfScope: openParen),
+                  let closeParen = endOfScope(at: openParen)
+            else {
+                return
+            }
+            let significantTokens = tokens[(openParen + 1) ..< closeParen]
+                .filter { !$0.isSpaceOrCommentOrLinebreak }
+            var labels = [String?]()
+            var pendingLabel: Token?
+            for token in significantTokens {
+                if let labelToken = pendingLabel {
+                    guard token == .delimiter(":") else { return }
+                    labels.append(labelToken.string == "_" ? nil : labelToken.string)
+                    pendingLabel = nil
+                } else {
+                    guard token.isIdentifier || token.isKeyword else { return }
+                    pendingLabel = token
+                }
+            }
+            guard !labels.isEmpty, pendingLabel == nil else { return }
+            explicitReferenceRanges.append(openParen ... closeParen)
+            let receiver = indexedFunctionReferenceReceiver(
+                at: identifierIndex,
+                declarations: declarations
+            )
+            references.append(.init(
+                name: tokens[identifierIndex].string,
+                argumentLabels: labels,
+                receiverType: receiver.type,
+                isUnqualifiedGlobal: receiver.isGlobal
+            ))
+        }
+
+        // A bare identifier can be inferred as a function value from context, as in
+        // `values.map(transform)`. Without type information, conservatively treat any
+        // non-type identifier that isn't plainly a call or member receiver as a reference.
+        forEach(.identifier) { identifierIndex, token in
+            guard !explicitReferenceRanges.contains(where: { $0.contains(identifierIndex) }),
+                  !isTypePosition(at: identifierIndex)
+            else { return }
+            if let previousIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
+               [.keyword("let"), .keyword("var")].contains(tokens[previousIndex])
+            {
+                return
+            }
+            if let nextIndex = index(of: .nonSpaceOrComment, after: identifierIndex) {
+                guard tokens[nextIndex] != .startOfScope("("),
+                      !tokens[nextIndex].isOperator("."),
+                      tokens[nextIndex] != .delimiter(".")
+                else { return }
+            }
+            let receiver = indexedFunctionReferenceReceiver(
+                at: identifierIndex,
+                declarations: declarations
+            )
+            guard receiver.isExplicit || !localDeclarationShadowsReference(
+                named: token.string,
+                at: identifierIndex,
+                declarations: declarations,
+                localDeclarations: localDeclarations[token.string] ?? []
+            ) else { return }
+            references.append(.init(
+                name: token.string,
+                argumentLabels: nil,
+                receiverType: receiver.type,
+                isUnqualifiedGlobal: receiver.isGlobal
+            ))
+        }
+
+        // Key paths don't encode a callable signature, so conservatively protect every
+        // overload with the same name as any of their components.
+        forEach(.operator("\\", .prefix)) { backslashIndex, _ in
+            var componentIndex = backslashIndex
+            var isAfterDot = false
+            while let nextIndex = index(of: .nonSpaceOrComment, after: componentIndex) {
+                let token = tokens[nextIndex]
+                guard !token.isLinebreak else { break }
+                if token.isOperator(".") {
+                    isAfterDot = true
+                } else if isAfterDot, token.isIdentifier || token.isKeyword {
+                    references.append(.init(
+                        name: token.string,
+                        argumentLabels: nil
+                    ))
+                    isAfterDot = false
+                } else if nextIndex == index(of: .nonSpaceOrComment, after: backslashIndex),
+                          token.isIdentifier || token.isKeyword
+                {
+                    // A root type in a fully qualified key path, such as `Type` in `\Type.value`.
+                } else if token.isOperator("?") || token.isOperator("!") {
+                    // Optional chaining between key-path components.
+                } else {
+                    break
+                }
+                componentIndex = nextIndex
+            }
+        }
+
+        var seen = Set<SourceFileIndex.FunctionReference>()
+        return references.filter { seen.insert($0).inserted }
+    }
+
+    func indexedFunctionReferenceReceiver(
+        at identifierIndex: Int,
+        declarations: [Declaration]
+    ) -> (type: String?, isGlobal: Bool, isExplicit: Bool) {
+        let enclosingType = parseEnclosingType(
+            containing: identifierIndex,
+            declarations: declarations
+        )?.fullyQualifiedName
+        guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
+              tokens[dotIndex].isOperator(".") || tokens[dotIndex] == .delimiter(".")
+        else {
+            return (enclosingType, enclosingType == nil, false)
+        }
+        guard let receiverIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex) else {
+            return (nil, false, true)
+        }
+        switch tokens[receiverIndex].string {
+        case "self", "Self":
+            return (enclosingType, false, true)
+        default:
+            return (nil, false, true)
+        }
+    }
+
+    func localDeclarationShadowsReference(
+        named name: String,
+        at referenceIndex: Int,
+        declarations: [Declaration],
+        localDeclarations: [Int]
+    ) -> Bool {
+        guard let containingDeclaration = declarations.declaration(containing: referenceIndex),
+              let functionDeclaration = ([containingDeclaration] + containingDeclaration.parentDeclarations)
+              .first(where: { ["func", "init", "subscript"].contains($0.keyword) }),
+              let function = parseFunctionDeclaration(keywordIndex: functionDeclaration.keywordIndex)
+        else { return false }
+
+        if function.arguments.contains(where: { $0.internalLabel == name }) {
+            return true
+        }
+
+        var enclosingScopes = Set<Int>()
+        var scopeSearchIndex = referenceIndex
+        while let scopeIndex = startOfScope(at: scopeSearchIndex) {
+            enclosingScopes.insert(scopeIndex)
+            scopeSearchIndex = scopeIndex
+        }
+
+        for scopeIndex in enclosingScopes where tokens[scopeIndex] == .startOfScope("{") {
+            if parseClosureArguments(at: scopeIndex)?.argumentIndices.contains(where: {
+                tokens[$0].unescaped() == name
+            }) == true {
+                return true
+            }
+        }
+
+        for declarationIndex in localDeclarations
+            where declarationIndex > functionDeclaration.keywordIndex && declarationIndex < referenceIndex
+        {
+            if let declarationScopeIndex = startOfScope(at: declarationIndex),
+               enclosingScopes.contains(declarationScopeIndex)
+            {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 struct ProjectRoot: Hashable {

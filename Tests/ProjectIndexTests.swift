@@ -47,8 +47,31 @@ final class ProjectIndexTests: XCTestCase {
 
         XCTAssertEqual(index.moduleIdentifiers, ["App"])
         XCTAssertEqual(index.symbolDeclarations, [])
+        XCTAssertEqual(index.functionReferences, [])
         XCTAssertEqual(index.functionDeclarations, [
             .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
+        ])
+    }
+
+    func testSourceFileIndexExtractsFunctionValueReferences() {
+        let source = """
+        let unlabeled = someMethod(_:)
+        let labeled = Type.someMethod(value:options:)
+        let call = someMethod(1)
+        let keyPath = \\Type.someMethod
+        let inferred = values.map(otherMethod)
+        """
+
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+
+        XCTAssertEqual(index.functionReferences, [
+            .init(name: "someMethod", argumentLabels: [nil], isUnqualifiedGlobal: true),
+            .init(
+                name: "someMethod",
+                argumentLabels: ["value", "options"]
+            ),
+            .init(name: "someMethod", argumentLabels: nil),
+            .init(name: "otherMethod", argumentLabels: nil, isUnqualifiedGlobal: true),
         ])
     }
 

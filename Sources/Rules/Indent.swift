@@ -209,6 +209,11 @@ public extension FormatRule {
                         }
                         indent = prevIndent
                     }
+                    if !formatter.options.xcodeIndentation,
+                       let conditionIndent = formatter.indentForClosureInMultilineCondition(at: i)
+                    {
+                        indent = conditionIndent
+                    }
                     let stringIndent = formatter.stringBodyIndent(at: i)
                     stringBodyIndentStack[stringBodyIndentStack.count - 1] = stringIndent
                     indent += stringIndent + formatter.options.indent
@@ -423,8 +428,16 @@ public extension FormatRule {
                         i += applyIndent(ifdefIndent, at: start)
                     } else {
                         var indent = indentStack.last ?? ""
-                        if token.isSwitchCaseOrDefault,
-                           formatter.options.indentCase, !formatter.isInIfdef(at: i, scopeStack: scopeStack)
+                        if token == .endOfScope("}"),
+                           !formatter.options.xcodeIndentation,
+                           let closureStartIndex = formatter.startOfScope(at: i),
+                           let conditionIndent = formatter.indentForClosureInMultilineCondition(
+                               at: closureStartIndex
+                           )
+                        {
+                            indent = conditionIndent
+                        } else if token.isSwitchCaseOrDefault,
+                                  formatter.options.indentCase, !formatter.isInIfdef(at: i, scopeStack: scopeStack)
                         {
                             indent += formatter.options.indent
                         }
@@ -956,6 +969,42 @@ extension Formatter {
             )
         }
         return currentIndentForLine(at: firstConditionIndex)
+    }
+
+    func indentForClosureInMultilineCondition(at closureStartIndex: Int) -> String? {
+        guard let closureEndIndex = endOfScope(at: closureStartIndex) else {
+            return nil
+        }
+
+        var index = closureEndIndex
+        while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+            switch tokens[nextIndex] {
+            case .delimiter(","):
+                // Argument and collection commas do not separate conditions.
+                if let scope = currentScope(at: nextIndex),
+                   scope == .startOfScope("(") || scope == .startOfScope("[")
+                {
+                    break
+                }
+                guard let conditionStartIndex = startOfConditionalStatement(at: nextIndex),
+                      startOfScope(at: nextIndex) == startOfScope(at: conditionStartIndex),
+                      let nextConditionIndex = self.index(
+                          of: .nonSpaceOrCommentOrLinebreak,
+                          after: nextIndex
+                      ),
+                      !onSameLine(nextIndex, nextConditionIndex)
+                else { return nil }
+                return indentForConditions(after: conditionStartIndex)
+            case .startOfScope("{"):
+                return nil
+            case .keyword("else"):
+                return nil
+            default:
+                break
+            }
+            index = nextIndex
+        }
+        return nil
     }
 
     func inFunctionDeclarationWhereReturnTypeIsWrappedToStartOfLine(at i: Int) -> Bool {

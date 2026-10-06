@@ -425,6 +425,103 @@ final class CommandLineTests: XCTestCase {
 
     // MARK: cache
 
+    func testDefaultCacheLocationIsSharedByTargetedFilesAndDirectories() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "struct Input {}",
+        ]) { directory in
+            let cacheDirectory = directory.appendingPathComponent("Caches")
+            let location = CacheLocation.projectScoped(cacheDirectory)
+            let sourceDirectory = directory.appendingPathComponent("Sources/App")
+            let sourceFile = sourceDirectory.appendingPathComponent("Input.swift")
+
+            XCTAssertEqual(
+                location.url(for: projectRoot(for: sourceFile)),
+                location.url(for: projectRoot(for: sourceDirectory))
+            )
+        }
+    }
+
+    func testDefaultCacheLocationDiffersBetweenProjects() {
+        let cacheDirectory = URL(fileURLWithPath: "/Caches")
+        let firstRoot = ProjectRoot(
+            url: URL(fileURLWithPath: "/Projects/First"),
+            kind: .gitRepository
+        )
+        let secondRoot = ProjectRoot(
+            url: URL(fileURLWithPath: "/Projects/Second"),
+            kind: .gitRepository
+        )
+
+        XCTAssertNotEqual(
+            CacheLocation.projectScoped(cacheDirectory).url(for: firstRoot),
+            CacheLocation.projectScoped(cacheDirectory).url(for: secondRoot)
+        )
+    }
+
+    func testUnclassifiedProjectsShareDefaultCacheLocation() {
+        let cacheDirectory = URL(fileURLWithPath: "/Caches")
+        let firstRoot = ProjectRoot(
+            url: URL(fileURLWithPath: "/Projects/First"),
+            kind: .directory
+        )
+        let secondRoot = ProjectRoot(
+            url: URL(fileURLWithPath: "/Projects/Second"),
+            kind: .directory
+        )
+
+        XCTAssertEqual(
+            CacheLocation.projectScoped(cacheDirectory).url(for: firstRoot),
+            CacheLocation.projectScoped(cacheDirectory).url(for: secondRoot)
+        )
+    }
+
+    func testProjectScopedCacheWritesOneFilePerProject() throws {
+        try withTmpDirectory([
+            "First/Package.swift": "// Package marker",
+            "First/Sources/App/Input.swift": "struct First {}\n",
+            "Second/Package.swift": "// Package marker",
+            "Second/Sources/App/Input.swift": "struct Second {}\n",
+        ]) { directory in
+            let cacheDirectory = directory.appendingPathComponent("Caches")
+            try FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+            let inputURLs = ["First", "Second"].map {
+                directory.appendingPathComponent("\($0)/Sources/App/Input.swift")
+            }
+            CLI.print = { _, _ in }
+
+            let (_, errors) = processInput(
+                inputURLs,
+                andWriteToOutput: nil,
+                options: Options(
+                    fileOptions: .default,
+                    formatOptions: .default,
+                    rules: ["indent"]
+                ),
+                overrides: [:],
+                lineRange: nil,
+                verbose: false,
+                dryrun: false,
+                lint: false,
+                lenient: false,
+                cacheLocation: .projectScoped(cacheDirectory),
+                projectIndexMode: .disabled,
+                snapshotMode: .discover(defaultURL: nil),
+                reporter: nil
+            )
+
+            XCTAssertTrue(errors.isEmpty)
+            let cacheFiles = try FileManager.default.contentsOfDirectory(
+                at: cacheDirectory,
+                includingPropertiesForKeys: nil
+            )
+            XCTAssertEqual(cacheFiles.count, 2)
+            XCTAssertTrue(cacheFiles.allSatisfy {
+                $0.lastPathComponent.hasPrefix(projectCacheFilePrefix) && $0.pathExtension == "cache"
+            })
+        }
+    }
+
     func testHashIsFasterThanFormatting() throws {
         let sourceFile = URL(fileURLWithPath: #file)
         let source = try String(contentsOf: sourceFile, encoding: .utf8)

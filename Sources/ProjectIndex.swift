@@ -1058,6 +1058,7 @@ struct ProjectRoot: Hashable {
     enum Kind {
         case swiftPackage
         case xcodeProject
+        case gitRepository
         case directory
     }
 
@@ -1084,6 +1085,9 @@ func projectRoot(for inputURL: URL) -> ProjectRoot {
            contents.contains(where: { $0.hasSuffix(".xcodeproj") || $0.hasSuffix(".xcworkspace") })
         {
             return ProjectRoot(url: directory, kind: .xcodeProject)
+        }
+        if manager.fileExists(atPath: directory.appendingPathComponent(".git").path) {
+            return ProjectRoot(url: directory, kind: .gitRepository)
         }
         directory.deleteLastPathComponent()
     }
@@ -1169,7 +1173,7 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Se
             }
         }
         return targetsByFile
-    case .directory:
+    case .gitRepository, .directory:
         return Dictionary(uniqueKeysWithValues: fileURLs.compactMap { fileURL in
             let path = fileURL.standardizedFileURL.path
             return path.hasPrefix(rootPath + "/") ? (path, [rootPath]) : nil

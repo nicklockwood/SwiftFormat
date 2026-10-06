@@ -741,27 +741,13 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Cache path
-        var cacheURL: URL?
-        let defaultCacheFileName = "swiftformat.cache"
+        var cacheLocation = CacheLocation.disabled
         let manager = FileManager.default
-        func setDefaultCacheURL() {
-            let cacheDirectory = { () -> URL in
-                #if os(macOS)
-                    if let cachePath = NSSearchPathForDirectoriesInDomains(
-                        .cachesDirectory, .userDomainMask, true
-                    ).first {
-                        return URL(fileURLWithPath: cachePath)
-                    }
-                #endif
-                if #available(macOS 10.12, *) {
-                    return FileManager.default.temporaryDirectory
-                } else {
-                    return URL(fileURLWithPath: "/var/tmp/")
-                }
-            }().appendingPathComponent("com.charcoaldesign.swiftformat")
+        func setDefaultCacheLocation() {
+            let cacheDirectory = defaultCacheDirectory()
             do {
                 try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
-                cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
+                cacheLocation = .projectScoped(cacheDirectory)
             } catch {
                 errors.append(FormatError.writing("Failed to create cache directory at \(cacheDirectory.path)"))
             }
@@ -773,26 +759,29 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             case "ignore":
                 break
             case "clear":
-                setDefaultCacheURL()
-                if let cacheURL, manager.fileExists(atPath: cacheURL.path) {
-                    do {
-                        try manager.removeItem(at: cacheURL)
-                    } catch {
-                        errors.append(FormatError.writing("Failed to delete cache file at \(cacheURL.path)"))
+                setDefaultCacheLocation()
+                let cacheDirectory = defaultCacheDirectory()
+                if let contents = try? manager.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) {
+                    for cacheURL in contents where cacheURL.lastPathComponent == defaultCacheFileName ||
+                        (cacheURL.lastPathComponent.hasPrefix(projectCacheFilePrefix) && cacheURL.pathExtension == "cache")
+                    {
+                        do {
+                            try manager.removeItem(at: cacheURL)
+                        } catch {
+                            errors.append(FormatError.writing("Failed to delete cache file at \(cacheURL.path)"))
+                        }
                     }
                 }
             default:
-                cacheURL = try parsePath(cache, for: "--cache", in: directory)
-                guard cacheURL != nil else {
-                    throw FormatError.options("Invalid --cache value '\(cache)'")
-                }
+                var cacheURL = try parsePath(cache, for: "--cache", in: directory)
                 var isDirectory: ObjCBool = false
-                if manager.fileExists(atPath: cacheURL!.path, isDirectory: &isDirectory), isDirectory.boolValue {
-                    cacheURL = cacheURL!.appendingPathComponent(defaultCacheFileName)
+                if manager.fileExists(atPath: cacheURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                    cacheURL = cacheURL.appendingPathComponent(defaultCacheFileName)
                 }
+                cacheLocation = .explicit(cacheURL)
             }
         } else {
-            setDefaultCacheURL()
+            setDefaultCacheLocation()
         }
 
         let projectIndexMode: ProjectIndexMode
@@ -956,7 +945,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   dryrun: dryrun,
                                                   lint: lint,
                                                   lenient: lenient,
-                                                  cacheURL: cacheURL,
+                                                  cacheLocation: cacheLocation,
                                                   projectIndexMode: projectIndexMode,
                                                   snapshotMode: snapshotMode,
                                                   reporter: reporter,
@@ -1095,6 +1084,55 @@ private struct SwiftFormatCache: Codable {
     var entries = [String: CacheEntry]()
 }
 
+enum CacheLocation {
+    case disabled
+    case explicit(URL)
+    case projectScoped(URL)
+
+    func url(for root: ProjectRoot) -> URL? {
+        switch self {
+        case .disabled:
+            return nil
+        case let .explicit(url):
+            return url
+        case let .projectScoped(directory):
+            return defaultCacheURL(for: root, in: directory)
+        }
+    }
+}
+
+let defaultCacheFileName = "swiftformat.cache"
+let projectCacheFilePrefix = "swiftformat-"
+
+func defaultCacheURL(for root: ProjectRoot, in directory: URL) -> URL {
+    let name: String
+    switch root.kind {
+    case .swiftPackage, .xcodeProject, .gitRepository:
+        name = "\(projectCacheFilePrefix)\(computeHash(root.url.standardizedFileURL.path)).cache"
+    case .directory:
+        name = "\(projectCacheFilePrefix)unclassified.cache"
+    }
+    return directory.appendingPathComponent(name)
+}
+
+func defaultCacheDirectory() -> URL {
+    let baseURL: URL = {
+        #if os(macOS)
+            if let cachePath = NSSearchPathForDirectoriesInDomains(
+                .cachesDirectory, .userDomainMask, true
+            ).first {
+                return URL(fileURLWithPath: cachePath)
+            }
+        #endif
+        if #available(macOS 10.12, *) {
+            return FileManager.default.temporaryDirectory
+        } else {
+            return URL(fileURLWithPath: "/var/tmp/")
+        }
+    }()
+    return baseURL.appendingPathComponent("com.charcoaldesign.swiftformat")
+}
+
 func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, lineRange: ClosedRange<Int>?,
                 verbose: Bool, lint: Bool, reporter: Reporter?, logger: Logger? = nil,
                 context: FormattingContext = .empty) throws -> [Token]
@@ -1153,7 +1191,7 @@ func processInput(_ inputURLs: [URL],
                   dryrun: Bool,
                   lint: Bool,
                   lenient _: Bool,
-                  cacheURL: URL?,
+                  cacheLocation: CacheLocation,
                   projectIndexMode: ProjectIndexMode,
                   snapshotMode: SnapshotMode,
                   reporter: Reporter?,
@@ -1206,10 +1244,14 @@ func processInput(_ inputURLs: [URL],
         return ((0, 0, 0, 0), [error])
     }
 
-    // Load cache
-    let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
-    var cache: SwiftFormatCache?
-    if let cacheURL {
+    // Load the explicit cache, or one default cache for each project represented by the inputs.
+    let projectRoots = Set(inputURLs.map(projectRoot(for:)))
+    let cacheURLsByRoot = Dictionary(uniqueKeysWithValues: projectRoots.compactMap { root in
+        cacheLocation.url(for: root).map { (root, $0.standardizedFileURL) }
+    })
+    var caches = [URL: SwiftFormatCache]()
+    for cacheURL in Set(cacheURLsByRoot.values) {
+        var cache: SwiftFormatCache?
         if let data = try? Data(contentsOf: cacheURL) {
             cache = try? JSONDecoder().decode(SwiftFormatCache.self, from: data)
             if cache?.version != SwiftFormatCache.currentVersion {
@@ -1221,14 +1263,23 @@ func processInput(_ inputURLs: [URL],
                 })
             }
         }
-        cache = cache ?? SwiftFormatCache()
+        caches[cacheURL] = cache ?? SwiftFormatCache()
     }
-    func cacheKey(for inputURL: URL) -> String {
+    func cacheURL(for root: ProjectRoot) -> URL? {
+        cacheURLsByRoot[root]
+    }
+    func cacheURL(for inputURL: URL) -> URL? {
+        let inputPath = inputURL.standardizedFileURL.path
+        let root = projectRoots
+            .filter { inputPath == $0.url.path || inputPath.hasPrefix($0.url.path + "/") }
+            .max { $0.url.path.count < $1.url.path.count }
+        return root.flatMap(cacheURL(for:))
+    }
+    func cacheKey(for inputURL: URL, cacheURL: URL) -> String {
         var path = inputURL.standardizedFileURL.path
-        if let cacheDirectory {
-            let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
-            path = String(path[commonPrefix.endIndex ..< path.endIndex])
-        }
+        let cacheDirectory = cacheURL.deletingLastPathComponent().absoluteURL
+        let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
+        path = String(path[commonPrefix.endIndex ..< path.endIndex])
         return path
     }
 
@@ -1313,9 +1364,8 @@ func processInput(_ inputURLs: [URL],
 
     // Build a complete, immutable project index before any file is formatted.
     let projectIndex: ProjectIndex? = requiresProjectIndex ? {
-        let roots = Set(inputURLs.map(projectRoot(for:)))
         var discoveredFilesByPath = [String: (URL, ProjectRoot)]()
-        for root in roots {
+        for root in projectRoots {
             for fileURL in discoverSourceFiles(in: root) {
                 let path = fileURL.path
                 if let existing = discoveredFilesByPath[path],
@@ -1331,22 +1381,24 @@ func processInput(_ inputURLs: [URL],
         let moduleIdentifiersByRoot = discoveredFilesByRoot.mapValues { files in
             moduleIdentifiers(for: files.map(\.0), in: files[0].1)
         }
-        let cachedEntries = cache?.entries ?? [:]
         let indexQueue = DispatchQueue(label: "swiftformat.project-index")
         let indexGroup = DispatchGroup()
         let workerQueue = DispatchQueue.global(qos: .userInitiated)
         var indexedFiles = [(String, SourceFileIndex)]()
-        var updatedIndexEntries = [(String, SourceFileIndex)]()
+        var updatedIndexEntries = [(URL, String, SourceFileIndex)]()
         for (fileURL, root) in discoveredFiles {
             indexGroup.enter()
             workerQueue.async {
                 defer { indexGroup.leave() }
                 guard let source = try? String(contentsOf: fileURL) else { return }
                 let sourceHash = computeHash(source)
-                let key = cacheKey(for: fileURL)
+                let rootCacheURL = cacheURL(for: root)
+                let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
                 let modules = moduleIdentifiersByRoot[root]?[fileURL.path] ?? []
                 let sourceIndex: SourceFileIndex
-                if let cached = cachedEntries[key]?.sourceIndex,
+                if let rootCacheURL,
+                   let key,
+                   let cached = caches[rootCacheURL]?.entries[key]?.sourceIndex,
                    cached.schemaVersion == SourceFileIndex.schemaVersion,
                    cached.contentHash == sourceHash,
                    cached.moduleIdentifiers == modules.sorted()
@@ -1357,16 +1409,19 @@ func processInput(_ inputURLs: [URL],
                 }
                 indexQueue.sync {
                     indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
-                    updatedIndexEntries.append((key, sourceIndex))
+                    if let rootCacheURL, let key {
+                        updatedIndexEntries.append((rootCacheURL, key, sourceIndex))
+                    }
                 }
             }
         }
         indexGroup.wait()
-        if cache != nil {
-            for (key, sourceIndex) in updatedIndexEntries {
-                var entry = cache!.entries[key] ?? CacheEntry()
+        for (cacheURL, key, sourceIndex) in updatedIndexEntries {
+            if var cache = caches[cacheURL] {
+                var entry = cache.entries[key] ?? CacheEntry()
                 entry.sourceIndex = sourceIndex
-                cache!.entries[key] = entry
+                cache.entries[key] = entry
+                caches[cacheURL] = cache
             }
         }
         return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
@@ -1428,7 +1483,8 @@ func processInput(_ inputURLs: [URL],
         let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
         // Check cache
         let rules = options.rules ?? defaultRules
-        let cachePrefix: String = cache == nil ? "" : {
+        let fileCacheURL = cacheURL(for: inputURL)
+        let cachePrefix: String = fileCacheURL == nil ? "" : {
             let usesProjectContext = rules.contains(where: { FormatRules.byName[$0]?.usesProjectContext == true })
             let projectFingerprint = usesProjectContext ? projectIndex.map {
                 "project-index:\($0.fingerprint)"
@@ -1436,11 +1492,15 @@ func processInput(_ inputURLs: [URL],
             let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))\(projectFingerprint)")
             return "\(version);\(configHash);"
         }()
-        let cacheKey = cacheKey(for: inputURL)
+        let cacheKey = fileCacheURL.map { cacheKey(for: inputURL, cacheURL: $0) }
         do {
             var cacheHash: String?
             var sourceHash: String?
-            if let cacheEntry = cache?.entries[cacheKey]?.formatting, cacheEntry.hasPrefix(cachePrefix) {
+            if let fileCacheURL,
+               let cacheKey,
+               let cacheEntry = caches[fileCacheURL]?.entries[cacheKey]?.formatting,
+               cacheEntry.hasPrefix(cachePrefix)
+            {
                 cacheHash = String(cacheEntry[cachePrefix.endIndex...])
                 sourceHash = computeHash(input)
             }
@@ -1548,7 +1608,7 @@ func processInput(_ inputURLs: [URL],
                     sourceHash = nil
                 }
             }
-            let cacheValue = cache.map { _ in
+            let cacheValue = fileCacheURL.map { _ in
                 // Only bother computing this if cache is enabled
                 cachePrefix + (sourceHash ?? computeHash(output))
             }
@@ -1577,10 +1637,12 @@ func processInput(_ inputURLs: [URL],
                 // No changes needed
                 return {
                     outputFlags.filesChecked += 1
-                    if cache != nil {
-                        var entry = cache!.entries[cacheKey] ?? CacheEntry()
+                    if let fileCacheURL, let cacheKey {
+                        var cache = caches[fileCacheURL] ?? SwiftFormatCache()
+                        var entry = cache.entries[cacheKey] ?? CacheEntry()
                         entry.formatting = cacheValue
-                        cache!.entries[cacheKey] = entry
+                        cache.entries[cacheKey] = entry
+                        caches[fileCacheURL] = cache
                     }
                     showConfigurationWarnings(options)
                 }
@@ -1600,8 +1662,9 @@ func processInput(_ inputURLs: [URL],
                     outputFlags.filesChecked += 1
                     outputFlags.filesFailed += 1
                     outputFlags.filesWritten += 1
-                    if cache != nil {
-                        var entry = cache!.entries[cacheKey] ?? CacheEntry()
+                    if let fileCacheURL, let cacheKey {
+                        var cache = caches[fileCacheURL] ?? SwiftFormatCache()
+                        var entry = cache.entries[cacheKey] ?? CacheEntry()
                         entry.formatting = cacheValue
                         if outputURL == inputURL {
                             entry.sourceIndex = makeSourceFileIndex(
@@ -1609,7 +1672,8 @@ func processInput(_ inputURLs: [URL],
                                 moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? [])
                             )
                         }
-                        cache!.entries[cacheKey] = entry
+                        cache.entries[cacheKey] = entry
+                        caches[fileCacheURL] = cache
                     }
                     showConfigurationWarnings(options)
                 }
@@ -1670,15 +1734,18 @@ func processInput(_ inputURLs: [URL],
         }
     }
     // Save cache
-    if outputFlags.filesChecked > 0, let cache, let cacheURL, let cacheDirectory {
-        do {
-            let data = try JSONEncoder().encode(cache)
-            try data.write(to: cacheURL, options: .atomic)
-        } catch {
-            if FileManager.default.fileExists(atPath: cacheDirectory.path) {
-                errors.append(FormatError.writing("Failed to write cache file at \(cacheURL.path)"))
-            } else {
-                errors.append(FormatError.reading("Specified cache file directory does not exist: \(cacheDirectory.path)"))
+    if outputFlags.filesChecked > 0 {
+        for (cacheURL, cache) in caches {
+            let cacheDirectory = cacheURL.deletingLastPathComponent()
+            do {
+                let data = try JSONEncoder().encode(cache)
+                try data.write(to: cacheURL, options: .atomic)
+            } catch {
+                if FileManager.default.fileExists(atPath: cacheDirectory.path) {
+                    errors.append(FormatError.writing("Failed to write cache file at \(cacheURL.path)"))
+                } else {
+                    errors.append(FormatError.reading("Specified cache file directory does not exist: \(cacheDirectory.path)"))
+                }
             }
         }
     }

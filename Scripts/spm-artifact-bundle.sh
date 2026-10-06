@@ -2,13 +2,15 @@
 
 set -e
 
-# By default, parses the current version from `Sources/SwiftFormat.swift`.
-# Can be overridden by passing in custom version number as argument, e.g.
-# `./Scripts/spm-artifact-bundle.sh VERSION_NUMBER`.
-VERSION=${1:-$(./Scripts/get-version.sh)}
-MAC_EXECUTABLE=${2:-CommandLineTool/swiftformat}
-LINUX_EXECUTABLE=${3:-CommandLineTool/swiftformat_linux}
-LINUX_AARCH64_EXECUTABLE=${4:-CommandLineTool/swiftformat_linux_aarch64}
+# Use binaries built for the release, rather than files checked into the repository.
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 VERSION MAC_EXECUTABLE LINUX_EXECUTABLE LINUX_AARCH64_EXECUTABLE" >&2
+    exit 1
+fi
+VERSION=$1
+MAC_EXECUTABLE=$2
+LINUX_EXECUTABLE=$3
+LINUX_AARCH64_EXECUTABLE=$4
 
 ARTIFACT_BUNDLE=swiftformat.artifactbundle
 INFO_TEMPLATE=Scripts/spm-artifact-bundle-info.template

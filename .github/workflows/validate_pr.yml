@@ -29,4 +29,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Lint
-        run: CommandLineTool/swiftformat . --cache ignore --lint
+        run: ./format.sh --lint

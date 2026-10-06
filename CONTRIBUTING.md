@@ -145,7 +145,6 @@ This is relevant only to maintainers:
 Run `./Scripts/prepare_release.sh VERSION_NUMBER`. This script:
 
 * Updates version number in SwiftFormat.swift + 3 targets
-* Updates SwiftFormat.podspec.json
 * Creates a placeholder entry in CHANGELOG.md
 * Run tests and ensure they pass
 * Archives SwiftFormat (Command Line Tool)
@@ -157,4 +156,3 @@ Then complete the following steps manually:
 * Tag commit and push to main
 * Publish a new release
   * All binaries are built and uploaded to the release automatically
-* pod trunk push --allow-warnings

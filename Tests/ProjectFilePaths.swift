@@ -25,9 +25,6 @@ let allRuleTestFiles = allSwiftFiles(inDirectory: "Tests/Rules")
 let changeLogURL =
     projectDirectory.appendingPathComponent("CHANGELOG.md")
 
-let podspecURL =
-    projectDirectory.appendingPathComponent("SwiftFormat.podspec.json")
-
 let rulesURL =
     projectDirectory.appendingPathComponent("Rules.md")
 

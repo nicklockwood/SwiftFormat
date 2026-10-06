@@ -154,8 +154,6 @@ $ cd SwiftFormat
 $ swift build -c release
 ```
 
-If you are installing SwiftFormat into your project directory, you can use [CocoaPods](https://cocoapods.org/) on macOS to automatically install the swiftformat binary along with your other pods - see the Xcode build phase instructions below for details.
-
 Another option is to include the binary artifactbundle in your `Package.swift`:
 
 ```swift
@@ -328,31 +326,6 @@ You can also use `swift run -c release --package-path BuildTools swiftformat "$S
 **NOTE:** You may wish to check BuildTools/Package.swift into your source control so that the version used by your run-script phase is kept in version control. It is recommended to add the following to your .gitignore file: `BuildTools/.build` and `BuildTools/.swiftpm`.
 
 **NOTE (2):** If you are using Xcode 15 or later, make sure that the `ENABLE_USER_SCRIPT_SANDBOXING` (aka "User Script Sandboxing") option is set to NO, otherwise SwiftFormat won't be able to run correctly.
-
-### Using CocoaPods
-
-#### 1) Add the SwiftFormat CLI to your Podfile
-
-1. Add the `swiftformat` binary to your project directory via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
-
-    ```ruby
-    pod 'SwiftFormat/CLI', '~> 0.63.1'
-    ```
-
-**NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
-
-**NOTE (2):** When installing this way, GateKeeper may block swiftformat from running until you open it manually the first time by right-clicking in the Finder and selecting "Open".
-
-#### 2) Add a Build phase to your app target
-
-1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
-2. Add a `New Run Script Phase` by clicking the little plus icon in the top left
-3. Uncheck the `Based on dependency analysis` checkbox
-4. Drag the new `Run Script` phase **above** the `Compile Sources` phase, expand it and paste the following script:
-
-    ```bash
-    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat" "$SRCROOT"
-    ```
 
 ### Alternative: Locally installed SwiftFormat
 
@@ -1158,7 +1131,7 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*
 
-> A. Yes, the SwiftFormat framework can be included in an app or test target, and used for many kinds of parsing and processing of Swift source code besides formatting. The SwiftFormat framework is available as a [CocoaPod](https://cocoapods.org/pods/SwiftFormat) for easy integration.
+> A. Yes, the SwiftFormat framework can be included in an app or test target, and used for many kinds of parsing and processing of Swift source code besides formatting. The SwiftFormat library is available via Swift Package Manager.
 
 *Q. How to create own rule?*
 

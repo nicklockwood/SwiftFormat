@@ -388,12 +388,6 @@ final class MetadataTests: XCTestCase {
                       "CHANGELOG.md does not include correct link for latest release")
     }
 
-    func testLatestVersionInPodspec() throws {
-        let podspec = try String(contentsOf: podspecURL, encoding: .utf8)
-        XCTAssertTrue(podspec.contains("\"version\": \"\(SwiftFormat.version)\""), "Podspec version does not match latest release")
-        XCTAssertTrue(podspec.contains("\"tag\": \"\(SwiftFormat.version)\""), "Podspec tag does not match latest release")
-    }
-
     func testVersionConstantUpdated() {
         XCTAssertEqual(SwiftFormat.version, swiftFormatVersion)
     }

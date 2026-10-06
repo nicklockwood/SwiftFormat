@@ -2334,9 +2334,15 @@ extension Formatter {
                    let endOfBody = self.index(of: .nonSpace, before: endOfScope),
                    startOfBody <= endOfBody
                 {
-                    body = parseDeclarations(in: Range(startOfBody ... endOfBody))
+                    body = parseDeclarations(
+                        in: Range(startOfBody ... endOfBody),
+                        _useForEachToken: _useForEachToken
+                    )
                 } else {
-                    body = parseDeclarations(in: (bodyOpenBrace + 1) ..< endOfScope)
+                    body = parseDeclarations(
+                        in: (bodyOpenBrace + 1) ..< endOfScope,
+                        _useForEachToken: _useForEachToken
+                    )
                 }
 
                 return TypeDeclaration(
@@ -2358,9 +2364,15 @@ extension Formatter {
                    let endOfBody = self.index(of: .nonSpace, before: endOfScope),
                    startOfBody <= endOfBody
                 {
-                    body = parseDeclarations(in: Range(startOfBody ... endOfBody))
+                    body = parseDeclarations(
+                        in: Range(startOfBody ... endOfBody),
+                        _useForEachToken: _useForEachToken
+                    )
                 } else {
-                    body = parseDeclarations(in: (endOfLine(at: declaration.keywordIndex) + 1) ..< endOfScope)
+                    body = parseDeclarations(
+                        in: (endOfLine(at: declaration.keywordIndex) + 1) ..< endOfScope,
+                        _useForEachToken: _useForEachToken
+                    )
                 }
 
                 return ConditionalCompilationDeclaration(

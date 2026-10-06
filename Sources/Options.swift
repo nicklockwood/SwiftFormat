@@ -1006,6 +1006,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveAcronyms: Set<String>
     public var acronymVisibility: Visibility
     public var typoVisibility: Visibility
+    public var overloadVisibility: Visibility
     public var typos: [String: String]
     public var ignoredTypos: Set<String>
     public var indentBlankLines: Bool
@@ -1174,6 +1175,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preserveAcronyms: Set<String> = [],
                 acronymVisibility: Visibility = .internal,
                 typoVisibility: Visibility = .fileprivate,
+                overloadVisibility: Visibility = .internal,
                 typos: [String: String] = [:],
                 ignoredTypos: Set<String> = [],
                 indentBlankLines: Bool = false,
@@ -1327,6 +1329,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveAcronyms = preserveAcronyms
         self.acronymVisibility = acronymVisibility
         self.typoVisibility = typoVisibility
+        self.overloadVisibility = overloadVisibility
         self.typos = typos
         self.ignoredTypos = ignoredTypos
         self.indentBlankLines = indentBlankLines

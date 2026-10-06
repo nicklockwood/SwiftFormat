@@ -1317,6 +1317,19 @@ struct _Descriptors {
             "private": .private,
         ]
     )
+    let overloadVisibility = OptionDescriptor(
+        argumentName: "overload-visibility",
+        displayName: "Overload Visibility",
+        help: "Remove redundant overloads at or below this visibility threshold:",
+        keyPath: \.overloadVisibility,
+        options: [
+            "public": .public,
+            "package": .package,
+            "internal": .internal,
+            "fileprivate": .fileprivate,
+            "private": .private,
+        ]
+    )
     let typos = OptionDescriptor(
         argumentName: "typos",
         displayName: "Custom Typos",

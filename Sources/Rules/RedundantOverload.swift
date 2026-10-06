@@ -12,8 +12,8 @@ public extension FormatRule {
     /// Replaces forwarding overloads with default arguments on the original declaration
     static let redundantOverload = FormatRule(
         help: "Replace forwarding overloads with default arguments.",
-        disabledByDefault: true,
-        usesProjectContext: true
+        usesProjectContext: true,
+        options: ["overload-visibility"]
     ) { formatter in
         let candidates = formatter.redundantOverloadCandidates().filter { candidate in
             guard let fileURL = formatter.currentFileURL,
@@ -136,7 +136,9 @@ extension Formatter {
                 typeDeclaration.body.filter { $0.keyword == "func" }
             }
 
-            for wrapper in functions where !declarationIsObjectiveC(wrapper) {
+            for wrapper in functions where !declarationIsObjectiveC(wrapper) &&
+                effectiveVisibility(of: wrapper) <= options.overloadVisibility
+            {
                 let matchingFunctions = functions.filter { target in
                     target !== wrapper && defaultArgumentMatch(
                         wrapper: wrapper,
@@ -163,7 +165,9 @@ extension Formatter {
                     }
                 }
 
-            for wrapper in extensionFunctions where !declarationIsObjectiveC(wrapper) {
+            for wrapper in extensionFunctions where !declarationIsObjectiveC(wrapper) &&
+                effectiveVisibility(of: wrapper) <= options.overloadVisibility
+            {
                 let matchingCases = enumCases.filter { enumCase in
                     defaultArgumentMatch(
                         wrapper: wrapper,

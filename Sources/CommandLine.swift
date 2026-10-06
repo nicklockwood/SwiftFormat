@@ -1292,7 +1292,7 @@ func processInput(_ inputURLs: [URL],
             withInputURLs: inputURLs,
             options: options,
             concurrent: !verbose,
-            logger: { print($0, as: .info) }
+            logger: Logger(print: print)
         ) { inputURL, _, options in
             guard inputURL.pathExtension != "md" else { return {} }
             guard let input = try? String(contentsOf: inputURL) else {

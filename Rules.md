@@ -68,6 +68,7 @@
 * [redundantNilInit](#redundantNilInit)
 * [redundantObjc](#redundantObjc)
 * [redundantOptionalBinding](#redundantOptionalBinding)
+* [redundantOverload](#redundantOverload)
 * [redundantParens](#redundantParens)
 * [redundantPattern](#redundantPattern)
 * [redundantPublic](#redundantPublic)
@@ -150,7 +151,6 @@
 * [privateSwiftUIDynamicProperties](#privateSwiftUIDynamicProperties)
 * [propertyTypes](#propertyTypes)
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
-* [redundantOverload](#redundantOverload)
 * [redundantSendable](#redundantSendable)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
@@ -3066,6 +3066,10 @@ Option | Description
 ## redundantOverload
 
 Replace forwarding overloads with default arguments.
+
+Option | Description
+--- | ---
+`--overload-visibility` | Remove redundant overloads at or below this visibility threshold: "public", "package", "internal" (default), "fileprivate" or "private"
 
 <details>
 <summary>Examples</summary>

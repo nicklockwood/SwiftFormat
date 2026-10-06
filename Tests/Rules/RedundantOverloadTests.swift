@@ -544,6 +544,94 @@ final class RedundantOverloadTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantOverload)
     }
 
+    func testDoesNotReplacePublicOverloadByDefault() {
+        let input = """
+        public struct Loader {
+            public func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            public func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantOverload)
+    }
+
+    func testReplacesPublicOverloadWithPublicVisibilityOption() {
+        let input = """
+        public struct Loader {
+            public func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            public func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let output = """
+        public struct Loader {
+            public func load(path: String, timeout: Double = 30) {
+                print(path, timeout)
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .redundantOverload,
+            options: FormatOptions(overloadVisibility: .public)
+        )
+    }
+
+    func testFileprivateVisibilityOptionExcludesInternalOverload() {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .redundantOverload,
+            options: FormatOptions(overloadVisibility: .fileprivate)
+        )
+    }
+
+    func testPrivateVisibilityOptionIncludesPrivateOverload() {
+        let input = """
+        private struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let output = """
+        private struct Loader {
+            func load(path: String, timeout: Double = 30) {
+                print(path, timeout)
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: .redundantOverload,
+            options: FormatOptions(overloadVisibility: .private)
+        )
+    }
+
     func testDoesNotReplaceImplicitlyPrivateOverloadWithExplicitlyPrivateMethod() {
         let input = """
         private extension Loader {
@@ -626,6 +714,25 @@ final class RedundantOverloadTests: XCTestCase {
             rule: .redundantOverload,
             options: FormatOptions(swiftVersion: "5.1"),
             exclude: [.emptyBraces, .emptyExtensions]
+        )
+    }
+
+    func testDoesNotReplacePublicEnumFactoryByDefault() {
+        let input = """
+        public enum Result<Value> {
+            case success(value: Value, cached: Bool)
+        }
+
+        public extension Result {
+            static func success(value: Value) -> Self {
+                .success(value: value, cached: false)
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .redundantOverload,
+            options: FormatOptions(swiftVersion: "5.1")
         )
     }
 

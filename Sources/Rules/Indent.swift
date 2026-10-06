@@ -1003,9 +1003,15 @@ extension Formatter {
         // an additional indentation to the lines at the same indention scope
         // after this line.
         let endOfLine = endOfLine(at: i)
-        switch token(at: endOfLine - 1) {
+        // Defer until the linebreak before the next line of code
+        guard let nextIndex = index(of: .nonSpace, after: endOfLine),
+              !tokens[nextIndex].isLinebreak, !tokens[nextIndex].isComment
+        else {
+            return false
+        }
+        switch last(.nonSpaceOrCommentOrLinebreak, before: endOfLine + 1) {
         case .keyword("return")?, .operator("=", .infix)?:
-            let endOfNextLine = self.endOfLine(at: endOfLine + 1)
+            let endOfNextLine = self.endOfLine(at: nextIndex)
             switch last(.nonSpaceOrCommentOrLinebreak, before: endOfNextLine) {
             case .operator(_, .infix)?, .delimiter(",")?:
                 return false
@@ -1013,7 +1019,7 @@ extension Formatter {
                 return !options.xcodeIndentation
             default:
                 return lastIndex(of: .startOfScope,
-                                 in: i ..< endOfNextLine) == nil
+                                 in: nextIndex ..< endOfNextLine) == nil
             }
         default:
             return false

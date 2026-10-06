@@ -1115,11 +1115,12 @@ extension Formatter {
             index = indexOfLastSignificantKeyword(at: index, excluding: ["where"]) ?? index
         }
 
-        if tokens[index] == .keyword("case"), let i = self.index(
-            of: .nonSpaceOrCommentOrLinebreak,
-            before: index,
-            if: { $0 != .delimiter(",") }
-        ) {
+        if tokens[index] == .keyword("case"),
+           let i = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
+        {
+            if tokens[i] == .delimiter(",") {
+                return startOfConditionalStatement(at: i) ?? index
+            }
             index = i
         }
 
@@ -1131,8 +1132,10 @@ extension Formatter {
                 return nil
             }
             switch tokens[prevIndex] {
+            case .keyword("case"):
+                return startOfConditionalStatement(at: prevIndex)
             case let .keyword(name) where
-                ["if", "guard", "while", "for", "case", "catch"].contains(name):
+                ["if", "guard", "while", "for", "catch"].contains(name):
                 return prevIndex
             case .delimiter(","):
                 return startOfConditionalStatement(at: prevIndex)

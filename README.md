@@ -21,7 +21,7 @@ Table of Contents
     - [Via Applescript](#via-applescript)
     - [VSCode plugin](#vscode-plugin)
     - [Sublime Text plugin](#sublime-text-plugin)
-    - [Nova plugin](nova-plugin)
+    - [Nova plugin](#nova-plugin)
     - [Git pre-commit hook](#git-pre-commit-hook)
     - [GitHub Actions](#github-actions)
     - [On CI using Danger](#on-ci-using-danger)

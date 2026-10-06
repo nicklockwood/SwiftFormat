@@ -133,6 +133,21 @@ public struct Logger {
 @available(*, deprecated, message: "Use Logger instead")
 public typealias LegacyLogger = (String) -> Void
 
+private final class EnumerationCompletionBlocks: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "swiftformat.enumeration.completion-blocks")
+    private var blocks = [() throws -> Void]()
+
+    func append(_ block: @escaping () throws -> Void) {
+        queue.sync {
+            blocks.append(block)
+        }
+    }
+
+    var all: [() throws -> Void] {
+        queue.sync { blocks }
+    }
+}
+
 /// Enumerate all Swift files at the specified location and (optionally) calculate an output file URL for each.
 /// Ignores the file if any of the excluded file URLs is a prefix of the input file URL.
 ///
@@ -158,9 +173,9 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
     ]
 
     let group = DispatchGroup()
-    var completionBlocks = [() throws -> Void]()
+    let completionBlocks = EnumerationCompletionBlocks()
     let completionQueue = DispatchQueue(label: "swiftformat.enumeration")
-    func onComplete(_ block: @escaping () throws -> Void) {
+    @Sendable func onComplete(_ block: @escaping () throws -> Void) {
         completionQueue.async(group: group) {
             completionBlocks.append(block)
         }
@@ -168,7 +183,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
 
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
-    func resolveInputURL(_ inputURL: URL, options: Options) -> (URL, URLResourceValues, Options)? {
+    @Sendable func resolveInputURL(_ inputURL: URL, options: Options) -> (URL, URLResourceValues, Options)? {
         let fileOptions = options.fileOptions ?? .default
         let inputURL = inputURL.standardizedFileURL
         if options.shouldSkipFile(inputURL) {
@@ -217,9 +232,9 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
         }
     }
 
-    func enumerate(inputURL: URL,
-                   outputURL: URL?,
-                   options: Options)
+    @Sendable func enumerate(inputURL: URL,
+                             outputURL: URL?,
+                             options: Options)
     {
         assert(options.formatOptions != nil)
         guard let (inputURL, resourceValues, options) = resolveInputURL(inputURL, options: options) else {
@@ -298,7 +313,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
     group.wait()
 
     var errors = [Error]()
-    for block in completionBlocks {
+    for block in completionBlocks.all {
         do {
             try block()
         } catch {
@@ -737,6 +752,7 @@ func applyRules(
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
+    let rulesToApply = rules
     let timeout = options.timeout + TimeInterval(originalTokens.count) / 1000
     var changes = [Formatter.Change]()
     var lastChanges = [Formatter.Change]()
@@ -746,7 +762,7 @@ func applyRules(
                                   logger: logger, context: context)
         let progress = RuleProgress()
         queue.async(group: group) {
-            for (index, rule) in rules.enumerated() {
+            for (index, rule) in rulesToApply.enumerated() {
                 progress.index = index
                 rule.apply(with: formatter)
             }

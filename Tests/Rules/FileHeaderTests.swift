@@ -801,7 +801,7 @@ private func withTempProjectFile(fn: (URL) -> Void) throws {
 
     let url = URL(fileURLWithPath: directory).appendingPathComponent(prefix + ".swift")
 
-    FileManager.default.createFile(atPath: url.path, contents: nil)
+    _ = FileManager.default.createFile(atPath: url.path, contents: nil)
     fn(url)
     try FileManager.default.removeItem(at: url)
 }

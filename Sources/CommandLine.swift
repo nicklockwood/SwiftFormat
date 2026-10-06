@@ -34,6 +34,57 @@ import Foundation
 /// Public interface for the SwiftFormat command-line functions
 public enum CLI {}
 
+private final class StdinProcessingState: @unchecked Sendable {
+    enum Status {
+        case idle, started, finished(ExitCode)
+    }
+
+    private let queue = DispatchQueue(label: "swiftformat.stdin-state")
+    private var _input: String?
+    private var _status = Status.idle
+
+    var input: String? {
+        queue.sync { _input }
+    }
+
+    var status: Status {
+        queue.sync { _status }
+    }
+
+    func append(_ line: String) {
+        queue.sync {
+            _input = (_input ?? "") + line
+        }
+    }
+
+    func setStatus(_ status: Status) {
+        queue.sync {
+            _status = status
+        }
+    }
+}
+
+private final class ProjectIndexResults: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "swiftformat.project-index-results")
+    private var _indexedFiles = [(String, SourceFileIndex)]()
+    private var _updatedEntries = [(String, SourceFileIndex)]()
+
+    func append(filePath: String, index: SourceFileIndex, cacheKey: String) {
+        queue.sync {
+            _indexedFiles.append((filePath, index))
+            _updatedEntries.append((cacheKey, index))
+        }
+    }
+
+    var indexedFiles: [(String, SourceFileIndex)] {
+        queue.sync { _indexedFiles }
+    }
+
+    var updatedEntries: [(String, SourceFileIndex)] {
+        queue.sync { _updatedEntries }
+    }
+}
+
 public extension CLI {
     /// Output type for printed content
     enum OutputType {
@@ -808,7 +859,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             projectIndexMode = .auto
         }
 
-        func printRunningMessage() {
+        @Sendable func printRunningMessage() {
             print("Running SwiftFormat...", as: .info)
             if lint {
                 print("(lint mode - no files will be changed.)", as: .info)
@@ -817,35 +868,37 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
         }
 
-        enum Status {
-            case idle, started, finished(ExitCode)
-        }
-
-        var input: String?
-        var status = Status.idle
-        func processFromStdin() {
-            status = .started
+        let stdinOptions = options
+        let stdinArgs = args
+        let stdinVerbose = verbose
+        let stdinUseStdout = useStdout
+        let stdinLenient = lenient
+        let stdinStrict = strict
+        let stdinState = StdinProcessingState()
+        @Sendable func processFromStdin() {
+            stdinState.setStatus(.started)
             while let line = CLI.readLine() {
-                input = (input ?? "") + line
+                stdinState.append(line)
             }
+            let input = stdinState.input
             guard let input else {
-                status = .finished(.ok)
+                stdinState.setStatus(.finished(.ok))
                 return
             }
             do {
-                var options = options
-                if args["infer-options"] != nil {
+                var options = stdinOptions
+                if stdinArgs["infer-options"] != nil {
                     let tokens = tokenize(input)
                     options.formatOptions = inferFormatOptions(from: tokens)
                     try serializeOptions(options, to: outputURL)
-                    status = .finished(.ok)
+                    stdinState.setStatus(.finished(.ok))
                 } else {
                     printRunningMessage()
                     if let stdinURL = options.formatOptions?.fileInfo.filePath.map(URL.init(fileURLWithPath:)) {
                         try gatherOptions(&options, for: stdinURL, with: logger)
                         if options.shouldSkipFile(stdinURL) {
                             print(input, as: .raw)
-                            status = .finished(.ok)
+                            stdinState.setStatus(.finished(.ok))
                             return
                         }
 
@@ -864,10 +917,10 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                     }
                     let outputTokens = try applyRules(
                         input, options: options, lineRange: lineRange,
-                        verbose: verbose, lint: lint, reporter: reporter, logger: logger
+                        verbose: stdinVerbose, lint: lint, reporter: reporter, logger: logger
                     )
                     let output = sourceCode(for: outputTokens)
-                    if let outputURL, !useStdout {
+                    if let outputURL, !stdinUseStdout {
                         if !dryrun, (try? String(contentsOf: outputURL)) != output {
                             try write(output, to: outputURL)
                         }
@@ -889,22 +942,22 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                     }
                     let exitCode: ExitCode
                     if lint, output != input {
-                        print("Source input did not pass lint check.", as: lenient ? .warning : .error)
-                        exitCode = lenient ? .ok : .lintFailure
-                    } else if strict, output != input {
+                        print("Source input did not pass lint check.", as: stdinLenient ? .warning : .error)
+                        exitCode = stdinLenient ? .ok : .lintFailure
+                    } else if stdinStrict, output != input {
                         print("Source input was reformatted.", as: .error)
                         exitCode = .lintFailure
                     } else {
                         print("SwiftFormat completed successfully.", as: .success)
                         exitCode = .ok
                     }
-                    status = .finished(exitCode)
+                    stdinState.setStatus(.finished(exitCode))
                 }
             } catch {
                 if printWarnings([error]) {
-                    status = .finished(.error)
+                    stdinState.setStatus(.finished(.error))
                 } else {
-                    status = .finished(.ok)
+                    stdinState.setStatus(.finished(.ok))
                 }
                 // Ensure input isn't lost
                 print(input, as: .raw)
@@ -913,7 +966,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         if useStdin {
             processFromStdin()
-            if case let .finished(exitCode) = status {
+            if case let .finished(exitCode) = stdinState.status {
                 return exitCode
             }
             return .ok
@@ -923,13 +976,13 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 processFromStdin()
             }
             // Wait for input
-            while case .idle = status {}
+            while case .idle = stdinState.status {}
             let start = NSDate()
-            while input == nil, start.timeIntervalSinceNow > -0.2 {}
+            while stdinState.input == nil, start.timeIntervalSinceNow > -0.2 {}
             // If no input received by now, assume none is coming
-            if input != nil {
+            if stdinState.input != nil {
                 while start.timeIntervalSinceNow > -30 {
-                    if case let .finished(exitCode) = status {
+                    if case let .finished(exitCode) = stdinState.status {
                         return exitCode
                     }
                 }
@@ -1223,7 +1276,7 @@ func processInput(_ inputURLs: [URL],
         }
         cache = cache ?? SwiftFormatCache()
     }
-    func cacheKey(for inputURL: URL) -> String {
+    @Sendable func cacheKey(for inputURL: URL) -> String {
         var path = inputURL.standardizedFileURL.path
         if let cacheDirectory {
             let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
@@ -1292,7 +1345,11 @@ func processInput(_ inputURLs: [URL],
             withInputURLs: inputURLs,
             options: options,
             concurrent: !verbose,
-            logger: { print($0, as: .info) }
+            logger: Logger { message, type in
+                if type == .info {
+                    print(message, as: .info)
+                }
+            }
         ) { inputURL, _, options in
             guard inputURL.pathExtension != "md" else { return {} }
             guard let input = try? String(contentsOf: inputURL) else {
@@ -1332,11 +1389,9 @@ func processInput(_ inputURLs: [URL],
             moduleIdentifiers(for: files.map(\.0), in: files[0].1)
         }
         let cachedEntries = cache?.entries ?? [:]
-        let indexQueue = DispatchQueue(label: "swiftformat.project-index")
         let indexGroup = DispatchGroup()
         let workerQueue = DispatchQueue.global(qos: .userInitiated)
-        var indexedFiles = [(String, SourceFileIndex)]()
-        var updatedIndexEntries = [(String, SourceFileIndex)]()
+        let indexResults = ProjectIndexResults()
         for (fileURL, root) in discoveredFiles {
             indexGroup.enter()
             workerQueue.async {
@@ -1355,21 +1410,19 @@ func processInput(_ inputURLs: [URL],
                 } else {
                     sourceIndex = makeSourceFileIndex(from: source, moduleIdentifiers: modules)
                 }
-                indexQueue.sync {
-                    indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
-                    updatedIndexEntries.append((key, sourceIndex))
-                }
+                indexResults.append(filePath: fileURL.standardizedFileURL.path, index: sourceIndex,
+                                    cacheKey: key)
             }
         }
         indexGroup.wait()
         if cache != nil {
-            for (key, sourceIndex) in updatedIndexEntries {
+            for (key, sourceIndex) in indexResults.updatedEntries {
                 var entry = cache!.entries[key] ?? CacheEntry()
                 entry.sourceIndex = sourceIndex
                 cache!.entries[key] = entry
             }
         }
-        return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
+        return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexResults.indexedFiles))
     }() : nil
 
     // Format files
@@ -1693,15 +1746,12 @@ func processInput(_ inputURLs: [URL],
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let stripSlashes: Bool
             if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-                stripSlashes = false
                 encoder.outputFormatting.insert(.withoutEscapingSlashes)
-            } else {
-                stripSlashes = true
             }
             var data = try encoder.encode(state.snapshot)
-            if stripSlashes, let string = String(data: data, encoding: .utf8) {
+            if #unavailable(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0) {
+                let string = String(decoding: data, as: UTF8.self)
                 data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
             }
             try data.write(to: snapshotURL, options: .atomic)

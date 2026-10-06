@@ -50,15 +50,12 @@ final class JSONReporter: Reporter {
         if #available(macOS 10.13, iOS 11.0, watchOS 4.0, tvOS 11.0, *) {
             encoder.outputFormatting.insert(.sortedKeys)
         }
-        let stripSlashes: Bool
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            stripSlashes = false
             encoder.outputFormatting.insert(.withoutEscapingSlashes)
-        } else {
-            stripSlashes = true
         }
         var data = try encoder.encode(changes.map(ReportItem.init))
-        if stripSlashes, let string = String(data: data, encoding: .utf8) {
+        if #unavailable(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0) {
+            let string = String(decoding: data, as: UTF8.self)
             data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
         }
         return data

@@ -10,6 +10,31 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantOverloadTests: XCTestCase {
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String? = nil,
+        references: String,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Declarations.swift")
+        let referencesURL = URL(fileURLWithPath: "/Project/Sources/App/References.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            referencesURL.path: makeSourceFileIndex(from: references, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.redundantOverload],
+            to: tokenize(input),
+            with: .default,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: declarationsURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output ?? input, file: file, line: line)
+    }
+
     func testReplacesForwardingOverloadWithDefaultArgument() {
         let input = """
         struct Loader {
@@ -74,6 +99,222 @@ final class RedundantOverloadTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantOverload)
+    }
+
+    func testDoesNotRemoveOverloadReferencedAsFunctionValue() throws {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        func loadAll(_ loader: Loader, paths: [String]) {
+            _ = paths.map(loader.load(path:))
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotRemoveOverloadReferencedByBareName() throws {
+        let input = """
+        struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+
+            func test() {
+                let baz: Int? = 7
+                _ = baz.map(foo)
+            }
+        }
+        """
+        try testProjectFormatting(for: input, references: "")
+    }
+
+    func testBareReferenceInAnotherFileDoesNotProtectPrivateOverload() throws {
+        let input = """
+        private struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+        }
+        """
+        let output = """
+        private struct Example {
+            func foo(bar _: Int, baz _: Int = 0) -> Int {
+                5
+            }
+        }
+        """
+        let references = """
+        let value: Int? = 7
+        _ = value.map(foo)
+        """
+        try testProjectFormatting(for: input, output, references: references)
+    }
+
+    func testBareReferenceOnAnotherTypeDoesNotProtectOverload() throws {
+        let input = """
+        struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+        }
+        """
+        let output = """
+        struct Example {
+            func foo(bar _: Int, baz _: Int = 0) -> Int {
+                5
+            }
+        }
+        """
+        let references = """
+        struct Other {
+            func foo(_ value: Int) -> Int { value }
+
+            func test(_ value: Int?) {
+                _ = value.map(foo)
+            }
+        }
+        """
+        try testProjectFormatting(for: input, output, references: references)
+    }
+
+    func testBareReferenceToShadowingLocalDoesNotProtectOverload() throws {
+        let input = """
+        struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+
+            func test() {
+                let foo: (Int) -> Int = { $0 }
+                let value: Int? = 7
+                _ = value.map(foo)
+            }
+        }
+        """
+        let output = """
+        struct Example {
+            func foo(bar _: Int, baz _: Int = 0) -> Int {
+                5
+            }
+
+            func test() {
+                let foo: (Int) -> Int = { $0 }
+                let value: Int? = 7
+                _ = value.map(foo)
+            }
+        }
+        """
+        try testProjectFormatting(for: input, output, references: "")
+    }
+
+    func testBareReferenceThroughUnknownReceiverProtectsOverload() throws {
+        let input = """
+        struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+        }
+        """
+        let references = """
+        func test(_ example: Example, value: Int?) {
+            _ = value.map(example.foo)
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testBareReferenceInSubclassProtectsOverload() throws {
+        let input = """
+        class Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+        }
+        """
+        let references = """
+        class Child: Example {
+            func test(_ value: Int?) {
+                _ = value.map(foo)
+            }
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testFunctionValueReferenceToDifferentSignatureDoesNotProtectOverload() throws {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let output = """
+        struct Loader {
+            func load(path: String, timeout: Double = 30) {
+                print(path, timeout)
+            }
+        }
+        """
+        let references = """
+        let load = Loader.load(path:timeout:)
+        """
+        try testProjectFormatting(for: input, output, references: references)
+    }
+
+    func testDoesNotRemoveOverloadReferencedByKeyPath() throws {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        let load = \\Loader.load
+        """
+        try testProjectFormatting(for: input, references: references)
     }
 
     func testSupportsDefaultArgumentInMiddleOfParameterList() {

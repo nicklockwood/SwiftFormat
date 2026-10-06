@@ -3237,6 +3237,55 @@ final class IndentTests: XCTestCase {
                        exclude: [.wrapMultilineStatementBraces, .wrapConditionalBodies])
     }
 
+    func testIndentConditionAfterMethodChainInWrappedGuard() {
+        let input = """
+        guard
+          listingRequestState.didSucceed,
+          case let .listing(response) = listingRequestState.value?.node,
+          let averageRating = response.pdpPresentation?
+            .quality?
+            .ratingAverage,
+          let imageURL = response.imageURL
+        else {
+          return nil
+        }
+        """
+        let options = FormatOptions(indent: "  ")
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIndentConditionAfterWrappedMemberInWrappedGuard() {
+        let input = """
+        guard
+            let store,
+            case let .configuration(config) = store.state.request.value?.presentation?
+                .formConfiguration,
+            let form = config.form
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testIndentWrappedConditionsInIfExpressionAssignment() {
+        let input = """
+        let environment: Environment? =
+
+            // Comment
+            if
+                let preferredEnvironment = environment.preferredEnvironment,
+                environment.isLaunchedByPerfTest()
+            {
+                preferredEnvironment
+            } else {
+                nil
+            }
+        """
+        let options = FormatOptions(wrapConditions: .beforeFirst)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testWrappedChainedFunctionsWithNestedScopeIndent() {
         let input = """
         var body: some View {

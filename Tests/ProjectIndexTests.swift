@@ -75,6 +75,40 @@ final class ProjectIndexTests: XCTestCase {
         ])
     }
 
+    func testSourceFileIndexHandlesNestedTypesInsideLocalTypes() {
+        for nestedDeclaration in ["struct Nested {}", "struct Nested { let nested = 1 }"] {
+            let source = """
+            func example() {
+                struct Local {
+                    \(nestedDeclaration)
+                    let value = 1
+                    func get() -> Int { value }
+                }
+            }
+            """
+            let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+            XCTAssertTrue(index.functionReferences.contains { $0.name == "value" })
+        }
+    }
+
+    func testSourceFileIndexHandlesConditionalCompilationInsideLocalTypes() {
+        for body in ["", "let debugValue = 1"] {
+            let source = """
+            func example() {
+                struct Local {
+                    #if DEBUG
+                    \(body)
+                    #endif
+                    let value = 1
+                    func get() -> Int { value }
+                }
+            }
+            """
+            let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+            XCTAssertTrue(index.functionReferences.contains { $0.name == "value" })
+        }
+    }
+
     func testXcodeProjectModuleIdentifiersUseTargetMembership() throws {
         try withProjectIndexTmpDirectory([
             "App/App.swift": "struct App {}",

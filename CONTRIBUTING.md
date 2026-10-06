@@ -57,6 +57,10 @@ Code should be commented, but not excessively. In general, comments should follo
 
 When making user-facing changes, please update the README.md file if applicable. There is no need to update CHANGELOG.md or bump the version number.
 
+The repository uses a pinned SwiftFormat release for formatting and linting. Run `./format.sh` to format or `./format.sh --lint` to check formatting. The first run downloads the binary from GitHub Releases into `.build/formatter`; subsequent runs use the cached copy. This requires `curl` and `unzip` and supports macOS and Linux.
+
+Release preparation automatically updates `FORMAT_VERSION` in `format.sh` to the most recent release in `CHANGELOG.md` other than the version being prepared. This keeps formatting pinned to an already published version while preparing the next release.
+
 ## Tests
 
 All significant code changes should be accompanied by a test.  
@@ -147,8 +151,8 @@ Run `./Scripts/prepare_release.sh VERSION_NUMBER`. This script:
 * Updates version number in SwiftFormat.swift + 3 targets
 * Creates a placeholder entry in CHANGELOG.md
 * Run tests and ensure they pass
-* Archives SwiftFormat (Command Line Tool)
-* Replaced binary in CommandLineTool directory
+* Pins the formatter to the previous release in CHANGELOG.md and formats the codebase
+* Builds the command-line tool from source
 
 Then complete the following steps manually:
 

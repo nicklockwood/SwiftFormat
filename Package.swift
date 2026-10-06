@@ -10,8 +10,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "CommandLineTool", dependencies: ["SwiftFormat"], path: "CommandLineTool",
-            exclude: ["swiftformat"]
+            name: "CommandLineTool", dependencies: ["SwiftFormat"], path: "CommandLineTool"
         ),
         .target(name: "SwiftFormat", path: "Sources", exclude: ["Info.plist"]),
         .testTarget(

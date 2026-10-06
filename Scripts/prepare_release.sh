@@ -64,31 +64,21 @@ fi
 
 echo "Tests passed successfully."
 
-# 6. Archive and export executable for distribution
-echo "Creating archive..."
-ARCHIVE_PATH="build/SwiftFormat.xcarchive"
-if ! xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Command Line Tool)" -configuration Release -archivePath "$ARCHIVE_PATH" archive; then
-    echo "Error: Archive failed. Please fix the issues before proceeding."
+# 6. Pin formatting to the most recent release before the one being prepared.
+# Skip NEW_VERSION so rerunning release preparation keeps the same pin.
+FORMAT_VERSION=$(sed -nE 's/^## \[([0-9]+\.[0-9]+\.[0-9]+)\].*/\1/p' CHANGELOG.md |
+    awk -v new_version="$NEW_VERSION" '$0 != new_version { print; exit }')
+if [ -z "$FORMAT_VERSION" ]; then
+    echo "Error: No previous release found in CHANGELOG.md for the formatter pin." >&2
     exit 1
 fi
+echo "Pinning formatter to $FORMAT_VERSION..."
+sed -i '' "s/^FORMAT_VERSION=.*/FORMAT_VERSION=$FORMAT_VERSION/" format.sh
 
-echo "Extracting executable from archive..."
-# Find the executable directly in the archive
-ARCHIVE_EXECUTABLE=$(find "$ARCHIVE_PATH" -name "swiftformat" -type f -perm +111 | head -1)
-
-if [ -z "$ARCHIVE_EXECUTABLE" ]; then
-    echo "Error: Could not find executable in archive"
-    exit 1
-fi
-
-echo "Replacing Command Line Tool executable with archived version..."
-cp "$ARCHIVE_EXECUTABLE" CommandLineTool/swiftformat
-
-# 7. Run format.sh to format the codebase with the new version
-echo "Formatting using new binary..."
+echo "Formatting..."
 bash format.sh
 
-# 8. Build again after formatting to ensure no issues were introduced
+# 7. Build again after formatting to ensure no issues were introduced
 echo "Building after formatting..."
 if ! swift build -c release; then
     echo "Error: Build failed after formatting. Please fix the issues before proceeding."

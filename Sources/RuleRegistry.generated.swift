@@ -102,6 +102,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantNilInit": .redundantNilInit,
     "redundantObjc": .redundantObjc,
     "redundantOptionalBinding": .redundantOptionalBinding,
+    "redundantOverload": .redundantOverload,
     "redundantParens": .redundantParens,
     "redundantPattern": .redundantPattern,
     "redundantProperty": .redundantProperty,

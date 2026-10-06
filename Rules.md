@@ -150,6 +150,7 @@
 * [privateSwiftUIDynamicProperties](#privateSwiftUIDynamicProperties)
 * [propertyTypes](#propertyTypes)
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
+* [redundantOverload](#redundantOverload)
 * [redundantSendable](#redundantSendable)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
@@ -3056,6 +3057,41 @@ Option | Description
 -     print(f)
 + if let foo {
 +     print(foo)
+  }
+```
+
+</details>
+<br/>
+
+## redundantOverload
+
+Replace forwarding overloads with default arguments.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct Loader {
+-     func load(path: String, timeout: TimeInterval) { ... }
++     func load(path: String, timeout: TimeInterval = 30) { ... }
+-     func load(path: String) {
+-         load(path: path, timeout: 30)
+-     }
+  }
+```
+
+With `--swift-version 5.1` or later:
+
+```diff
+  enum Result<Value> {
+-     case success(value: Value, cached: Bool)
++     case success(value: Value, cached: Bool = false)
+  }
+
+  extension Result {
+-     static func success(value: Value) -> Self {
+-         .success(value: value, cached: false)
+-     }
   }
 ```
 

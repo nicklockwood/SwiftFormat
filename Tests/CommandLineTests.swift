@@ -563,13 +563,12 @@ final class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
-    func testLegacyCacheIsMigratedToVersionedFormat() throws {
+    func testUnsupportedCacheFormatIsDiscarded() throws {
         try withTmpDirectory([
             "Input.swift": "let foo = bar\n",
         ]) { directory in
             let cacheURL = directory.appendingPathComponent("swiftformat.cache")
-            let legacyCache = ["legacy-entry": "legacy-value"]
-            try JSONEncoder().encode(legacyCache).write(to: cacheURL)
+            try JSONEncoder().encode(["legacy-entry": "legacy-value"]).write(to: cacheURL)
             CLI.print = { _, _ in }
 
             XCTAssertEqual(CLI.run(
@@ -580,10 +579,37 @@ final class CommandLineTests: XCTestCase {
             let cache = try XCTUnwrap(
                 JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
             )
-            XCTAssertEqual(cache["version"] as? Int, 1)
-            let entries = try XCTUnwrap(cache["entries"] as? [String: Any])
-            let legacyEntry = try XCTUnwrap(entries["legacy-entry"] as? [String: Any])
-            XCTAssertEqual(legacyEntry["formatting"] as? String, "legacy-value")
+            XCTAssertEqual(cache["swiftFormatVersion"] as? String, swiftFormatVersion)
+            XCTAssertEqual(cache["projectIndexVersion"] as? Int, SourceFileIndex.cacheVersion)
+            let formatting = try XCTUnwrap(cache["formatting"] as? [String: Any])
+            XCTAssertEqual(formatting.count, 1)
+            XCTAssertNil(formatting["legacy-entry"])
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
+    func testCacheSupportsMultipleConfigurationsInOneProject() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/First/.swiftformat": "--indent 2",
+            "Sources/First/Input.swift": "func first() {\nprint(1)\n}\n",
+            "Sources/Second/.swiftformat": "--indent 4",
+            "Sources/Second/Input.swift": "func second() {\nprint(2)\n}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/First/Input.swift Sources/Second/Input.swift --rules indent --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            let formatting = try XCTUnwrap(cache["formatting"] as? [String: [String: String]])
+            XCTAssertEqual(formatting.count, 2)
+            XCTAssertEqual(formatting.values.flatMap(\.keys).count, 2)
         }
     }
 
@@ -607,16 +633,15 @@ final class CommandLineTests: XCTestCase {
             var cache = try XCTUnwrap(
                 JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
             )
-            var entries = try XCTUnwrap(cache["entries"] as? [String: Any])
-            let typeKey = try XCTUnwrap(entries.keys.first(where: { $0.hasSuffix("/Type.swift") }))
-            var typeEntry = try XCTUnwrap(entries[typeKey] as? [String: Any])
-            var sourceIndex = try XCTUnwrap(typeEntry["sourceIndex"] as? [String: Any])
+            var sourceIndexes = try XCTUnwrap(cache["sourceIndexes"] as? [String: Any])
+            let typeKey = try XCTUnwrap(sourceIndexes.keys.first(where: { $0.hasSuffix("/Type.swift") }))
+            var sourceIndex = try XCTUnwrap(sourceIndexes[typeKey] as? [String: Any])
+            XCTAssertNil(sourceIndex["schemaVersion"])
             var declarations = try XCTUnwrap(sourceIndex["typeDeclarations"] as? [[String: Any]])
             declarations[0]["visibility"] = "internal"
             sourceIndex["typeDeclarations"] = declarations
-            typeEntry["sourceIndex"] = sourceIndex
-            entries[typeKey] = typeEntry
-            cache["entries"] = entries
+            sourceIndexes[typeKey] = sourceIndex
+            cache["sourceIndexes"] = sourceIndexes
             try JSONSerialization.data(withJSONObject: cache).write(to: cacheURL)
 
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
@@ -644,8 +669,9 @@ final class CommandLineTests: XCTestCase {
             let cache = try XCTUnwrap(
                 JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
             )
-            let entries = try XCTUnwrap(cache["entries"] as? [String: Any])
-            XCTAssertEqual(entries.count, 1)
+            let formatting = try XCTUnwrap(cache["formatting"] as? [String: Any])
+            XCTAssertEqual(formatting.count, 1)
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
         }
     }
 

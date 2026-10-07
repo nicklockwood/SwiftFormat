@@ -3290,6 +3290,31 @@ final class IndentTests: XCTestCase {
                        exclude: [.wrapConditionalBodies])
     }
 
+    func testClosureOnLaterLineOfConditionUsesStandardIndentation() {
+        let input = """
+        if
+            values
+                .filter({
+                        $0.isMatch
+                })
+                .isEmpty,
+            otherCondition
+        {}
+        """
+        let output = """
+        if
+            values
+                .filter({
+                    $0.isMatch
+                })
+                .isEmpty,
+            otherCondition
+        {}
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       exclude: [.preferContains])
+    }
+
     func testClosureAtStartOfMultilineIfAndWhileConditions() {
         let input = """
         if let match = values.first(where: {

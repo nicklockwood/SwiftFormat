@@ -1072,16 +1072,21 @@ func computeHash(_ source: String) -> String {
     return "\(count)\(hash)"
 }
 
-private struct CacheEntry: Codable {
-    var formatting: String? = nil
-    var sourceIndex: SourceFileIndex? = nil
-}
-
 private struct SwiftFormatCache: Codable {
-    static let currentVersion = 1
+    var swiftFormatVersion = version
+    var projectIndexVersion = SourceFileIndex.cacheVersion
+    var formatting = [String: [String: String]]()
+    var sourceIndexes = [String: SourceFileIndex]()
 
-    var version = currentVersion
-    var entries = [String: CacheEntry]()
+    mutating func setFormattingHash(_ contentHash: String, for path: String, configurationHash: String) {
+        for hash in Array(formatting.keys) where hash != configurationHash {
+            formatting[hash]?[path] = nil
+            if formatting[hash]?.isEmpty == true {
+                formatting[hash] = nil
+            }
+        }
+        formatting[configurationHash, default: [:]][path] = contentHash
+    }
 }
 
 enum CacheLocation {
@@ -1251,19 +1256,17 @@ func processInput(_ inputURLs: [URL],
     })
     var caches = [URL: SwiftFormatCache]()
     for cacheURL in Set(cacheURLsByRoot.values) {
-        var cache: SwiftFormatCache?
-        if let data = try? Data(contentsOf: cacheURL) {
-            cache = try? JSONDecoder().decode(SwiftFormatCache.self, from: data)
-            if cache?.version != SwiftFormatCache.currentVersion {
-                cache = nil
-            }
-            if cache == nil, let legacyCache = try? JSONDecoder().decode([String: String].self, from: data) {
-                cache = SwiftFormatCache(entries: legacyCache.mapValues {
-                    CacheEntry(formatting: $0, sourceIndex: nil)
-                })
-            }
+        var cache = (try? Data(contentsOf: cacheURL))
+            .flatMap { try? JSONDecoder().decode(SwiftFormatCache.self, from: $0) } ?? SwiftFormatCache()
+        if cache.swiftFormatVersion != version {
+            cache.swiftFormatVersion = version
+            cache.formatting.removeAll()
         }
-        caches[cacheURL] = cache ?? SwiftFormatCache()
+        if cache.projectIndexVersion != SourceFileIndex.cacheVersion {
+            cache.projectIndexVersion = SourceFileIndex.cacheVersion
+            cache.sourceIndexes.removeAll()
+        }
+        caches[cacheURL] = cache
     }
     func cacheURL(for root: ProjectRoot) -> URL? {
         cacheURLsByRoot[root]
@@ -1398,8 +1401,7 @@ func processInput(_ inputURLs: [URL],
                 let sourceIndex: SourceFileIndex
                 if let rootCacheURL,
                    let key,
-                   let cached = caches[rootCacheURL]?.entries[key]?.sourceIndex,
-                   cached.schemaVersion == SourceFileIndex.schemaVersion,
+                   let cached = caches[rootCacheURL]?.sourceIndexes[key],
                    cached.contentHash == sourceHash,
                    cached.moduleIdentifiers == modules.sorted()
                 {
@@ -1418,9 +1420,7 @@ func processInput(_ inputURLs: [URL],
         indexGroup.wait()
         for (cacheURL, key, sourceIndex) in updatedIndexEntries {
             if var cache = caches[cacheURL] {
-                var entry = cache.entries[key] ?? CacheEntry()
-                entry.sourceIndex = sourceIndex
-                cache.entries[key] = entry
+                cache.sourceIndexes[key] = sourceIndex
                 caches[cacheURL] = cache
             }
         }
@@ -1484,24 +1484,23 @@ func processInput(_ inputURLs: [URL],
         // Check cache
         let rules = options.rules ?? defaultRules
         let fileCacheURL = cacheURL(for: inputURL)
-        let cachePrefix: String = fileCacheURL == nil ? "" : {
+        let configurationHash: String? = fileCacheURL.map { _ in
             let usesProjectContext = rules.contains(where: { FormatRules.byName[$0]?.usesProjectContext == true })
             let projectFingerprint = usesProjectContext ? projectIndex.map {
                 "project-index:\($0.fingerprint)"
             } ?? "project-index:disabled" : ""
-            let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))\(projectFingerprint)")
-            return "\(version);\(configHash);"
-        }()
+            return computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))\(projectFingerprint)")
+        }
         let cacheKey = fileCacheURL.map { cacheKey(for: inputURL, cacheURL: $0) }
         do {
             var cacheHash: String?
             var sourceHash: String?
             if let fileCacheURL,
                let cacheKey,
-               let cacheEntry = caches[fileCacheURL]?.entries[cacheKey]?.formatting,
-               cacheEntry.hasPrefix(cachePrefix)
+               let configurationHash,
+               let cachedHash = caches[fileCacheURL]?.formatting[configurationHash]?[cacheKey]
             {
-                cacheHash = String(cacheEntry[cachePrefix.endIndex...])
+                cacheHash = cachedHash
                 sourceHash = computeHash(input)
             }
             let output: String
@@ -1608,9 +1607,9 @@ func processInput(_ inputURLs: [URL],
                     sourceHash = nil
                 }
             }
-            let cacheValue = fileCacheURL.map { _ in
+            let cacheValue = configurationHash.map {
                 // Only bother computing this if cache is enabled
-                cachePrefix + (sourceHash ?? computeHash(output))
+                ($0, sourceHash ?? computeHash(output))
             }
             if outputURL.path.components(separatedBy: "/").contains("stdout") {
                 if !dryrun {
@@ -1637,11 +1636,13 @@ func processInput(_ inputURLs: [URL],
                 // No changes needed
                 return {
                     outputFlags.filesChecked += 1
-                    if let fileCacheURL, let cacheKey {
+                    if let fileCacheURL, let cacheKey, let cacheValue {
                         var cache = caches[fileCacheURL] ?? SwiftFormatCache()
-                        var entry = cache.entries[cacheKey] ?? CacheEntry()
-                        entry.formatting = cacheValue
-                        cache.entries[cacheKey] = entry
+                        cache.setFormattingHash(
+                            cacheValue.1,
+                            for: cacheKey,
+                            configurationHash: cacheValue.0
+                        )
                         caches[fileCacheURL] = cache
                     }
                     showConfigurationWarnings(options)
@@ -1662,17 +1663,19 @@ func processInput(_ inputURLs: [URL],
                     outputFlags.filesChecked += 1
                     outputFlags.filesFailed += 1
                     outputFlags.filesWritten += 1
-                    if let fileCacheURL, let cacheKey {
+                    if let fileCacheURL, let cacheKey, let cacheValue {
                         var cache = caches[fileCacheURL] ?? SwiftFormatCache()
-                        var entry = cache.entries[cacheKey] ?? CacheEntry()
-                        entry.formatting = cacheValue
+                        cache.setFormattingHash(
+                            cacheValue.1,
+                            for: cacheKey,
+                            configurationHash: cacheValue.0
+                        )
                         if outputURL == inputURL {
-                            entry.sourceIndex = makeSourceFileIndex(
+                            cache.sourceIndexes[cacheKey] = makeSourceFileIndex(
                                 from: output,
                                 moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? [])
                             )
                         }
-                        cache.entries[cacheKey] = entry
                         caches[fileCacheURL] = cache
                     }
                     showConfigurationWarnings(options)

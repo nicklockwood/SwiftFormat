@@ -431,6 +431,7 @@ public extension FormatRule {
                         if token == .endOfScope("}"),
                            !formatter.options.xcodeIndentation,
                            let closureStartIndex = formatter.startOfScope(at: i),
+                           formatter.isStartOfClosure(at: closureStartIndex),
                            let conditionIndent = formatter.indentForClosureInMultilineCondition(
                                at: closureStartIndex
                            )
@@ -988,6 +989,11 @@ extension Formatter {
                 }
                 guard let conditionStartIndex = startOfConditionalStatement(at: nextIndex),
                       startOfScope(at: nextIndex) == startOfScope(at: conditionStartIndex),
+                      let firstConditionIndex = self.index(
+                          of: .nonSpaceOrCommentOrLinebreak,
+                          after: conditionStartIndex
+                      ),
+                      onSameLine(firstConditionIndex, closureStartIndex),
                       let nextConditionIndex = self.index(
                           of: .nonSpaceOrCommentOrLinebreak,
                           after: nextIndex

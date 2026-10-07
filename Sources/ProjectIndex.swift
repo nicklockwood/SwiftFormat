@@ -69,40 +69,6 @@ struct SourceFileIndex: Codable, Equatable {
             self.closureArgumentIndices = closureArgumentIndices
             self.autoclosureArgumentIndices = autoclosureArgumentIndices
         }
-
-        private enum CodingKeys: CodingKey {
-            case name
-            case kind
-            case declaringType
-            case isStatic
-            case visibility
-            case argumentLabels
-            case defaultArgumentIndices
-            case closureArgumentIndices
-            case autoclosureArgumentIndices
-        }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            name = try container.decode(String.self, forKey: .name)
-            kind = try container.decodeIfPresent(Kind.self, forKey: .kind) ?? .function
-            declaringType = try container.decodeIfPresent(String.self, forKey: .declaringType)
-            isStatic = try container.decodeIfPresent(Bool.self, forKey: .isStatic) ?? false
-            visibility = try container.decodeIfPresent(String.self, forKey: .visibility) ?? Visibility.internal.rawValue
-            argumentLabels = try container.decode([String?].self, forKey: .argumentLabels)
-            defaultArgumentIndices = try container.decodeIfPresent(
-                [Int].self,
-                forKey: .defaultArgumentIndices
-            ) ?? []
-            closureArgumentIndices = try container.decodeIfPresent(
-                [Int].self,
-                forKey: .closureArgumentIndices
-            ) ?? []
-            autoclosureArgumentIndices = try container.decode(
-                [Int].self,
-                forKey: .autoclosureArgumentIndices
-            )
-        }
     }
 
     struct FunctionReference: Codable, Hashable {
@@ -125,24 +91,6 @@ struct SourceFileIndex: Codable, Equatable {
             self.receiverType = receiverType
             self.isUnqualifiedGlobal = isUnqualifiedGlobal
         }
-
-        private enum CodingKeys: CodingKey {
-            case name
-            case argumentLabels
-            case receiverType
-            case isUnqualifiedGlobal
-        }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            name = try container.decode(String.self, forKey: .name)
-            argumentLabels = try container.decodeIfPresent([String?].self, forKey: .argumentLabels)
-            receiverType = try container.decodeIfPresent(String.self, forKey: .receiverType)
-            isUnqualifiedGlobal = try container.decodeIfPresent(
-                Bool.self,
-                forKey: .isUnqualifiedGlobal
-            ) ?? false
-        }
     }
 
     struct TypeMembers: Codable, Equatable {
@@ -157,9 +105,8 @@ struct SourceFileIndex: Codable, Equatable {
         var canBeRenamed: Bool
     }
 
-    static let schemaVersion = 9
+    static let cacheVersion = 1
 
-    var schemaVersion = SourceFileIndex.schemaVersion
     var contentHash: String
     var moduleIdentifiers: [String]
     var typeDeclarations: [TypeDeclaration]
@@ -184,55 +131,6 @@ struct SourceFileIndex: Codable, Equatable {
         self.typeMembers = typeMembers
         self.symbolDeclarations = symbolDeclarations
         self.functionReferences = functionReferences
-    }
-
-    private enum CodingKeys: CodingKey {
-        case schemaVersion
-        case contentHash
-        case moduleIdentifiers
-        case moduleIdentifier
-        case typeDeclarations
-        case functionDeclarations
-        case typeMembers
-        case symbolDeclarations
-        case functionReferences
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
-        contentHash = try container.decode(String.self, forKey: .contentHash)
-        if let identifiers = try container.decodeIfPresent([String].self, forKey: .moduleIdentifiers) {
-            moduleIdentifiers = Set(identifiers).sorted()
-        } else {
-            moduleIdentifiers = try container.decodeIfPresent(String.self, forKey: .moduleIdentifier).map { [$0] } ?? []
-        }
-        typeDeclarations = try container.decode([TypeDeclaration].self, forKey: .typeDeclarations)
-        functionDeclarations = try container.decodeIfPresent(
-            [FunctionDeclaration].self,
-            forKey: .functionDeclarations
-        ) ?? []
-        typeMembers = try container.decodeIfPresent([TypeMembers].self, forKey: .typeMembers) ?? []
-        symbolDeclarations = try container.decodeIfPresent(
-            [SymbolDeclaration].self,
-            forKey: .symbolDeclarations
-        ) ?? []
-        functionReferences = try container.decodeIfPresent(
-            [FunctionReference].self,
-            forKey: .functionReferences
-        ) ?? []
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(schemaVersion, forKey: .schemaVersion)
-        try container.encode(contentHash, forKey: .contentHash)
-        try container.encode(moduleIdentifiers, forKey: .moduleIdentifiers)
-        try container.encode(typeDeclarations, forKey: .typeDeclarations)
-        try container.encode(functionDeclarations, forKey: .functionDeclarations)
-        try container.encode(typeMembers, forKey: .typeMembers)
-        try container.encode(symbolDeclarations, forKey: .symbolDeclarations)
-        try container.encode(functionReferences, forKey: .functionReferences)
     }
 }
 

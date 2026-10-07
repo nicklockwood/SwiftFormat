@@ -262,6 +262,8 @@ final class MetadataTests: XCTestCase {
                         ]
                     case .identifier("isCommentedCode"):
                         referencedOptions.append(Descriptors.indent)
+                    case .identifier("isInStringLiteralWithWrappingDisabled"):
+                        referencedOptions.append(Descriptors.wrapStringInterpolation)
                     case .identifier("insertLinebreak"), .identifier("linebreakToken"),
                          .identifier("insertResultBuilderAttribute"):
                         referencedOptions.append(Descriptors.linebreak)

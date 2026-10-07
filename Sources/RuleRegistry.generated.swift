@@ -175,5 +175,6 @@ let ruleRegistry: [String: FormatRule] = [
     "wrapSingleLineComments": .wrapSingleLineComments,
     "wrapSingleLineStrings": .wrapSingleLineStrings,
     "wrapSwitchCases": .wrapSwitchCases,
+    "wrapTaskBodies": .wrapTaskBodies,
     "yodaConditions": .yodaConditions,
 ]

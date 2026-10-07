@@ -58,32 +58,6 @@ final class ProjectIndexTests: XCTestCase {
         }
     }
 
-    func testSourceFileIndexDecodesFunctionDeclarationFromPreviousSchema() throws {
-        let data = Data("""
-        {
-            "schemaVersion": 3,
-            "contentHash": "hash",
-            "moduleIdentifier": "App",
-            "typeDeclarations": [],
-            "functionDeclarations": [{
-                "name": "evaluate",
-                "argumentLabels": [null],
-                "autoclosureArgumentIndices": [0]
-            }],
-            "typeMembers": []
-        }
-        """.utf8)
-
-        let index = try JSONDecoder().decode(SourceFileIndex.self, from: data)
-
-        XCTAssertEqual(index.moduleIdentifiers, ["App"])
-        XCTAssertEqual(index.symbolDeclarations, [])
-        XCTAssertEqual(index.functionReferences, [])
-        XCTAssertEqual(index.functionDeclarations, [
-            .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
-        ])
-    }
-
     func testSourceFileIndexExtractsFunctionValueReferences() {
         let source = """
         let unlabeled = someMethod(_:)

@@ -153,6 +153,31 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
+    func testDirectiveWithMultilineString() {
+        let header = #"""
+        // swiftformat:disable:next numberFormatting
+        let text = """
+        value: \(123456)
+        """
+
+        """#
+        let declarations = (0 ..< 1000).map { index in
+            """
+            func value\(index)() -> Int {
+                return 123456
+            }
+
+            """
+        }.joined()
+        let tokens = tokenize(header + declarations)
+        let expected = tokenize(header + declarations.replacingOccurrences(of: "123456", with: "123_456"))
+        var output = [Token]()
+        measure {
+            output = try! format(tokens, rules: [.numberFormatting]).tokens
+        }
+        XCTAssertEqual(output, expected)
+    }
+
     func testWorstCaseNumberFormatting() {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }

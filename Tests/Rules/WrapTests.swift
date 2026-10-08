@@ -52,6 +52,14 @@ final class WrapTests: XCTestCase {
         XCTAssertEqual(formatter.indexWhereLineShouldWrap(from: 0), 4)
     }
 
+    func testWrapBeforeClosingBraceWhenItExceedsMaximumWidth() {
+        let input = """
+        let foo = bar { baz }
+        """
+        let formatter = Formatter(tokenize(input), options: FormatOptions(maxWidth: 20))
+        XCTAssertEqual(formatter.indexWhereLineShouldWrap(from: 0), 10)
+    }
+
     func testNoWrapShortNestedClosureArguments() {
         let input = """
         let transform = { (value: Widget, body: (Widget) -> Widget) in body(value) }

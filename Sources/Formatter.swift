@@ -308,7 +308,10 @@ public final class Formatter: NSObject {
         if tokens[index].isLinebreak,
            !hasApplicableLineDirective,
            containsMultilineStringLiteral,
-           let startIndex = startOfScope(at: index),
+           // Stop at ordinary code instead of scanning the entire enclosing scope on every line.
+           let startIndex = self.index(before: index, where: {
+               !$0.isSpaceOrLinebreak && !$0.isStringBody && !$0.isEndOfScope
+           }),
            tokens[startIndex].isMultilineStringDelimiter
         {
             enablementIndex = startIndex

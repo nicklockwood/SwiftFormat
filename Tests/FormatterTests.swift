@@ -293,6 +293,74 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [.spaceAroundOperators]).output, output)
     }
 
+    func testDisableNextMultilineStringWithBlankLinesAndNestedInterpolation() {
+        let input = #"""
+        // swiftformat:disable:next numberFormatting
+        let string = """
+
+        \(value(123456, transform: { $0 + 678901 }))
+
+        \(123456)
+        """
+
+        let value = 123456
+        """#
+        let output = #"""
+        // swiftformat:disable:next numberFormatting
+        let string = """
+
+        \(value(123456, transform: { $0 + 678901 }))
+
+        \(123456)
+        """
+
+        let value = 123_456
+        """#
+        XCTAssertEqual(try format(input, rules: [.numberFormatting]).output, output)
+    }
+
+    func testDisableNextRawMultilineString() {
+        let input = ##"""
+        // swiftformat:disable:next numberFormatting
+        let string = #"""
+        \#(123456)
+        \#(678901)
+        """#
+        let value = 123456
+        """##
+        let output = ##"""
+        // swiftformat:disable:next numberFormatting
+        let string = #"""
+        \#(123456)
+        \#(678901)
+        """#
+        let value = 123_456
+        """##
+        XCTAssertEqual(try format(input, rules: [.numberFormatting]).output, output)
+    }
+
+    func testOptionsNextMultilineString() {
+        let input = #"""
+        // swiftformat:options:next --decimalgrouping none
+        let string = """
+        \(123456)
+
+        \(678901)
+        """
+        let value = 123456
+        """#
+        let output = #"""
+        // swiftformat:options:next --decimalgrouping none
+        let string = """
+        \(123456)
+
+        \(678901)
+        """
+        let value = 123_456
+        """#
+        XCTAssertEqual(try format(input, rules: [.numberFormatting]).output, output)
+    }
+
     func testDisableThisInsideMultilineStringInterpolation() {
         let input = #"""
         let string = """

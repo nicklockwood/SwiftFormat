@@ -27,6 +27,29 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testProjectRootStopsAtFilesystemRoot() {
+        let root = projectRoot(for: URL(fileURLWithPath: "/", isDirectory: true))
+
+        XCTAssertEqual(root.url.path, "/")
+        XCTAssertEqual(root.kind, .directory)
+    }
+
+    func testProjectRootFallsBackToInputDirectory() throws {
+        try withProjectIndexTmpDirectory([
+            "Sources/Input.swift": "struct Input {}",
+        ]) { directory in
+            let sourceDirectory = directory.appendingPathComponent("Sources")
+            let sourceFile = sourceDirectory.appendingPathComponent("Input.swift")
+            let fileRoot = projectRoot(for: sourceFile)
+            let directoryRoot = projectRoot(for: sourceDirectory)
+
+            XCTAssertEqual(fileRoot.url.path, sourceDirectory.path)
+            XCTAssertEqual(fileRoot.kind, .directory)
+            XCTAssertEqual(directoryRoot.url.path, sourceDirectory.path)
+            XCTAssertEqual(directoryRoot.kind, .directory)
+        }
+    }
+
     func testProjectRootIsSharedByTargetedFilesAndDirectories() throws {
         try withProjectIndexTmpDirectory([
             "Package.swift": "// Package marker",

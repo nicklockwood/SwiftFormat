@@ -183,9 +183,10 @@ extension Formatter {
                     i = endIndex
                     break
                 }
-                for case let .identifier(name) in tokens[startIndex ..< endIndex]
-                    where names.contains(name)
-                {
+                for token in tokens[startIndex ..< endIndex] {
+                    guard case let .identifier(name) = token,
+                          names.contains(name)
+                    else { continue }
                     return true
                 }
                 i = endIndex

@@ -542,7 +542,8 @@ func parseRules(_ rules: String, ignoreUnknown: Bool) throws -> [String] {
             return []
         }
         if Descriptors.all.contains(where: { $0.argumentName == lowercaseName }) {
-            for rule in FormatRules.all where rule.options.contains(lowercaseName) {
+            for rule in FormatRules.all {
+                guard rule.options.contains(lowercaseName) else { continue }
                 throw FormatError.options(
                     "'\(proposedName)' is not a formatting rule. Did you mean '\(rule.name)'?"
                 )

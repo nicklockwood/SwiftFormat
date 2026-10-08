@@ -36,13 +36,21 @@ jobs:
           git config user.name "test user"
           git config user.email "test.user@noreply.com"
 
-          xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test -enableCodeCoverage YES -derivedDataPath Build/
+          xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test -enableCodeCoverage YES -derivedDataPath Build/ 'OTHER_SWIFT_FLAGS=$(inherited) -Xllvm -instrprof-atomic-counter-update-all'
           cd Build/Build/ProfileData
           cd $(ls -d */|head -n 1)
           directory=${PWD##*/}
           pathCoverage=Build/Build/ProfileData/${directory}/Coverage.profdata
           cd ../../../../
           xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug/SwiftFormat.framework/SwiftFormat > info.lcov
+          python3 - <<'PY'
+          with open("info.lcov") as report:
+              for line in report:
+                  if line.startswith("DA:"):
+                      count = int(line.split(",")[1])
+                      if not 0 <= count < 2**63:
+                          raise SystemExit(f"Invalid coverage count: {line.strip()}")
+          PY
       - name: Codecov
         uses: codecov/codecov-action@v7
         with:

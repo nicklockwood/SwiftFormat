@@ -7726,6 +7726,32 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent)
     }
 
+    func testIndentConditionalAssignmentsNestedInClosure() {
+        let input = """
+        let result =
+            if let value = optionalValue {
+                values.map { other in
+                    let mapped =
+                        switch other {
+                        case 0:
+                            value
+                        default:
+                            other
+                        }
+
+                    consume(mapped)
+                    return mapped
+                }
+            } else {
+                []
+            }
+
+        consume(result)
+        """
+
+        testFormatting(for: input, rule: .indent)
+    }
+
     func testIndentSwitchExpressionAssignmentWithComments() {
         let input = """
         let foo =

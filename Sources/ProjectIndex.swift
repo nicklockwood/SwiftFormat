@@ -114,6 +114,8 @@ struct SourceFileIndex: Codable, Equatable {
     var typeMembers: [TypeMembers]
     var symbolDeclarations: [SymbolDeclaration]
     var functionReferences: [FunctionReference]
+    /// Whether function references were collected, even if none were found.
+    var includesFunctionReferences: Bool
 
     init(
         contentHash: String,
@@ -122,7 +124,8 @@ struct SourceFileIndex: Codable, Equatable {
         functionDeclarations: [FunctionDeclaration],
         typeMembers: [TypeMembers],
         symbolDeclarations: [SymbolDeclaration],
-        functionReferences: [FunctionReference] = []
+        functionReferences: [FunctionReference] = [],
+        includesFunctionReferences: Bool = true
     ) {
         self.contentHash = contentHash
         self.moduleIdentifiers = moduleIdentifiers.sorted()
@@ -131,6 +134,7 @@ struct SourceFileIndex: Codable, Equatable {
         self.typeMembers = typeMembers
         self.symbolDeclarations = symbolDeclarations
         self.functionReferences = functionReferences
+        self.includesFunctionReferences = includesFunctionReferences
     }
 }
 
@@ -622,7 +626,8 @@ private extension SourceFileIndex.FunctionDeclaration {
 /// Extracts the subset of declarations required by the initial project-aware rules.
 func makeSourceFileIndex(
     from source: String,
-    moduleIdentifiers: Set<String>
+    moduleIdentifiers: Set<String>,
+    includeFunctionReferences: Bool = true
 ) -> SourceFileIndex {
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
@@ -630,7 +635,8 @@ func makeSourceFileIndex(
     var typeMembers = [SourceFileIndex.TypeMembers]()
     var symbolDeclarations = [SourceFileIndex.SymbolDeclaration]()
     let declarations = formatter.parseDeclarations()
-    let functionReferences = formatter.indexedFunctionReferences(declarations: declarations)
+    let functionReferences = includeFunctionReferences ?
+        formatter.indexedFunctionReferences(declarations: declarations) : []
     declarations.forEachRecursiveDeclaration { declaration in
         let symbolNames = formatter.namesInDeclaration(at: declaration.keywordIndex)
             ?? declaration.name.map { [$0] }
@@ -762,7 +768,8 @@ func makeSourceFileIndex(
         functionDeclarations: functionDeclarations,
         typeMembers: typeMembers,
         symbolDeclarations: symbolDeclarations,
-        functionReferences: functionReferences
+        functionReferences: functionReferences,
+        includesFunctionReferences: includeFunctionReferences
     )
 }
 

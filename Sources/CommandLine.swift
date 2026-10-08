@@ -1341,6 +1341,7 @@ func processInput(_ inputURLs: [URL],
     // Resolve the effective rules for the selected inputs before scanning the wider project.
     // Rules can vary by directory or source filter, so checking the top-level options isn't sufficient.
     var requiresProjectIndex = false
+    var requiresFunctionReferences = false
     if projectIndexMode == .auto {
         let projectIndexRequirementErrors = enumerateFiles(
             withInputURLs: inputURLs,
@@ -1358,7 +1359,11 @@ func processInput(_ inputURLs: [URL],
             let usesProjectContext = rules.contains {
                 FormatRules.byName[$0]?.usesProjectContext == true
             }
-            return { requiresProjectIndex = requiresProjectIndex || usesProjectContext }
+            let usesFunctionReferences = rules.contains("redundantOverload")
+            return {
+                requiresProjectIndex = requiresProjectIndex || usesProjectContext
+                requiresFunctionReferences = requiresFunctionReferences || usesFunctionReferences
+            }
         }
         guard projectIndexRequirementErrors.isEmpty else {
             return ((0, 0, 0, 0), projectIndexRequirementErrors)
@@ -1403,11 +1408,16 @@ func processInput(_ inputURLs: [URL],
                    let key,
                    let cached = caches[rootCacheURL]?.sourceIndexes[key],
                    cached.contentHash == sourceHash,
-                   cached.moduleIdentifiers == modules.sorted()
+                   cached.moduleIdentifiers == modules.sorted(),
+                   !requiresFunctionReferences || cached.includesFunctionReferences
                 {
                     sourceIndex = cached
                 } else {
-                    sourceIndex = makeSourceFileIndex(from: source, moduleIdentifiers: modules)
+                    sourceIndex = makeSourceFileIndex(
+                        from: source,
+                        moduleIdentifiers: modules,
+                        includeFunctionReferences: requiresFunctionReferences
+                    )
                 }
                 indexQueue.sync {
                     indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
@@ -1667,7 +1677,8 @@ func processInput(_ inputURLs: [URL],
                         if outputURL == inputURL {
                             caches[fileCacheURL, default: SwiftFormatCache()].sourceIndexes[cacheKey] = makeSourceFileIndex(
                                 from: output,
-                                moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? [])
+                                moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? []),
+                                includeFunctionReferences: requiresFunctionReferences
                             )
                         }
                     }

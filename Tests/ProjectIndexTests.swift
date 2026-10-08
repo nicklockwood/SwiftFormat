@@ -103,6 +103,36 @@ final class ProjectIndexTests: XCTestCase {
         ])
     }
 
+    func testSourceFileIndexCanOmitFunctionReferences() throws {
+        let source = """
+        struct Example {
+            var value = 0
+            func perform(_ body: @autoclosure () -> Int) {}
+        }
+        let callback = Example.perform
+        """
+        let complete = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+        let partial = makeSourceFileIndex(
+            from: source,
+            moduleIdentifiers: ["App"],
+            includeFunctionReferences: false
+        )
+        XCTAssertTrue(complete.includesFunctionReferences)
+        XCTAssertFalse(complete.functionReferences.isEmpty)
+        var expected = complete
+        expected.functionReferences = []
+        expected.includesFunctionReferences = false
+        XCTAssertEqual(partial, expected)
+        XCTAssertEqual(try JSONDecoder().decode(
+            SourceFileIndex.self,
+            from: JSONEncoder().encode(partial)
+        ), partial)
+
+        let empty = makeSourceFileIndex(from: "", moduleIdentifiers: [])
+        XCTAssertTrue(empty.includesFunctionReferences)
+        XCTAssertTrue(empty.functionReferences.isEmpty)
+    }
+
     func testSourceFileIndexHandlesNestedTypesInsideLocalTypes() {
         for nestedDeclaration in ["struct Nested {}", "struct Nested { let nested = 1 }"] {
             let source = """

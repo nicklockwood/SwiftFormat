@@ -1419,10 +1419,7 @@ func processInput(_ inputURLs: [URL],
         }
         indexGroup.wait()
         for (cacheURL, key, sourceIndex) in updatedIndexEntries {
-            if var cache = caches[cacheURL] {
-                cache.sourceIndexes[key] = sourceIndex
-                caches[cacheURL] = cache
-            }
+            caches[cacheURL]?.sourceIndexes[key] = sourceIndex
         }
         return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
     }() : nil
@@ -1637,13 +1634,11 @@ func processInput(_ inputURLs: [URL],
                 return {
                     outputFlags.filesChecked += 1
                     if let fileCacheURL, let cacheKey, let cacheValue {
-                        var cache = caches[fileCacheURL] ?? SwiftFormatCache()
-                        cache.setFormattingHash(
+                        caches[fileCacheURL, default: SwiftFormatCache()].setFormattingHash(
                             cacheValue.1,
                             for: cacheKey,
                             configurationHash: cacheValue.0
                         )
-                        caches[fileCacheURL] = cache
                     }
                     showConfigurationWarnings(options)
                 }
@@ -1664,19 +1659,17 @@ func processInput(_ inputURLs: [URL],
                     outputFlags.filesFailed += 1
                     outputFlags.filesWritten += 1
                     if let fileCacheURL, let cacheKey, let cacheValue {
-                        var cache = caches[fileCacheURL] ?? SwiftFormatCache()
-                        cache.setFormattingHash(
+                        caches[fileCacheURL, default: SwiftFormatCache()].setFormattingHash(
                             cacheValue.1,
                             for: cacheKey,
                             configurationHash: cacheValue.0
                         )
                         if outputURL == inputURL {
-                            cache.sourceIndexes[cacheKey] = makeSourceFileIndex(
+                            caches[fileCacheURL, default: SwiftFormatCache()].sourceIndexes[cacheKey] = makeSourceFileIndex(
                                 from: output,
                                 moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? [])
                             )
                         }
-                        caches[fileCacheURL] = cache
                     }
                     showConfigurationWarnings(options)
                 }

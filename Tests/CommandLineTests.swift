@@ -1005,6 +1005,11 @@ final class CommandLineTests: XCTestCase {
             }
             """)
 
+            let originalCache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            let originalIndexes = try XCTUnwrap(originalCache["sourceIndexes"] as? [String: NSDictionary])
+
             try "struct Foo {}".write(to: typeURL, atomically: true, encoding: .utf8)
 
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
@@ -1013,6 +1018,18 @@ final class CommandLineTests: XCTestCase {
                 func bar() {}
             }
             """)
+
+            let updatedCache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            let updatedIndexes = try XCTUnwrap(updatedCache["sourceIndexes"] as? [String: NSDictionary])
+            XCTAssertEqual(Set(updatedIndexes.keys), Set(originalIndexes.keys))
+            let packageKey = try XCTUnwrap(originalIndexes.keys.first(where: { $0.hasSuffix("/Package.swift") }))
+            XCTAssertEqual(updatedIndexes[packageKey], originalIndexes[packageKey])
+            for fileURL in [typeURL, extensionURL] {
+                let key = try XCTUnwrap(updatedIndexes.keys.first(where: { $0.hasSuffix("/" + fileURL.lastPathComponent) }))
+                XCTAssertEqual(updatedIndexes[key]?["contentHash"] as? String, try computeHash(String(contentsOf: fileURL)))
+            }
         }
     }
 

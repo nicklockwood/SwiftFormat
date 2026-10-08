@@ -1157,6 +1157,21 @@ extension Formatter {
         let maxWidth = options.maxWidth
         guard maxWidth > 0 else { return nil }
 
+        let endIndex = endOfLine(at: index)
+        var remainingWidth = maxWidth - lineLength
+        // Asset literals can extend beyond this line and need the full width calculation below.
+        if tokens[index ..< endIndex].allSatisfy({ token in
+            guard token != .keyword("#colorLiteral"), token != .keyword("#imageLiteral") else {
+                return false
+            }
+            let width = tokenLength(token)
+            guard width <= remainingWidth else { return false }
+            remainingWidth -= width
+            return true
+        }) {
+            return nil
+        }
+
         func addBreakPoint(at i: Int, relativePriority: Int) {
             guard stringLiteralDepth == 0, currentPriority + relativePriority >= lastBreakPointPriority,
                   !isInClosureArguments(at: i + 1),
@@ -1173,7 +1188,6 @@ extension Formatter {
         }
 
         var i = index
-        let endIndex = endOfLine(at: index)
         while i < endIndex {
             var token = tokens[i]
             switch token {

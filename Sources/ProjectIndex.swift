@@ -975,7 +975,8 @@ func projectRoot(for inputURL: URL) -> ProjectRoot {
     }
     let fallback = directory
 
-    while directory.path != directory.deletingLastPathComponent().path {
+    // Older Foundation versions append ".." when deleting the root's last path component.
+    while directory.pathComponents.count > 1 {
         if manager.fileExists(atPath: directory.appendingPathComponent("Package.swift").path) {
             return ProjectRoot(url: directory, kind: .swiftPackage)
         }

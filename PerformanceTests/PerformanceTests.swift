@@ -101,6 +101,59 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
+    func testProjectIndexWithPopulatedCache() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let sources = directory.appendingPathComponent("Sources/Example")
+        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
+        let originalPrint = CLI.print
+        defer {
+            CLI.print = originalPrint
+            try? FileManager.default.removeItem(at: directory)
+        }
+        CLI.print = { _, _ in }
+        try "// Package marker".write(to: directory.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
+        let fileCount = 1000
+        for index in 0 ..< fileCount {
+            try "struct Item\(index) {}".write(
+                to: sources.appendingPathComponent("Item\(index).swift"), atomically: true, encoding: .utf8
+            )
+        }
+        let input = """
+        extension Item0 {
+            public func value() -> Int { 1 }
+        }
+        """
+        let expected = """
+        extension Item0 {
+            func value() -> Int { 1 }
+        }
+        """
+        let selected = sources.appendingPathComponent("Extension.swift")
+        try expected.write(to: selected, atomically: true, encoding: .utf8)
+        let cache = directory.appendingPathComponent("swiftformat.cache")
+        let arguments = [
+            "swiftformat", selected.path, "--rules", "redundantPublic",
+            "--project-index", "auto", "--cache", cache.path, "--swift-version", "6.0", "--quiet",
+        ]
+        XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+        let populatedCache = try Data(contentsOf: cache)
+        let cacheContents = try XCTUnwrap(JSONSerialization.jsonObject(with: populatedCache) as? [String: Any])
+        let sourceIndexes = try XCTUnwrap(cacheContents["sourceIndexes"] as? [String: Any])
+        for index in 0 ..< fileCount {
+            XCTAssertTrue(sourceIndexes.keys.contains { $0.hasSuffix("/Item\(index).swift") })
+        }
+
+        measureMetrics([.wallClockTime], automaticallyStartMeasuring: false) {
+            try! populatedCache.write(to: cache)
+            try! input.write(to: selected, atomically: true, encoding: .utf8)
+            startMeasuring()
+            let result = CLI.run(in: directory.path, with: arguments)
+            stopMeasuring()
+            XCTAssertEqual(result, .ok)
+            XCTAssertEqual(try? String(contentsOf: selected), expected)
+        }
+    }
+
     func testInferring() {
         let files = PerformanceTests.files
         let tokens = files.flatMap { tokenize($0) }

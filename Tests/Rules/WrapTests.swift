@@ -10,6 +10,87 @@ import XCTest
 @testable import SwiftFormat
 
 final class WrapTests: XCTestCase {
+    func testNoWrapAtMaximumWidth() {
+        let input = """
+        let value = first + second
+        """
+        testFormatting(for: input, rule: .wrap, options: FormatOptions(maxWidth: 26))
+    }
+
+    func testWrapOneColumnOverMaximumWidth() {
+        let input = """
+        let value = first + second
+        """
+        let output = """
+        let value = first +
+            second
+        """
+        testFormatting(for: input, output, rule: .wrap, options: FormatOptions(maxWidth: 25))
+    }
+
+    func testWrapUsesTabWidth() {
+        let input = """
+        func process() {
+        \tlet value = first + second
+        }
+        """
+        let output = """
+        func process() {
+        \tlet value = first +
+        \t\tsecond
+        }
+        """
+        testFormatting(for: input, rule: .wrap, options: FormatOptions(indent: "\t", tabWidth: 4, maxWidth: 30))
+        testFormatting(for: input, output, rule: .wrap, options: FormatOptions(indent: "\t", tabWidth: 8, maxWidth: 30))
+    }
+
+    func testWrapFindsBreakpointBeforeLineWidthOverflows() {
+        let input = """
+        let foo =\tbar +\tbaz
+        """
+        let formatter = Formatter(tokenize(input), options: FormatOptions(tabWidth: Int.max / 2, maxWidth: 40))
+        XCTAssertEqual(formatter.indexWhereLineShouldWrap(from: 0), 4)
+    }
+
+    func testWrapBeforeClosingBraceWhenItExceedsMaximumWidth() {
+        let input = """
+        let foo = bar { baz }
+        """
+        let formatter = Formatter(tokenize(input), options: FormatOptions(maxWidth: 20))
+        XCTAssertEqual(formatter.indexWhereLineShouldWrap(from: 0), 10)
+    }
+
+    func testNoWrapShortNestedClosureArguments() {
+        let input = """
+        let transform = { (value: Widget, body: (Widget) -> Widget) in body(value) }
+        """
+        testFormatting(for: input, rule: .wrap, options: FormatOptions(maxWidth: 80))
+    }
+
+    func testWrapMeasuresEntireMultilineAssetLiteral() {
+        let input = """
+        let color = #colorLiteral(
+            red: 0.123456789,
+            green: 0.123456789,
+            blue: 0.123456789,
+            alpha: 1
+        )
+        """
+        let output = """
+        let color =
+            #colorLiteral(
+                red: 0.123456789,
+                green: 0.123456789,
+                blue: 0.123456789,
+                alpha: 1
+            )
+        """
+        testFormatting(for: input, [output], rules: [.wrap, .indent],
+                       options: FormatOptions(maxWidth: 40, assetLiteralWidth: .actualWidth))
+        testFormatting(for: input, rule: .wrap,
+                       options: FormatOptions(maxWidth: 40, assetLiteralWidth: .visualWidth))
+    }
+
     func testWrapIfStatement() {
         let input = """
         if let foo = foo, let bar = bar, let baz = baz {}

@@ -111,6 +111,42 @@ final class PerformanceTests: XCTestCase {
         XCTAssertEqual(options?.indent.count, 4)
     }
 
+    func testWrapShortMemberExpressions() {
+        let body = (0 ..< 2000).map { "    consume(value\($0).member)" }.joined(separator: "\n")
+        let input = """
+        func process() {
+        \(body)
+        }
+        """
+        let tokens = tokenize(input)
+        let options = FormatOptions(maxWidth: 120)
+        var output = [Token]()
+        measure {
+            output = try! format(tokens, rules: [.wrap], options: options).tokens
+        }
+        XCTAssertEqual(output, tokens)
+    }
+
+    func testWrapLongExpressions() {
+        let body = String(repeating: "    value = first + second + third + fourth\n", count: 200)
+        let input = """
+        func process() {
+        \(body)}
+        """
+        let wrappedBody = String(repeating: "    value = first + second +\n        third + fourth\n", count: 200)
+        let expected = """
+        func process() {
+        \(wrappedBody)}
+        """
+        let tokens = tokenize(input)
+        let options = FormatOptions(maxWidth: 30)
+        var output = [Token]()
+        measure {
+            output = try! format(tokens, rules: [.wrap], options: options).tokens
+        }
+        XCTAssertEqual(sourceCode(for: output), expected)
+    }
+
     func testIndent() {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }

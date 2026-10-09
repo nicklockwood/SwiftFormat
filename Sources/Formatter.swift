@@ -70,7 +70,7 @@ public final class Formatter: NSObject {
     var projectIndex: ProjectIndex? {
         assert(
             currentRule?.usesProjectContext == true,
-            "\(currentRule?.name ?? "Unknown rule") must declare usesProjectContext"
+            "\(currentRule?.name ?? "Unknown rule") must declare project context"
         )
         return context.projectIndex
     }

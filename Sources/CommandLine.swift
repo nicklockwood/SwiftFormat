@@ -1340,8 +1340,7 @@ func processInput(_ inputURLs: [URL],
 
     // Resolve the effective rules for the selected inputs before scanning the wider project.
     // Rules can vary by directory or source filter, so checking the top-level options isn't sufficient.
-    var requiresProjectIndex = false
-    var requiresFunctionReferences = false
+    var requiredFeatures = Set<ProjectContextFeature>()
     if projectIndexMode == .auto {
         let projectIndexRequirementErrors = enumerateFiles(
             withInputURLs: inputURLs,
@@ -1356,19 +1355,20 @@ func processInput(_ inputURLs: [URL],
             var options = try applyOverrides(to: options, for: inputURL)
             try options.addFilterArguments(path: inputURL.path, source: input)
             let rules = options.rules ?? defaultRules
-            let usesProjectContext = rules.contains {
-                FormatRules.byName[$0]?.usesProjectContext == true
+            let features = rules.reduce(into: Set<ProjectContextFeature>()) { features, name in
+                features.formUnion(FormatRules.byName[name]?.projectContextFeatures ?? [])
             }
-            let usesFunctionReferences = rules.contains("redundantOverload")
             return {
-                requiresProjectIndex = requiresProjectIndex || usesProjectContext
-                requiresFunctionReferences = requiresFunctionReferences || usesFunctionReferences
+                requiredFeatures.formUnion(features)
             }
         }
         guard projectIndexRequirementErrors.isEmpty else {
             return ((0, 0, 0, 0), projectIndexRequirementErrors)
         }
     }
+
+    let requiresProjectIndex = !requiredFeatures.isEmpty
+    let requiresFunctionReferences = requiredFeatures.contains(.functionReferences)
 
     // Build a complete, immutable project index before any file is formatted.
     let projectIndex: ProjectIndex? = requiresProjectIndex ? {

@@ -114,7 +114,6 @@ struct SourceFileIndex: Codable, Equatable {
     var typeMembers: [TypeMembers]
     var symbolDeclarations: [SymbolDeclaration]
     var functionReferences: [FunctionReference]
-    /// Whether function references were collected, even if none were found.
     var includesFunctionReferences: Bool
 
     init(

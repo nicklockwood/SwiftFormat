@@ -148,8 +148,17 @@ final class MetadataTests: XCTestCase {
             XCTAssertEqual(
                 rule.usesProjectContext,
                 referencesProjectIndex,
-                "\(ruleName) must set usesProjectContext iff it accesses formatter.projectIndex"
+                "\(ruleName) must declare project context iff it accesses formatter.projectIndex"
             )
+            formatter.forEach(.identifier("containsFunctionReference")) { index, _ in
+                guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator(".", .infix) else {
+                    return
+                }
+                XCTAssertTrue(
+                    rule.projectContextFeatures.contains(.functionReferences),
+                    "\(ruleName) must include .functionReferences in projectContextFeatures"
+                )
+            }
         }
     }
 

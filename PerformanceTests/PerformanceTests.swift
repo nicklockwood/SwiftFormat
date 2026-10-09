@@ -119,6 +119,29 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
+    func testIndentManySiblingMethods() {
+        let methods = (0 ..< 1000).map { index in
+            """
+                func method\(index)() -> Int {
+                    return \(index)
+                }
+            """
+        }.joined(separator: "\n\n")
+        let input = """
+        struct Example {
+        \(methods)
+        }
+        """
+        let tokens = tokenize(input)
+        var output = [Token]()
+
+        measure {
+            output = try! format(tokens, rules: [.indent]).tokens
+        }
+
+        XCTAssertEqual(output, tokens)
+    }
+
     func testWorstCaseIndent() {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }

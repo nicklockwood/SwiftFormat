@@ -337,7 +337,10 @@ public extension FormatRule {
                 // If this is the final `endOfScope` in a conditional assignment,
                 // we have to end the scope introduced by that assignment operator.
                 defer {
-                    if token == .endOfScope("}"), let startOfScope = formatter.startOfScope(at: i) {
+                    if token == .endOfScope("}"),
+                       scopeStack.last == .operator("=", .infix),
+                       let startOfScope = formatter.startOfScope(at: i)
+                    {
                         // Find the `=` before this start of scope, which isn't itself part of the conditional statement
                         var previousAssignmentIndex = formatter.index(of: .operator("=", .infix), before: startOfScope)
                         while let currentPreviousAssignmentIndex = previousAssignmentIndex,
@@ -348,10 +351,8 @@ public extension FormatRule {
                             previousAssignmentIndex = nextPreviousAssignmentIndex
                         }
 
-                        // Make sure the `=` actually created a new scope
-                        if scopeStack.last == .operator("=", .infix),
-                           // Parse the conditional branches following the `=` assignment operator
-                           let previousAssignmentIndex,
+                        // Parse the conditional branches following the `=` assignment operator
+                        if let previousAssignmentIndex,
                            let nextTokenAfterAssignment = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: previousAssignmentIndex),
                            let conditionalBranches = formatter.conditionalBranches(at: nextTokenAfterAssignment),
                            // If this is the very end of the conditional assignment following the `=`,

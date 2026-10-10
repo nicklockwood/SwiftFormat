@@ -101,6 +101,66 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
+    func testProjectIndexWithoutFunctionReferences() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let sources = directory.appendingPathComponent("Sources/Example")
+        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
+        let originalPrint = CLI.print
+        defer {
+            CLI.print = originalPrint
+            try? FileManager.default.removeItem(at: directory)
+        }
+        CLI.print = { _, _ in }
+        try "// Package marker".write(
+            to: directory.appendingPathComponent("Package.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        let methods = (0 ..< 512).map {
+            "    func operation\($0)(_ value: Int) -> Int { value }"
+        }.joined(separator: "\n")
+        let references = (0 ..< 512).map {
+            "        _ = values.map(operation\($0))"
+        }.joined(separator: "\n")
+        let source = """
+        struct Worker {
+        \(methods)
+            func process(_ values: [Int]) {
+        \(references)
+            }
+        }
+        """
+        try source.write(to: sources.appendingPathComponent("Worker.swift"), atomically: true, encoding: .utf8)
+        let input = """
+        extension Worker {
+            public func extra() -> Int { 1 }
+        }
+        """
+        let expected = """
+        extension Worker {
+            func extra() -> Int { 1 }
+        }
+        """
+        let selected = sources.appendingPathComponent("Extension.swift")
+        let cache = directory.appendingPathComponent("swiftformat.cache")
+        let arguments = [
+            "swiftformat", selected.path, "--rules", "redundantPublic",
+            "--project-index", "auto", "--cache", cache.path, "--swift-version", "6.0", "--quiet",
+        ]
+        measureMetrics([.wallClockTime], automaticallyStartMeasuring: false) {
+            if FileManager.default.fileExists(atPath: cache.path) {
+                try! FileManager.default.removeItem(at: cache)
+            }
+            try! input.write(to: selected, atomically: true, encoding: .utf8)
+            startMeasuring()
+            let result = CLI.run(in: directory.path, with: arguments)
+            stopMeasuring()
+            XCTAssertEqual(result, .ok)
+            XCTAssertEqual(try? String(contentsOf: selected), expected)
+            XCTAssertTrue(FileManager.default.fileExists(atPath: cache.path))
+        }
+    }
+
     func testProjectIndexWithPopulatedCache() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let sources = directory.appendingPathComponent("Sources/Example")

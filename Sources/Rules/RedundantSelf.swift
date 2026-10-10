@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Insert or remove redundant self keyword
     static let redundantSelf = FormatRule(
         help: "Insert/remove explicit `self` where applicable.",
-        usesProjectContext: true,
+        projectContextFeatures: [.declarations],
         options: ["self", "self-required"]
     ) { formatter in
         _ = formatter.options.selfRequired

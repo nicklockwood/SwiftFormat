@@ -80,6 +80,13 @@ private func withTmpDirectory(_ files: [String: String], fn: (URL) throws -> Voi
     try fn(directory)
 }
 
+private func readSourceIndexes(at url: URL) throws -> [String: SourceFileIndex] {
+    struct Cache: Decodable {
+        let sourceIndexes: [String: SourceFileIndex]
+    }
+    return try JSONDecoder().decode(Cache.self, from: Data(contentsOf: url)).sourceIndexes
+}
+
 private struct TestSnapshot: Decodable {
     let version: Int
     let files: [String: String]
@@ -650,6 +657,157 @@ final class CommandLineTests: XCTestCase {
                 func bar() {}
             }
             """)
+        }
+    }
+
+    func testProjectIndexOmitsFunctionReferencesWhenUnused() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Functions.swift": """
+            func perform(value: Int) {}
+            """,
+            "Sources/App/Use.swift": """
+            let callback = perform(value:)
+            """,
+        ]) { directory in
+            let useURL = directory.appendingPathComponent("Sources/App/Use.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Use.swift --rules redundantPublic,linebreakAtEndOfFile --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: useURL), """
+            let callback = perform(value:)
+
+            """)
+
+            let sourceIndexes = try readSourceIndexes(at: cacheURL)
+            XCTAssertFalse(sourceIndexes.isEmpty)
+            for index in sourceIndexes.values {
+                XCTAssertFalse(index.includesFunctionReferences)
+                XCTAssertTrue(index.functionReferences.isEmpty)
+            }
+        }
+    }
+
+    func testProjectIndexUpdatesFunctionReferenceRequirements() throws {
+        let input = """
+        struct Worker {
+            func perform(value: Int, count: Int) {}
+
+            func perform(value: Int) {
+                perform(value: value, count: 1)
+            }
+        }
+        """
+        let output = """
+        struct Worker {
+            func perform(value: Int, count: Int = 1) {}
+        }
+
+        """
+        for projectIndexMode in ["auto", "disabled"] {
+            try withTmpDirectory([
+                "Package.swift": "// Package marker",
+                "Sources/App/Overloads.swift": input,
+                "Sources/App/References.swift": """
+                let callback = Worker().perform(value:)
+                """,
+            ]) { directory in
+                let overloadsURL = directory.appendingPathComponent("Sources/App/Overloads.swift")
+                let referencesURL = directory.appendingPathComponent("Sources/App/References.swift")
+                let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+                let arguments = "Sources/App/Overloads.swift --cache \(cacheURL.path) --quiet"
+                CLI.print = { _, _ in }
+
+                XCTAssertEqual(CLI.run(
+                    in: directory.path,
+                    with: "\(arguments) --rules redundantPublic,linebreakAtEndOfFile --project-index \(projectIndexMode)"
+                ), .ok)
+                let partialIndexes = try readSourceIndexes(at: cacheURL)
+                XCTAssertFalse(partialIndexes.isEmpty)
+                XCTAssertTrue(partialIndexes.values.allSatisfy { !$0.includesFunctionReferences })
+
+                XCTAssertEqual(CLI.run(
+                    in: directory.path,
+                    with: "\(arguments) --rules redundantOverload"
+                ), .ok)
+                XCTAssertEqual(try String(contentsOf: overloadsURL), input + "\n")
+
+                try """
+                let number = 1
+                """.write(to: referencesURL, atomically: true, encoding: .utf8)
+
+                XCTAssertEqual(CLI.run(
+                    in: directory.path,
+                    with: "\(arguments) --rules redundantOverload"
+                ), .ok)
+                XCTAssertEqual(try String(contentsOf: overloadsURL), output)
+                let completeIndexes = try readSourceIndexes(at: cacheURL)
+                XCTAssertTrue(completeIndexes.values.allSatisfy(\.includesFunctionReferences))
+
+                XCTAssertEqual(CLI.run(
+                    in: directory.path,
+                    with: "\(arguments) --rules redundantPublic"
+                ), .ok)
+                XCTAssertEqual(try readSourceIndexes(at: cacheURL), completeIndexes)
+            }
+        }
+    }
+
+    func testProjectIndexFunctionReferencesUseEffectiveRules() throws {
+        let input = """
+        struct Worker {
+            func perform(value: Int, count: Int) {}
+
+            func perform(value: Int) {
+                perform(value: value, count: 1)
+            }
+        }
+        """
+        let configurations = [
+            [
+                ".swiftformat": "--rules redundantPublic",
+                "Sources/App/Selected/.swiftformat": "--enable redundantOverload",
+            ],
+            [
+                ".swiftformat": """
+                --rules redundantPublic
+                --filter **/Selected/*.swift
+                --enable redundantOverload
+                """,
+            ],
+        ]
+        for configuration in configurations {
+            let files = configuration.merging([
+                "Package.swift": "// Package marker",
+                "Sources/App/First.swift": """
+                let number = 1
+                """,
+                "Sources/App/Selected/Overloads.swift": input,
+                "Sources/App/References.swift": """
+                let callback = Worker().perform(value:)
+                """,
+            ]) { _, value in value }
+            try withTmpDirectory(files) { directory in
+                let overloadsURL = directory.appendingPathComponent("Sources/App/Selected/Overloads.swift")
+                let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+                CLI.print = { _, _ in }
+
+                XCTAssertEqual(CLI.run(
+                    in: directory.path,
+                    with: "Sources/App/First.swift Sources/App/Selected/Overloads.swift --cache \(cacheURL.path) --quiet"
+                ), .ok)
+                XCTAssertEqual(try String(contentsOf: overloadsURL), input)
+                let indexes = try readSourceIndexes(at: cacheURL)
+                XCTAssertFalse(indexes.isEmpty)
+                XCTAssertTrue(indexes.values.allSatisfy(\.includesFunctionReferences))
+                XCTAssertTrue(indexes.values.contains { index in
+                    index.functionReferences.contains { $0.name == "perform" }
+                })
+            }
         }
     }
 

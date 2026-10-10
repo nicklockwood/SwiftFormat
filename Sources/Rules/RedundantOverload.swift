@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Replaces forwarding overloads with default arguments on the original declaration
     static let redundantOverload = FormatRule(
         help: "Replace forwarding overloads with default arguments.",
-        usesProjectContext: true,
+        projectContextFeatures: [.functionReferences],
         options: ["overload-visibility"]
     ) { formatter in
         let candidates = formatter.redundantOverloadCandidates().filter { candidate in

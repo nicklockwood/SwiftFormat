@@ -13,7 +13,7 @@ public extension FormatRule {
     static let commonTypos = FormatRule(
         help: "Correct common spelling mistakes in comments and identifiers.",
         disabledByDefault: true,
-        usesProjectContext: true,
+        projectContextFeatures: [.declarations],
         options: ["typo-visibility", "typos", "ignore-typos"]
     ) { formatter in
         let ignoredTypos = Set(formatter.options.ignoredTypos.map { $0.lowercased() })

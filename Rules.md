@@ -166,6 +166,7 @@
 * [wrapMultilineFunctionChains](#wrapMultilineFunctionChains)
 * [wrapSingleLineStrings](#wrapSingleLineStrings)
 * [wrapSwitchCases](#wrapSwitchCases)
+* [wrapTaskBodies](#wrapTaskBodies)
 
 # Deprecated Rules (do not use)
 
@@ -4936,6 +4937,23 @@ Wrap comma-delimited switch cases onto multiple lines.
 +        .bar:
       break
   }
+```
+
+</details>
+<br/>
+
+## wrapTaskBodies
+
+Wrap single-line Task and Task.detached closure bodies onto multiple lines.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- Task { await someOperation() }
++ Task {
++     await someOperation()
++ }
 ```
 
 </details>

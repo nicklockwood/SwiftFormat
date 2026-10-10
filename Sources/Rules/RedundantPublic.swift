@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let redundantPublic = FormatRule(
         help: "Remove redundant public access control from declarations in internal or private types.",
-        usesProjectContext: true
+        projectContextFeatures: [.declarations]
     ) { formatter in
         let declarations = formatter.parseDeclarations()
 

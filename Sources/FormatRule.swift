@@ -31,6 +31,11 @@
 
 import Foundation
 
+enum ProjectContextFeature: Hashable {
+    case declarations
+    case functionReferences
+}
+
 public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     static let unnamedRule = "[unnamed rule]"
 
@@ -42,7 +47,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     let examples: String?
     let runOnceOnly: Bool
     let disabledByDefault: Bool
-    let usesProjectContext: Bool
+    let projectContextFeatures: Set<ProjectContextFeature>
     let orderAfter: [FormatRule]
     let options: [String]
     let sharedOptions: [String]
@@ -51,6 +56,10 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
 
     /// Null rule, used for testing
     static let none: FormatRule = .init(help: "") { _ in } examples: { nil }
+
+    var usesProjectContext: Bool {
+        !projectContextFeatures.isEmpty
+    }
 
     var isDeprecated: Bool {
         deprecationMessage != nil || renamedTo != nil
@@ -76,7 +85,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
          renamedTo: FormatRule? = nil,
          runOnceOnly: Bool = false,
          disabledByDefault: Bool = false,
-         usesProjectContext: Bool = false,
+         projectContextFeatures: Set<ProjectContextFeature> = [],
          orderAfter: [FormatRule] = [],
          options: [String] = [],
          sharedOptions: [String] = [],
@@ -87,7 +96,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
         self.help = help
         self.runOnceOnly = runOnceOnly
         self.disabledByDefault = disabledByDefault || deprecationMessage != nil || renamedTo != nil
-        self.usesProjectContext = usesProjectContext
+        self.projectContextFeatures = projectContextFeatures
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions

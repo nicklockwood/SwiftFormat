@@ -1640,10 +1640,13 @@ public func tokenize(_ source: String) -> [Token] {
                 break
             }
         }
-        while let nextToken = index + 1 < tokens.count ? tokens[index + 1] : nil,
-              case let .operator(nextString, _) = nextToken, !nextString.hasPrefix("\\"),
-              string.hasPrefix(".") || !nextString.contains(".")
-        {
+        while true {
+            guard let nextToken = index + 1 < tokens.count ? tokens[index + 1] : nil,
+                  case let .operator(nextString, _) = nextToken, !nextString.hasPrefix("\\"),
+                  string.hasPrefix(".") || !nextString.contains(".")
+            else {
+                break
+            }
             if scopeIndexStack.last == index {
                 // In case of a ? previously interpreted as a ternary
                 scopeIndexStack.removeLast()
@@ -1653,10 +1656,13 @@ public func tokenize(_ source: String) -> [Token] {
             scopeIndexStack = scopeIndexStack.map { $0 > index ? $0 - 1 : $0 }
         }
         var index = index
-        while let prevToken = index > 0 ? tokens[index - 1] : nil,
-              case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
-              !string.hasPrefix("\\"), prevString.hasPrefix(".") || !string.contains(".")
-        {
+        while true {
+            guard let prevToken = index > 0 ? tokens[index - 1] : nil,
+                  case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
+                  !string.hasPrefix("\\"), prevString.hasPrefix(".") || !string.contains(".")
+            else {
+                break
+            }
             if scopeIndexStack.last == index - 1 {
                 // In case of a ? previously interpreted as a ternary
                 scopeIndexStack.removeLast()
@@ -1707,7 +1713,7 @@ public func tokenize(_ source: String) -> [Token] {
         case ".":
             var _type = OperatorType.prefix
             var prevNonSpaceIndex = prevNonSpaceIndex
-            repeat {
+            while true {
                 let prevNonSpaceToken = tokens[prevNonSpaceIndex]
                 if prevNonSpaceToken.isLvalue {
                     var lineStart = index(of: .linebreak, before: prevNonSpaceIndex) ?? 0
@@ -1736,7 +1742,7 @@ public func tokenize(_ source: String) -> [Token] {
                     _type = .infix
                 }
                 break
-            } while true
+            }
             type = _type
         case "?":
             if prevToken.isSpaceOrCommentOrLinebreak {

@@ -12,13 +12,27 @@ public extension FormatRule {
     /// Replaces forwarding overloads with default arguments on the original declaration
     static let redundantOverload = FormatRule(
         help: "Replace forwarding overloads with default arguments.",
-        projectContextFeatures: [.functionReferences],
         options: ["overload-visibility"]
     ) { formatter in
-        let candidates = formatter.redundantOverloadCandidates().filter { candidate in
-            guard let fileURL = formatter.currentFileURL,
-                  let projectIndex = formatter.projectIndex,
-                  let function = formatter.parseFunctionDeclaration(keywordIndex: candidate.wrapper.keywordIndex),
+        let fileURL = formatter.currentFileURL ?? URL(fileURLWithPath: "/SwiftFormat/Input.swift")
+        let filePath = fileURL.standardizedFileURL.path
+        let overloadCandidates = formatter.redundantOverloadCandidates()
+        guard !overloadCandidates.isEmpty else { return }
+        let sharedProjectIndex = formatter.options.overloadVisibility > .fileprivate
+            ? formatter.projectIndex(requiring: [.functionReferences])
+            : nil
+        let indexedProject = sharedProjectIndex.flatMap { index in
+            index.files[filePath]?.includesFunctionReferences == true ? index : nil
+        }
+        let sourceFileIndex = formatter.sourceFileIndex.flatMap { index in
+            index.includesFunctionReferences ? index : nil
+        } ?? makeSourceFileIndex(
+            from: sourceCode(for: formatter.tokens),
+            moduleIdentifiers: ["SwiftFormat.CurrentFile"]
+        )
+        let projectIndex = indexedProject ?? ProjectIndex(files: [filePath: sourceFileIndex])
+        let candidates = overloadCandidates.filter { candidate in
+            guard let function = formatter.parseFunctionDeclaration(keywordIndex: candidate.wrapper.keywordIndex),
                   let name = function.name
             else { return true }
             return !projectIndex.containsFunctionReference(

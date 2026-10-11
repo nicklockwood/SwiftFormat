@@ -1107,16 +1107,53 @@ private struct SwiftFormatCache: Codable {
     var swiftFormatVersion = version
     var projectIndexVersion = SourceFileIndex.cacheVersion
     var formatting = [String: [String: String]]()
+    var projectIndexDependencies = [String: [String: ProjectIndexDependency]]()
     var sourceIndexes = [String: SourceFileIndex]()
 
-    mutating func setFormattingHash(_ contentHash: String, for path: String, configurationHash: String) {
+    mutating func setFormattingHash(
+        _ contentHash: String,
+        for path: String,
+        configurationHash: String,
+        projectIndexDependency: ProjectIndexDependency?
+    ) {
         for hash in Array(formatting.keys) where hash != configurationHash {
             formatting[hash]?[path] = nil
+            projectIndexDependencies[hash]?[path] = nil
             if formatting[hash]?.isEmpty == true {
                 formatting[hash] = nil
             }
+            if projectIndexDependencies[hash]?.isEmpty == true {
+                projectIndexDependencies[hash] = nil
+            }
         }
         formatting[configurationHash, default: [:]][path] = contentHash
+        projectIndexDependencies[configurationHash, default: [:]][path] = projectIndexDependency
+        if projectIndexDependencies[configurationHash]?.isEmpty == true {
+            projectIndexDependencies[configurationHash] = nil
+        }
+    }
+}
+
+private final class ProjectIndexCacheUpdates {
+    private let lock = NSLock()
+    private var values = [URL: [String: SourceFileIndex]]()
+
+    func index(for key: String, cacheURL: URL) -> SourceFileIndex? {
+        lock.lock()
+        defer { lock.unlock() }
+        return values[cacheURL]?[key]
+    }
+
+    func setIndex(_ index: SourceFileIndex, for key: String, cacheURL: URL) {
+        lock.lock()
+        values[cacheURL, default: [:]][key] = index
+        lock.unlock()
+    }
+
+    func snapshot() -> [URL: [String: SourceFileIndex]] {
+        lock.lock()
+        defer { lock.unlock() }
+        return values
     }
 }
 
@@ -1369,101 +1406,110 @@ func processInput(_ inputURLs: [URL],
         return result
     }
 
-    // Resolve the effective rules for the selected inputs before scanning the wider project.
-    // Rules can vary by directory or source filter, so checking the top-level options isn't sufficient.
-    var requiredFeatures = Set<ProjectContextFeature>()
+    // Preserve the original contents of files being formatted. A project index may be requested
+    // after another formatting worker has finished, so it must not read a partially updated project.
+    var inputSourceSnapshots = [String: String]()
+    var localFunctionReferencePaths = Set<String>()
     if projectIndexMode == .auto {
-        let projectIndexRequirementErrors = enumerateFiles(
+        let snapshotErrors = enumerateFiles(
             withInputURLs: inputURLs,
             options: options,
             concurrent: !verbose,
             logger: Logger(print: print)
         ) { inputURL, _, options in
-            guard inputURL.pathExtension != "md" else { return {} }
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("Failed to read file \(inputURL.path)")
             }
             var options = try applyOverrides(to: options, for: inputURL)
             try options.addFilterArguments(path: inputURL.path, source: input)
             let rules = options.rules ?? defaultRules
-            let features = rules.reduce(into: Set<ProjectContextFeature>()) { features, name in
-                features.formUnion(FormatRules.byName[name]?.projectContextFeatures ?? [])
-            }
+            let requiresLocalFunctionReferences = inputURL.pathExtension == "swift" &&
+                rules.contains(FormatRule.redundantOverload.name) &&
+                (options.formatOptions ?? .default).overloadVisibility <= .fileprivate
+            let path = inputURL.standardizedFileURL.path
             return {
-                requiredFeatures.formUnion(features)
+                inputSourceSnapshots[path] = input
+                if requiresLocalFunctionReferences {
+                    localFunctionReferencePaths.insert(path)
+                }
             }
         }
-        guard projectIndexRequirementErrors.isEmpty else {
-            return ((0, 0, 0, 0), projectIndexRequirementErrors)
+        guard snapshotErrors.isEmpty else {
+            return ((0, 0, 0, 0), snapshotErrors)
         }
     }
 
-    let requiresProjectIndex = !requiredFeatures.isEmpty
-    let requiresFunctionReferences = requiredFeatures.contains(.functionReferences)
-
-    // Build a complete, immutable project index before any file is formatted.
-    let projectIndex: ProjectIndex? = requiresProjectIndex ? {
-        var discoveredFilesByPath = [String: (URL, ProjectRoot)]()
-        for root in projectRoots {
-            for fileURL in discoverSourceFiles(in: root) {
-                let path = fileURL.path
-                if let existing = discoveredFilesByPath[path],
-                   existing.1.url.path.count >= root.url.path.count
-                {
-                    continue
-                }
-                discoveredFilesByPath[path] = (fileURL, root)
-            }
-        }
-        let discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
-        let discoveredFilesByRoot = Dictionary(grouping: discoveredFiles, by: \.1)
-        let moduleIdentifiersByRoot = discoveredFilesByRoot.mapValues { files in
-            moduleIdentifiers(for: files.map(\.0), in: files[0].1)
-        }
-        let indexQueue = DispatchQueue(label: "swiftformat.project-index")
-        let indexGroup = DispatchGroup()
-        let workerQueue = DispatchQueue.global(qos: .userInitiated)
-        var indexedFiles = [(String, SourceFileIndex)]()
-        var updatedIndexEntries = [(URL, String, SourceFileIndex)]()
-        for (fileURL, root) in discoveredFiles {
-            indexGroup.enter()
-            workerQueue.async {
-                defer { indexGroup.leave() }
-                guard let source = try? String(contentsOf: fileURL) else { return }
-                let sourceHash = computeHash(source)
-                let rootCacheURL = cacheURL(for: root)
-                let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
-                let modules = moduleIdentifiersByRoot[root]?[fileURL.path] ?? []
-                let sourceIndex: SourceFileIndex
-                if let rootCacheURL,
-                   let key,
-                   let cached = caches[rootCacheURL]?.sourceIndexes[key],
-                   cached.contentHash == sourceHash,
-                   cached.moduleIdentifiers == modules.sorted(),
-                   !requiresFunctionReferences || cached.includesFunctionReferences
-                {
-                    sourceIndex = cached
-                } else {
-                    sourceIndex = makeSourceFileIndex(
-                        from: source,
-                        moduleIdentifiers: modules,
-                        includeFunctionReferences: requiresFunctionReferences
-                    )
-                }
-                indexQueue.sync {
-                    indexedFiles.append((fileURL.standardizedFileURL.path, sourceIndex))
-                    if let rootCacheURL, let key {
-                        updatedIndexEntries.append((rootCacheURL, key, sourceIndex))
+    let projectIndexCacheUpdates = ProjectIndexCacheUpdates()
+    var discoveredProjectFiles: [(URL, ProjectRoot)]?
+    var moduleIdentifiersByRoot: [ProjectRoot: [String: Set<String>]]?
+    let projectIndexProvider: ProjectIndexProvider? = projectIndexMode == .auto ? ProjectIndexProvider { features in
+        let requiresFunctionReferences = features.contains(.functionReferences)
+        let discoveredFiles: [(URL, ProjectRoot)]
+        if let cached = discoveredProjectFiles {
+            discoveredFiles = cached
+        } else {
+            var discoveredFilesByPath = [String: (URL, ProjectRoot)]()
+            for root in projectRoots {
+                for fileURL in discoverSourceFiles(in: root) {
+                    let path = fileURL.path
+                    if let existing = discoveredFilesByPath[path],
+                       existing.1.url.path.count >= root.url.path.count
+                    {
+                        continue
                     }
+                    discoveredFilesByPath[path] = (fileURL, root)
                 }
             }
+            discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
+            discoveredProjectFiles = discoveredFiles
         }
-        indexGroup.wait()
-        for (cacheURL, key, sourceIndex) in updatedIndexEntries {
-            caches[cacheURL]?.sourceIndexes[key] = sourceIndex
+        let modulesByRoot: [ProjectRoot: [String: Set<String>]]
+        if let cached = moduleIdentifiersByRoot {
+            modulesByRoot = cached
+        } else {
+            let filesByRoot = Dictionary(grouping: discoveredFiles, by: \.1)
+            modulesByRoot = filesByRoot.mapValues { files in
+                moduleIdentifiers(for: files.map(\.0), in: files[0].1)
+            }
+            moduleIdentifiersByRoot = modulesByRoot
+        }
+        let indexLock = NSLock()
+        var indexedFiles = [(String, SourceFileIndex)]()
+        DispatchQueue.concurrentPerform(iterations: discoveredFiles.count) { index in
+            let (fileURL, root) = discoveredFiles[index]
+            let path = fileURL.standardizedFileURL.path
+            guard let source = inputSourceSnapshots[path] ?? (try? String(contentsOf: fileURL)) else { return }
+            let sourceHash = computeHash(source)
+            let rootCacheURL = cacheURL(for: root)
+            let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
+            let modules = modulesByRoot[root]?[fileURL.path] ?? []
+            let includeFunctionReferences = requiresFunctionReferences || localFunctionReferencePaths.contains(path)
+            let sourceIndex: SourceFileIndex
+            if let rootCacheURL,
+               let key,
+               let cached = projectIndexCacheUpdates.index(for: key, cacheURL: rootCacheURL) ??
+               caches[rootCacheURL]?.sourceIndexes[key],
+               cached.contentHash == sourceHash,
+               cached.moduleIdentifiers == modules.sorted(),
+               !includeFunctionReferences || cached.includesFunctionReferences
+            {
+                sourceIndex = cached
+            } else {
+                sourceIndex = makeSourceFileIndex(
+                    from: source,
+                    moduleIdentifiers: modules,
+                    includeFunctionReferences: includeFunctionReferences
+                )
+            }
+            indexLock.lock()
+            indexedFiles.append((path, sourceIndex))
+            indexLock.unlock()
+            if let rootCacheURL, let key {
+                projectIndexCacheUpdates.setIndex(sourceIndex, for: key, cacheURL: rootCacheURL)
+            }
         }
         return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
-    }() : nil
+    } : nil
 
     // Format files
     func fileHandler(
@@ -1482,7 +1528,7 @@ func processInput(_ inputURLs: [URL],
         if inputURL == snapshotURL {
             return { outputFlags.filesSkipped += 1 }
         }
-        guard let input = try? String(contentsOf: inputURL) else {
+        guard let input = inputSourceSnapshots[inputURL.path] ?? (try? String(contentsOf: inputURL)) else {
             throw FormatError.reading("Failed to read file \(inputURL.path)")
         }
         let inputSnapshotKey: String?
@@ -1521,25 +1567,54 @@ func processInput(_ inputURLs: [URL],
         let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
         // Check cache
         let rules = options.rules ?? defaultRules
+        let projectIndexAccess = ProjectIndexAccess(provider: projectIndexProvider)
+        let requiresLocalFunctionReferences = inputURL.pathExtension == "swift" &&
+            rules.contains(FormatRule.redundantOverload.name) &&
+            (formatOptions.overloadVisibility <= .fileprivate || projectIndexProvider == nil)
         let fileCacheURL = cacheURL(for: inputURL)
         let configurationHash: String? = fileCacheURL.map { _ in
-            let usesProjectContext = rules.contains(where: { FormatRules.byName[$0]?.usesProjectContext == true })
-            let projectFingerprint = usesProjectContext ? projectIndex.map {
-                "project-index:\($0.fingerprint)"
-            } ?? "project-index:disabled" : ""
-            return computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))\(projectFingerprint)")
+            computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
         }
         let cacheKey = fileCacheURL.map { cacheKey(for: inputURL, cacheURL: $0) }
         do {
             var cacheHash: String?
             var sourceHash: String?
+            var cachedProjectIndexDependency: ProjectIndexDependency?
             if let fileCacheURL,
                let cacheKey,
                let configurationHash,
                let cachedHash = caches[fileCacheURL]?.formatting[configurationHash]?[cacheKey]
             {
-                cacheHash = cachedHash
                 sourceHash = computeHash(input)
+                if cachedHash == sourceHash {
+                    let dependency = caches[fileCacheURL]?
+                        .projectIndexDependencies[configurationHash]?[cacheKey]
+                    let currentFingerprint = dependency.flatMap {
+                        projectIndexProvider?.index(requiring: $0.features)?.fingerprint(for: $0.features)
+                    }
+                    if dependency == nil || currentFingerprint == dependency?.fingerprint {
+                        cacheHash = cachedHash
+                        cachedProjectIndexDependency = dependency
+                    }
+                }
+            }
+            let sourceFileIndexAccess = SourceFileIndexAccess(index: {
+                guard requiresLocalFunctionReferences,
+                      let fileCacheURL,
+                      let cacheKey,
+                      let cached = projectIndexCacheUpdates.index(for: cacheKey, cacheURL: fileCacheURL) ??
+                      caches[fileCacheURL]?.sourceIndexes[cacheKey],
+                      cached.contentHash == computeHash(input),
+                      cached.includesFunctionReferences
+                else { return nil }
+                return cached
+            }()) {
+                guard requiresLocalFunctionReferences else { return nil }
+                return makeSourceFileIndex(
+                    from: input,
+                    moduleIdentifiers: [],
+                    includeFunctionReferences: true
+                )
             }
             let output: String
             if let cacheHash, cacheHash == sourceHash {
@@ -1638,17 +1713,34 @@ func processInput(_ inputURLs: [URL],
                                                   logger: logger,
                                                   context: FormattingContext(
                                                       currentFileURL: inputURL,
-                                                      projectIndex: projectIndex
+                                                      projectIndexAccess: projectIndexAccess,
+                                                      sourceFileIndexAccess: sourceFileIndexAccess
                                                   ))
                 output = sourceCode(for: outputTokens)
                 if output != input {
                     sourceHash = nil
                 }
             }
+            var updatedLocalSourceIndex: SourceFileIndex?
+            if sourceFileIndexAccess.wasRequested {
+                updatedLocalSourceIndex = output == input ? sourceFileIndexAccess.index : makeSourceFileIndex(
+                    from: output,
+                    moduleIdentifiers: [],
+                    includeFunctionReferences: true
+                )
+            } else {
+                updatedLocalSourceIndex = nil
+            }
+            if let moduleIdentifiers = projectIndexAccess.lastIndex?.files[inputURL.path]?.moduleIdentifiers,
+               !moduleIdentifiers.isEmpty
+            {
+                updatedLocalSourceIndex?.moduleIdentifiers = moduleIdentifiers
+            }
             let cacheValue = configurationHash.map {
                 // Only bother computing this if cache is enabled
                 ($0, sourceHash ?? computeHash(output))
             }
+            let projectIndexDependency = cachedProjectIndexDependency ?? projectIndexAccess.dependency
             if outputURL.path.components(separatedBy: "/").contains("stdout") {
                 if !dryrun {
                     // Write to stdout
@@ -1678,8 +1770,16 @@ func processInput(_ inputURLs: [URL],
                         caches[fileCacheURL, default: SwiftFormatCache()].setFormattingHash(
                             cacheValue.1,
                             for: cacheKey,
-                            configurationHash: cacheValue.0
+                            configurationHash: cacheValue.0,
+                            projectIndexDependency: projectIndexDependency
                         )
+                        if let updatedLocalSourceIndex {
+                            projectIndexCacheUpdates.setIndex(
+                                updatedLocalSourceIndex,
+                                for: cacheKey,
+                                cacheURL: fileCacheURL
+                            )
+                        }
                     }
                     showConfigurationWarnings(options)
                 }
@@ -1703,13 +1803,22 @@ func processInput(_ inputURLs: [URL],
                         caches[fileCacheURL, default: SwiftFormatCache()].setFormattingHash(
                             cacheValue.1,
                             for: cacheKey,
-                            configurationHash: cacheValue.0
+                            configurationHash: cacheValue.0,
+                            projectIndexDependency: projectIndexDependency
                         )
                         if outputURL == inputURL {
-                            caches[fileCacheURL, default: SwiftFormatCache()].sourceIndexes[cacheKey] = makeSourceFileIndex(
+                            let sourceIndex = updatedLocalSourceIndex ?? makeSourceFileIndex(
                                 from: output,
-                                moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? []),
-                                includeFunctionReferences: requiresFunctionReferences
+                                moduleIdentifiers: Set(
+                                    projectIndexAccess.lastIndex?.files[inputURL.path]?.moduleIdentifiers ?? []
+                                ),
+                                includeFunctionReferences: projectIndexDependency?
+                                    .features.contains(.functionReferences) == true
+                            )
+                            projectIndexCacheUpdates.setIndex(
+                                sourceIndex,
+                                for: cacheKey,
+                                cacheURL: fileCacheURL
                             )
                         }
                     }
@@ -1770,6 +1879,9 @@ func processInput(_ inputURLs: [URL],
             // Replace individual warnings with a generic message, to avoid repetition
             errors.append(FormatError.writing("\(errorCount) file\(errorCount == 1 ? "" : "s") could not be formatted"))
         }
+    }
+    for (cacheURL, indexes) in projectIndexCacheUpdates.snapshot() {
+        caches[cacheURL, default: SwiftFormatCache()].sourceIndexes.merge(indexes) { _, updated in updated }
     }
     // Save cache
     if outputFlags.filesChecked > 0 {

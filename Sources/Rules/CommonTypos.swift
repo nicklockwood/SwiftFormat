@@ -13,7 +13,6 @@ public extension FormatRule {
     static let commonTypos = FormatRule(
         help: "Correct common spelling mistakes in comments and identifiers.",
         disabledByDefault: true,
-        projectContextFeatures: [.declarations],
         options: ["typo-visibility", "typos", "ignore-typos"]
     ) { formatter in
         let ignoredTypos = Set(formatter.options.ignoredTypos.map { $0.lowercased() })
@@ -27,7 +26,7 @@ public extension FormatRule {
         var eligibleNames = Set<String>()
         let projectTypoNames: ProjectIndex.DeclarationNames? = formatter.currentFileURL.flatMap { fileURL in
             guard formatter.options.typoVisibility > .fileprivate else { return nil }
-            return formatter.projectIndex?.declarationNames(
+            return formatter.projectIndex(requiring: [.declarations])?.declarationNames(
                 upTo: formatter.options.typoVisibility,
                 visibleFrom: fileURL
             )

@@ -36,6 +36,29 @@ enum ProjectContextFeature: Hashable {
     case functionReferences
 }
 
+struct ProjectContextRequirement: ExpressibleByArrayLiteral {
+    typealias ArrayLiteralElement = ProjectContextFeature
+
+    let features: Set<ProjectContextFeature>
+    private let condition: (FormatOptions) -> Bool
+
+    init(
+        _ features: Set<ProjectContextFeature>,
+        where condition: @escaping (FormatOptions) -> Bool = { _ in true }
+    ) {
+        self.features = features
+        self.condition = condition
+    }
+
+    init(arrayLiteral elements: ProjectContextFeature...) {
+        self.init(Set(elements))
+    }
+
+    func features(for options: FormatOptions) -> Set<ProjectContextFeature> {
+        condition(options) ? features : []
+    }
+}
+
 public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     static let unnamedRule = "[unnamed rule]"
 
@@ -47,7 +70,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     let examples: String?
     let runOnceOnly: Bool
     let disabledByDefault: Bool
-    let projectContextFeatures: Set<ProjectContextFeature>
+    let projectContext: ProjectContextRequirement
     let orderAfter: [FormatRule]
     let options: [String]
     let sharedOptions: [String]
@@ -58,7 +81,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     static let none: FormatRule = .init(help: "") { _ in } examples: { nil }
 
     var usesProjectContext: Bool {
-        !projectContextFeatures.isEmpty
+        !projectContext.features.isEmpty
     }
 
     var isDeprecated: Bool {
@@ -85,7 +108,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
          renamedTo: FormatRule? = nil,
          runOnceOnly: Bool = false,
          disabledByDefault: Bool = false,
-         projectContextFeatures: Set<ProjectContextFeature> = [],
+         projectContext: ProjectContextRequirement = [],
          orderAfter: [FormatRule] = [],
          options: [String] = [],
          sharedOptions: [String] = [],
@@ -96,7 +119,7 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
         self.help = help
         self.runOnceOnly = runOnceOnly
         self.disabledByDefault = disabledByDefault || deprecationMessage != nil || renamedTo != nil
-        self.projectContextFeatures = projectContextFeatures
+        self.projectContext = projectContext
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions

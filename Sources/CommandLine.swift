@@ -1355,8 +1355,9 @@ func processInput(_ inputURLs: [URL],
             var options = try applyOverrides(to: options, for: inputURL)
             try options.addFilterArguments(path: inputURL.path, source: input)
             let rules = options.rules ?? defaultRules
+            let formatOptions = options.formatOptions ?? .default
             let features = rules.reduce(into: Set<ProjectContextFeature>()) { features, name in
-                features.formUnion(FormatRules.byName[name]?.projectContextFeatures ?? [])
+                features.formUnion(FormatRules.byName[name]?.projectContext.features(for: formatOptions) ?? [])
             }
             return {
                 requiredFeatures.formUnion(features)
@@ -1492,7 +1493,9 @@ func processInput(_ inputURLs: [URL],
         let rules = options.rules ?? defaultRules
         let fileCacheURL = cacheURL(for: inputURL)
         let configurationHash: String? = fileCacheURL.map { _ in
-            let usesProjectContext = rules.contains(where: { FormatRules.byName[$0]?.usesProjectContext == true })
+            let usesProjectContext = rules.contains(where: {
+                FormatRules.byName[$0]?.projectContext.features(for: formatOptions).isEmpty == false
+            })
             let projectFingerprint = usesProjectContext ? projectIndex.map {
                 "project-index:\($0.fingerprint)"
             } ?? "project-index:disabled" : ""

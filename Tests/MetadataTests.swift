@@ -127,6 +127,16 @@ final class MetadataTests: XCTestCase {
         }
     }
 
+    func testProjectContextRequirementCanBeConditionalOnOptions() {
+        let rule = FormatRule(
+            help: "Test rule.",
+            projectContext: .init([.declarations], where: { !$0.fragment })
+        ) { _ in } examples: { nil }
+
+        XCTAssertEqual(rule.projectContext.features(for: FormatOptions(fragment: false)), [.declarations])
+        XCTAssertEqual(rule.projectContext.features(for: FormatOptions(fragment: true)), [])
+    }
+
     func testRulesDeclareProjectContextUsage() throws {
         for ruleFile in allRuleFiles {
             let titleCaseRuleName = ruleFile.deletingPathExtension().lastPathComponent
@@ -155,8 +165,8 @@ final class MetadataTests: XCTestCase {
                     return
                 }
                 XCTAssertTrue(
-                    rule.projectContextFeatures.contains(.functionReferences),
-                    "\(ruleName) must include .functionReferences in projectContextFeatures"
+                    rule.projectContext.features.contains(.functionReferences),
+                    "\(ruleName) must include .functionReferences in projectContext"
                 )
             }
         }

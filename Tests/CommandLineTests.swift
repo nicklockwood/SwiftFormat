@@ -851,6 +851,180 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testConcurrentWarmCacheProjectIndexRequestsDoNotStarveBuild() throws {
+        var files = [
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}\n",
+        ]
+        for index in 0 ..< 80 {
+            files["Sources/App/Extensions/Extension\(index).swift"] = """
+            extension Foo {
+                public func value\(index)() {}
+            }
+            """
+        }
+
+        try withTmpDirectory(files) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+        }
+    }
+
+    func testProjectIndexIsNotBuiltUntilAProjectAwareRuleNeedsIt() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "let value = 1\n",
+            "Sources/App/Other.swift": "struct Other {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantPublic,redundantSelf,trailingClosures --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+            XCTAssertEqual((cache["projectIndexDependencies"] as? [String: Any])?.count, 0)
+
+            try "struct Updated {}\n".write(
+                to: directory.appendingPathComponent("Sources/App/Other.swift"),
+                atomically: true,
+                encoding: .utf8
+            )
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantPublic,redundantSelf,trailingClosures --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertTrue(try readSourceIndexes(at: cacheURL).isEmpty)
+        }
+    }
+
+    func testProjectIndexIsNotBuiltForRedundantSelfInFragmentMode() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "self.value = value\n",
+            "Sources/App/Other.swift": "struct Other {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantSelf --fragment true --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
+    func testProjectIndexIsNotBuiltForFileScopedCommonTypos() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "private let retrievedValue = 1\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules commonTypos --typo-visibility fileprivate --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
+    func testProjectIndexIsNotBuiltForFileScopedAcronyms() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "private let userID = 1\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules acronyms --acronym-visibility fileprivate --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
+    func testFileScopedRedundantOverloadCachesOnlyCurrentFileIndex() throws {
+        let input = """
+        private struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+
+            func test() {
+                let baz: Int? = 7
+                _ = baz.map(foo)
+            }
+        }
+        """
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": input,
+            "Sources/App/Other.swift": "struct Other {}\n",
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("Sources/App/Input.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility private --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            let sourceIndexes = try XCTUnwrap(cache["sourceIndexes"] as? [String: Any])
+            XCTAssertEqual(sourceIndexes.count, 1)
+            XCTAssertTrue(try XCTUnwrap(readSourceIndexes(at: cacheURL).values.first).includesFunctionReferences)
+        }
+    }
+
+    func testFileScopedRedundantOverloadDoesNotIndexFileWithoutCandidates() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "struct Input {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility private --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertTrue(try readSourceIndexes(at: cacheURL).isEmpty)
+        }
+    }
+
     func testProjectIndexCanBeDisabled() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",
@@ -1155,6 +1329,42 @@ final class CommandLineTests: XCTestCase {
                 with: "Sources/App/Call.swift --rules trailingClosures --never-trailing perform --cache ignore --quiet"
             ), .ok)
             XCTAssertEqual(try String(contentsOf: callURL), input)
+        }
+    }
+
+    func testLocalFunctionIndexRetainsModulesFromOnDemandProjectIndex() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "struct Example {}\n",
+            "Sources/App/Input.swift": """
+            extension Example {
+                public func bar() {}
+            }
+
+            private struct Worker {
+                func perform(value _: Int, count _: Int) {}
+
+                func perform(value: Int) {
+                    perform(value: value, count: 1)
+                }
+            }
+            """,
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("Sources/App/Input.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantOverload,redundantPublic --overload-visibility fileprivate --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let inputIndex = try XCTUnwrap(readSourceIndexes(at: cacheURL).first { key, _ in
+                key.hasSuffix("/Input.swift")
+            }?.value)
+            XCTAssertFalse(inputIndex.moduleIdentifiers.isEmpty)
+            XCTAssertTrue(inputIndex.includesFunctionReferences)
+            XCTAssertTrue(try String(contentsOf: inputURL).contains("func perform(value _: Int, count _: Int = 1)"))
         }
     }
 

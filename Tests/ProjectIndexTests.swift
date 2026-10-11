@@ -27,6 +27,75 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testProjectIndexProviderBuildsOnDemandAndReusesFeatures() {
+        var requestedFeatures = [Set<ProjectContextFeature>]()
+        let provider = ProjectIndexProvider { features in
+            requestedFeatures.append(features)
+            return ProjectIndex(files: [:])
+        }
+
+        XCTAssertTrue(requestedFeatures.isEmpty)
+        XCTAssertNotNil(provider.index(requiring: [.declarations]))
+        XCTAssertEqual(requestedFeatures, [[.declarations]])
+        XCTAssertNotNil(provider.index(requiring: [.declarations]))
+        XCTAssertEqual(requestedFeatures, [[.declarations]])
+        XCTAssertNotNil(provider.index(requiring: [.functionReferences]))
+        XCTAssertEqual(requestedFeatures, [
+            [.declarations],
+            [.declarations, .functionReferences],
+        ])
+    }
+
+    func testDeclarationFingerprintDoesNotDependOnFunctionReferences() {
+        let source = "let callback = perform(value:)"
+        let declarationsOnly = ProjectIndex(files: [
+            "/Project/Input.swift": makeSourceFileIndex(
+                from: source,
+                moduleIdentifiers: ["App"],
+                includeFunctionReferences: false
+            ),
+        ])
+        let complete = ProjectIndex(files: [
+            "/Project/Input.swift": makeSourceFileIndex(
+                from: source,
+                moduleIdentifiers: ["App"],
+                includeFunctionReferences: true
+            ),
+        ])
+
+        XCTAssertEqual(
+            declarationsOnly.fingerprint(for: [.declarations]),
+            complete.fingerprint(for: [.declarations])
+        )
+        XCTAssertNotEqual(declarationsOnly.fingerprint, complete.fingerprint)
+    }
+
+    func testConcurrentProjectIndexRequestsShareBuild() {
+        let lock = NSLock()
+        var buildCount = 0
+        let buildStarted = DispatchSemaphore(value: 0)
+        let finishBuild = DispatchSemaphore(value: 0)
+        let provider = ProjectIndexProvider { _ in
+            lock.lock()
+            buildCount += 1
+            lock.unlock()
+            buildStarted.signal()
+            finishBuild.wait()
+            return ProjectIndex(files: [:])
+        }
+        let group = DispatchGroup()
+        for _ in 0 ..< 8 {
+            DispatchQueue.global().async(group: group) {
+                _ = provider.index(requiring: [.declarations])
+            }
+        }
+
+        XCTAssertEqual(buildStarted.wait(timeout: .now() + 1), .success)
+        finishBuild.signal()
+        XCTAssertEqual(group.wait(timeout: .now() + 1), .success)
+        XCTAssertEqual(buildCount, 1)
+    }
+
     func testProjectRootStopsAtFilesystemRoot() {
         let root = projectRoot(for: URL(fileURLWithPath: "/", isDirectory: true))
 

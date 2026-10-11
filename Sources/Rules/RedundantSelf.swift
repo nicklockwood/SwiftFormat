@@ -12,21 +12,22 @@ public extension FormatRule {
     /// Insert or remove redundant self keyword
     static let redundantSelf = FormatRule(
         help: "Insert/remove explicit `self` where applicable.",
-        projectContextFeatures: [.declarations],
         options: ["self", "self-required"]
     ) { formatter in
         _ = formatter.options.selfRequired
         _ = formatter.options.explicitSelf
-        let projectMembers = formatter.currentFileURL.map { fileURL in
-            formatter.projectIndex?.memberNamesByType(visibleFrom: fileURL) ?? .empty
-        } ?? .empty
+        let projectMembers: ProjectIndex.MemberNamesByType = formatter.options.fragment ||
+            formatter.options.explicitSelf == .remove ? .empty :
+            formatter.currentFileURL.flatMap { fileURL in
+                formatter.projectIndex(requiring: [.declarations])?.memberNamesByType(visibleFrom: fileURL)
+            } ?? .empty
         formatter.addOrRemoveSelf(
             static: false,
             additionalMembersByType: projectMembers.instance,
             additionalClassMembersByType: projectMembers.staticOrClass,
             isAdditionalSelfRequired: { index in
                 guard let fileURL = formatter.currentFileURL else { return false }
-                return formatter.projectIndex?.isAutoclosureArgument(
+                return formatter.projectIndex(requiring: [.declarations])?.isAutoclosureArgument(
                     containing: index,
                     in: formatter,
                     visibleFrom: fileURL

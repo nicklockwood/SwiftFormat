@@ -67,12 +67,12 @@ public final class Formatter: NSObject {
         context.currentFileURL
     }
 
-    var projectIndex: ProjectIndex? {
-        assert(
-            currentRule?.usesProjectContext == true,
-            "\(currentRule?.name ?? "Unknown rule") must declare project context"
-        )
-        return context.projectIndex
+    var sourceFileIndex: SourceFileIndex? {
+        context.sourceFileIndex
+    }
+
+    func projectIndex(requiring features: Set<ProjectContextFeature>) -> ProjectIndex? {
+        context.projectIndexAccess.index(requiring: features)
     }
 
     /// The token array managed by the formatter (read-only)

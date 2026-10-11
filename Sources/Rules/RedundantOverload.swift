@@ -28,7 +28,8 @@ public extension FormatRule {
             index.includesFunctionReferences ? index : nil
         } ?? makeSourceFileIndex(
             from: sourceCode(for: formatter.tokens),
-            moduleIdentifiers: ["SwiftFormat.CurrentFile"]
+            moduleIdentifiers: ["SwiftFormat.CurrentFile"],
+            includeSymbolReferences: false
         )
         let projectIndex = indexedProject ?? ProjectIndex(files: [filePath: sourceFileIndex])
         let candidates = overloadCandidates.filter { candidate in

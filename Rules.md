@@ -155,7 +155,7 @@
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
 * [testSuiteAccessControl](#testSuiteAccessControl)
-* [unusedPrivateDeclarations](#unusedPrivateDeclarations)
+* [unusedDeclarations](#unusedDeclarations)
 * [urlMacro](#urlMacro)
 * [validateTestCases](#validateTestCases)
 * [wrapCaseBodies](#wrapCaseBodies)
@@ -176,6 +176,7 @@
 * [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
 * [throwingTests](#throwingTests)
+* [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 
 ----------
@@ -4330,13 +4331,14 @@ Option | Description
 </details>
 <br/>
 
-## unusedPrivateDeclarations
+## unusedDeclarations
 
-Remove unused private and fileprivate declarations.
+Remove unused declarations.
 
 Option | Description
 --- | ---
 `--preserve-decls` | Comma separated list of declaration names to exclude
+`--unused-visibility` | Remove unused declarations at or below this visibility threshold: "public", "package", "internal", "fileprivate" (default) or "private"
 
 <details>
 <summary>Examples</summary>
@@ -4351,6 +4353,12 @@ Option | Description
 
 </details>
 <br/>
+
+## unusedPrivateDeclarations
+
+Remove unused private and fileprivate declarations.
+
+*Note: unusedPrivateDeclarations rule is deprecated. Renamed to `unusedDeclarations`.*
 
 ## urlMacro
 

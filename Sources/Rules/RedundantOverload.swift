@@ -18,7 +18,7 @@ public extension FormatRule {
         let fileURL = formatter.currentFileURL ?? URL(fileURLWithPath: "/SwiftFormat/Input.swift")
         let filePath = fileURL.standardizedFileURL.path
         let projectIndex = formatter.projectIndex.flatMap { index in
-            index.files[filePath] == nil ? nil : index
+            index.files[filePath]?.includesFunctionReferences == true ? index : nil
         } ?? ProjectIndex(files: [
             filePath: makeSourceFileIndex(
                 from: sourceCode(for: formatter.tokens),

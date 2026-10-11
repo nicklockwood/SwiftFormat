@@ -873,7 +873,7 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    func testProjectIndexIsNotBuiltForFileScopedRedundantOverload() throws {
+    func testFileScopedRedundantOverloadCachesOnlyCurrentFileIndex() throws {
         let input = """
         private struct Example {
             func foo(bar _: Int, baz _: Int) -> Int {
@@ -893,6 +893,7 @@ final class CommandLineTests: XCTestCase {
         try withTmpDirectory([
             "Package.swift": "// Package marker",
             "Sources/App/Input.swift": input,
+            "Sources/App/Other.swift": "struct Other {}\n",
         ]) { directory in
             let inputURL = directory.appendingPathComponent("Sources/App/Input.swift")
             let cacheURL = directory.appendingPathComponent("swiftformat.cache")
@@ -907,7 +908,9 @@ final class CommandLineTests: XCTestCase {
             let cache = try XCTUnwrap(
                 JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
             )
-            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+            let sourceIndexes = try XCTUnwrap(cache["sourceIndexes"] as? [String: Any])
+            XCTAssertEqual(sourceIndexes.count, 1)
+            XCTAssertTrue(try XCTUnwrap(readSourceIndexes(at: cacheURL).values.first).includesFunctionReferences)
         }
     }
 

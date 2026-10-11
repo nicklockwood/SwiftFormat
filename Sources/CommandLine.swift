@@ -1491,11 +1491,18 @@ func processInput(_ inputURLs: [URL],
         let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
         // Check cache
         let rules = options.rules ?? defaultRules
+        let declaredProjectContextFeatures = rules.reduce(into: Set<ProjectContextFeature>()) { features, name in
+            features.formUnion(FormatRules.byName[name]?.projectContext.features ?? [])
+        }
+        let effectiveProjectContextFeatures = rules.reduce(into: Set<ProjectContextFeature>()) { features, name in
+            features.formUnion(FormatRules.byName[name]?.projectContext.features(for: formatOptions) ?? [])
+        }
+        let requiresLocalFunctionReferences = inputURL.pathExtension == "swift" &&
+            declaredProjectContextFeatures.contains(.functionReferences) &&
+            !effectiveProjectContextFeatures.contains(.functionReferences)
         let fileCacheURL = cacheURL(for: inputURL)
         let configurationHash: String? = fileCacheURL.map { _ in
-            let usesProjectContext = rules.contains(where: {
-                FormatRules.byName[$0]?.projectContext.features(for: formatOptions).isEmpty == false
-            })
+            let usesProjectContext = !effectiveProjectContextFeatures.isEmpty
             let projectFingerprint = usesProjectContext ? projectIndex.map {
                 "project-index:\($0.fingerprint)"
             } ?? "project-index:disabled" : ""
@@ -1512,6 +1519,16 @@ func processInput(_ inputURLs: [URL],
             {
                 cacheHash = cachedHash
                 sourceHash = computeHash(input)
+            }
+            var localSourceIndex: SourceFileIndex?
+            if requiresLocalFunctionReferences, projectIndex == nil,
+               let fileCacheURL,
+               let cacheKey,
+               let cached = caches[fileCacheURL]?.sourceIndexes[cacheKey],
+               cached.contentHash == computeHash(input),
+               cached.includesFunctionReferences
+            {
+                localSourceIndex = cached
             }
             let output: String
             if let cacheHash, cacheHash == sourceHash {
@@ -1605,17 +1622,49 @@ func processInput(_ inputURLs: [URL],
                 }
             } else {
                 // Regular swift file
+                var formattingProjectIndex = projectIndex
+                if projectIndex == nil, requiresLocalFunctionReferences {
+                    if localSourceIndex == nil {
+                        localSourceIndex = makeSourceFileIndex(
+                            from: input,
+                            moduleIdentifiers: [],
+                            includeFunctionReferences: true
+                        )
+                    }
+                    formattingProjectIndex = localSourceIndex.map {
+                        ProjectIndex(files: [inputURL.path: $0])
+                    }
+                }
                 let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
                                                   verbose: verbose, lint: lint, reporter: reporter,
                                                   logger: logger,
                                                   context: FormattingContext(
                                                       currentFileURL: inputURL,
-                                                      projectIndex: projectIndex
+                                                      projectIndex: formattingProjectIndex
                                                   ))
                 output = sourceCode(for: outputTokens)
                 if output != input {
                     sourceHash = nil
                 }
+                if requiresLocalFunctionReferences {
+                    if output != input || localSourceIndex == nil {
+                        localSourceIndex = makeSourceFileIndex(
+                            from: output,
+                            moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? []),
+                            includeFunctionReferences: true
+                        )
+                    }
+                }
+            }
+            let updatedLocalSourceIndex: SourceFileIndex?
+            if requiresLocalFunctionReferences {
+                updatedLocalSourceIndex = localSourceIndex ?? makeSourceFileIndex(
+                    from: output,
+                    moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? []),
+                    includeFunctionReferences: true
+                )
+            } else {
+                updatedLocalSourceIndex = nil
             }
             let cacheValue = configurationHash.map {
                 // Only bother computing this if cache is enabled
@@ -1652,6 +1701,10 @@ func processInput(_ inputURLs: [URL],
                             for: cacheKey,
                             configurationHash: cacheValue.0
                         )
+                        if let updatedLocalSourceIndex {
+                            caches[fileCacheURL, default: SwiftFormatCache()].sourceIndexes[cacheKey] =
+                                updatedLocalSourceIndex
+                        }
                     }
                     showConfigurationWarnings(options)
                 }
@@ -1678,11 +1731,12 @@ func processInput(_ inputURLs: [URL],
                             configurationHash: cacheValue.0
                         )
                         if outputURL == inputURL {
-                            caches[fileCacheURL, default: SwiftFormatCache()].sourceIndexes[cacheKey] = makeSourceFileIndex(
-                                from: output,
-                                moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? []),
-                                includeFunctionReferences: requiresFunctionReferences
-                            )
+                            caches[fileCacheURL, default: SwiftFormatCache()].sourceIndexes[cacheKey] =
+                                updatedLocalSourceIndex ?? makeSourceFileIndex(
+                                    from: output,
+                                    moduleIdentifiers: Set(projectIndex?.files[inputURL.path]?.moduleIdentifiers ?? []),
+                                    includeFunctionReferences: requiresFunctionReferences
+                                )
                         }
                     }
                     showConfigurationWarnings(options)

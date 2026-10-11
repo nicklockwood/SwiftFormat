@@ -11,16 +11,133 @@ import Foundation
     import FoundationXML
 #endif
 
-/// Immutable project information available to rules while formatting a file.
+enum ProjectContextFeature: String, Codable, Hashable {
+    case declarations
+    case functionReferences
+}
+
+struct ProjectIndexDependency: Codable, Equatable {
+    var features: Set<ProjectContextFeature>
+    var fingerprint: String?
+}
+
+/// Builds a project index the first time a rule requests it. Concurrent callers
+/// wait for the in-flight build instead of starting duplicate work.
+final class ProjectIndexProvider {
+    typealias Builder = (Set<ProjectContextFeature>) -> ProjectIndex?
+
+    private let condition = NSCondition()
+    private let builder: Builder
+    private var index: ProjectIndex?
+    private var availableFeatures = Set<ProjectContextFeature>()
+    private var isBuilding = false
+
+    init(builder: @escaping Builder) {
+        self.builder = builder
+    }
+
+    func index(requiring features: Set<ProjectContextFeature>) -> ProjectIndex? {
+        condition.lock()
+        while isBuilding {
+            condition.wait()
+        }
+        if features.isSubset(of: availableFeatures) {
+            let index = index
+            condition.unlock()
+            return index
+        }
+        isBuilding = true
+        let requestedFeatures = availableFeatures.union(features)
+        condition.unlock()
+
+        let index = builder(requestedFeatures)
+
+        condition.lock()
+        self.index = index
+        availableFeatures = requestedFeatures
+        isBuilding = false
+        condition.broadcast()
+        condition.unlock()
+        return index
+    }
+}
+
+/// Tracks the project information actually requested while formatting one file.
+final class ProjectIndexAccess {
+    private let provider: ProjectIndexProvider?
+    private(set) var dependency: ProjectIndexDependency?
+    private(set) var lastIndex: ProjectIndex?
+
+    init(provider: ProjectIndexProvider?) {
+        self.provider = provider
+    }
+
+    func index(requiring features: Set<ProjectContextFeature>) -> ProjectIndex? {
+        let index = provider?.index(requiring: features)
+        lastIndex = index
+        let requestedFeatures = dependency?.features.union(features) ?? features
+        dependency = ProjectIndexDependency(
+            features: requestedFeatures,
+            fingerprint: index?.fingerprint(for: requestedFeatures)
+        )
+        return index
+    }
+}
+
+/// Lazily builds the current file's function-reference index if a rule needs it.
+final class SourceFileIndexAccess {
+    private let builder: () -> SourceFileIndex?
+    private(set) var index: SourceFileIndex?
+    private(set) var wasRequested = false
+
+    init(index: SourceFileIndex? = nil, builder: @escaping () -> SourceFileIndex? = { nil }) {
+        self.index = index
+        self.builder = builder
+    }
+
+    func get(preferredIndex: SourceFileIndex? = nil) -> SourceFileIndex? {
+        wasRequested = true
+        if index == nil {
+            index = preferredIndex ?? builder()
+        }
+        return index
+    }
+}
+
+/// Project information available to rules while formatting a file.
 struct FormattingContext {
     static let empty = FormattingContext()
 
     let currentFileURL: URL?
-    let projectIndex: ProjectIndex?
+    let projectIndexAccess: ProjectIndexAccess
+    let sourceFileIndexAccess: SourceFileIndexAccess
 
-    init(currentFileURL: URL? = nil, projectIndex: ProjectIndex? = nil) {
+    init(
+        currentFileURL: URL? = nil,
+        projectIndexProvider: ProjectIndexProvider? = nil,
+        sourceFileIndex: SourceFileIndex? = nil
+    ) {
         self.currentFileURL = currentFileURL
-        self.projectIndex = projectIndex
+        projectIndexAccess = ProjectIndexAccess(provider: projectIndexProvider)
+        sourceFileIndexAccess = SourceFileIndexAccess(index: sourceFileIndex)
+    }
+
+    init(
+        currentFileURL: URL?,
+        projectIndexAccess: ProjectIndexAccess,
+        sourceFileIndexAccess: SourceFileIndexAccess = SourceFileIndexAccess()
+    ) {
+        self.currentFileURL = currentFileURL
+        self.projectIndexAccess = projectIndexAccess
+        self.sourceFileIndexAccess = sourceFileIndexAccess
+    }
+
+    init(currentFileURL: URL? = nil, projectIndex: ProjectIndex?) {
+        self.currentFileURL = currentFileURL
+        projectIndexAccess = ProjectIndexAccess(provider: projectIndex.map { projectIndex in
+            ProjectIndexProvider { _ in projectIndex }
+        })
+        sourceFileIndexAccess = SourceFileIndexAccess()
     }
 }
 
@@ -177,6 +294,7 @@ struct ProjectIndex {
 
     let files: [String: SourceFileIndex]
     let fingerprint: String
+    private let declarationsFingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
     private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
     private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
@@ -226,7 +344,7 @@ struct ProjectIndex {
         self.functionReferencesByModule = functionReferencesByModule
         self.memberNamesByModule = memberNamesByModule
         self.symbolDeclarationsByModule = symbolDeclarationsByModule
-        let description = files.keys.sorted().compactMap { path -> String? in
+        let descriptions = files.keys.sorted().compactMap { path -> (String, String)? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
                 .map { "\($0.name):\($0.visibility)" }
@@ -263,10 +381,16 @@ struct ProjectIndex {
                 }
                 .sorted()
                 .joined(separator: ",")
-            return "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(functions):" +
-                "\(members):\(symbolDeclarations):\(functionReferences)"
-        }.joined(separator: ";")
-        fingerprint = computeHash(description)
+            let declarations = "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(functions):" +
+                "\(members):\(symbolDeclarations)"
+            return (declarations, functionReferences)
+        }
+        declarationsFingerprint = computeHash(descriptions.map(\.0).joined(separator: ";"))
+        fingerprint = computeHash(descriptions.map { "\($0.0):\($0.1)" }.joined(separator: ";"))
+    }
+
+    func fingerprint(for features: Set<ProjectContextFeature>) -> String {
+        features.contains(.functionReferences) ? fingerprint : declarationsFingerprint
     }
 
     /// Whether a function is used as a value in any module containing the current file.

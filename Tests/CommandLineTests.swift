@@ -833,6 +833,46 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexIsNotBuiltForFileScopedCommonTypos() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "private let retrievedValue = 1\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules commonTypos --typo-visibility fileprivate --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
+    func testProjectIndexIsNotBuiltForFileScopedAcronyms() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "private let userID = 1\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules acronyms --acronym-visibility fileprivate --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
     func testProjectIndexCanBeDisabled() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

@@ -12,7 +12,7 @@ public extension FormatRule {
     static let acronyms = FormatRule(
         help: "Capitalize acronyms when the first character is capitalized.",
         disabledByDefault: true,
-        projectContext: [.declarations],
+        projectContext: .init([.declarations], where: { $0.acronymVisibility > .fileprivate }),
         options: ["acronyms", "preserve-acronyms", "acronym-visibility"]
     ) { formatter in
         func capitalizingAcronyms(in text: String) -> String {

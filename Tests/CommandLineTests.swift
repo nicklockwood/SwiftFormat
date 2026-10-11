@@ -833,6 +833,27 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexIsNotBuiltForRedundantSelfInFragmentMode() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "self.value = value\n",
+            "Sources/App/Other.swift": "struct Other {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantSelf --fragment true --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
     func testProjectIndexIsNotBuiltForFileScopedCommonTypos() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

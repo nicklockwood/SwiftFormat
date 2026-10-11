@@ -137,6 +137,17 @@ final class MetadataTests: XCTestCase {
         XCTAssertEqual(rule.projectContext.features(for: FormatOptions(fragment: true)), [])
     }
 
+    func testRedundantSelfDoesNotRequireProjectContextForFragment() {
+        XCTAssertEqual(
+            FormatRule.redundantSelf.projectContext.features(for: FormatOptions(fragment: false)),
+            [.declarations]
+        )
+        XCTAssertEqual(
+            FormatRule.redundantSelf.projectContext.features(for: FormatOptions(fragment: true)),
+            []
+        )
+    }
+
     func testRulesDeclareProjectContextUsage() throws {
         for ruleFile in allRuleFiles {
             let titleCaseRuleName = ruleFile.deletingPathExtension().lastPathComponent

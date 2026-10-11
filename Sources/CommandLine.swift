@@ -1567,15 +1567,23 @@ func processInput(_ inputURLs: [URL],
                     }
                 }
             }
-            var localSourceIndex: SourceFileIndex?
-            if requiresLocalFunctionReferences,
-               let fileCacheURL,
-               let cacheKey,
-               let cached = caches[fileCacheURL]?.sourceIndexes[cacheKey],
-               cached.contentHash == computeHash(input),
-               cached.includesFunctionReferences
-            {
-                localSourceIndex = cached
+            let sourceFileIndexAccess = SourceFileIndexAccess(index: {
+                guard requiresLocalFunctionReferences,
+                      let fileCacheURL,
+                      let cacheKey,
+                      let cached = projectIndexCacheUpdates.index(for: cacheKey, cacheURL: fileCacheURL) ??
+                      caches[fileCacheURL]?.sourceIndexes[cacheKey],
+                      cached.contentHash == computeHash(input),
+                      cached.includesFunctionReferences
+                else { return nil }
+                return cached
+            }()) {
+                guard requiresLocalFunctionReferences else { return nil }
+                return makeSourceFileIndex(
+                    from: input,
+                    moduleIdentifiers: [],
+                    includeFunctionReferences: true
+                )
             }
             let output: String
             if let cacheHash, cacheHash == sourceHash {
@@ -1669,40 +1677,22 @@ func processInput(_ inputURLs: [URL],
                 }
             } else {
                 // Regular swift file
-                if requiresLocalFunctionReferences {
-                    if localSourceIndex == nil {
-                        localSourceIndex = makeSourceFileIndex(
-                            from: input,
-                            moduleIdentifiers: [],
-                            includeFunctionReferences: true
-                        )
-                    }
-                }
                 let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
                                                   verbose: verbose, lint: lint, reporter: reporter,
                                                   logger: logger,
                                                   context: FormattingContext(
                                                       currentFileURL: inputURL,
                                                       projectIndexAccess: projectIndexAccess,
-                                                      sourceFileIndex: localSourceIndex
+                                                      sourceFileIndexAccess: sourceFileIndexAccess
                                                   ))
                 output = sourceCode(for: outputTokens)
                 if output != input {
                     sourceHash = nil
                 }
-                if requiresLocalFunctionReferences {
-                    if output != input || localSourceIndex == nil {
-                        localSourceIndex = makeSourceFileIndex(
-                            from: output,
-                            moduleIdentifiers: [],
-                            includeFunctionReferences: true
-                        )
-                    }
-                }
             }
             var updatedLocalSourceIndex: SourceFileIndex?
-            if requiresLocalFunctionReferences {
-                updatedLocalSourceIndex = localSourceIndex ?? makeSourceFileIndex(
+            if sourceFileIndexAccess.wasRequested {
+                updatedLocalSourceIndex = output == input ? sourceFileIndexAccess.index : makeSourceFileIndex(
                     from: output,
                     moduleIdentifiers: [],
                     includeFunctionReferences: true

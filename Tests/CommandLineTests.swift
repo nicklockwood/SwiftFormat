@@ -991,6 +991,22 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testFileScopedRedundantOverloadDoesNotIndexFileWithoutCandidates() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "struct Input {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility private --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertTrue(try readSourceIndexes(at: cacheURL).isEmpty)
+        }
+    }
+
     func testProjectIndexCanBeDisabled() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

@@ -68,7 +68,17 @@ public final class Formatter: NSObject {
     }
 
     var sourceFileIndex: SourceFileIndex? {
-        context.sourceFileIndex
+        let indexedFile: SourceFileIndex?
+        if let currentFileURL,
+           let projectIndex = context.projectIndexAccess.lastIndex,
+           let sourceFileIndex = projectIndex.files[currentFileURL.standardizedFileURL.path],
+           sourceFileIndex.includesFunctionReferences
+        {
+            indexedFile = sourceFileIndex
+        } else {
+            indexedFile = nil
+        }
+        return context.sourceFileIndexAccess.get(preferredIndex: indexedFile)
     }
 
     func projectIndex(requiring features: Set<ProjectContextFeature>) -> ProjectIndex? {

@@ -84,13 +84,33 @@ final class ProjectIndexAccess {
     }
 }
 
+/// Lazily builds the current file's function-reference index if a rule needs it.
+final class SourceFileIndexAccess {
+    private let builder: () -> SourceFileIndex?
+    private(set) var index: SourceFileIndex?
+    private(set) var wasRequested = false
+
+    init(index: SourceFileIndex? = nil, builder: @escaping () -> SourceFileIndex? = { nil }) {
+        self.index = index
+        self.builder = builder
+    }
+
+    func get(preferredIndex: SourceFileIndex? = nil) -> SourceFileIndex? {
+        wasRequested = true
+        if index == nil {
+            index = preferredIndex ?? builder()
+        }
+        return index
+    }
+}
+
 /// Project information available to rules while formatting a file.
 struct FormattingContext {
     static let empty = FormattingContext()
 
     let currentFileURL: URL?
     let projectIndexAccess: ProjectIndexAccess
-    let sourceFileIndex: SourceFileIndex?
+    let sourceFileIndexAccess: SourceFileIndexAccess
 
     init(
         currentFileURL: URL? = nil,
@@ -99,17 +119,17 @@ struct FormattingContext {
     ) {
         self.currentFileURL = currentFileURL
         projectIndexAccess = ProjectIndexAccess(provider: projectIndexProvider)
-        self.sourceFileIndex = sourceFileIndex
+        sourceFileIndexAccess = SourceFileIndexAccess(index: sourceFileIndex)
     }
 
     init(
         currentFileURL: URL?,
         projectIndexAccess: ProjectIndexAccess,
-        sourceFileIndex: SourceFileIndex? = nil
+        sourceFileIndexAccess: SourceFileIndexAccess = SourceFileIndexAccess()
     ) {
         self.currentFileURL = currentFileURL
         self.projectIndexAccess = projectIndexAccess
-        self.sourceFileIndex = sourceFileIndex
+        self.sourceFileIndexAccess = sourceFileIndexAccess
     }
 
     init(currentFileURL: URL? = nil, projectIndex: ProjectIndex?) {
@@ -117,7 +137,7 @@ struct FormattingContext {
         projectIndexAccess = ProjectIndexAccess(provider: projectIndex.map { projectIndex in
             ProjectIndexProvider { _ in projectIndex }
         })
-        sourceFileIndex = nil
+        sourceFileIndexAccess = SourceFileIndexAccess()
     }
 }
 

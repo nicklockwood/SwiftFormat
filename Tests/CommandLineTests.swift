@@ -833,6 +833,29 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testConcurrentWarmCacheProjectIndexRequestsDoNotStarveBuild() throws {
+        var files = [
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}\n",
+        ]
+        for index in 0 ..< 80 {
+            files["Sources/App/Extensions/Extension\(index).swift"] = """
+            extension Foo {
+                public func value\(index)() {}
+            }
+            """
+        }
+
+        try withTmpDirectory(files) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+        }
+    }
+
     func testProjectIndexIsNotBuiltUntilAProjectAwareRuleNeedsIt() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

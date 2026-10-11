@@ -1378,18 +1378,29 @@ func processInput(_ inputURLs: [URL],
     // Preserve the original contents of files being formatted. A project index may be requested
     // after another formatting worker has finished, so it must not read a partially updated project.
     var inputSourceSnapshots = [String: String]()
+    var localFunctionReferencePaths = Set<String>()
     if projectIndexMode == .auto {
         let snapshotErrors = enumerateFiles(
             withInputURLs: inputURLs,
             options: options,
             concurrent: !verbose,
             logger: Logger(print: print)
-        ) { inputURL, _, _ in
+        ) { inputURL, _, options in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("Failed to read file \(inputURL.path)")
             }
+            var options = try applyOverrides(to: options, for: inputURL)
+            try options.addFilterArguments(path: inputURL.path, source: input)
+            let rules = options.rules ?? defaultRules
+            let requiresLocalFunctionReferences = inputURL.pathExtension == "swift" &&
+                rules.contains(FormatRule.redundantOverload.name) &&
+                (options.formatOptions ?? .default).overloadVisibility <= .fileprivate
+            let path = inputURL.standardizedFileURL.path
             return {
-                inputSourceSnapshots[inputURL.standardizedFileURL.path] = input
+                inputSourceSnapshots[path] = input
+                if requiresLocalFunctionReferences {
+                    localFunctionReferencePaths.insert(path)
+                }
             }
         }
         guard snapshotErrors.isEmpty else {
@@ -1431,46 +1442,41 @@ func processInput(_ inputURLs: [URL],
             }
             moduleIdentifiersByRoot = modulesByRoot
         }
-        let indexQueue = DispatchQueue(label: "swiftformat.project-index")
-        let indexGroup = DispatchGroup()
-        let workerQueue = DispatchQueue.global(qos: .userInitiated)
+        let indexLock = NSLock()
         var indexedFiles = [(String, SourceFileIndex)]()
-        for (fileURL, root) in discoveredFiles {
-            indexGroup.enter()
-            workerQueue.async {
-                defer { indexGroup.leave() }
-                let path = fileURL.standardizedFileURL.path
-                guard let source = inputSourceSnapshots[path] ?? (try? String(contentsOf: fileURL)) else { return }
-                let sourceHash = computeHash(source)
-                let rootCacheURL = cacheURL(for: root)
-                let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
-                let modules = modulesByRoot[root]?[fileURL.path] ?? []
-                let sourceIndex: SourceFileIndex
-                if let rootCacheURL,
-                   let key,
-                   let cached = projectIndexCacheUpdates.index(for: key, cacheURL: rootCacheURL) ??
-                   caches[rootCacheURL]?.sourceIndexes[key],
-                   cached.contentHash == sourceHash,
-                   cached.moduleIdentifiers == modules.sorted(),
-                   !requiresFunctionReferences || cached.includesFunctionReferences
-                {
-                    sourceIndex = cached
-                } else {
-                    sourceIndex = makeSourceFileIndex(
-                        from: source,
-                        moduleIdentifiers: modules,
-                        includeFunctionReferences: requiresFunctionReferences
-                    )
-                }
-                indexQueue.sync {
-                    indexedFiles.append((path, sourceIndex))
-                    if let rootCacheURL, let key {
-                        projectIndexCacheUpdates.setIndex(sourceIndex, for: key, cacheURL: rootCacheURL)
-                    }
-                }
+        DispatchQueue.concurrentPerform(iterations: discoveredFiles.count) { index in
+            let (fileURL, root) = discoveredFiles[index]
+            let path = fileURL.standardizedFileURL.path
+            guard let source = inputSourceSnapshots[path] ?? (try? String(contentsOf: fileURL)) else { return }
+            let sourceHash = computeHash(source)
+            let rootCacheURL = cacheURL(for: root)
+            let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
+            let modules = modulesByRoot[root]?[fileURL.path] ?? []
+            let includeFunctionReferences = requiresFunctionReferences || localFunctionReferencePaths.contains(path)
+            let sourceIndex: SourceFileIndex
+            if let rootCacheURL,
+               let key,
+               let cached = projectIndexCacheUpdates.index(for: key, cacheURL: rootCacheURL) ??
+               caches[rootCacheURL]?.sourceIndexes[key],
+               cached.contentHash == sourceHash,
+               cached.moduleIdentifiers == modules.sorted(),
+               !includeFunctionReferences || cached.includesFunctionReferences
+            {
+                sourceIndex = cached
+            } else {
+                sourceIndex = makeSourceFileIndex(
+                    from: source,
+                    moduleIdentifiers: modules,
+                    includeFunctionReferences: includeFunctionReferences
+                )
+            }
+            indexLock.lock()
+            indexedFiles.append((path, sourceIndex))
+            indexLock.unlock()
+            if let rootCacheURL, let key {
+                projectIndexCacheUpdates.setIndex(sourceIndex, for: key, cacheURL: rootCacheURL)
             }
         }
-        indexGroup.wait()
         return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
     } : nil
 

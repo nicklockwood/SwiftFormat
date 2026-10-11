@@ -873,6 +873,44 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexIsNotBuiltForFileScopedRedundantOverload() throws {
+        let input = """
+        private struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int {
+                5
+            }
+
+            func foo(bar: Int) -> Int {
+                foo(bar: bar, baz: 0)
+            }
+
+            func test() {
+                let baz: Int? = 7
+                _ = baz.map(foo)
+            }
+        }
+        """
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": input,
+        ]) { directory in
+            let inputURL = directory.appendingPathComponent("Sources/App/Input.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility private --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: inputURL), input)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
     func testProjectIndexCanBeDisabled() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

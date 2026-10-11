@@ -12,13 +12,21 @@ public extension FormatRule {
     /// Replaces forwarding overloads with default arguments on the original declaration
     static let redundantOverload = FormatRule(
         help: "Replace forwarding overloads with default arguments.",
-        projectContext: [.functionReferences],
+        projectContext: .init([.functionReferences], where: { $0.overloadVisibility > .fileprivate }),
         options: ["overload-visibility"]
     ) { formatter in
+        let fileURL = formatter.currentFileURL ?? URL(fileURLWithPath: "/SwiftFormat/Input.swift")
+        let filePath = fileURL.standardizedFileURL.path
+        let projectIndex = formatter.projectIndex.flatMap { index in
+            index.files[filePath] == nil ? nil : index
+        } ?? ProjectIndex(files: [
+            filePath: makeSourceFileIndex(
+                from: sourceCode(for: formatter.tokens),
+                moduleIdentifiers: ["SwiftFormat.CurrentFile"]
+            ),
+        ])
         let candidates = formatter.redundantOverloadCandidates().filter { candidate in
-            guard let fileURL = formatter.currentFileURL,
-                  let projectIndex = formatter.projectIndex,
-                  let function = formatter.parseFunctionDeclaration(keywordIndex: candidate.wrapper.keywordIndex),
+            guard let function = formatter.parseFunctionDeclaration(keywordIndex: candidate.wrapper.keywordIndex),
                   let name = function.name
             else { return true }
             return !projectIndex.containsFunctionReference(

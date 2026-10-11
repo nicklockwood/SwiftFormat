@@ -121,7 +121,7 @@ final class RedundantOverloadTests: XCTestCase {
         try testProjectFormatting(for: input, references: references)
     }
 
-    func testDoesNotRemoveOverloadReferencedByBareName() throws {
+    func testDoesNotRemoveOverloadReferencedByBareNameWithoutProjectContext() {
         let input = """
         struct Example {
             func foo(bar _: Int, baz _: Int) -> Int {
@@ -138,7 +138,7 @@ final class RedundantOverloadTests: XCTestCase {
             }
         }
         """
-        try testProjectFormatting(for: input, references: "")
+        testFormatting(for: input, rule: .redundantOverload)
     }
 
     func testBareReferenceInAnotherFileDoesNotProtectPrivateOverload() throws {

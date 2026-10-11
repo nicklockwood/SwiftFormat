@@ -12,7 +12,6 @@ public extension FormatRule {
     /// Convert closure arguments to trailing closure syntax where possible
     static let trailingClosures = FormatRule(
         help: "Use trailing closure syntax where applicable.",
-        projectContextFeatures: [.declarations],
         options: ["trailing-closures", "never-trailing"]
     ) { formatter in
         let useTrailing = Set([
@@ -25,7 +24,7 @@ public extension FormatRule {
         ] + formatter.options.neverTrailing)
 
         // Declaration ranges track edits, so receiver resolution can reuse this tree throughout the rule.
-        let declarations = formatter.projectIndex == nil ? nil : formatter.parseDeclarations()
+        let declarations = formatter.parseDeclarations()
         formatter.forEach(.startOfScope("(")) { functionOpenParen, _ in
             guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: functionOpenParen),
                   // A paren that starts a line isn't a call of what comes before it
@@ -44,7 +43,7 @@ public extension FormatRule {
             // Defer receiver resolution until a labeled closure actually needs project-based opt-in.
             let projectSupportsTrailingClosure = {
                 formatter.currentFileURL.map { fileURL in
-                    guard let projectIndex = formatter.projectIndex,
+                    guard let projectIndex = formatter.projectIndex(requiring: [.declarations]),
                           let receiver = projectIndex.functionCallReceiver(
                               at: identifierIndex,
                               in: formatter,

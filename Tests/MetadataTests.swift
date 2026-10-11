@@ -156,41 +156,6 @@ final class MetadataTests: XCTestCase {
         }
     }
 
-    func testRulesDeclareProjectContextUsage() throws {
-        for ruleFile in allRuleFiles {
-            let titleCaseRuleName = ruleFile.deletingPathExtension().lastPathComponent
-            var ruleName = try XCTUnwrap(titleCaseRuleName.first?.lowercased()) + titleCaseRuleName.dropFirst()
-            if titleCaseRuleName == "URLMacro" {
-                ruleName = "urlMacro"
-            }
-            let rule = try XCTUnwrap(FormatRules.byName[ruleName])
-            let source = try String(contentsOf: ruleFile, encoding: .utf8)
-            let formatter = Formatter(tokenize(source))
-            var referencesProjectIndex = false
-            formatter.forEach(.identifier("projectIndex")) { index, _ in
-                guard formatter.token(at: index - 1) == .operator(".", .infix),
-                      formatter.token(at: index - 2) == .identifier("formatter")
-                else { return }
-                referencesProjectIndex = true
-            }
-
-            XCTAssertEqual(
-                rule.usesProjectContext,
-                referencesProjectIndex,
-                "\(ruleName) must declare project context iff it accesses formatter.projectIndex"
-            )
-            formatter.forEach(.identifier("containsFunctionReference")) { index, _ in
-                guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator(".", .infix) else {
-                    return
-                }
-                XCTAssertTrue(
-                    rule.projectContextFeatures.contains(.functionReferences),
-                    "\(ruleName) must include .functionReferences in projectContextFeatures"
-                )
-            }
-        }
-    }
-
     func testRuleExampleDiffsAreValid() throws {
         for rule in FormatRules.all {
             guard let examples = rule.examples else { continue }

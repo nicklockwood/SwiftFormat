@@ -950,6 +950,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var importGrouping: [ImportGrouping]
     public var hoistImports: Bool
     public var trailingClosures: Set<String>
+    public var wrapClosureBodies: Set<String>
     public var neverTrailing: Set<String>
     public var xcodeIndentation: Bool
     public var tabWidth: Int
@@ -1120,6 +1121,7 @@ public struct FormatOptions: CustomStringConvertible {
                 importGrouping: [ImportGrouping] = [.accessControl, .alpha],
                 hoistImports: Bool = true,
                 trailingClosures: Set<String> = [],
+                wrapClosureBodies: Set<String> = ["Task", "Task.detached"],
                 neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,
                 tabWidth: Int = 0,
@@ -1275,6 +1277,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.importGrouping = importGrouping
         self.hoistImports = hoistImports
         self.trailingClosures = trailingClosures
+        self.wrapClosureBodies = wrapClosureBodies
         self.neverTrailing = neverTrailing
         self.xcodeIndentation = xcodeIndentation
         self.tabWidth = tabWidth

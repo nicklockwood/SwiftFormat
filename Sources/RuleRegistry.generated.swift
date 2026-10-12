@@ -160,6 +160,7 @@ let ruleRegistry: [String: FormatRule] = [
     "wrapArguments": .wrapArguments,
     "wrapAttributes": .wrapAttributes,
     "wrapCaseBodies": .wrapCaseBodies,
+    "wrapClosureBodies": .wrapClosureBodies,
     "wrapConditionalBodies": .wrapConditionalBodies,
     "wrapDoBodies": .wrapDoBodies,
     "wrapEnumCases": .wrapEnumCases,
@@ -175,6 +176,5 @@ let ruleRegistry: [String: FormatRule] = [
     "wrapSingleLineComments": .wrapSingleLineComments,
     "wrapSingleLineStrings": .wrapSingleLineStrings,
     "wrapSwitchCases": .wrapSwitchCases,
-    "wrapTaskBodies": .wrapTaskBodies,
     "yodaConditions": .yodaConditions,
 ]

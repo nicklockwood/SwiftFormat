@@ -889,6 +889,12 @@ struct _Descriptors {
         help: "List of functions that should never use trailing closures",
         keyPath: \FormatOptions.neverTrailing
     )
+    let wrapClosureBodies = OptionDescriptor(
+        argumentName: "wrap-closure-bodies",
+        displayName: "Wrap Closure Bodies",
+        help: "Comma-delimited list of functions whose closure bodies should wrap, or \"always\". Defaults to \"Task,Task.detached\"",
+        keyPath: \FormatOptions.wrapClosureBodies
+    )
     let xcodeIndentation = OptionDescriptor(
         argumentName: "xcode-indentation",
         displayName: "Xcode Indentation",

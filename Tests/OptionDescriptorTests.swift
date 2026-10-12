@@ -10,6 +10,18 @@ import XCTest
 @testable import SwiftFormat
 
 final class OptionDescriptorTests: XCTestCase {
+    func testWrapClosureBodiesList() throws {
+        var options = FormatOptions.default
+        XCTAssertEqual(options.wrapClosureBodies, ["Task", "Task.detached"])
+        try Descriptors.wrapClosureBodies.toOptions("perform,Service.run,perform", &options)
+        XCTAssertEqual(options.wrapClosureBodies, ["perform", "Service.run"])
+        XCTAssertEqual(Descriptors.wrapClosureBodies.fromOptions(options), "Service.run,perform")
+        try Descriptors.wrapClosureBodies.toOptions("always", &options)
+        XCTAssertEqual(options.wrapClosureBodies, ["always"])
+        try Descriptors.wrapClosureBodies.toOptions("", &options)
+        XCTAssertEqual(options.wrapClosureBodies, [])
+    }
+
     private typealias OptionArgumentMapping<T> = (optionValue: T, argumentValue: String)
 
     private func validateDescriptorThrowsOptionsError(_ descriptor: OptionDescriptor,

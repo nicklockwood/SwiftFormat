@@ -158,6 +158,7 @@
 * [urlMacro](#urlMacro)
 * [validateTestCases](#validateTestCases)
 * [wrapCaseBodies](#wrapCaseBodies)
+* [wrapClosureBodies](#wrapClosureBodies)
 * [wrapDoBodies](#wrapDoBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapGuardStatementBodies](#wrapGuardStatementBodies)
@@ -165,7 +166,6 @@
 * [wrapMultilineFunctionChains](#wrapMultilineFunctionChains)
 * [wrapSingleLineStrings](#wrapSingleLineStrings)
 * [wrapSwitchCases](#wrapSwitchCases)
-* [wrapTaskBodies](#wrapTaskBodies)
 
 # Deprecated Rules (do not use)
 
@@ -4581,6 +4581,32 @@ Wrap the bodies of inline switch cases onto a new line.
 </details>
 <br/>
 
+## wrapClosureBodies
+
+Wrap single-line closure bodies for configured functions onto multiple lines.
+
+Option | Description
+--- | ---
+`--wrap-closure-bodies` | Comma-delimited list of functions whose closure bodies should wrap, or "always". Defaults to "Task,Task.detached"
+
+<details>
+<summary>Examples</summary>
+
+The default `--wrap-closure-bodies Task,Task.detached` wraps Task closures.
+Supply a comma-delimited list of function names to select other closures,
+or use `--wrap-closure-bodies always` to wrap all closure bodies.
+Names match by dotted-component suffix, so `Task` also matches `Swift.Task`.
+
+```diff
+- Task { await someOperation() }
++ Task {
++     await someOperation()
++ }
+```
+
+</details>
+<br/>
+
 ## wrapConditionalBodies
 
 Wrap the bodies of inline conditional statements onto a new line.
@@ -4897,23 +4923,6 @@ Wrap comma-delimited switch cases onto multiple lines.
 +        .bar:
       break
   }
-```
-
-</details>
-<br/>
-
-## wrapTaskBodies
-
-Wrap single-line Task and Task.detached closure bodies onto multiple lines.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- Task { await someOperation() }
-+ Task {
-+     await someOperation()
-+ }
 ```
 
 </details>

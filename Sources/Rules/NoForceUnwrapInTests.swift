@@ -44,6 +44,11 @@ public extension FormatRule {
                     continue
                 }
 
+                // Re-parse the function declaration, since converting previous force unwraps changes its body range
+                guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: testCase.index) else {
+                    continue
+                }
+
                 // Only convert the `!` if we are within the function body
                 guard formatter.tryKeywordSupported(at: forceUnwrapOperator.index, in: functionDecl) else {
                     continue

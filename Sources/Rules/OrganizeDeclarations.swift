@@ -153,6 +153,13 @@ extension Formatter {
               typeLengthExceedsOrganizationThreshold(at: typeDeclaration.keywordIndex)
         else { return }
 
+        // Leave the body alone if several declarations share a line (e.g. separated by `;`).
+        // Reordering them can't keep each declaration on its own line, and adding the trailing
+        // blank lines between categories would never terminate.
+        guard typeDeclaration.body.dropLast().allSatisfy({ $0.tokens.numberOfTrailingLinebreaks() > 0 }) else {
+            return
+        }
+
         // Parse category order from options
         let categoryOrder = categoryOrder(for: options.organizationMode)
 

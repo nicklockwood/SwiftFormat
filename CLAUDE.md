@@ -49,7 +49,7 @@ swift test --enable-test-discovery
 - `Sources/Formatter.swift` - Token manipulation APIs
 - `Sources/ParsingHelpers.swift` - Parsing helpers for types, declarations, expressions, properties, functions, etc.
 - `Sources/FormattingHelpers.swift` - Higher-level formatting utilities
-- `Sources/Declarations.swift` - Helpers related to individual declarations
+- `Sources/Declaration.swift` - Helpers related to individual declarations
 
 You MUST review the APIs available in these files using:
 

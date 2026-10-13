@@ -13,7 +13,7 @@ public extension FormatRule {
     static let emptyExtensions = FormatRule(
         help: "Remove empty, non-protocol-conforming extensions.",
         disabledByDefault: true,
-        orderAfter: [.unusedPrivateDeclarations]
+        orderAfter: [.unusedDeclarations]
     ) { formatter in
         var emptyExtensions = [TypeDeclaration]()
 

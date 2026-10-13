@@ -102,6 +102,6 @@ final class EmptyExtensionsTests: XCTestCase {
         }
 
         """
-        testFormatting(for: input, [output], rules: [.unusedPrivateDeclarations, .emptyExtensions])
+        testFormatting(for: input, [output], rules: [.unusedDeclarations, .emptyExtensions])
     }
 }

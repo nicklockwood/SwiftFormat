@@ -1444,6 +1444,7 @@ func processInput(_ inputURLs: [URL],
     var moduleIdentifiersByRoot: [ProjectRoot: [String: Set<String>]]?
     let projectIndexProvider: ProjectIndexProvider? = projectIndexMode == .auto ? ProjectIndexProvider { features in
         let requiresFunctionReferences = features.contains(.functionReferences)
+        let requiresSymbolReferences = features.contains(.symbolReferences)
         let discoveredFiles: [(URL, ProjectRoot)]
         if let cached = discoveredProjectFiles {
             discoveredFiles = cached
@@ -1491,14 +1492,16 @@ func processInput(_ inputURLs: [URL],
                caches[rootCacheURL]?.sourceIndexes[key],
                cached.contentHash == sourceHash,
                cached.moduleIdentifiers == modules.sorted(),
-               !includeFunctionReferences || cached.includesFunctionReferences
+               !includeFunctionReferences || cached.includesFunctionReferences,
+               !requiresSymbolReferences || cached.includesSymbolReferences
             {
                 sourceIndex = cached
             } else {
                 sourceIndex = makeSourceFileIndex(
                     from: source,
                     moduleIdentifiers: modules,
-                    includeFunctionReferences: includeFunctionReferences
+                    includeFunctionReferences: includeFunctionReferences,
+                    includeSymbolReferences: requiresSymbolReferences
                 )
             }
             indexLock.lock()
@@ -1613,7 +1616,8 @@ func processInput(_ inputURLs: [URL],
                 return makeSourceFileIndex(
                     from: input,
                     moduleIdentifiers: [],
-                    includeFunctionReferences: true
+                    includeFunctionReferences: true,
+                    includeSymbolReferences: false
                 )
             }
             let output: String
@@ -1726,7 +1730,9 @@ func processInput(_ inputURLs: [URL],
                 updatedLocalSourceIndex = output == input ? sourceFileIndexAccess.index : makeSourceFileIndex(
                     from: output,
                     moduleIdentifiers: [],
-                    includeFunctionReferences: true
+                    includeFunctionReferences: true,
+                    includeSymbolReferences: projectIndexAccess.dependency?
+                        .features.contains(.symbolReferences) == true
                 )
             } else {
                 updatedLocalSourceIndex = nil
@@ -1813,7 +1819,9 @@ func processInput(_ inputURLs: [URL],
                                     projectIndexAccess.lastIndex?.files[inputURL.path]?.moduleIdentifiers ?? []
                                 ),
                                 includeFunctionReferences: projectIndexDependency?
-                                    .features.contains(.functionReferences) == true
+                                    .features.contains(.functionReferences) == true,
+                                includeSymbolReferences: projectIndexDependency?
+                                    .features.contains(.symbolReferences) == true
                             )
                             projectIndexCacheUpdates.setIndex(
                                 sourceIndex,

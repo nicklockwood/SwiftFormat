@@ -1166,6 +1166,7 @@ let commandLineArguments = [
     "strict",
     "verbose",
     "quiet",
+    "color",
     "reporter",
     "report",
     // Misc

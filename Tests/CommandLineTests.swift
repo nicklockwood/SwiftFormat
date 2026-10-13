@@ -2253,6 +2253,42 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "foobar.swift --quiet"), .error)
     }
 
+    // MARK: color
+
+    func testColorSetsForceColorWhileRunning() {
+        var forceColor: Bool?
+        CLI.print = { _, _ in
+            forceColor = CLI.forceColor
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color --help"), .ok)
+        XCTAssertEqual(forceColor, true)
+        XCTAssertFalse(CLI.forceColor)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--help"), .ok)
+        XCTAssertEqual(forceColor, false)
+    }
+
+    func testColorDoesNotTakeInputPath() throws {
+        let input = """
+        func foo()
+        {
+        bar()
+        }
+        """
+        let output = """
+        func foo() {
+            bar()
+        }
+
+        """
+        try withTmpDirectory(["foo.swift": input]) { directory in
+            let inputURL = directory.appendingPathComponent("foo.swift")
+            CLI.print = { _, _ in }
+            CLI.readLine = { nil }
+            XCTAssertEqual(processArguments(["", "--color", directory.path, "--cache", "ignore"], in: ""), .ok)
+            XCTAssertEqual(try String(contentsOf: inputURL), output)
+        }
+    }
+
     // MARK: split input paths
 
     func testSplitInputPaths() {

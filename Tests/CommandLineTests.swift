@@ -3133,6 +3133,44 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testBuildDirectoriesExcludedByDefault() throws {
+        try withTmpDirectory([
+            "Sources/Foo.swift": "let foo = 5;\n",
+            "Build/Foo.swift": "let foo = 5;\n",
+            ".build/Foo.swift": "let foo = 5;\n",
+            "DerivedData/Foo.swift": "let foo = 5;\n",
+            "Example/Build/Foo.swift": "let foo = 5;\n",
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: ". --rules semicolons --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift")), "let foo = 5\n")
+            for path in ["Build/Foo.swift", ".build/Foo.swift", "DerivedData/Foo.swift", "Example/Build/Foo.swift"] {
+                XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent(path)), "let foo = 5;\n", path)
+            }
+        }
+    }
+
+    func testBuildDirectoryFormattedWhenUnexcluded() throws {
+        try withTmpDirectory([
+            ".swiftformat": "--unexclude Build\n",
+            "Build/Foo.swift": "let foo = 5;\n",
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: ". --rules semicolons --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Build/Foo.swift")), "let foo = 5\n")
+        }
+    }
+
+    func testBuildDirectoryFormattedWhenPassedAsInput() throws {
+        try withTmpDirectory([
+            "Build/Foo.swift": "let foo = 5;\n",
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "Build --rules semicolons --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Build/Foo.swift")), "let foo = 5\n")
+        }
+    }
+
     // MARK: Markdown
 
     func testFormatMarkdownFile() throws {

@@ -1449,6 +1449,9 @@ public struct FileOptions {
 
     public static let `default` = FileOptions()
 
+    /// Names of build directories, which are excluded by default
+    static let buildDirectories: Set = [".build", "Build", "DerivedData"]
+
     public init(followSymlinks: Bool = false,
                 supportedFileExtensions: [String] = ["swift", "md"],
                 excludedGlobs: [Glob] = [],
@@ -1476,6 +1479,13 @@ public struct FileOptions {
             }
         }
         return shouldSkip
+    }
+
+    /// Returns true if the URL is a build directory that has not been unexcluded.
+    /// Only checked when enumerating directory contents, so build directories passed as inputs are still formatted.
+    func shouldSkipBuildDirectory(_ url: URL) -> Bool {
+        Self.buildDirectories.contains(url.lastPathComponent) &&
+            !unexcludedGlobs.contains(where: { $0.matches(url.standardizedFileURL.path) })
     }
 }
 

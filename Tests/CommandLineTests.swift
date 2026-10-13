@@ -2253,6 +2253,33 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "foobar.swift --quiet"), .error)
     }
 
+    // MARK: color
+
+    func testColorModeIsSetWhileRunning() {
+        var colorMode: CLI.ColorMode?
+        CLI.print = { _, _ in
+            colorMode = CLI.colorMode
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color always --help"), .ok)
+        XCTAssertEqual(colorMode, .always)
+        XCTAssertEqual(CLI.colorMode, .auto)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color never --help"), .ok)
+        XCTAssertEqual(colorMode, .never)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--help"), .ok)
+        XCTAssertEqual(colorMode, .auto)
+    }
+
+    func testInvalidColorModeIsAnError() {
+        var errors = [String]()
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color sometimes --help"), .error)
+        XCTAssertEqual(errors, ["error: Unsupported --color value 'sometimes'. Valid options are \"auto\", \"always\" or \"never\"."])
+    }
+
     // MARK: split input paths
 
     func testSplitInputPaths() {

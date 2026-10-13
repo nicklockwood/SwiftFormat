@@ -56,6 +56,19 @@ public extension CLI {
         Swift.readLine(strippingNewline: false)
     }
 
+    /// When output handlers should color messages, set with the `--color` argument
+    enum ColorMode: String, CaseIterable {
+        /// Color messages when the output is a terminal (the default)
+        case auto
+        /// Color messages even when the output is piped or captured
+        case always
+        /// Never color messages
+        case never
+    }
+
+    /// The `--color` mode of the current run
+    internal(set) static var colorMode = ColorMode.auto
+
     /// Run the CLI with the specified input arguments
     static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
         processArguments(args, environment: ProcessInfo.processInfo.environment, in: directory)
@@ -226,6 +239,7 @@ func printHelp(as type: CLI.OutputType) {
     --strict           Emit errors for unformatted code when formatting
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
+    --color            Colored output: "auto" (default), "always" or "never"
     --output-tokens    Outputs an array of tokens instead of text when using stdin
     --markdown-files   \(stripMarkdown(Descriptors.markdownFiles.help))
 
@@ -418,9 +432,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
     var strict = false
 
     quietMode = false
+    CLI.colorMode = .auto
     defer {
-        // Reset quiet mode on exit to prevent side-effects between unit tests
+        // Reset quiet and color modes on exit to prevent side-effects between unit tests
         quietMode = false
+        CLI.colorMode = .auto
     }
     let logger = Logger(print: print)
 
@@ -430,6 +446,18 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Quiet mode
         quietMode = (args["quiet"] != nil)
+
+        // Color
+        if let value = args["color"] {
+            guard let mode = CLI.ColorMode(rawValue: value) else {
+                throw FormatError.invalidOption(
+                    value,
+                    for: "color",
+                    with: CLI.ColorMode.allCases.map(\.rawValue)
+                )
+            }
+            CLI.colorMode = mode
+        }
 
         // Verbose
         verbose = (args["verbose"] != nil)

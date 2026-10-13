@@ -3569,6 +3569,7 @@ extension Formatter {
     func makeSwiftUIDynamicPropertiesPrivate() {
         parseDeclarations().forEachRecursiveDeclaration { declaration in
             guard declaration.isStoredInstanceProperty,
+                  isViewType(declaration.parentType) || isViewModifierType(declaration.parentType),
                   let propertyWrapper = declaration.swiftUIPropertyWrapper,
                   propertyWrapper != "@Binding" ||
                   declaration.parentType?.visibility() == .public ||

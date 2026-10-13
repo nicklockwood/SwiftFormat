@@ -1025,6 +1025,46 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexIsNotBuiltForDefaultUnusedDeclarationVisibility() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "internal func unused() {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules unusedDeclarations --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            let cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            XCTAssertEqual((cache["sourceIndexes"] as? [String: Any])?.count, 0)
+        }
+    }
+
+    func testProjectIndexRemovesOnlyUnreferencedInternalDeclarations() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Declarations.swift": """
+            internal func used() {}
+            internal func unused() {}
+            """,
+            "Sources/App/References.swift": "used()\n",
+        ]) { directory in
+            let declarationsURL = directory.appendingPathComponent("Sources/App/Declarations.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Declarations.swift --rules unusedDeclarations --unused-visibility internal --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: declarationsURL), "internal func used() {}\n")
+        }
+    }
+
     func testProjectIndexCanBeDisabled() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

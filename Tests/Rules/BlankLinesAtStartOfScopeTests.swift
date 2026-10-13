@@ -241,6 +241,59 @@ final class BlankLinesAtStartOfScopeTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .consistent), exclude: [.blankLinesAtEndOfScope])
     }
 
+    func testScopeBlankLinesPreserveKeepsBlankLineAtStartOfNonTypeScopes() {
+        let input = """
+        func foo() {
+
+            let bar = baz.map { value in
+
+                value * 2
+            }
+            if bar.isEmpty {
+
+                print(bar)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesAtStartOfScope, options: .init(scopeBlankLines: .preserve))
+    }
+
+    func testScopeBlankLinesPreserveStillRemovesBlankLineAtStartOfParens() {
+        let input = """
+        foo(
+
+            bar: 1
+        )
+        """
+        let output = """
+        foo(
+            bar: 1
+        )
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(scopeBlankLines: .preserve))
+    }
+
+    func testScopeBlankLinesPreserveWithTypeBlankLinesStartOnly() {
+        let input = """
+        struct Foo {
+            func bar() {
+
+                baz()
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+
+            func bar() {
+
+                baz()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .startOnly, scopeBlankLines: .preserve))
+    }
+
     func testFalsePositive() {
         let input = """
         struct S {

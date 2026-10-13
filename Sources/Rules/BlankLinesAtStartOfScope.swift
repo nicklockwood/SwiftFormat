@@ -13,7 +13,7 @@ public extension FormatRule {
     /// that starts a new scope.
     static let blankLinesAtStartOfScope = FormatRule(
         help: "Remove leading blank line at the start of a scope.",
-        options: ["type-blank-lines"]
+        options: ["type-blank-lines", "scope-blank-lines"]
     ) { formatter in
         formatter.forEach(.startOfScope) { i, token in
             guard ["{", "(", "[", "<", ":"].contains(token.string) else { return }
@@ -45,7 +45,7 @@ public extension FormatRule {
                 case .preserve, .consistent:
                     break
                 }
-            } else {
+            } else if token != .startOfScope("{") || formatter.options.scopeBlankLines == .remove {
                 formatter.removeLeadingBlankLinesIfPresent(in: rangeInsideScope)
             }
         }
@@ -94,6 +94,18 @@ public extension FormatRule {
           struct Foo {
         +
               let bar: Bar
+          }
+        ```
+
+        With `--type-blank-lines start-only` and `--scope-blank-lines preserve`:
+
+        ```diff
+          struct Foo {
+        +
+              func bar() {
+
+                  baz()
+              }
           }
         ```
         """

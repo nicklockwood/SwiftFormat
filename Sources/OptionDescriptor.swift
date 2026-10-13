@@ -1427,6 +1427,12 @@ struct _Descriptors {
         help: "Blank lines in type declarations:",
         keyPath: \.typeBlankLines
     )
+    let scopeBlankLines = OptionDescriptor(
+        argumentName: "scope-blank-lines",
+        displayName: "Scope blank lines",
+        help: "Blank lines in function bodies, closures, and statement blocks:",
+        keyPath: \.scopeBlankLines
+    )
     let genericTypes = OptionDescriptor(
         argumentName: "generic-types",
         displayName: "Additional generic types",

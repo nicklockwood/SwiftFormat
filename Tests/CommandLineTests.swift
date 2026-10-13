@@ -968,6 +968,63 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexPreservesClassSubclassedInAnotherFile() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Parent.swift": "class Parent {}\n",
+            "Sources/App/Child.swift": "class Child: Parent {}\n",
+        ]) { directory in
+            let parentURL = directory.appendingPathComponent("Sources/App/Parent.swift")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Parent.swift --rules preferFinalClasses --cache ignore --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: parentURL), "class Parent {}\n")
+        }
+    }
+
+    func testSubclassChangeInvalidatesPreferFinalClassesCache() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Parent.swift": "class Parent {}\n",
+            "Sources/App/Child.swift": "class Child: Parent {}\n",
+        ]) { directory in
+            let parentURL = directory.appendingPathComponent("Sources/App/Parent.swift")
+            let childURL = directory.appendingPathComponent("Sources/App/Child.swift")
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Sources/App/Parent.swift --rules preferFinalClasses --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: parentURL), "class Parent {}\n")
+
+            try "class Unrelated {}\n".write(to: childURL, atomically: true, encoding: .utf8)
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: parentURL), "final class Parent {}\n")
+        }
+    }
+
+    func testPrivatePreferFinalClassCandidateDoesNotBuildProjectIndex() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Input.swift": "private class Example {}\n",
+            "Sources/App/Other.swift": "class Other {}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/Input.swift --rules preferFinalClasses --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            // Rewriting the selected file caches its new summary, but the unrelated file isn't indexed.
+            XCTAssertEqual(try readSourceIndexes(at: cacheURL).count, 1)
+        }
+    }
+
     func testFileScopedRedundantOverloadCachesOnlyCurrentFileIndex() throws {
         let input = """
         private struct Example {

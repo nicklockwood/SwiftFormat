@@ -128,6 +128,10 @@ private let rulesByName: [String: FormatRule] = {
         rule.canonicalRule.directiveNames.insert(rule.name.lowercased())
     }
     let values = rules.values.sorted(by: { $0.name < $1.name })
+    let dependencies = Dictionary(uniqueKeysWithValues: values.map { ($0.name, $0.orderAfter.map(\.name)) })
+    if let cycle = _FormatRules.orderingCycle(in: dependencies) {
+        fatalError("Circular orderAfter dependency: \(cycle.joined(separator: " -> "))")
+    }
     for (index, value) in values.enumerated() {
         value.index = index * 10
     }
@@ -227,4 +231,34 @@ extension _FormatRules {
 
 public struct _FormatRules {
     fileprivate init() {}
+}
+
+extension _FormatRules {
+    /// Returns a dependency cycle, including its repeated starting rule, if one exists.
+    static func orderingCycle(in dependencies: [String: [String]]) -> [String]? {
+        var visited = Set<String>()
+        var path = [String]()
+
+        func visit(_ name: String) -> [String]? {
+            if let index = path.firstIndex(of: name) {
+                return Array(path[index...]) + [name]
+            }
+            guard visited.insert(name).inserted else { return nil }
+            path.append(name)
+            defer { path.removeLast() }
+            for dependency in dependencies[name] ?? [] {
+                if let cycle = visit(dependency) {
+                    return cycle
+                }
+            }
+            return nil
+        }
+
+        for name in dependencies.keys.sorted() {
+            if let cycle = visit(name) {
+                return cycle
+            }
+        }
+        return nil
+    }
 }

@@ -32,6 +32,35 @@ private let changelogTitles: [Substring] = {
 }()
 
 final class MetadataTests: XCTestCase {
+    // MARK: rule order cycle check
+
+    func testRuleOrderingHasNoCycles() {
+        let dependencies = Dictionary(uniqueKeysWithValues: FormatRules.all.map {
+            ($0.name, $0.orderAfter.map(\.name))
+        })
+        XCTAssertNil(_FormatRules.orderingCycle(in: dependencies))
+    }
+
+    func testRuleOrderingAllowsSharedDependencies() {
+        XCTAssertNil(_FormatRules.orderingCycle(in: [
+            "a": ["b", "c"], "b": ["d"], "c": ["d"], "d": [],
+        ]))
+    }
+
+    func testRuleOrderingDetectsSelfDependency() {
+        XCTAssertEqual(_FormatRules.orderingCycle(in: ["a": ["a"]]), ["a", "a"])
+    }
+
+    func testRuleOrderingDetectsMutualDependency() {
+        XCTAssertEqual(_FormatRules.orderingCycle(in: ["a": ["b"], "b": ["a"]]), ["a", "b", "a"])
+    }
+
+    func testRuleOrderingDetectsIndirectCycle() {
+        XCTAssertEqual(_FormatRules.orderingCycle(in: [
+            "a": [], "b": ["c"], "c": ["d"], "d": ["e"], "e": ["c"],
+        ]), ["c", "d", "e", "c"])
+    }
+
     // MARK: generate Rules.md
 
     /// NOTE: if test fails, just run it again locally to update rules file

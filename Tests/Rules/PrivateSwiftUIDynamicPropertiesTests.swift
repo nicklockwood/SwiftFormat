@@ -12,7 +12,7 @@ import XCTest
 final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
     func testPrivateDynamicProperties() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @AppStorage("isVisible") var isVisible: Bool
             @Binding var isPresented: Bool
             @Environment(\\.openURL) var openURL
@@ -22,7 +22,7 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
         }
         """
         let output = """
-        struct ContentView {
+        struct ContentView: View {
             @AppStorage("isVisible") private var isVisible: Bool
             @Binding var isPresented: Bool
             @Environment(\\.openURL) private var openURL
@@ -36,7 +36,7 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
 
     func testDoesNotMakeBindingPrivateInInternalType() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @Binding var isPresented: Bool
         }
         """
@@ -45,20 +45,20 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
 
     func testMakesBindingPrivateInPublicOrOpenType() {
         let input = """
-        public struct PublicContentView {
+        public struct PublicContentView: View {
             @Binding var text: String
         }
 
-        open class OpenContentView {
+        open class OpenContentView: View {
             @Binding var text: String
         }
         """
         let output = """
-        public struct PublicContentView {
+        public struct PublicContentView: View {
             @Binding private var text: String
         }
 
-        open class OpenContentView {
+        open class OpenContentView: View {
             @Binding private var text: String
         }
         """
@@ -67,12 +67,12 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
 
     func testPrivateNamespacedDynamicProperty() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @SwiftUI::State var counter: Int
         }
         """
         let output = """
-        struct ContentView {
+        struct ContentView: View {
             @SwiftUI::State private var counter: Int
         }
         """
@@ -81,7 +81,7 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
 
     func testUseExistingAccessControl() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @State private var counter: Int
             @StateObject public var model: Model
             @State package var count: Int
@@ -95,7 +95,7 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
 
     func testDoesNotModifyNonStoredProperties() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @State static var counter: Int
 
             func update() {
@@ -108,13 +108,13 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
 
     func testStateVariableOnPreviousLine() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @State
             var counter: Int
         }
         """
         let output = """
-        struct ContentView {
+        struct ContentView: View {
             @State
             private var counter: Int
         }
@@ -125,7 +125,7 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
     func testWithPreviewableOnSameLine() {
         // Don't add `private` to @Previewable property wrappers:
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @Previewable @StateObject var counter: Int
         }
         """
@@ -135,12 +135,143 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
     func testWithPreviewableOnPreviousLine() {
         // Don't add `private` to @Previewable property wrappers:
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @Previewable
             @State var counter: Int
         }
         """
         testFormatting(for: input, rule: .privateSwiftUIDynamicProperties)
+    }
+
+    func testAppStorageInObservableObjectRemainsUnchanged() {
+        let input = """
+        final class ViewModel: ObservableObject {
+            @AppStorage("soundEffectsEnabled")
+            var soundEffectsEnabled = true
+        }
+        """
+        testFormatting(for: input, rule: .privateSwiftUIDynamicProperties)
+        testFormatting(for: input, rule: .privateStateVariables)
+    }
+
+    func testAppStorageInUnrelatedStructRemainsUnchanged() {
+        let input = """
+        struct Settings {
+            @AppStorage("soundEffectsEnabled")
+            var soundEffectsEnabled = true
+        }
+        """
+        testFormatting(for: input, rule: .privateSwiftUIDynamicProperties)
+        testFormatting(for: input, rule: .privateStateVariables)
+    }
+
+    func testAppStorageInViewAndViewModifierBecomesPrivate() {
+        let input = """
+        struct AppSettingsScreen: View {
+            @AppStorage("soundEffectsEnabled")
+            var soundEffectsEnabled = true
+        }
+
+        struct SoundEffectsModifier: ViewModifier {
+            @AppStorage("soundEffectsEnabled")
+            var soundEffectsEnabled = true
+        }
+        """
+        let output = """
+        struct AppSettingsScreen: View {
+            @AppStorage("soundEffectsEnabled")
+            private var soundEffectsEnabled = true
+        }
+
+        struct SoundEffectsModifier: ViewModifier {
+            @AppStorage("soundEffectsEnabled")
+            private var soundEffectsEnabled = true
+        }
+        """
+        testFormatting(for: input, output, rule: .privateSwiftUIDynamicProperties)
+        testFormatting(for: input, output, rule: .privateStateVariables)
+    }
+
+    func testNestedTypesDoNotInheritViewEligibility() {
+        let input = """
+        struct AppSettingsScreen: View {
+            @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+
+            final class ViewModel: ObservableObject {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+
+            struct Settings {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+
+            struct NestedView: View {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+        }
+        """
+        let output = """
+        struct AppSettingsScreen: View {
+            @AppStorage("soundEffectsEnabled") private var soundEffectsEnabled = true
+
+            final class ViewModel: ObservableObject {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+
+            struct Settings {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+
+            struct NestedView: View {
+                @AppStorage("soundEffectsEnabled") private var soundEffectsEnabled = true
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .privateSwiftUIDynamicProperties)
+        testFormatting(for: input, output, rule: .privateStateVariables)
+    }
+
+    func testNestedTypesInExtensionsUseTheirOwnConformances() {
+        let input = """
+        struct AppSettingsScreen: View {}
+
+        extension AppSettingsScreen {
+            final class ViewModel: ObservableObject {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+
+            struct NestedModifier: ViewModifier {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+        }
+
+        extension AppSettingsScreen.ViewModel {
+            struct Settings {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+        }
+        """
+        let output = """
+        struct AppSettingsScreen: View {}
+
+        extension AppSettingsScreen {
+            final class ViewModel: ObservableObject {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+
+            struct NestedModifier: ViewModifier {
+                @AppStorage("soundEffectsEnabled") private var soundEffectsEnabled = true
+            }
+        }
+
+        extension AppSettingsScreen.ViewModel {
+            struct Settings {
+                @AppStorage("soundEffectsEnabled") var soundEffectsEnabled = true
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .privateSwiftUIDynamicProperties)
+        testFormatting(for: input, output, rule: .privateStateVariables)
     }
 
     func testPrivateStateVariablesIsDeprecated() {
@@ -149,12 +280,12 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
 
     func testPrivateStateVariablesForwardsToPrivateSwiftUIDynamicProperties() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             @State var counter: Int
         }
         """
         let output = """
-        struct ContentView {
+        struct ContentView: View {
             @State private var counter: Int
         }
         """

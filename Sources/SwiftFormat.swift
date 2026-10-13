@@ -250,6 +250,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
                 return
             }
             let options = tempOptions
+            let fileOptions = options.fileOptions ?? .default
             let enumerationOptions: FileManager.DirectoryEnumerationOptions = .skipsHiddenFiles
             guard let files = try? manager.contentsOfDirectory(
                 at: inputURL, includingPropertiesForKeys: keys, options: enumerationOptions
@@ -257,7 +258,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
                 onComplete { throw FormatError.reading("Failed to read contents of directory at \(inputURL.path)") }
                 return
             }
-            for url in files where !url.path.hasPrefix(".") {
+            for url in files where !url.path.hasPrefix(".") && !fileOptions.shouldSkipBuildDirectory(url) {
                 let options = options
                 queue.async(group: group) {
                     let outputURL = outputURL.map {

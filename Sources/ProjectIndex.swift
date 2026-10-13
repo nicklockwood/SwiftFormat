@@ -149,6 +149,11 @@ struct SourceFileIndex: Codable, Equatable {
         var visibility: String
     }
 
+    struct ClassInheritance: Codable, Equatable {
+        var className: String
+        var inheritedTypes: [String]
+    }
+
     struct FunctionDeclaration: Codable, Equatable {
         enum Kind: String, Codable {
             case function
@@ -228,6 +233,7 @@ struct SourceFileIndex: Codable, Equatable {
     var contentHash: String
     var moduleIdentifiers: [String]
     var typeDeclarations: [TypeDeclaration]
+    var classInheritances: [ClassInheritance]
     var functionDeclarations: [FunctionDeclaration]
     var typeMembers: [TypeMembers]
     var symbolDeclarations: [SymbolDeclaration]
@@ -240,6 +246,7 @@ struct SourceFileIndex: Codable, Equatable {
         contentHash: String,
         moduleIdentifiers: Set<String>,
         typeDeclarations: [TypeDeclaration],
+        classInheritances: [ClassInheritance] = [],
         functionDeclarations: [FunctionDeclaration],
         typeMembers: [TypeMembers],
         symbolDeclarations: [SymbolDeclaration],
@@ -251,6 +258,7 @@ struct SourceFileIndex: Codable, Equatable {
         self.contentHash = contentHash
         self.moduleIdentifiers = moduleIdentifiers.sorted()
         self.typeDeclarations = typeDeclarations
+        self.classInheritances = classInheritances
         self.functionDeclarations = functionDeclarations
         self.typeMembers = typeMembers
         self.symbolDeclarations = symbolDeclarations
@@ -305,6 +313,8 @@ struct ProjectIndex {
     private let functionReferencesFingerprint: String
     private let symbolReferencesFingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
+    private let inheritedClassNamesByModule: [String: Set<String>]
+    private let inheritedClassNames: Set<String>
     private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
     private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
     private let memberNamesByModule: [String: MemberNamesByType]
@@ -313,6 +323,7 @@ struct ProjectIndex {
     init(files: [String: SourceFileIndex]) {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
+        var inheritedClassNamesByModule = [String: Set<String>]()
         var functionDeclarationsByModule = [String: [String: [SourceFileIndex.FunctionDeclaration]]]()
         var functionReferencesByModule = [String: [String: [SourceFileIndex.FunctionReference]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
@@ -322,6 +333,16 @@ struct ProjectIndex {
                 for declaration in file.typeDeclarations {
                     let key = TypeKey(moduleIdentifier: moduleIdentifier, name: declaration.name)
                     typeVisibilities[key, default: []].insert(declaration.visibility)
+                }
+                for inheritance in file.classInheritances {
+                    for inheritedType in inheritance.inheritedTypes {
+                        inheritedClassNamesByModule[moduleIdentifier, default: []].insert(inheritedType)
+                        if let unqualifiedName = inheritedType.split(separator: ".").last {
+                            inheritedClassNamesByModule[moduleIdentifier, default: []].insert(
+                                String(unqualifiedName)
+                            )
+                        }
+                    }
                 }
                 for declaration in file.functionDeclarations {
                     functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
@@ -349,6 +370,10 @@ struct ProjectIndex {
             }
         }
         self.typeVisibilities = typeVisibilities
+        self.inheritedClassNamesByModule = inheritedClassNamesByModule
+        inheritedClassNames = inheritedClassNamesByModule.values.reduce(into: []) {
+            $0.formUnion($1)
+        }
         self.functionDeclarationsByModule = functionDeclarationsByModule
         self.functionReferencesByModule = functionReferencesByModule
         self.memberNamesByModule = memberNamesByModule
@@ -357,6 +382,10 @@ struct ProjectIndex {
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
                 .map { "\($0.name):\($0.visibility)" }
+                .sorted()
+                .joined(separator: ",")
+            let classInheritances = file.classInheritances
+                .map { "\($0.className):\($0.inheritedTypes.joined(separator: ","))" }
                 .sorted()
                 .joined(separator: ",")
             let functions = file.functionDeclarations
@@ -390,7 +419,7 @@ struct ProjectIndex {
                 }
                 .sorted()
                 .joined(separator: ",")
-            let declarations = "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(functions):" +
+            let declarations = "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(classInheritances):\(functions):" +
                 "\(members):\(symbolDeclarations)"
             let symbolReferences = file.symbolReferences.sorted().joined(separator: ",")
             return (declarations, functionReferences, symbolReferences)
@@ -505,6 +534,27 @@ struct ProjectIndex {
         else { return false }
         return moduleIdentifiers.allSatisfy { moduleIdentifier in
             typeVisibilities[TypeKey(moduleIdentifier: moduleIdentifier, name: name)] != nil
+        }
+    }
+
+    /// Whether the class is subclassed anywhere allowed by its visibility.
+    /// Short-name matches are deliberately conservative when qualification is ambiguous.
+    func isClassSubclassed(
+        named name: String,
+        visibility: Visibility,
+        visibleFrom fileURL: URL
+    ) -> Bool {
+        let path = fileURL.standardizedFileURL.path
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
+              !moduleIdentifiers.isEmpty
+        else { return false }
+        let unqualifiedName = name.split(separator: ".").last.map(String.init) ?? name
+        if visibility == .package {
+            return inheritedClassNames.contains(name) || inheritedClassNames.contains(unqualifiedName)
+        }
+        return moduleIdentifiers.contains { moduleIdentifier in
+            let inheritedNames = inheritedClassNamesByModule[moduleIdentifier] ?? []
+            return inheritedNames.contains(name) || inheritedNames.contains(unqualifiedName)
         }
     }
 
@@ -805,6 +855,7 @@ func makeSourceFileIndex(
 ) -> SourceFileIndex {
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
+    var classInheritances = [SourceFileIndex.ClassInheritance]()
     var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
     var typeMembers = [SourceFileIndex.TypeMembers]()
     var symbolDeclarations = [SourceFileIndex.SymbolDeclaration]()
@@ -837,6 +888,12 @@ func makeSourceFileIndex(
         if let typeDeclaration = declaration.asTypeDeclaration,
            let name = declaration.fullyQualifiedName
         {
+            if typeDeclaration.keyword == "class" {
+                classInheritances.append(.init(
+                    className: name,
+                    inheritedTypes: Array(Set(typeDeclaration.conformances.flatMap(\.conformance.indexedNominalTypeNames))).sorted()
+                ))
+            }
             if typeDeclaration.keyword != "extension", typeDeclaration.keyword != "protocol" {
                 let insidePublicExtension = declaration.parentDeclarations.contains(where: {
                     $0.keyword == "extension" && $0.visibility() == .public
@@ -940,6 +997,7 @@ func makeSourceFileIndex(
         contentHash: computeHash(source),
         moduleIdentifiers: moduleIdentifiers,
         typeDeclarations: typeDeclarations,
+        classInheritances: classInheritances,
         functionDeclarations: functionDeclarations,
         typeMembers: typeMembers,
         symbolDeclarations: symbolDeclarations,
@@ -948,6 +1006,20 @@ func makeSourceFileIndex(
         includesFunctionReferences: includeFunctionReferences,
         includesSymbolReferences: includeSymbolReferences
     )
+}
+
+private extension TypeName {
+    /// Qualified and unqualified nominal names in an inherited type, excluding generic arguments.
+    var indexedNominalTypeNames: [String] {
+        tokens.split(separator: .operator("&", .infix)).flatMap { component -> [String] in
+            let identifiers = component
+                .prefix { $0 != .startOfScope("<") }
+                .compactMap { $0.isIdentifier ? $0.string : nil }
+            guard let unqualifiedName = identifiers.last else { return [] }
+            let qualifiedName = identifiers.joined(separator: ".")
+            return qualifiedName == unqualifiedName ? [unqualifiedName] : [qualifiedName, unqualifiedName]
+        }
+    }
 }
 
 extension Formatter {

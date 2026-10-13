@@ -600,6 +600,12 @@ public enum TypeBlankLines: String, CaseIterable {
     case endOnly = "end-only"
 }
 
+/// Whether to remove or preserve blank lines at the start / end of non-type scopes
+public enum ScopeBlankLines: String, CaseIterable {
+    case remove
+    case preserve
+}
+
 /// Treatment of semicolons
 public enum SemicolonsMode: String, CaseIterable {
     case inlineOnly = "inline-only"
@@ -1014,6 +1020,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var closureVoidReturn: ClosureVoidReturn
     public var enumNamespaces: EnumNamespacesMode
     public var typeBlankLines: TypeBlankLines
+    public var scopeBlankLines: ScopeBlankLines
     public var genericTypes: String
     public var useSomeAny: Bool
     public var wrapEffects: WrapEffects
@@ -1183,6 +1190,7 @@ public struct FormatOptions: CustomStringConvertible {
                 closureVoidReturn: ClosureVoidReturn = .remove,
                 enumNamespaces: EnumNamespacesMode = .always,
                 typeBlankLines: TypeBlankLines = .remove,
+                scopeBlankLines: ScopeBlankLines = .remove,
                 genericTypes: String = "",
                 useSomeAny: Bool = true,
                 wrapEffects: WrapEffects = .preserve,
@@ -1337,6 +1345,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.closureVoidReturn = closureVoidReturn
         self.enumNamespaces = enumNamespaces
         self.typeBlankLines = typeBlankLines
+        self.scopeBlankLines = scopeBlankLines
         self.genericTypes = genericTypes
         self.useSomeAny = useSomeAny
         self.wrapEffects = wrapEffects

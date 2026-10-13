@@ -425,6 +425,7 @@ Remove or insert trailing blank line at the end of a scope.
 Option | Description
 --- | ---
 `--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert", "preserve", "consistent", "start-only" or "end-only"
+`--scope-blank-lines` | Blank lines in function bodies, closures, and statement blocks: "remove" (default) or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -485,6 +486,7 @@ Remove leading blank line at the start of a scope.
 Option | Description
 --- | ---
 `--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert", "preserve", "consistent", "start-only" or "end-only"
+`--scope-blank-lines` | Blank lines in function bodies, closures, and statement blocks: "remove" (default) or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -532,6 +534,18 @@ With `--type-blank-lines start-only`:
   struct Foo {
 +
       let bar: Bar
+  }
+```
+
+With `--type-blank-lines start-only` and `--scope-blank-lines preserve`:
+
+```diff
+  struct Foo {
++
+      func bar() {
+
+          baz()
+      }
   }
 ```
 

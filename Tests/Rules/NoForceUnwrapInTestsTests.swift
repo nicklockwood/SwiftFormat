@@ -793,4 +793,26 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
+
+    func testForceUnwrapAfterOtherConvertedForceUnwraps() {
+        let input = """
+        import Testing
+
+        @Test func something() {
+            let foo = foo!.bar!.baaz!
+            let bar = bar!.baaz!.quux!
+            #expect(baaz! + 1 == 2)
+        }
+        """
+        let output = """
+        import Testing
+
+        @Test func something() throws {
+            let foo = try #require(foo?.bar?.baaz)
+            let bar = try #require(bar?.baaz?.quux)
+            #expect(try #require(baaz) + 1 == 2)
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+    }
 }

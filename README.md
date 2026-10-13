@@ -757,6 +757,12 @@ This allows you to override certain rules or formatting options just for a parti
 
 The `--exclude` option takes a comma-delimited list of file or directory paths to exclude from formatting. Excluded paths are relative to the config file containing the `--exclude` command. The excluded paths can include wildcards, specified using Unix "Glob" syntax, as [documented below](#globs).
 
+Build directories named `.build`, `Build` or `DerivedData` are excluded by default. To format files inside one of these directories, either pass the directory as an input path, or use the `--unexclude` option:
+
+```
+--unexclude Build
+```
+
 Config files named ".swiftformat" will be processed automatically, however, you can select an additional configuration file to use for formatting using the `--config "path/to/config/file"` command-line argument. A configuration file selected using `--config` does not need to be named ".swiftformat", and can be located outside of the project directory.
 
 The config file format is designed to be edited by hand. You may include blank lines for readability, and can also add comments using a hash prefix (#), e.g.

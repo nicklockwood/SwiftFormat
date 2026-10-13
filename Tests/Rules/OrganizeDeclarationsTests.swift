@@ -4687,4 +4687,18 @@ final class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testNoTimeoutWithDeclarationsSeparatedBySemicolon() {
+        let input = """
+        class Foo {
+            var bar = 1; func baaz() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: .organizeDeclarations,
+            exclude: [.semicolons]
+        )
+    }
 }

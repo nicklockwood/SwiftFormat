@@ -4688,6 +4688,39 @@ final class OrganizeDeclarationsTests: XCTestCase {
         )
     }
 
+    func testOrganizeDeclarationsAfterSplittingSemicolons() {
+        let input = """
+        public class Foo {
+            private func bar() {}; public let baz = 1
+        }
+        """
+        let output = """
+        public class Foo {
+            public let baz = 1
+
+            private func bar() {}
+        }
+        """
+        testFormatting(
+            for: input, [output],
+            rules: [.organizeDeclarations, .semicolons],
+            options: FormatOptions(semicolons: .never, markCategories: false)
+        )
+    }
+
+    func testOrganizeDeclarationsPreservesInlineSemicolons() {
+        let input = """
+        public class Foo {
+            private func bar() {}; public let baz = 1
+        }
+        """
+        testFormatting(
+            for: input,
+            rules: [.organizeDeclarations, .semicolons],
+            options: FormatOptions(semicolons: .inlineOnly, markCategories: false)
+        )
+    }
+
     func testNoTimeoutWithDeclarationsSeparatedBySemicolon() {
         let input = """
         class Foo {

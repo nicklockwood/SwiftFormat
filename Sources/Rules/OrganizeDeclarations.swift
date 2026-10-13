@@ -13,7 +13,10 @@ public extension FormatRule {
         help: "Organize declarations within class, struct, enum, actor, and extension bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
-        orderAfter: [.extensionAccessControl, .redundantFileprivate, .redundantPublic, .validateTestCases, .redundantMemberwiseInit],
+        orderAfter: [
+            .extensionAccessControl, .redundantFileprivate, .redundantPublic, .validateTestCases,
+            .redundantMemberwiseInit, .semicolons,
+        ],
         options: [
             "category-mark", "mark-categories", "before-marks",
             "lifecycle", "organize-types", "struct-threshold", "class-threshold",

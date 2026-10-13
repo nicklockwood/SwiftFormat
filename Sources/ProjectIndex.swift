@@ -14,6 +14,7 @@ import Foundation
 enum ProjectContextFeature: String, Codable, Hashable {
     case declarations
     case functionReferences
+    case symbolReferences
 }
 
 struct ProjectIndexDependency: Codable, Equatable {
@@ -222,7 +223,7 @@ struct SourceFileIndex: Codable, Equatable {
         var canBeRenamed: Bool
     }
 
-    static let cacheVersion = 1
+    static let cacheVersion = 2
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -231,7 +232,9 @@ struct SourceFileIndex: Codable, Equatable {
     var typeMembers: [TypeMembers]
     var symbolDeclarations: [SymbolDeclaration]
     var functionReferences: [FunctionReference]
+    var symbolReferences: [String]
     var includesFunctionReferences: Bool
+    var includesSymbolReferences: Bool
 
     init(
         contentHash: String,
@@ -241,7 +244,9 @@ struct SourceFileIndex: Codable, Equatable {
         typeMembers: [TypeMembers],
         symbolDeclarations: [SymbolDeclaration],
         functionReferences: [FunctionReference] = [],
-        includesFunctionReferences: Bool = true
+        symbolReferences: [String] = [],
+        includesFunctionReferences: Bool = true,
+        includesSymbolReferences: Bool = true
     ) {
         self.contentHash = contentHash
         self.moduleIdentifiers = moduleIdentifiers.sorted()
@@ -250,7 +255,9 @@ struct SourceFileIndex: Codable, Equatable {
         self.typeMembers = typeMembers
         self.symbolDeclarations = symbolDeclarations
         self.functionReferences = functionReferences
+        self.symbolReferences = symbolReferences
         self.includesFunctionReferences = includesFunctionReferences
+        self.includesSymbolReferences = includesSymbolReferences
     }
 }
 
@@ -295,6 +302,8 @@ struct ProjectIndex {
     let files: [String: SourceFileIndex]
     let fingerprint: String
     private let declarationsFingerprint: String
+    private let functionReferencesFingerprint: String
+    private let symbolReferencesFingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
     private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
     private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
@@ -344,7 +353,7 @@ struct ProjectIndex {
         self.functionReferencesByModule = functionReferencesByModule
         self.memberNamesByModule = memberNamesByModule
         self.symbolDeclarationsByModule = symbolDeclarationsByModule
-        let descriptions = files.keys.sorted().compactMap { path -> (String, String)? in
+        let descriptions = files.keys.sorted().compactMap { path -> (String, String, String)? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
                 .map { "\($0.name):\($0.visibility)" }
@@ -383,14 +392,58 @@ struct ProjectIndex {
                 .joined(separator: ",")
             let declarations = "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(functions):" +
                 "\(members):\(symbolDeclarations)"
-            return (declarations, functionReferences)
+            let symbolReferences = file.symbolReferences.sorted().joined(separator: ",")
+            return (declarations, functionReferences, symbolReferences)
         }
         declarationsFingerprint = computeHash(descriptions.map(\.0).joined(separator: ";"))
-        fingerprint = computeHash(descriptions.map { "\($0.0):\($0.1)" }.joined(separator: ";"))
+        functionReferencesFingerprint = computeHash(
+            descriptions.map { "\($0.0):\($0.1)" }.joined(separator: ";")
+        )
+        symbolReferencesFingerprint = computeHash(
+            descriptions.map { "\($0.0):\($0.2)" }.joined(separator: ";")
+        )
+        fingerprint = computeHash(
+            descriptions.map { "\($0.0):\($0.1):\($0.2)" }.joined(separator: ";")
+        )
     }
 
     func fingerprint(for features: Set<ProjectContextFeature>) -> String {
-        features.contains(.functionReferences) ? fingerprint : declarationsFingerprint
+        switch (features.contains(.functionReferences), features.contains(.symbolReferences)) {
+        case (true, true):
+            return fingerprint
+        case (true, false):
+            return functionReferencesFingerprint
+        case (false, true):
+            return symbolReferencesFingerprint
+        case (false, false):
+            return declarationsFingerprint
+        }
+    }
+
+    /// Whether another indexed file contains a possible reference to the declaration.
+    /// Name-only matching is intentionally conservative: ambiguous references preserve declarations.
+    func containsSymbolReference(
+        named name: String,
+        visibility: Visibility,
+        visibleFrom fileURL: URL
+    ) -> Bool? {
+        let path = fileURL.standardizedFileURL.path
+        guard visibility > .fileprivate,
+              let file = files[path],
+              file.includesSymbolReferences
+        else { return nil }
+        let moduleIdentifiers = Set(file.moduleIdentifiers)
+        if visibility == .internal, moduleIdentifiers.isEmpty {
+            return nil
+        }
+        let variants = Set([name, "_\(name)", "$\(name)", "`\(name)`"])
+        return files.contains { candidatePath, candidate in
+            guard candidatePath != path,
+                  candidate.includesSymbolReferences,
+                  visibility != .internal || !moduleIdentifiers.isDisjoint(with: candidate.moduleIdentifiers)
+            else { return false }
+            return !variants.isDisjoint(with: candidate.symbolReferences)
+        }
     }
 
     /// Whether a function is used as a value in any module containing the current file.
@@ -747,7 +800,8 @@ private extension SourceFileIndex.FunctionDeclaration {
 func makeSourceFileIndex(
     from source: String,
     moduleIdentifiers: Set<String>,
-    includeFunctionReferences: Bool = true
+    includeFunctionReferences: Bool = true,
+    includeSymbolReferences: Bool = true
 ) -> SourceFileIndex {
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
@@ -757,6 +811,7 @@ func makeSourceFileIndex(
     let declarations = formatter.parseDeclarations()
     let functionReferences = includeFunctionReferences ?
         formatter.indexedFunctionReferences(declarations: declarations) : []
+    let symbolReferences = includeSymbolReferences ? formatter.indexedSymbolReferences() : []
     declarations.forEachRecursiveDeclaration { declaration in
         let symbolNames = formatter.namesInDeclaration(at: declaration.keywordIndex)
             ?? declaration.name.map { [$0] }
@@ -889,11 +944,22 @@ func makeSourceFileIndex(
         typeMembers: typeMembers,
         symbolDeclarations: symbolDeclarations,
         functionReferences: functionReferences,
-        includesFunctionReferences: includeFunctionReferences
+        symbolReferences: symbolReferences,
+        includesFunctionReferences: includeFunctionReferences,
+        includesSymbolReferences: includeSymbolReferences
     )
 }
 
 extension Formatter {
+    /// All identifier spellings that may refer to a declaration in another source file.
+    func indexedSymbolReferences() -> [String] {
+        var references = Set<String>()
+        forEach(.identifier) { _, token in
+            references.insert(token.string)
+        }
+        return references.sorted()
+    }
+
     /// Function-value references whose signatures can be identified without type checking.
     func indexedFunctionReferences(declarations: [Declaration]) -> [SourceFileIndex.FunctionReference] {
         var references = [SourceFileIndex.FunctionReference]()

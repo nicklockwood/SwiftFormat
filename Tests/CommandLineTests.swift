@@ -2255,38 +2255,29 @@ final class CommandLineTests: XCTestCase {
 
     // MARK: color
 
-    func testColorSetsForceColorWhileRunning() {
-        var forceColor: Bool?
+    func testColorModeIsSetWhileRunning() {
+        var colorMode: CLI.ColorMode?
         CLI.print = { _, _ in
-            forceColor = CLI.forceColor
+            colorMode = CLI.colorMode
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color --help"), .ok)
-        XCTAssertEqual(forceColor, true)
-        XCTAssertFalse(CLI.forceColor)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color always --help"), .ok)
+        XCTAssertEqual(colorMode, .always)
+        XCTAssertEqual(CLI.colorMode, .auto)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color never --help"), .ok)
+        XCTAssertEqual(colorMode, .never)
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--help"), .ok)
-        XCTAssertEqual(forceColor, false)
+        XCTAssertEqual(colorMode, .auto)
     }
 
-    func testColorDoesNotTakeInputPath() throws {
-        let input = """
-        func foo()
-        {
-        bar()
+    func testInvalidColorModeIsAnError() {
+        var errors = [String]()
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
         }
-        """
-        let output = """
-        func foo() {
-            bar()
-        }
-
-        """
-        try withTmpDirectory(["foo.swift": input]) { directory in
-            let inputURL = directory.appendingPathComponent("foo.swift")
-            CLI.print = { _, _ in }
-            CLI.readLine = { nil }
-            XCTAssertEqual(processArguments(["", "--color", directory.path, "--cache", "ignore"], in: ""), .ok)
-            XCTAssertEqual(try String(contentsOf: inputURL), output)
-        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--color sometimes --help"), .error)
+        XCTAssertEqual(errors, ["error: Unsupported --color value 'sometimes'. Valid options are \"auto\", \"always\" or \"never\"."])
     }
 
     // MARK: split input paths

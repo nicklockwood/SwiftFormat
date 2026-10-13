@@ -56,9 +56,18 @@ public extension CLI {
         Swift.readLine(strippingNewline: false)
     }
 
-    /// Whether the `--color` argument was passed. Output handlers should color
-    /// messages when this is true, even if the output is not a terminal
-    internal(set) static var forceColor = false
+    /// When output handlers should color messages, set with the `--color` argument
+    enum ColorMode: String, CaseIterable {
+        /// Color messages when the output is a terminal (the default)
+        case auto
+        /// Color messages even when the output is piped or captured
+        case always
+        /// Never color messages
+        case never
+    }
+
+    /// The `--color` mode of the current run
+    internal(set) static var colorMode = ColorMode.auto
 
     /// Run the CLI with the specified input arguments
     static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
@@ -230,7 +239,7 @@ func printHelp(as type: CLI.OutputType) {
     --strict           Emit errors for unformatted code when formatting
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
-    --color            Colors output messages even when stderr is not a terminal
+    --color            Colored output: "auto" (default), "always" or "never"
     --output-tokens    Outputs an array of tokens instead of text when using stdin
     --markdown-files   \(stripMarkdown(Descriptors.markdownFiles.help))
 
@@ -423,11 +432,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
     var strict = false
 
     quietMode = false
-    CLI.forceColor = false
+    CLI.colorMode = .auto
     defer {
         // Reset quiet and color modes on exit to prevent side-effects between unit tests
         quietMode = false
-        CLI.forceColor = false
+        CLI.colorMode = .auto
     }
     let logger = Logger(print: print)
 
@@ -439,7 +448,16 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         quietMode = (args["quiet"] != nil)
 
         // Color
-        CLI.forceColor = (args["color"] != nil)
+        if let value = args["color"] {
+            guard let mode = CLI.ColorMode(rawValue: value) else {
+                throw FormatError.invalidOption(
+                    value,
+                    for: "color",
+                    with: CLI.ColorMode.allCases.map(\.rawValue)
+                )
+            }
+            CLI.colorMode = mode
+        }
 
         // Verbose
         verbose = (args["verbose"] != nil)
@@ -638,7 +656,6 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
         }
         try addInputPaths(for: "quiet")
-        try addInputPaths(for: "color")
         try addInputPaths(for: "verbose")
         try addInputPaths(for: "lenient")
         try addInputPaths(for: "strict")

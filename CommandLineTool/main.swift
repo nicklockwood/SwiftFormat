@@ -76,7 +76,14 @@ private var stderr = FileHandleOutputStream(filehandle: .standardError)
 private let stderrIsTTY = isatty(STDERR_FILENO) != 0
 
 private var useColor: Bool {
-    stderrIsTTY || CLI.forceColor
+    switch CLI.colorMode {
+    case .auto:
+        return stderrIsTTY
+    case .always:
+        return true
+    case .never:
+        return false
+    }
 }
 
 private let printQueue = DispatchQueue(label: "swiftformat.print")

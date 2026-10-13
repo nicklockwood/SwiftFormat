@@ -866,7 +866,7 @@ By default, `--lint` will only report lines that require formatting, but you can
 
 If you would prefer not to see a warning for each and every formatting change, you can use the `--quiet` flag to suppress all output except errors.
 
-SwiftFormat colors its warnings and errors when they are written to a terminal. Use the `--color` flag to keep the colors when the output is piped or captured, for example in a CI log.
+SwiftFormat colors its warnings and errors when they are written to a terminal. Use `--color always` to keep the colors when the output is piped or captured, for example in a CI log, or `--color never` to turn them off.
 
 Sometimes you may wish to autoformat some rules, but only lint others. To do that, use the `--lintonly` option in your config file to specify rules that should only be applied in `--lint` mode:
 

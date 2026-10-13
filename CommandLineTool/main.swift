@@ -75,6 +75,17 @@ private var stderr = FileHandleOutputStream(filehandle: .standardError)
 
 private let stderrIsTTY = isatty(STDERR_FILENO) != 0
 
+private var useColor: Bool {
+    switch CLI.colorMode {
+    case .auto:
+        return stderrIsTTY
+    case .always:
+        return true
+    case .never:
+        return false
+    }
+}
+
 private let printQueue = DispatchQueue(label: "swiftformat.print")
 
 CLI.print = { message, type in
@@ -83,11 +94,11 @@ CLI.print = { message, type in
         case .info:
             print(message, to: &stderr)
         case .success:
-            print(stderrIsTTY ? message.inGreen : message, to: &stderr)
+            print(useColor ? message.inGreen : message, to: &stderr)
         case .error:
-            print(stderrIsTTY ? message.inRed : message, to: &stderr)
+            print(useColor ? message.inRed : message, to: &stderr)
         case .warning:
-            print(stderrIsTTY ? message.inYellow : message, to: &stderr)
+            print(useColor ? message.inYellow : message, to: &stderr)
         case .content:
             print(message)
         case .raw:

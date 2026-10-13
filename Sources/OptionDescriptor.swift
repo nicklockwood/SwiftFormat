@@ -1344,6 +1344,19 @@ struct _Descriptors {
             "private": .private,
         ]
     )
+    let unusedVisibility = OptionDescriptor(
+        argumentName: "unused-visibility",
+        displayName: "Unused Visibility",
+        help: "Remove unused declarations at or below this visibility threshold:",
+        keyPath: \.unusedVisibility,
+        options: [
+            "public": .public,
+            "package": .package,
+            "internal": .internal,
+            "fileprivate": .fileprivate,
+            "private": .private,
+        ]
+    )
     let typos = OptionDescriptor(
         argumentName: "typos",
         displayName: "Custom Typos",

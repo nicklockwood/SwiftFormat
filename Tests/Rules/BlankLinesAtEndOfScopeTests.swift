@@ -258,6 +258,36 @@ final class BlankLinesAtEndOfScopeTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .startOnly), exclude: [.blankLinesAtStartOfScope])
     }
 
+    func testScopeBlankLinesPreserveKeepsBlankLineAtEndOfNonTypeScopes() {
+        let input = """
+        func foo() {
+            if bar {
+                print(bar)
+
+            }
+
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesAtEndOfScope, options: .init(scopeBlankLines: .preserve))
+    }
+
+    func testScopeBlankLinesPreserveStillRemovesBlankLineAtEndOfArray() {
+        let input = """
+        let foo = [
+            1,
+            2,
+
+        ]
+        """
+        let output = """
+        let foo = [
+            1,
+            2,
+        ]
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(scopeBlankLines: .preserve))
+    }
+
     func testConsistentBlankLinesAddsTrailingBlankLineWhenLeadingPresent() {
         let input = """
         class Foo {

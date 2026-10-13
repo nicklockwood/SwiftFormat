@@ -172,6 +172,41 @@ final class ProjectIndexTests: XCTestCase {
         ])
     }
 
+    func testSourceFileIndexExtractsClassInheritance() {
+        let source = """
+        class Child<Element>: Module.Parent<Element>, SomeProtocol {}
+        """
+
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+
+        XCTAssertEqual(index.classInheritances, [
+            .init(
+                className: "Child",
+                inheritedTypes: ["Module.Parent", "Parent", "SomeProtocol"]
+            ),
+        ])
+    }
+
+    func testDeclarationFingerprintIncludesClassInheritance() {
+        let base = ProjectIndex(files: [
+            "/Project/Input.swift": makeSourceFileIndex(
+                from: "class Child: Parent {}",
+                moduleIdentifiers: ["App"]
+            ),
+        ])
+        let changed = ProjectIndex(files: [
+            "/Project/Input.swift": makeSourceFileIndex(
+                from: "class Child: OtherParent {}",
+                moduleIdentifiers: ["App"]
+            ),
+        ])
+
+        XCTAssertNotEqual(
+            base.fingerprint(for: [.declarations]),
+            changed.fingerprint(for: [.declarations])
+        )
+    }
+
     func testSourceFileIndexCanOmitFunctionReferences() throws {
         let source = """
         struct Example {

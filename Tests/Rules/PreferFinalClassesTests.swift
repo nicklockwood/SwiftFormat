@@ -10,6 +10,33 @@ import XCTest
 @testable import SwiftFormat
 
 final class PreferFinalClassesTests: XCTestCase {
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String? = nil,
+        otherFile: String,
+        currentModules: Set<String> = ["App"],
+        otherModules: Set<String> = ["App"],
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let inputURL = URL(fileURLWithPath: "/Project/Sources/App/Input.swift")
+        let otherURL = URL(fileURLWithPath: "/Project/Sources/App/Other.swift")
+        let projectIndex = ProjectIndex(files: [
+            inputURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: currentModules),
+            otherURL.path: makeSourceFileIndex(from: otherFile, moduleIdentifiers: otherModules),
+        ])
+        let result = try applyRules(
+            [.preferFinalClasses],
+            to: tokenize(input),
+            with: .default,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: inputURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output ?? input, file: file, line: line)
+    }
+
     func testBasicClassMadesFinal() {
         let input = """
         class Foo {}
@@ -182,6 +209,88 @@ final class PreferFinalClassesTests: XCTestCase {
         final class SubClass: BaseClass {}
         """
         testFormatting(for: input, output, rule: .preferFinalClasses)
+    }
+
+    func testClassWithSubclassInAnotherFileNotMadeFinal() throws {
+        let input = """
+        class Parent {}
+        """
+        try testProjectFormatting(
+            for: input,
+            otherFile: """
+            class Child: Parent {}
+            """
+        )
+    }
+
+    func testGenericClassWithSubclassInAnotherFileNotMadeFinal() throws {
+        let input = """
+        class Container<Element> {}
+        """
+        try testProjectFormatting(
+            for: input,
+            otherFile: """
+            class StringContainer: Container<String> {}
+            """
+        )
+    }
+
+    func testSubclassInAnotherModuleDoesNotPreventFinalClass() throws {
+        let input = """
+        class Parent {}
+        """
+        let output = """
+        final class Parent {}
+        """
+        try testProjectFormatting(
+            for: input,
+            output,
+            otherFile: """
+            class Child: Parent {}
+            """,
+            otherModules: ["Library"]
+        )
+    }
+
+    func testPackageClassWithSubclassInAnotherModuleNotMadeFinal() throws {
+        let input = """
+        package class Parent {}
+        """
+        try testProjectFormatting(
+            for: input,
+            otherFile: """
+            package class Child: Parent {}
+            """,
+            otherModules: ["Library"]
+        )
+    }
+
+    func testSubclassInAnyContainingModulePreventsFinalClass() throws {
+        let input = """
+        class Parent {}
+        """
+        try testProjectFormatting(
+            for: input,
+            otherFile: """
+            class Child: Parent {}
+            """,
+            currentModules: ["App", "Shared"],
+            otherModules: ["App"]
+        )
+    }
+
+    func testSubclassNestedInPublicExtensionPreventsFinalClass() throws {
+        let input = """
+        class Parent {}
+        """
+        try testProjectFormatting(
+            for: input,
+            otherFile: """
+            public extension Namespace {
+                class Child: Parent {}
+            }
+            """
+        )
     }
 
     func testMultipleInheritanceLevels() {

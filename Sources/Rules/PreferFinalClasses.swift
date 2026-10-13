@@ -36,6 +36,21 @@ public extension FormatRule {
             // Don't add final to classes likely to be subclassed
             guard !formatter.isLikelyToBeSubclassed(typeDecl) else { return }
 
+            // A class with wider-than-file visibility may be subclassed elsewhere in its module or package.
+            let visibility = formatter.effectiveVisibility(of: declaration)
+            if visibility > .fileprivate,
+               !declaration.parentDeclarations.contains(where: \.keyword.isFunctionDeclarationKeyword),
+               let typeName = typeDecl.fullyQualifiedName,
+               let fileURL = formatter.currentFileURL,
+               formatter.projectIndex(requiring: [.declarations])?.isClassSubclassed(
+                   named: typeName,
+                   visibility: visibility,
+                   visibleFrom: fileURL
+               ) == true
+            {
+                return
+            }
+
             formatter.insert(tokenize("final "), at: keywordIndex)
 
             // Convert any open direct child declarations to public (since final classes can't have open members)

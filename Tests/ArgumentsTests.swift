@@ -365,6 +365,14 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertNil(try formatOptionsFor(["--disable": "void"]))
     }
 
+    func testWrapSingleLineEnumCasesOption() throws {
+        XCTAssertFalse(FormatOptions.default.wrapSingleLineEnumCases)
+        XCTAssertEqual(try formatOptionsFor(["wrap-single-line-enum-cases": "true"])?.wrapSingleLineEnumCases, true)
+        XCTAssertEqual(try formatOptionsFor(["wrap-single-line-enum-cases": "false"])?.wrapSingleLineEnumCases, false)
+        let options = FormatOptions(wrapSingleLineEnumCases: true)
+        XCTAssertEqual(argumentsFor(Options(formatOptions: options), excludingDefaults: true)["wrap-single-line-enum-cases"], "true")
+    }
+
     func testFileHeaderOptionToArguments() {
         let options = FormatOptions(fileHeader: "//  Hello World\n//  Goodbye World")
         let args = argumentsFor(Options(formatOptions: options), excludingDefaults: true)

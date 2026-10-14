@@ -681,6 +681,14 @@ struct _Descriptors {
         help: "Enum case wrapping:",
         keyPath: \.wrapEnumCases
     )
+    let wrapSingleLineEnumCases = OptionDescriptor(
+        argumentName: "wrap-single-line-enum-cases",
+        displayName: "Wrap Single-line Enum Cases",
+        help: "Wrap comma-delimited enum cases following the opening brace:",
+        keyPath: \.wrapSingleLineEnumCases,
+        trueValues: ["true"],
+        falseValues: ["false"]
+    )
     let wrapArguments = OptionDescriptor(
         argumentName: "wrap-arguments",
         displayName: "Wrap Arguments",

@@ -425,6 +425,11 @@ extension Formatter {
               let startOfOperand = self.index(of: .nonSpaceOrCommentOrLinebreak, after: operatorBeforeOperand)
         else { return nil }
 
+        // The RHS of `as` and `is` is a type, where `!` declares an implicitly unwrapped optional
+        if [.keyword("as"), .keyword("is")].contains(tokens[operatorBeforeOperand]) {
+            return nil
+        }
+
         var endOfOperand = endOfExpression
         if let operatorAfterOperand = infixOperators.first(where: { $0 > forceUnwrapIndex }),
            let lastTokenOfOperand = self.index(of: .nonSpaceOrCommentOrLinebreak, before: operatorAfterOperand)

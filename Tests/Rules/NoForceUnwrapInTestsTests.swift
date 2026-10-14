@@ -933,6 +933,20 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noForceUnwrapInTests)
     }
 
+    func testImplicitlyUnwrappedOptionalCastTypeUnchanged() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssertEqual(try expression.evaluate() as Double!, 1)
+                let value = try foo() as Int!
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noForceUnwrapInTests)
+    }
+
     func testForceUnwrapOnRightOfRequireUnchangedInSwiftTesting() {
         let input = """
         import Testing

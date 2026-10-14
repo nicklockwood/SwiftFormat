@@ -13,43 +13,12 @@ public extension FormatRule {
     static let wrapEnumCases = FormatRule(
         help: "Rewrite comma-delimited enum cases to one case per line.",
         disabledByDefault: true,
-        options: ["wrap-enum-cases"],
-        sharedOptions: ["linebreaks"]
+        options: ["wrap-enum-cases", "wrap-single-line-enum-cases"],
+        sharedOptions: ["linebreaks", "indent", "wrap-string-interpolation"]
     ) { formatter in
-        formatter.parseEnumCaseRanges()
-            .filter(formatter.shouldWrapCaseRangeGroup)
-            .flatMap { $0 }
-            .filter { $0.endOfCaseRangeToken == .delimiter(",") }
-            .reversed()
-            .forEach { enumCase in
-                guard var nextNonSpaceIndex = formatter.index(of: .nonSpace, after: enumCase.value.upperBound) else {
-                    return
-                }
-                let caseIndex = formatter.lastIndex(of: .keyword("case"), in: 0 ..< enumCase.value.lowerBound)
-                let indent = formatter.currentIndentForLine(at: caseIndex ?? enumCase.value.lowerBound)
-
-                if formatter.tokens[nextNonSpaceIndex] == .startOfScope("//") {
-                    formatter.removeToken(at: enumCase.value.upperBound)
-                    if formatter.token(at: enumCase.value.upperBound)?.isSpace == true,
-                       formatter.token(at: enumCase.value.upperBound - 1)?.isSpace == true
-                    {
-                        formatter.removeToken(at: enumCase.value.upperBound - 1)
-                    }
-                    nextNonSpaceIndex = formatter.index(of: .linebreak, after: enumCase.value.upperBound) ?? nextNonSpaceIndex
-                } else {
-                    formatter.removeTokens(in: enumCase.value.upperBound ..< nextNonSpaceIndex)
-                    nextNonSpaceIndex = enumCase.value.upperBound
-                }
-
-                if !formatter.tokens[nextNonSpaceIndex].isLinebreak {
-                    formatter.insertLinebreak(at: nextNonSpaceIndex)
-                }
-
-                let offset = indent.isEmpty ? 0 : 1
-                formatter.insertSpace(indent, at: nextNonSpaceIndex + 1)
-                formatter.insert([.keyword("case")], at: nextNonSpaceIndex + 1 + offset)
-                formatter.insertSpace(" ", at: nextNonSpaceIndex + 2 + offset)
-            }
+        formatter.forEach(.keyword("case")) { i, _ in
+            formatter.wrapEnumCaseDeclaration(at: i)
+        }
     } examples: {
         """
         ```diff
@@ -62,77 +31,142 @@ public extension FormatRule {
         +   case baz
           }
         ```
+
+        With `--wrap-single-line-enum-cases true`:
+
+        ```diff
+        - package enum Action { case delete, suspend, resume }
+        + package enum Action {
+        +     case delete
+        +     case suspend
+        +     case resume
+        + }
+        ```
         """
     }
 }
 
 extension Formatter {
-    struct EnumCaseRange: Comparable {
-        let value: Range<Int>
-        let endOfCaseRangeToken: Token
+    func wrapEnumCaseDeclaration(at i: Int) {
+        guard isEnumCaseDeclaration(at: i),
+              isEnumCase(at: i) || options.wrapSingleLineEnumCases,
+              !isInStringLiteralWithWrappingDisabled(at: i),
+              // Attributes and modifiers apply to every case in the original declaration.
+              // Keep it intact rather than changing availability or recursive case semantics.
+              startOfModifiers(at: i, includingAttributes: true) == i,
+              let scopeStart = startOfScope(at: i)
+        else { return }
 
-        static func < (lhs: Formatter.EnumCaseRange, rhs: Formatter.EnumCaseRange) -> Bool {
-            lhs.value.lowerBound < rhs.value.lowerBound
+        let caseIndex = i.autoUpdating(in: self)
+        if options.wrapSingleLineEnumCases {
+            wrapEnumCaseAfterSemicolon(at: caseIndex.index)
         }
-    }
+        let ranges = enumCaseRanges(at: caseIndex.index)
+        guard ranges.count > 1,
+              let firstIndex = ranges.first?.lowerBound,
+              options.wrapSingleLineEnumCases || tokens[scopeStart ..< firstIndex].contains(where: \.isLinebreak),
+              options.wrapEnumCases == .always || ranges.contains(where: {
+                  tokens[$0].contains { $0 == .startOfScope("(") || $0 == .operator("=", .infix) }
+              })
+        else { return }
 
-    func parseEnumCaseRanges() -> [[EnumCaseRange]] {
-        var result: [[EnumCaseRange]] = []
-
-        parseDeclarations().forEachRecursiveDeclaration { declaration in
-            guard declaration.keyword == "case", isEnumCase(at: declaration.keywordIndex) else { return }
-
-            let caseIndex = declaration.keywordIndex
-            var caseRanges: [EnumCaseRange] = []
-
-            // Split the case declaration on commas to get individual case ranges
-            var currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: caseIndex) ?? caseIndex
-            var searchIndex = caseIndex
-
-            while let commaIndex = index(of: .delimiter(","), after: searchIndex),
-                  commaIndex <= declaration.range.upperBound
+        if options.wrapSingleLineEnumCases {
+            if token(at: scopeStart) == .startOfScope("{"), onSameLine(scopeStart, caseIndex.index),
+               var closingBrace = endOfScope(at: scopeStart)
             {
-                // Add the case before this comma
-                caseRanges.append(EnumCaseRange(
-                    value: currentStart ..< commaIndex,
-                    endOfCaseRangeToken: .delimiter(",")
-                ))
-
-                // Move to start of next case
-                currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: commaIndex) ?? commaIndex
-                searchIndex = commaIndex
+                if let previous = index(of: .nonSpaceOrComment, before: closingBrace),
+                   !tokens[previous].isLinebreak
+                {
+                    if token(at: closingBrace - 1)?.isSpace == true {
+                        removeToken(at: closingBrace - 1)
+                        closingBrace -= 1
+                    }
+                    insertLinebreak(at: closingBrace)
+                    insertSpace(currentIndentForLine(at: scopeStart), at: closingBrace + 1)
+                }
+                wrapStatementBody(at: scopeStart)
             }
-
-            // Add the final case
-            let finalCaseEnd = lastIndex(of: .nonSpaceOrCommentOrLinebreak, in: currentStart ..< (declaration.range.upperBound + 1)) ?? declaration.range.upperBound
-
-            let endToken = token(at: finalCaseEnd) ?? .linebreak("\n", 1)
-            caseRanges.append(EnumCaseRange(
-                value: currentStart ..< finalCaseEnd,
-                endOfCaseRangeToken: endToken
-            ))
-
-            // Only add if there are multiple cases in this declaration
-            if caseRanges.count > 1 {
-                result.append(caseRanges)
-            }
+            wrapEnumCaseAfterSemicolon(at: caseIndex.index)
         }
 
-        return result
+        let indent = currentIndentForLine(at: caseIndex.index)
+        for range in enumCaseRanges(at: caseIndex.index).dropLast().reversed() {
+            let commaIndex = range.upperBound
+            guard var nextNonSpaceIndex = index(of: .nonSpace, after: commaIndex) else { continue }
+
+            if tokens[nextNonSpaceIndex] == .startOfScope("//") {
+                removeToken(at: commaIndex)
+                if token(at: commaIndex)?.isSpace == true,
+                   token(at: commaIndex - 1)?.isSpace == true
+                {
+                    removeToken(at: commaIndex - 1)
+                }
+                nextNonSpaceIndex = index(of: .linebreak, after: commaIndex) ?? nextNonSpaceIndex
+            } else {
+                removeTokens(in: commaIndex ..< nextNonSpaceIndex)
+                nextNonSpaceIndex = commaIndex
+            }
+
+            if !tokens[nextNonSpaceIndex].isLinebreak {
+                insertLinebreak(at: nextNonSpaceIndex)
+            }
+
+            let offset = indent.isEmpty ? 0 : 1
+            insertSpace(indent, at: nextNonSpaceIndex + 1)
+            insert(.keyword("case"), at: nextNonSpaceIndex + 1 + offset)
+            insertSpace(" ", at: nextNonSpaceIndex + 2 + offset)
+        }
     }
 
-    func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
-        guard let firstIndex = caseRangeGroup.first?.value.lowerBound,
-              let scopeStart = startOfScope(at: firstIndex),
-              tokens[scopeStart ..< firstIndex].contains(where: \.isLinebreak)
-        else {
-            // Don't wrap if first case is on same line as opening `{`
-            return false
+    /// Place a semicolon-separated declaration on its own line once the enum body is multiline.
+    func wrapEnumCaseAfterSemicolon(at index: Int) {
+        guard let previous = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+              tokens[previous] == .delimiter(";"), onSameLine(previous, index),
+              let scopeStart = startOfScope(at: index),
+              tokens[scopeStart ..< index].contains(where: \.isLinebreak)
+        else { return }
+        _ = wrapLine(before: index)
+    }
+
+    /// Enum cases may be inside conditional compilation scopes within the enum body.
+    func isEnumCaseDeclaration(at index: Int) -> Bool {
+        var searchIndex = index
+        while let scopeStart = startOfScope(at: searchIndex) {
+            if token(at: scopeStart) != .startOfScope("#if") {
+                return token(at: scopeStart) == .startOfScope("{")
+                    && lastSignificantKeyword(at: scopeStart, excluding: ["where"]) == "enum"
+            }
+            searchIndex = scopeStart
         }
-        return options.wrapEnumCases == .always || caseRangeGroup.contains(where: {
-            tokens[$0.value].contains(where: {
-                [.startOfScope("("), .operator("=", .infix)].contains($0)
-            })
-        })
+        return false
+    }
+
+    /// Parses the case values in a single declaration, skipping commas inside associated values.
+    func enumCaseRanges(at caseIndex: Int) -> [Range<Int>] {
+        guard let scopeEnd = endOfScope(at: caseIndex),
+              var currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: caseIndex)
+        else { return [] }
+
+        var result: [Range<Int>] = []
+        var searchIndex = caseIndex
+        while let boundary = index(after: searchIndex, where: {
+            $0 == .delimiter(",") || $0 == .delimiter(";") || $0.isDeclarationTypeKeyword
+                || $0.isAttribute || $0 == .startOfScope("#if")
+                || $0 == .keyword("#else") || $0 == .keyword("#elseif")
+        }), boundary < scopeEnd {
+            if tokens[boundary] != .delimiter(",") {
+                if currentStart < boundary {
+                    result.append(currentStart ..< boundary)
+                }
+                return result
+            }
+            result.append(currentStart ..< boundary)
+            currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: boundary) ?? boundary
+            searchIndex = boundary
+        }
+        if currentStart < scopeEnd {
+            result.append(currentStart ..< scopeEnd)
+        }
+        return result
     }
 }

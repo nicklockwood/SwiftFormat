@@ -924,6 +924,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapCollections: WrapMode
     public var wrapTypealiases: WrapMode
     public var wrapEnumCases: WrapEnumCases
+    public var wrapSingleLineEnumCases: Bool
     public var closingParenPosition: ClosingParenPosition
     public var callSiteClosingParenPosition: ClosingParenPosition
     public var wrapReturnType: WrapReturnType
@@ -1095,6 +1096,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapCollections: WrapMode = .preserve,
                 wrapTypealiases: WrapMode = .preserve,
                 wrapEnumCases: WrapEnumCases = .always,
+                wrapSingleLineEnumCases: Bool = false,
                 closingParenPosition: ClosingParenPosition = .balanced,
                 callSiteClosingParenPosition: ClosingParenPosition = .default,
                 wrapReturnType: WrapReturnType = .preserve,
@@ -1251,6 +1253,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapCollections = wrapCollections
         self.wrapTypealiases = wrapTypealiases
         self.wrapEnumCases = wrapEnumCases
+        self.wrapSingleLineEnumCases = wrapSingleLineEnumCases
         self.closingParenPosition = closingParenPosition
         self.callSiteClosingParenPosition = callSiteClosingParenPosition
         self.wrapReturnType = wrapReturnType

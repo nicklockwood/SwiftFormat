@@ -504,6 +504,35 @@ final class SwiftFormatTests: XCTestCase {
         ))
     }
 
+    func testMaxConcurrentFilesLimitsConcurrency() {
+        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().appendingPathComponent("Rules")
+        let lock = NSLock()
+        var running = 0, maxRunning = 0, count = 0
+        let errors = enumerateFiles(withInputURLs: [inputURL], maxConcurrentFiles: 2) { _, _, _ in
+            lock.lock()
+            running += 1
+            count += 1
+            maxRunning = max(maxRunning, running)
+            lock.unlock()
+            Thread.sleep(forTimeInterval: 0.001)
+            lock.lock()
+            running -= 1
+            lock.unlock()
+            return {}
+        }
+        XCTAssertEqual(errors.count, 0)
+        XCTAssertGreaterThan(count, 2)
+        XCTAssertLessThanOrEqual(maxRunning, 2)
+    }
+
+    func testMaxConcurrentFilesReturnsHandlerErrors() {
+        let inputURL = URL(fileURLWithPath: #file)
+        let errors = enumerateFiles(withInputURLs: [inputURL], maxConcurrentFiles: 1) { _, _, _ in
+            throw FormatError.options("foo")
+        }
+        XCTAssertEqual(errors.count, 1)
+    }
+
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)

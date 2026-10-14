@@ -2779,6 +2779,40 @@ final class CommandLineTests: XCTestCase {
         XCTAssert(error.contains("'ifdef' is not a formatting rule"), error)
     }
 
+    func testMaxConcurrentFilesOption() {
+        CLI.print = { _, _ in }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources/EnumAssociable.swift --max-concurrent-files 1 --lint --cache ignore --project-index disabled"), .ok)
+    }
+
+    func testConcurrentPerformLimitsConcurrency() {
+        let lock = NSLock()
+        var running = 0, maxRunning = 0, completed = Set<Int>()
+        concurrentPerform(iterations: 50, maxConcurrency: 2) { index in
+            lock.lock()
+            running += 1
+            maxRunning = max(maxRunning, running)
+            lock.unlock()
+            Thread.sleep(forTimeInterval: 0.001)
+            lock.lock()
+            running -= 1
+            completed.insert(index)
+            lock.unlock()
+        }
+        XCTAssertEqual(completed, Set(0 ..< 50))
+        XCTAssertLessThanOrEqual(maxRunning, 2)
+    }
+
+    func testInvalidMaxConcurrentFilesOptionFails() {
+        var error = ""
+        CLI.print = { message, type in
+            if type == .error {
+                error += message + "\n"
+            }
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources/EnumAssociable.swift --max-concurrent-files 0 --lint"), .error)
+        XCTAssert(error.contains("--max-concurrent-files option expects a positive integer"), error)
+    }
+
     func testBadConfigFails2() {
         var error = ""
         CLI.print = { message, type in

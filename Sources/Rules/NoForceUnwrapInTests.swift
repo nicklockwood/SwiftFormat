@@ -74,7 +74,11 @@ public extension FormatRule {
                     }
                 }
 
-                guard let expressionRange = formatter.parseExpressionRangeContainingForceUnwrap(forceUnwrapOperator.index, in: functionDecl) else {
+                let infixOperand = formatter.parseInfixOperandContainingForceUnwrap(forceUnwrapOperator.index)
+
+                guard let expressionRange = infixOperand?.autoUpdating(in: formatter)
+                    ?? formatter.parseExpressionRangeContainingForceUnwrap(forceUnwrapOperator.index, in: functionDecl)
+                else {
                     continue
                 }
 
@@ -139,6 +143,29 @@ public extension FormatRule {
                     } else {
                         formatter.replaceToken(at: i, with: .operator("?", .postfix))
                     }
+                }
+
+                // An operand on the RHS of an operator is covered by the `try` at the start of the expression
+                if infixOperand != nil {
+                    // Use the token the tokenizer produces for `#require`, so later operands in this expression still parse
+                    let wrapperTokens: [Token]
+                    switch testFramework {
+                    case .xcTest:
+                        wrapperTokens = [.identifier("XCTUnwrap"), .startOfScope("(")]
+                    case .swiftTesting:
+                        wrapperTokens = [.keyword("#require"), .startOfScope("(")]
+                    }
+
+                    // Unlike `try XCTUnwrap(...)`, `-XCTUnwrap(...)` is valid, so insert after any prefix operator
+                    let startsWithPrefixOperator = formatter.tokens[expressionRange.lowerBound].isOperator(ofType: .prefix)
+                        && formatter.tokens[expressionRange.lowerBound] != .operator(".", .prefix)
+                    let insertionIndex = startsWithPrefixOperator ? expressionRange.lowerBound + 1 : expressionRange.lowerBound
+
+                    formatter.insert(.endOfScope(")"), at: expressionRange.upperBound + 1)
+                    formatter.insert(wrapperTokens, at: insertionIndex)
+
+                    convertedAnyForceUnwrapOperators = true
+                    continue
                 }
 
                 // Whether or not the expression needs to be wrapped in `XCTUnwrap` / `#require`
@@ -287,31 +314,9 @@ extension Formatter {
         }
 
         // If there are infix operators in the expression, only handle the lhs of the first operator.
-        // `try` isn't allowed on the RHS of an operator, and multiple nested operators is too complicated.
-        //
-        // Handle any infix operator, including operator-like keywords like `is` and `as`.
-        // However don't exclude `as!`, which we want to handle by converting to `as?`.
-        let treatAsInfixOperator = { (token: Token, index: Int) in
-            if token.isOperator(ofType: .infix), token != .operator(".", .infix) {
-                return true
-            }
-
-            if token == .keyword("is") {
-                return true
-            }
-
-            if token == .keyword("as"),
-               let nextToken = self.index(of: .nonSpaceOrLinebreak, after: index),
-               self.tokens[nextToken] != .operator("!", .postfix)
-            {
-                return true
-            }
-
-            return false
-        }
-
+        // Force unwraps on the RHS are handled by `parseInfixOperandContainingForceUnwrap`.
         let firstInfixOperator = expressionRange.range.first(where: { i in
-            if treatAsInfixOperator(tokens[i], i),
+            if isInfixOperatorSeparatingOperands(at: i),
                let functionDecl,
                tryKeywordSupported(at: i, in: functionDecl),
                tokens[i] != .operator(".", .infix)
@@ -346,6 +351,141 @@ extension Formatter {
         }
 
         return expressionRange
+    }
+
+    /// Whether the token at the given index is an infix operator between two operands,
+    /// including operator-like keywords like `is` and `as`, but not `as!`,
+    /// which we want to handle by converting to `as?`.
+    func isInfixOperatorSeparatingOperands(at index: Int) -> Bool {
+        let token = tokens[index]
+
+        if token.isOperator(ofType: .infix), token != .operator(".", .infix) {
+            return true
+        }
+
+        if token == .keyword("is") {
+            return true
+        }
+
+        if token == .keyword("as"),
+           let nextToken = self.index(of: .nonSpaceOrLinebreak, after: index),
+           tokens[nextToken] != .operator("!", .postfix)
+        {
+            return true
+        }
+
+        return false
+    }
+
+    /// If the given force unwrap is in an operand on the RHS of an infix operator, in an expression on a single line
+    /// that starts with `try` (but not `try await`), returns the range of that operand. The `try` covers the whole expression, so the operand
+    /// can be wrapped in `XCTUnwrap(...)` / `#require(...)` without its own `try`, which isn't allowed on the RHS of an operator.
+    /// Returns `nil` for ternary expressions and expressions containing `as!`, which applies to everything on its left
+    /// (`a + b as! T` is `(a + b) as! T`).
+    func parseInfixOperandContainingForceUnwrap(_ forceUnwrapIndex: Int) -> ClosedRange<Int>? {
+        guard let expressionRange = parseExpressionRange(containing: forceUnwrapIndex) else { return nil }
+
+        // Find the operators between the operands of the expression, skipping over nested scopes
+        var infixOperators = [Int]()
+        var startOfExpression = expressionRange.lowerBound
+        var endOfExpression = expressionRange.upperBound
+        var index = expressionRange.lowerBound
+        while index <= endOfExpression {
+            if tokens[index] == .operator("=", .infix) {
+                // The parsed range can include the target of an assignment, which isn't part of the expression
+                guard index < forceUnwrapIndex,
+                      let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
+                else {
+                    endOfExpression = index - 1
+                    break
+                }
+                infixOperators.removeAll()
+                startOfExpression = nextIndex
+            } else if tokens[index].isStartOfScope, let endOfScope = endOfScope(at: index) {
+                if (index ... endOfScope).contains(forceUnwrapIndex) {
+                    return nil
+                }
+                index = endOfScope
+            } else if tokens[index] == .operator("?", .infix) {
+                return nil
+            } else if tokens[index] == .keyword("as"),
+                      let nextIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
+                      tokens[nextIndex] == .operator("!", .postfix)
+            {
+                return nil
+            } else if isInfixOperatorSeparatingOperands(at: index) {
+                infixOperators.append(index)
+            }
+
+            guard let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) else { break }
+            index = nextIndex
+        }
+
+        guard let operatorBeforeOperand = infixOperators.last(where: { $0 < forceUnwrapIndex }),
+              let startOfOperand = self.index(of: .nonSpaceOrCommentOrLinebreak, after: operatorBeforeOperand)
+        else { return nil }
+
+        var endOfOperand = endOfExpression
+        if let operatorAfterOperand = infixOperators.first(where: { $0 > forceUnwrapIndex }),
+           let lastTokenOfOperand = self.index(of: .nonSpaceOrCommentOrLinebreak, before: operatorAfterOperand)
+        {
+            endOfOperand = lastTokenOfOperand
+        }
+
+        // `XCTUnwrap` / `#require` take a synchronous autoclosure, so can't wrap an `await`,
+        // and a nested ternary's force unwraps can't be converted to optional chaining.
+        // An operand that already contains a `try` or `#require` (inserted elsewhere in this rule as
+        // `#` and `require`) can't be wrapped again, since nesting `#require` is a recursive macro expansion.
+        if tokens[startOfOperand ... endOfOperand].contains(where: {
+            [.keyword("await"), .operator("?", .infix), .keyword("try"), .keyword("#require"), .operator("#", .prefix)].contains($0)
+        }) {
+            return nil
+        }
+
+        // Converting `!` to `?` only works within an optional chain, so `foo!!`
+        // and `(foo as! Bar?)!` can't be unwrapped with a single `XCTUnwrap`
+        let hasNestedForceUnwrap = (startOfOperand ..< endOfOperand).contains { i in
+            guard tokens[i] == .operator("!", .postfix),
+                  let previousIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                  let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+            else { return false }
+
+            return tokens[previousIndex] == .keyword("as") || ![".", "(", "["].contains(tokens[nextIndex].string)
+        }
+
+        if hasNestedForceUnwrap {
+            return nil
+        }
+
+        // The expression range may not include prefix operators and the `try` and `await` keywords at its start
+        while let previousIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfExpression),
+              [.keyword("try"), .keyword("await")].contains(tokens[previousIndex]) || tokens[previousIndex].isOperator(ofType: .prefix)
+        {
+            startOfExpression = previousIndex
+        }
+
+        // Where the parsed range doesn't match the statement, such as when the range stopped
+        // after an infix operator or ran on from a previous line, we can't tell if the `try` covers the operand
+        if let previousIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfExpression),
+           isInfixOperatorSeparatingOperands(at: previousIndex),
+           tokens[previousIndex] != .operator("=", .infix)
+        {
+            return nil
+        }
+
+        if tokens[startOfExpression ... endOfOperand].contains(where: \.isLinebreak) {
+            return nil
+        }
+
+        // `try?` and `try!` would change how a failed unwrap is handled. A `try await` expression
+        // may have async calls in the operand, which can't be moved into the autoclosure.
+        guard tokens[startOfExpression] == .keyword("try"),
+              let tokenAfterTry = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfExpression),
+              !tokens[tokenAfterTry].isUnwrapOperator,
+              tokens[tokenAfterTry] != .keyword("await")
+        else { return nil }
+
+        return startOfOperand ... endOfOperand
     }
 
     /// If the given token is an `as` token, finds the direct outer paren scope that could potentially contain a method chain on the result of the cast.

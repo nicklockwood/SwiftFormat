@@ -602,6 +602,8 @@ Rules are configured by adding `--[option_name] [value]` to your command-line ar
 
 A given option may affect multiple rules. Use `--rule-info [rule_name]` command for details about which options affect a given rule, or see the [rules documentation](https://swiftformat.info/rules).
 
+To split comma-delimited cases in single-line enums into one `case` per line, enable `wrapEnumCases` and set `--wrap-single-line-enum-cases true`. This option defaults to `false`, preserving single-line enums, and respects the `--wrap-enum-cases` setting. Case declarations with attributes or the `indirect` modifier are preserved to avoid changing their meaning.
+
 You can configure options for specific files or code ranges by using `swiftformat:options` directive in comments inside your Swift file. To temporarily set one or more options inside a source file, use:
 
 ```swift

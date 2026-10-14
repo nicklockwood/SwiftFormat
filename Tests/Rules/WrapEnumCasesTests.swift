@@ -10,6 +10,328 @@ import XCTest
 @testable import SwiftFormat
 
 final class WrapEnumCasesTests: XCTestCase {
+    func testPreserveEnumCasesInSingleLineStringInterpolation() {
+        let input = #"""
+        let text = "\({ enum Foo { case first, second }; return Foo.first }())"
+        """#
+        testFormatting(for: input, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testPreserveEnumCasesInMultilineStringInterpolationWhenWrappingDisabled() {
+        let input = #"""
+        let text = """
+        \({ enum Foo { case first, second }; return Foo.first }())
+        """
+        """#
+        testFormatting(for: input, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testSemicolonSeparatedSingleEnumCaseAfterMultipleCases() {
+        let input = """
+        enum Foo { case first, second; case third }
+        """
+        let output = """
+        enum Foo {
+            case first
+            case second;
+            case third
+        }
+        """
+        let allRulesOutput = """
+        enum Foo {
+            case first
+            case second
+            case third
+        }
+        """
+        testFormatting(for: input, [output, allRulesOutput], rules: [.wrapEnumCases],
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testPreserveAttributedEnumCases() {
+        let input = """
+        enum Inline { @available(*, deprecated) case first, second }
+
+        enum Multiline {
+            @available(*, unavailable)
+            case first, second
+        }
+        """
+        testFormatting(for: input, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testPreserveIndirectEnumCases() {
+        let input = """
+        enum Tree { indirect case left(Tree), right(Tree) }
+        """
+        testFormatting(for: input, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testEnableSingleLineEnumCasesWithNextDirective() {
+        let input = """
+        // swiftformat:options:next --wrap-single-line-enum-cases true
+        enum Foo { case first, second }
+
+        enum Bar { case third, fourth }
+        """
+        let output = """
+        // swiftformat:options:next --wrap-single-line-enum-cases true
+        enum Foo {
+            case first
+            case second
+        }
+
+        enum Bar { case third, fourth }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases)
+    }
+
+    func testSingleLineEnumCasesWithAlternatingDirectives() {
+        let input = """
+        // swiftformat:options --wrap-single-line-enum-cases true
+        enum Foo { case first, second }
+
+        // swiftformat:options --wrap-single-line-enum-cases false
+        enum Bar { case third, fourth }
+
+        // swiftformat:options --wrap-single-line-enum-cases true --wrap-enum-cases with-values
+        enum Baz { case fifth, sixth }
+
+        enum Value { case seventh(Int), eighth }
+        """
+        let output = """
+        // swiftformat:options --wrap-single-line-enum-cases true
+        enum Foo {
+            case first
+            case second
+        }
+
+        // swiftformat:options --wrap-single-line-enum-cases false
+        enum Bar { case third, fourth }
+
+        // swiftformat:options --wrap-single-line-enum-cases true --wrap-enum-cases with-values
+        enum Baz { case fifth, sixth }
+
+        enum Value {
+            case seventh(Int)
+            case eighth
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases)
+    }
+
+    func testSingleLineEnumCasesWithSemicolons() {
+        let input = """
+        enum Foo { case first, second; case third, fourth }
+        """
+        let output = """
+        enum Foo {
+            case first
+            case second;
+            case third
+            case fourth
+        }
+        """
+        let allRulesOutput = """
+        enum Foo {
+            case first
+            case second
+            case third
+            case fourth
+        }
+        """
+        testFormatting(for: input, [output, allRulesOutput], rules: [.wrapEnumCases],
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testSingleLineEnumCasesWithCRLFLinebreaks() {
+        let input = """
+        enum Foo { case first, second }
+        """
+        let output = """
+        enum Foo {
+            case first
+            case second
+        }
+        """
+        testFormatting(for: input, output.replacingOccurrences(of: "\n", with: "\r\n"), rule: .wrapEnumCases,
+                       options: FormatOptions(linebreak: "\r\n", wrapSingleLineEnumCases: true))
+    }
+
+    func testSingleLineEnumCasesWithContextualKeywordNames() {
+        let input = """
+        enum Foo { case isolated, nonisolated, package }
+        """
+        let output = """
+        enum Foo {
+            case isolated
+            case nonisolated
+            case package
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testPreserveSwitchCasesInsideEnum() {
+        let input = """
+        enum Foo {
+            case first
+            case second
+
+            func check() {
+                switch self {
+                case .first,
+                     .second:
+                    break
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testSingleLineEnumCasesWithTabIndentation() {
+        let input = """
+        enum Foo { case first, second }
+        """
+        let output = """
+        enum Foo {
+        \tcase first
+        \tcase second
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(indent: "\t", wrapSingleLineEnumCases: true))
+    }
+
+    func testEnumCasesWithConditionalCompilation() {
+        let input = """
+        enum Foo {
+            #if DEBUG
+                case first, second
+            #else
+                case third, fourth
+            #endif
+        }
+        """
+        let output = """
+        enum Foo {
+            #if DEBUG
+                case first
+                case second
+            #else
+                case third
+                case fourth
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testWrapSingleLinePackageEnumCases() {
+        let input = """
+        package enum Action { case delete, suspend, resume }
+        """
+        let output = """
+        package enum Action {
+            case delete
+            case suspend
+            case resume
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testWrapSingleLineEnumCasesWithValues() {
+        let input = """
+        enum Raw: Int { case first = 1, second = 2 }
+
+        enum Associated { case first(Int, String), second(value: (Int, Int)) }
+
+        enum Plain { case first, second }
+        """
+        let output = """
+        enum Raw: Int {
+            case first = 1
+            case second = 2
+        }
+
+        enum Associated {
+            case first(Int, String)
+            case second(value: (Int, Int))
+        }
+
+        enum Plain { case first, second }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapEnumCases: .withValues, wrapSingleLineEnumCases: true))
+    }
+
+    func testWrapNestedSingleLineEnumCasesWithCustomIndent() {
+        let input = """
+        enum Outer {
+          enum Inner { case first, second }
+        }
+        """
+        let output = """
+        enum Outer {
+          enum Inner {
+            case first
+            case second
+          }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(indent: "  ", wrapSingleLineEnumCases: true))
+    }
+
+    func testWrapSingleLineEnumCasesWithComments() {
+        let input = """
+        enum Foo { /* cases */ case first, /* second */ second } // enum
+        """
+        let output = """
+        enum Foo { /* cases */
+            case first
+            case /* second */ second
+        } // enum
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testWrapSingleLineEnumCasesPreservesSingleCase() {
+        let input = """
+        enum Foo { case first(Int, String) }
+        """
+        testFormatting(for: input, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
+    func testWrapEnumCasesOnOpeningLineWithLineComments() {
+        let input = """
+        enum Foo { case first, // first
+            second, // second
+            third }
+        """
+        let output = """
+        enum Foo {
+            case first // first
+            case second // second
+            case third
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases,
+                       options: FormatOptions(wrapSingleLineEnumCases: true))
+    }
+
     func testMultilineEnumCases() {
         let input = """
         enum Enum1: Int {

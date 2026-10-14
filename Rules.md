@@ -4701,6 +4701,7 @@ Rewrite comma-delimited enum cases to one case per line.
 Option | Description
 --- | ---
 `--wrap-enum-cases` | Enum case wrapping: "always" (default) or "with-values"
+`--wrap-single-line-enum-cases` | Wrap comma-delimited enum cases following the opening brace: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
@@ -4714,6 +4715,17 @@ Option | Description
 +   case bar
 +   case baz
   }
+```
+
+With `--wrap-single-line-enum-cases true`:
+
+```diff
+- package enum Action { case delete, suspend, resume }
++ package enum Action {
++     case delete
++     case suspend
++     case resume
++ }
 ```
 
 </details>

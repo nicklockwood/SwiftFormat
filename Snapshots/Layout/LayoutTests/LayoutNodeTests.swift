@@ -60,7 +60,7 @@ final class LayoutNodeTests: XCTestCase {
     }
 
     func testCircularMacroReference() throws {
-        let xmlData = "<UIView><macro name=\"foo\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8)!
+        let xmlData = try XCTUnwrap("<UIView><macro name=\"foo\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8))
         let node = try LayoutNode(xmlData: xmlData)
         let errors = node.validate()
         XCTAssertGreaterThanOrEqual(errors.count, 1)
@@ -72,7 +72,7 @@ final class LayoutNodeTests: XCTestCase {
     }
 
     func testMutualMacroReferences() throws {
-        let xmlData = "<UIView><macro name=\"foo\" value=\"bar\"/><macro name=\"bar\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8)!
+        let xmlData = try XCTUnwrap("<UIView><macro name=\"foo\" value=\"bar\"/><macro name=\"bar\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8))
         let node = try LayoutNode(xmlData: xmlData)
         let errors = node.validate()
         XCTAssertGreaterThanOrEqual(errors.count, 1)
@@ -239,7 +239,7 @@ final class LayoutNodeTests: XCTestCase {
     }
 
     func testParameterNameShadowsState() throws {
-        let xmlData = "<UILabel text=\"{name}\" name=\"{name}\"><param name=\"name\" type=\"String\"/></UILabel>".data(using: .utf8)!
+        let xmlData = try XCTUnwrap("<UILabel text=\"{name}\" name=\"{name}\"><param name=\"name\" type=\"String\"/></UILabel>".data(using: .utf8))
         let node = try LayoutNode(xmlData: xmlData)
         node.setState(["name": "Foo"])
         node.update()
@@ -247,7 +247,7 @@ final class LayoutNodeTests: XCTestCase {
     }
 
     func testMacroNameShadowsState() throws {
-        let xmlData = "<UIView name=\"{foo}\"><macro name=\"name\" value=\"name\"/><UILabel text=\"{name}\"/></UIView>".data(using: .utf8)!
+        let xmlData = try XCTUnwrap("<UIView name=\"{foo}\"><macro name=\"name\" value=\"name\"/><UILabel text=\"{name}\"/></UIView>".data(using: .utf8))
         let node = try LayoutNode(xmlData: xmlData)
         node.setState(["name": "Foo"])
         node.update()
@@ -255,7 +255,7 @@ final class LayoutNodeTests: XCTestCase {
     }
 
     func testMacroNameShadowsConstant() throws {
-        let xmlData = "<UIView><macro name=\"foo\" value=\"foo + 'baz'\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8)!
+        let xmlData = try XCTUnwrap("<UIView><macro name=\"foo\" value=\"foo + 'baz'\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8))
         let node = try LayoutNode(xmlData: xmlData)
         node.constants = ["foo": "bar"]
         let errors = node.validate()

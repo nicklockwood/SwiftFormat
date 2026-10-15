@@ -2963,6 +2963,33 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssert(isSingleExpressionParsedFromEnd("[1, 2, 3]"))
     }
 
+    func testParseExpressionEndingWithMacroExpansion() {
+        XCTAssert(isSingleExpressionParsedFromEnd("""
+        #require(foo).first!
+        """))
+        XCTAssert(isSingleExpressionParsedFromEnd("""
+        try 1 + #require(foo).first!
+        """))
+    }
+
+    func testParseExpressionEndingAtAssignmentOperator() {
+        let formatter = Formatter(tokenize("""
+        let value =
+        """))
+        XCTAssertNil(formatter.parseExpressionRange(endingAt: formatter.tokens.count - 1))
+    }
+
+    func testParseLiteralExpressionAfterAssignment() {
+        let input = """
+        let value = "hello".data(using: .utf8)!
+        """
+        let formatter = Formatter(tokenize(input))
+        let range = formatter.parseExpressionRange(endingAt: formatter.tokens.count - 1)
+        XCTAssertEqual(range.map { formatter.tokens[$0].string }, """
+        "hello".data(using: .utf8)!
+        """)
+    }
+
     func isSingleExpressionParsedFromEnd(_ input: String) -> Bool {
         let formatter = Formatter(tokenize(input))
         let lastTokenIndex = formatter.tokens.count - 1

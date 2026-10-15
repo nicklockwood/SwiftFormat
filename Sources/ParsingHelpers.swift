@@ -2102,6 +2102,9 @@ extension Formatter {
     ) -> ClosedRange<Int>? {
         let token = tokens[endIndex]
 
+        // Assignment is a statement boundary, not part of an expression.
+        guard token != .operator("=", .infix) else { return nil }
+
         // First, check what comes BEFORE this token to see if we're part of a larger expression
         if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) {
             let prevToken = tokens[prevIndex]
@@ -2190,8 +2193,8 @@ extension Formatter {
             return startOfScope ... endIndex
         }
 
-        // Base cases: identifiers, numbers, literals, etc.
-        if token.isIdentifier || token.isNumber {
+        // Base cases: identifiers, numbers, literals, and macro expansions.
+        if token.isIdentifier || token.isNumber || (token.isKeyword && token.string.isMacroOrCompilerDirective) {
             return endIndex ... endIndex
         }
 

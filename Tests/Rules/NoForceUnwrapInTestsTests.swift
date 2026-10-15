@@ -26,6 +26,54 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
     }
 
+    func testForceUnwrapOfLiteralInAssignment() {
+        let input = #"""
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_literals() {
+                let xmlData = "<UIView><macro name=\"foo\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8)!
+                var first = [1, 2, 3].first!
+                first = [4, 5, 6].first!
+                let sum = [1, 2, 3].first! + other!
+            }
+        }
+        """#
+        let output = #"""
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_literals() throws {
+                let xmlData = try XCTUnwrap("<UIView><macro name=\"foo\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8))
+                var first = try XCTUnwrap([1, 2, 3].first)
+                first = try XCTUnwrap([4, 5, 6].first)
+                let sum = try XCTUnwrap([1, 2, 3].first) + XCTUnwrap(other)
+            }
+        }
+        """#
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+    }
+
+    func testForceUnwrapOfLiteralInAssignmentInSwiftTesting() {
+        let input = """
+        import Testing
+
+        @Test func literals() {
+            let data = "hello".data(using: .utf8)!
+            let sum = [1, 2, 3].first! + other!
+        }
+        """
+        let output = """
+        import Testing
+
+        @Test func literals() throws {
+            let data = try #require("hello".data(using: .utf8))
+            let sum = try #require([1, 2, 3].first) + #require(other)
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+    }
+
     func testSimpleForceCast() {
         let input = """
         import XCTest
@@ -269,6 +317,58 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             func test_multipleForceUnwraps() throws {
                 let result = try XCTUnwrap(myOptional) + XCTUnwrap(anotherOptional)
             }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+    }
+
+    func testForceUnwrapOnOperatorRHS() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_rhs() throws {
+                let sum = 1 + value! * other!
+                let existingTry = try getValue() + value!
+                let nested = 1 + (2 * value!)
+                XCTAssertEqual(1 + value!, 3)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_rhs() throws {
+                let sum = try 1 + XCTUnwrap(value) * XCTUnwrap(other)
+                let existingTry = try getValue() + XCTUnwrap(value)
+                let nested = 1 + (try 2 * XCTUnwrap(value))
+                XCTAssertEqual(try 1 + XCTUnwrap(value), 3)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+    }
+
+    func testForceUnwrapOnOperatorRHSInSwiftTesting() {
+        let input = """
+        import Testing
+
+        @Test func example() {
+            #expect(1 + value! == 3)
+            let negated = flag == !value!
+            let optional = try? getValue() + value!
+            let commented = 1 + /* value */ value!
+        }
+        """
+        let output = """
+        import Testing
+
+        @Test func example() throws {
+            #expect(try 1 + #require(value) == 3)
+            let negated = try flag == !#require(value)
+            let optional = try? getValue() + #require(value)
+            let commented = try 1 + /* value */ #require(value)
         }
         """
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
@@ -894,7 +994,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .redundantParens])
     }
 
-    func testForceUnwrapOnRightOfOperatorWithoutTryUnchanged() {
+    func testForceUnwrapOnRightOfOperatorWithDifferentTryScopes() {
         let input = """
         import XCTest
 
@@ -911,7 +1011,23 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests)
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let sum = try foo + XCTUnwrap(bar)
+                let foo = try bar()
+                try (1 + 2) + XCTUnwrap(baaz)
+                let multiline = try foo
+                    + XCTUnwrap(bar)
+                let cast = try 1
+                    as Int + XCTUnwrap(bar)
+                let optional = try? bar() + XCTUnwrap(baaz)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
     }
 
     func testForceUnwrapOnRightOfOperatorInUnsupportedExpressionUnchanged() {

@@ -173,6 +173,7 @@ extension Formatter {
                   $0 == .operator(".", .infix)
               }), !exclude.contains(selfKeyword),
               let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex),
+              isEnabled(at: nextIndex - 1),
               let token = token(at: nextIndex), token.isIdentifier,
               case let name = token.unescaped(), (include.map { $0.contains(name) } ?? true),
               !isSymbol(at: nextIndex, in: exclusionList),
@@ -269,7 +270,7 @@ extension Formatter {
         while let token = token(at: index) {
             outer: switch token {
             case let .identifier(name) where last(.nonSpace, before: index)?.isOperator == false:
-                if name == removeSelfKeyword, isEnabled, let nextIndex = self.index(
+                if name == removeSelfKeyword, isEnabled(at: index), let nextIndex = self.index(
                     of: .nonSpaceOrCommentOrLinebreak,
                     after: index, if: { $0 == .operator(".", .infix) }
                 ), case .identifier? = next(
@@ -328,14 +329,14 @@ extension Formatter {
                     if isStartOfStatement(at: nextIndex) {
                         names.formUnion(locals)
                     }
-                    let removeSelfKeyword = isEnabled && (
+                    let removeSelfKeyword = (
                         options.swiftVersion >= "5.4" || isConditionalStatement(at: nextIndex)
                     ) ? removeSelfKeyword : nil
                     let include = onlyLocal ? locals : nil
                     switch token {
                     case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                         break
-                    case .identifier(removeSelfKeyword ?? ""):
+                    case .identifier(removeSelfKeyword ?? "") where isEnabled(at: nextIndex):
                         _ = removeSelf(
                             at: nextIndex,
                             exclude: names,
@@ -354,7 +355,7 @@ extension Formatter {
                                 switch tokens[i] {
                                 case .endOfScope("}"):
                                     i = self.index(of: .startOfScope("{"), before: i) ?? i
-                                case .identifier(removeSelfKeyword):
+                                case .identifier(removeSelfKeyword) where isEnabled(at: i):
                                     _ = removeSelf(
                                         at: i,
                                         exclude: names,
@@ -3148,7 +3149,7 @@ extension Formatter {
                 case .startOfScope:
                     index = endOfScope(at: index) ?? (tokens.count - 1)
                 case .identifier(selfKeyword):
-                    guard isEnabled, explicitSelf != .insert, !isTypeRoot, !usingDynamicLookup, !staticSelf || classOrStatic,
+                    guard isEnabled(at: index), explicitSelf != .insert, !isTypeRoot, !usingDynamicLookup, !staticSelf || classOrStatic,
                           let dotIndex = self.index(of: .nonSpaceOrLinebreak, after: index, if: {
                               $0 == .operator(".", .infix)
                           }),
@@ -3183,7 +3184,7 @@ extension Formatter {
                         fallthrough
                     }
                 case .keyword where token.isMacro, .identifier:
-                    guard isEnabled && !isTypeRoot else {
+                    guard isEnabled(at: index) && !isTypeRoot else {
                         break
                     }
                     if explicitSelf == .insert {

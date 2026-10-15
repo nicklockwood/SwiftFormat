@@ -782,6 +782,108 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, lineRange: 3 ... 4).output, output)
     }
 
+    func testRedundantSelfFormattingRange() {
+        let input = """
+        struct Formatting {
+            let a: Int
+            let b: Int
+
+            init() {
+                self.a = 0
+                self.b = 1
+            }
+        }
+        """
+        let output = """
+        struct Formatting {
+            let a: Int
+            let b: Int
+
+            init() {
+                a = 0
+                self.b = 1
+            }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [.redundantSelf], lineRange: 6 ... 6).output, output)
+    }
+
+    func testRedundantSelfFormattingRangeWithMultilineAccess() {
+        let input = """
+        struct S {
+            var a = 0
+            mutating func f() {
+                self
+                    .a = 1
+            }
+        }
+        """
+        let output = """
+        struct S {
+            var a = 0
+            mutating func f() {
+                a = 1
+            }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [.redundantSelf], lineRange: 4 ... 4).output, input)
+        XCTAssertEqual(try format(input, rules: [.redundantSelf], lineRange: 4 ... 5).output, output)
+        XCTAssertEqual(try format(input, rules: [.redundantSelf], lineRange: 5 ... 5).output, input)
+    }
+
+    func testRedundantStaticSelfFormattingRangeWithMultilineAccess() {
+        let input = """
+        struct S {
+            static var a = 0
+            static func f() {
+                Self
+                    .a = 1
+            }
+        }
+        """
+        let output = """
+        struct S {
+            static var a = 0
+            static func f() {
+                a = 1
+            }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [.redundantStaticSelf], lineRange: 4 ... 4).output, input)
+        XCTAssertEqual(try format(input, rules: [.redundantStaticSelf], lineRange: 4 ... 5).output, output)
+        XCTAssertEqual(try format(input, rules: [.redundantStaticSelf], lineRange: 5 ... 5).output, input)
+    }
+
+    func testRedundantSelfFormattingRangeInConditionalBinding() {
+        let input = """
+        struct Formatting {
+            var foo = 0
+            func f() {
+                if let y = Optional(self.foo) {
+                    print(y)
+                }
+                if let z = Optional(self.foo) {
+                    print(z)
+                }
+            }
+        }
+        """
+        let output = """
+        struct Formatting {
+            var foo = 0
+            func f() {
+                if let y = Optional(foo) {
+                    print(y)
+                }
+                if let z = Optional(self.foo) {
+                    print(z)
+                }
+            }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [.redundantSelf], lineRange: 4 ... 4).output, output)
+    }
+
     // MARK: endOfScope
 
     func testEndOfScopeInSwitch() {

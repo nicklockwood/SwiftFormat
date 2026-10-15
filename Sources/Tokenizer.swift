@@ -1640,6 +1640,7 @@ public func tokenize(_ source: String) -> [Token] {
                 break
             }
         }
+        // Keep the guard inside the loop to avoid incorrect Swift coverage counts.
         while true {
             guard let nextToken = index + 1 < tokens.count ? tokens[index + 1] : nil,
                   case let .operator(nextString, _) = nextToken, !nextString.hasPrefix("\\"),
@@ -1656,6 +1657,7 @@ public func tokenize(_ source: String) -> [Token] {
             scopeIndexStack = scopeIndexStack.map { $0 > index ? $0 - 1 : $0 }
         }
         var index = index
+        // Keep the guard inside the loop to avoid incorrect Swift coverage counts.
         while true {
             guard let prevToken = index > 0 ? tokens[index - 1] : nil,
                   case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
@@ -1713,6 +1715,7 @@ public func tokenize(_ source: String) -> [Token] {
         case ".":
             var _type = OperatorType.prefix
             var prevNonSpaceIndex = prevNonSpaceIndex
+            // Avoid repeat-while here because Swift generates incorrect loop-exit coverage counts.
             while true {
                 let prevNonSpaceToken = tokens[prevNonSpaceIndex]
                 if prevNonSpaceToken.isLvalue {

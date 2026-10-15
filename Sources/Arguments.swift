@@ -542,6 +542,8 @@ func parseRules(_ rules: String, ignoreUnknown: Bool) throws -> [String] {
             return []
         }
         if Descriptors.all.contains(where: { $0.argumentName == lowercaseName }) {
+            // Keep the filter in the body to avoid incorrect Swift coverage counts.
+            // swiftformat:disable:next forWhere
             for rule in FormatRules.all {
                 guard rule.options.contains(lowercaseName) else { continue }
                 throw FormatError.options(

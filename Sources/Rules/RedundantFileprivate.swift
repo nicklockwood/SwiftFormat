@@ -183,6 +183,8 @@ extension Formatter {
                     i = endIndex
                     break
                 }
+                // Keep the filter in the body to avoid incorrect Swift coverage counts.
+                // swiftformat:disable:next forWhere
                 for token in tokens[startIndex ..< endIndex] {
                     guard case let .identifier(name) = token,
                           names.contains(name)

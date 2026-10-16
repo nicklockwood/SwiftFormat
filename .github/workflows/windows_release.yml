@@ -20,8 +20,10 @@ jobs:
         include:
           - target-triple: x86_64-unknown-windows-msvc
             product-arch: amd64
+            library-arch: x64
           - target-triple: aarch64-unknown-windows-msvc
             product-arch: arm64
+            library-arch: arm64
 
     steps:
       - uses: compnerd/gha-setup-swift@main
@@ -37,9 +39,25 @@ jobs:
 
       - shell: pwsh
         run: |
+          # Keep the host MSVC environment for SwiftPM's x64 package manifest.
+          # Pass target library paths only to the product linker.
+          $TargetArch = '${{ matrix.library-arch }}'
+          $LibraryPaths = @(
+            (Join-Path $env:VCToolsInstallDir "lib\$TargetArch")
+            (Join-Path $env:UniversalCRTSdkDir "Lib\$env:UCRTVersion\ucrt\$TargetArch")
+            (Join-Path $env:WindowsSdkDir "Lib\$env:WindowsSDKVersion\um\$TargetArch")
+          )
+          $LinkerFlags = @()
+          foreach ($LibraryPath in $LibraryPaths) {
+            if (-not (Test-Path -LiteralPath $LibraryPath -PathType Container)) {
+              throw "Missing target library directory: $LibraryPath"
+            }
+            $LinkerFlags += '-Xlinker', "/LIBPATH:$LibraryPath"
+          }
+
           $ExperimentalSDK = "$(Split-Path -Path ${env:SDKROOT} -Parent)/WindowsExperimental.sdk"
           swift build -c release --triple ${{ matrix.target-triple }} -debug-info-format none -Xswiftc -static-stdlib `
-            -Xswiftc -sdk -Xswiftc ${ExperimentalSDK}
+            -Xswiftc -sdk -Xswiftc ${ExperimentalSDK} @LinkerFlags
 
       - uses: microsoft/setup-msbuild@v3.0.0
 

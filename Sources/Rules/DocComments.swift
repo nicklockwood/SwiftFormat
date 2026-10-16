@@ -12,7 +12,7 @@ public extension FormatRule {
     static let docComments = FormatRule(
         help: "Use doc comments for API declarations, otherwise use regular comments.",
         orderAfter: [.fileHeader],
-        options: ["doc-comments"]
+        options: ["doc-comments", "excluded-declaration-types"]
     ) { formatter in
         formatter.forEach(.startOfScope) { index, token in
             guard [.startOfScope("//"), .startOfScope("/*")].contains(token),
@@ -147,12 +147,21 @@ extension Formatter {
         }
 
         // Check if this token defines a declaration that supports doc comments
-        var declarationToken = tokens[nextDeclarationIndex]
-        if declarationToken.isAttribute || isModifier(at: nextDeclarationIndex),
-           let index = index(after: nextDeclarationIndex, where: { $0.isDeclarationTypeKeyword })
+        var declarationIndex = nextDeclarationIndex
+        if tokens[declarationIndex].isAttribute || isModifier(at: declarationIndex),
+           let index = index(after: declarationIndex, where: { $0.isDeclarationTypeKeyword })
         {
-            declarationToken = tokens[index]
+            declarationIndex = index
         }
+
+        // Preserve comments before declaration types the user has excluded
+        if let declarationType = declarationType(at: declarationIndex),
+           options.excludedDeclarationTypes.contains(declarationType)
+        {
+            return nil
+        }
+
+        let declarationToken = tokens[declarationIndex]
         guard declarationToken.isDeclarationTypeKeyword(excluding: ["import"]) else {
             return false
         }

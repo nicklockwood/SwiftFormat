@@ -934,6 +934,7 @@ Use doc comments for API declarations, otherwise use regular comments.
 Option | Description
 --- | ---
 `--doc-comments` | Doc comment placement: "preserve", "before-declarations" (default) or "before-non-local-declarations"
+`--excluded-declaration-types` | Declarations whose comments are left as-is, e.g. `case,var`
 
 <details>
 <summary>Examples</summary>

@@ -883,4 +883,87 @@ final class DocCommentsTests: XCTestCase {
         let options = FormatOptions(docComments: .beforeNonLocalDeclarations)
         testFormatting(for: input, output, rule: .docComments, options: options)
     }
+
+    func testExcludedDeclarationTypesPreservesRegularComment() {
+        let input = """
+        struct Foo {
+            var foo: Bool
+
+            // This is just a dev comment
+            var bar: String
+
+            // A method in a type
+            func baz() {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+            var foo: Bool
+
+            // This is just a dev comment
+            var bar: String
+
+            /// A method in a type
+            func baz() {}
+        }
+        """
+
+        let options = FormatOptions(excludedDeclarationTypes: ["var"])
+        testFormatting(for: input, output, rule: .docComments, options: options)
+    }
+
+    func testExcludedDeclarationTypesPreservesDocComment() {
+        let input = """
+        func foo() {
+            /// A local variable
+            let bar = 1
+            print(bar)
+        }
+        """
+
+        let options = FormatOptions(excludedDeclarationTypes: ["let"])
+        testFormatting(for: input, rule: .docComments, options: options)
+    }
+
+    func testExcludedDeclarationTypesWithClassModifier() {
+        let input = """
+        public class Foo {
+            // Makes a value
+            public class func make() {}
+
+            // A class property
+            public class var value: Int {
+                0
+            }
+        }
+        """
+
+        let output = """
+        public class Foo {
+            // Makes a value
+            public class func make() {}
+
+            /// A class property
+            public class var value: Int {
+                0
+            }
+        }
+        """
+
+        let options = FormatOptions(excludedDeclarationTypes: ["func"])
+        testFormatting(for: input, output, rule: .docComments, options: options)
+    }
+
+    func testExcludedDeclarationTypesPreservesImportDocComment() {
+        let input = """
+        /// Used for the Foo type
+        import Foundation
+
+        struct Foo {}
+        """
+
+        let options = FormatOptions(excludedDeclarationTypes: ["import"])
+        testFormatting(for: input, rule: .docComments, options: options)
+    }
 }

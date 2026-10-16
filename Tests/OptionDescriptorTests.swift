@@ -405,60 +405,53 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try Descriptors.preferFileMacro.toOptions(argument, &options))
     }
 
-    func testTypoVisibilityAcceptsSupportedVisibilityThresholds() throws {
-        let descriptor = Descriptors.typoVisibility
-        XCTAssertEqual(descriptor.defaultArgument, "fileprivate")
-        XCTAssertEqual(descriptor.validArguments, ["public", "package", "internal", "fileprivate", "private"])
-
-        var options: FormatOptions = .default
-        try descriptor.toOptions("public", &options)
-        XCTAssertEqual(options.typoVisibility, .public)
-        try descriptor.toOptions("fileprivate", &options)
-        XCTAssertEqual(options.typoVisibility, .fileprivate)
-        try descriptor.toOptions("private", &options)
-        XCTAssertEqual(options.typoVisibility, .private)
+    func testVisibilityThresholdOptions() throws {
+        let descriptors: [(OptionDescriptor, WritableKeyPath<FormatOptions, VisibilityThreshold>, String)] = [
+            (Descriptors.acronymVisibility, \.acronymVisibility, "internal"),
+            (Descriptors.typoVisibility, \.typoVisibility, "file"),
+            (Descriptors.overloadVisibility, \.overloadVisibility, "internal"),
+            (Descriptors.unusedVisibility, \.unusedVisibility, "file"),
+        ]
+        let thresholds: [(String, VisibilityThreshold)] = [
+            ("public", .public), ("package", .package), ("internal", .internal), ("file", .file),
+        ]
+        for (descriptor, keyPath, defaultArgument) in descriptors {
+            XCTAssertEqual(descriptor.defaultArgument, defaultArgument, descriptor.argumentName)
+            XCTAssertEqual(descriptor.validArguments, thresholds.map(\.0), descriptor.argumentName)
+            for (argument, visibility) in thresholds {
+                var options = FormatOptions.default
+                try descriptor.toOptions(argument, &options)
+                XCTAssertEqual(options[keyPath: keyPath], visibility, descriptor.argumentName)
+                XCTAssertEqual(descriptor.fromOptions(options), argument, descriptor.argumentName)
+            }
+            for argument in ["private", "fileprivate", "PRIVATE", "FILEPRIVATE"] {
+                var options = FormatOptions.default
+                try descriptor.toOptions(argument, &options)
+                XCTAssertEqual(options[keyPath: keyPath], .file, descriptor.argumentName)
+                XCTAssertEqual(descriptor.fromOptions(options), "file", descriptor.argumentName)
+            }
+            XCTAssertFalse(descriptor.validateArgument("open"), descriptor.argumentName)
+            XCTAssertFalse(descriptor.help.contains("\"private\""), descriptor.argumentName)
+            XCTAssertFalse(descriptor.help.contains("\"fileprivate\""), descriptor.argumentName)
+        }
     }
 
-    func testAcronymVisibilityAcceptsSupportedVisibilityThresholds() throws {
-        let descriptor = Descriptors.acronymVisibility
-        XCTAssertEqual(descriptor.defaultArgument, "internal")
-        XCTAssertEqual(descriptor.validArguments, ["public", "package", "internal", "fileprivate", "private"])
-
-        var options: FormatOptions = .default
-        try descriptor.toOptions("public", &options)
-        XCTAssertEqual(options.acronymVisibility, .public)
-        try descriptor.toOptions("fileprivate", &options)
-        XCTAssertEqual(options.acronymVisibility, .fileprivate)
-        try descriptor.toOptions("private", &options)
-        XCTAssertEqual(options.acronymVisibility, .private)
+    func testVisibilityThresholdIncludesPrivateAndFileprivate() {
+        for threshold in VisibilityThreshold.allCases {
+            XCTAssertTrue(threshold.includes(.private))
+            XCTAssertTrue(threshold.includes(.fileprivate))
+        }
+        XCTAssertFalse(VisibilityThreshold.file.includes(.internal))
+        XCTAssertFalse(VisibilityThreshold.public.includes(.open))
     }
 
-    func testAcronymVisibilityRejectsOpenVisibility() {
-        XCTAssertFalse(Descriptors.acronymVisibility.validateArgument("open"))
-    }
-
-    func testOverloadVisibilityAcceptsSupportedVisibilityThresholds() throws {
-        let descriptor = Descriptors.overloadVisibility
-        XCTAssertEqual(descriptor.defaultArgument, "internal")
-        XCTAssertEqual(descriptor.validArguments, ["public", "package", "internal", "fileprivate", "private"])
-
-        var options: FormatOptions = .default
-        try descriptor.toOptions("public", &options)
-        XCTAssertEqual(options.overloadVisibility, .public)
-        try descriptor.toOptions("fileprivate", &options)
-        XCTAssertEqual(options.overloadVisibility, .fileprivate)
-        try descriptor.toOptions("private", &options)
-        XCTAssertEqual(options.overloadVisibility, .private)
-    }
-
-    func testOverloadVisibilityRejectsOpenVisibility() {
-        XCTAssertFalse(Descriptors.overloadVisibility.validateArgument("open"))
-    }
-
-    func testTypoVisibilityRejectsUnsupportedVisibilityThresholds() {
-        let descriptor = Descriptors.typoVisibility
-        for visibility in ["open"] {
-            XCTAssertFalse(descriptor.validateArgument(visibility))
+    func testTestCaseAccessControlRetainsSwiftVisibilityOptions() throws {
+        let descriptor = Descriptors.testCaseAccessControl
+        XCTAssertEqual(descriptor.validArguments, Visibility.allCases.map(\.rawValue))
+        for visibility in Visibility.allCases {
+            var options = FormatOptions.default
+            try descriptor.toOptions(visibility.rawValue, &options)
+            XCTAssertEqual(options.testCaseAccessControl, visibility)
         }
     }
 

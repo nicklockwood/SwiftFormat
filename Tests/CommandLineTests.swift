@@ -938,7 +938,7 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(
                 in: directory.path,
-                with: "Sources/App/Input.swift --rules commonTypos --typo-visibility fileprivate --cache \(cacheURL.path) --quiet"
+                with: "Sources/App/Input.swift --rules commonTypos --typo-visibility file --cache \(cacheURL.path) --quiet"
             ), .ok)
 
             let cache = try XCTUnwrap(
@@ -958,7 +958,7 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(
                 in: directory.path,
-                with: "Sources/App/Input.swift --rules acronyms --acronym-visibility fileprivate --cache \(cacheURL.path) --quiet"
+                with: "Sources/App/Input.swift --rules acronyms --acronym-visibility file --cache \(cacheURL.path) --quiet"
             ), .ok)
 
             let cache = try XCTUnwrap(
@@ -1053,7 +1053,7 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(
                 in: directory.path,
-                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility private --cache \(cacheURL.path) --quiet"
+                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility file --cache \(cacheURL.path) --quiet"
             ), .ok)
             XCTAssertEqual(try String(contentsOf: inputURL), input)
 
@@ -1076,7 +1076,7 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(
                 in: directory.path,
-                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility private --cache \(cacheURL.path) --quiet"
+                with: "Sources/App/Input.swift --rules redundantOverload --overload-visibility file --cache \(cacheURL.path) --quiet"
             ), .ok)
             XCTAssertTrue(try readSourceIndexes(at: cacheURL).isEmpty)
         }
@@ -1453,7 +1453,7 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(
                 in: directory.path,
-                with: "Sources/App/Input.swift --rules redundantOverload,redundantPublic --overload-visibility fileprivate --cache \(cacheURL.path) --quiet"
+                with: "Sources/App/Input.swift --rules redundantOverload,redundantPublic --overload-visibility file --cache \(cacheURL.path) --quiet"
             ), .ok)
 
             let inputIndex = try XCTUnwrap(readSourceIndexes(at: cacheURL).first { key, _ in

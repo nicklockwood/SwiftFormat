@@ -31,6 +31,23 @@
 
 import Foundation
 
+/// The widest visibility a rule may modify. Private and fileprivate declarations share file scope.
+public enum VisibilityThreshold: String, CaseIterable {
+    case `public`
+    case package
+    case `internal`
+    case file
+
+    func includes(_ visibility: Visibility) -> Bool {
+        switch self {
+        case .public: return visibility <= .public
+        case .package: return visibility <= .package
+        case .internal: return visibility <= .internal
+        case .file: return visibility <= .fileprivate
+        }
+    }
+}
+
 public enum UnknownOptionsMode: String, CaseIterable {
     case error
     case warn
@@ -1012,10 +1029,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var emptyBracesSpacing: EmptyBracesSpacing
     public var acronyms: Set<String>
     public var preserveAcronyms: Set<String>
-    public var acronymVisibility: Visibility
-    public var typoVisibility: Visibility
-    public var overloadVisibility: Visibility
-    public var unusedVisibility: Visibility
+    public var acronymVisibility: VisibilityThreshold
+    public var typoVisibility: VisibilityThreshold
+    public var overloadVisibility: VisibilityThreshold
+    public var unusedVisibility: VisibilityThreshold
     public var typos: [String: String]
     public var ignoredTypos: Set<String>
     public var indentBlankLines: Bool
@@ -1186,10 +1203,10 @@ public struct FormatOptions: CustomStringConvertible {
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 preserveAcronyms: Set<String> = [],
-                acronymVisibility: Visibility = .internal,
-                typoVisibility: Visibility = .fileprivate,
-                overloadVisibility: Visibility = .internal,
-                unusedVisibility: Visibility = .fileprivate,
+                acronymVisibility: VisibilityThreshold = .internal,
+                typoVisibility: VisibilityThreshold = .file,
+                overloadVisibility: VisibilityThreshold = .internal,
+                unusedVisibility: VisibilityThreshold = .file,
                 typos: [String: String] = [:],
                 ignoredTypos: Set<String> = [],
                 indentBlankLines: Bool = false,

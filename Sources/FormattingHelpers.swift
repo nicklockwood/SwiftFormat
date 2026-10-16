@@ -13,12 +13,15 @@ import Foundation
 extension Formatter {
     /// Renames eligible identifiers and their references, avoiding protected names and collisions.
     /// Comments are transformed regardless of declaration visibility.
-    func renameIdentifiersAndComments(upTo maximumVisibility: Visibility, using transform: (String) -> String) {
+    func renameIdentifiersAndComments(
+        upTo maximumVisibility: VisibilityThreshold,
+        using transform: (String) -> String
+    ) {
         var declaredNames = Set<String>()
         var protectedNames = Set<String>()
         var eligibleNames = Set<String>()
         let projectDeclarationNames: ProjectIndex.DeclarationNames? = currentFileURL.flatMap { fileURL in
-            guard maximumVisibility > .fileprivate else { return nil }
+            guard maximumVisibility != .file else { return nil }
             return projectIndex(requiring: [.declarations])?.declarationNames(
                 upTo: maximumVisibility,
                 visibleFrom: fileURL
@@ -92,7 +95,7 @@ extension Formatter {
                 let transformedName: String
                 if let renamed = renames[name] {
                     transformedName = renamed
-                } else if maximumVisibility > .fileprivate,
+                } else if maximumVisibility != .file,
                           projectDeclarationNames == nil,
                           !declaredNames.contains(name)
                 {
@@ -113,10 +116,10 @@ extension Formatter {
     }
 
     /// Whether renaming this declaration cannot affect a public or serialized API contract.
-    func declarationCanBeRenamed(_ declaration: Declaration, upTo maximumVisibility: Visibility?) -> Bool {
+    func declarationCanBeRenamed(_ declaration: Declaration, upTo maximumVisibility: VisibilityThreshold?) -> Bool {
         guard declaration.keyword != "extension",
               !["case", "import", "operator", "precedencegroup"].contains(declaration.keyword),
-              maximumVisibility.map({ effectiveVisibility(of: declaration) <= $0 }) ?? true
+              maximumVisibility.map({ $0.includes(effectiveVisibility(of: declaration)) }) ?? true
         else { return false }
 
         let contractModifiers = [

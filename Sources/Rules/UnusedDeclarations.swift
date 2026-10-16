@@ -50,7 +50,7 @@ public extension FormatRule {
             // unusedPrivateDeclarations. An implicit member of a private type wasn't
             // previously treated as an unused private declaration.
             let visibility = declaration.visibility() ?? .internal
-            guard visibility <= formatter.options.unusedVisibility else { return }
+            guard formatter.options.unusedVisibility.includes(visibility) else { return }
             unusedDeclarationCandidates.append((declaration, visibility))
         }
 

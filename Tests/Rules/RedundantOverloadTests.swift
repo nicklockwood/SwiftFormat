@@ -586,7 +586,7 @@ final class RedundantOverloadTests: XCTestCase {
         )
     }
 
-    func testFileprivateVisibilityOptionExcludesInternalOverload() {
+    func testFileVisibilityOptionExcludesInternalOverload() {
         let input = """
         struct Loader {
             func load(path: String, timeout: Double) {
@@ -601,11 +601,11 @@ final class RedundantOverloadTests: XCTestCase {
         testFormatting(
             for: input,
             rule: .redundantOverload,
-            options: FormatOptions(overloadVisibility: .fileprivate)
+            options: FormatOptions(overloadVisibility: .file)
         )
     }
 
-    func testPrivateVisibilityOptionIncludesPrivateOverload() {
+    func testFileVisibilityOptionIncludesPrivateOverload() {
         let input = """
         private struct Loader {
             func load(path: String, timeout: Double) {
@@ -628,7 +628,7 @@ final class RedundantOverloadTests: XCTestCase {
             for: input,
             output,
             rule: .redundantOverload,
-            options: FormatOptions(overloadVisibility: .private)
+            options: FormatOptions(overloadVisibility: .file)
         )
     }
 

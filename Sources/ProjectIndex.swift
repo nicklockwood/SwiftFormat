@@ -765,7 +765,7 @@ struct ProjectIndex {
     }
 
     /// Project declaration names that can participate in coordinated renaming.
-    func declarationNames(upTo visibility: Visibility, visibleFrom fileURL: URL) -> DeclarationNames? {
+    func declarationNames(upTo visibility: VisibilityThreshold, visibleFrom fileURL: URL) -> DeclarationNames? {
         let path = fileURL.standardizedFileURL.path
         guard let moduleIdentifiers = files[path]?.moduleIdentifiers,
               let firstModule = moduleIdentifiers.first
@@ -777,7 +777,7 @@ struct ProjectIndex {
             let eligible = Set(declarations.compactMap { declaration -> String? in
                 guard declaration.canBeRenamed,
                       let declarationVisibility = Visibility(rawValue: declaration.visibility),
-                      declarationVisibility <= visibility
+                      visibility.includes(declarationVisibility)
                 else { return nil }
                 return declaration.name
             })

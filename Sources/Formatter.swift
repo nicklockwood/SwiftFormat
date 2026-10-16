@@ -128,7 +128,12 @@ public final class Formatter: NSObject {
 
     /// Is current rule enabled
     var isEnabled: Bool {
-        if ruleDisabled || disabled || range?.contains(enumerationIndex) == false {
+        isEnabled(at: enumerationIndex)
+    }
+
+    /// Is current rule enabled at the specified token index
+    func isEnabled(at index: Int) -> Bool {
+        if ruleDisabled || disabled || range?.contains(index) == false {
             return false
         }
         return true

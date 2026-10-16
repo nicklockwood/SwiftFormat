@@ -18,7 +18,7 @@ public extension FormatRule {
         let filePath = fileURL.standardizedFileURL.path
         let overloadCandidates = formatter.redundantOverloadCandidates()
         guard !overloadCandidates.isEmpty else { return }
-        let sharedProjectIndex = formatter.options.overloadVisibility > .fileprivate
+        let sharedProjectIndex = formatter.options.overloadVisibility != .file
             ? formatter.projectIndex(requiring: [.functionReferences])
             : nil
         let indexedProject = sharedProjectIndex.flatMap { index in
@@ -157,7 +157,7 @@ extension Formatter {
             }
 
             for wrapper in functions where !declarationIsObjectiveC(wrapper) &&
-                effectiveVisibility(of: wrapper) <= options.overloadVisibility
+                options.overloadVisibility.includes(effectiveVisibility(of: wrapper))
             {
                 let matchingFunctions = functions.filter { target in
                     target !== wrapper && defaultArgumentMatch(
@@ -186,7 +186,7 @@ extension Formatter {
                 }
 
             for wrapper in extensionFunctions where !declarationIsObjectiveC(wrapper) &&
-                effectiveVisibility(of: wrapper) <= options.overloadVisibility
+                options.overloadVisibility.includes(effectiveVisibility(of: wrapper))
             {
                 let matchingCases = enumCases.filter { enumCase in
                     defaultArgumentMatch(

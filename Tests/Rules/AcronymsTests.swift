@@ -233,7 +233,7 @@ final class AcronymsTests: XCTestCase {
         )
     }
 
-    func testPrivateVisibilityPreservesUnknownAndWiderDeclarations() {
+    func testFileVisibilityPreservesUnknownAndWiderDeclarations() {
         let input = """
         let internalUrl = externalApi.loadUrl()
         private let privateUrl = internalUrl
@@ -246,7 +246,7 @@ final class AcronymsTests: XCTestCase {
             for: input,
             output,
             rule: .acronyms,
-            options: FormatOptions(acronymVisibility: .private)
+            options: FormatOptions(acronymVisibility: .file)
         )
     }
 

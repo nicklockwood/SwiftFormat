@@ -1425,7 +1425,7 @@ func processInput(_ inputURLs: [URL],
             let rules = options.rules ?? defaultRules
             let requiresLocalFunctionReferences = inputURL.pathExtension == "swift" &&
                 rules.contains(FormatRule.redundantOverload.name) &&
-                (options.formatOptions ?? .default).overloadVisibility <= .fileprivate
+                (options.formatOptions ?? .default).overloadVisibility == .file
             let path = inputURL.standardizedFileURL.path
             return {
                 inputSourceSnapshots[path] = input
@@ -1573,7 +1573,7 @@ func processInput(_ inputURLs: [URL],
         let projectIndexAccess = ProjectIndexAccess(provider: projectIndexProvider)
         let requiresLocalFunctionReferences = inputURL.pathExtension == "swift" &&
             rules.contains(FormatRule.redundantOverload.name) &&
-            (formatOptions.overloadVisibility <= .fileprivate || projectIndexProvider == nil)
+            (formatOptions.overloadVisibility == .file || projectIndexProvider == nil)
         let fileCacheURL = cacheURL(for: inputURL)
         let configurationHash: String? = fileCacheURL.map { _ in
             computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")

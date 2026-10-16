@@ -14,7 +14,7 @@ final class UnusedDeclarationsTests: XCTestCase {
         for input: String,
         _ output: String? = nil,
         references: String,
-        visibility: Visibility,
+        visibility: VisibilityThreshold,
         declarationModules: Set<String> = ["App"],
         referenceModules: Set<String> = ["App"],
         file: StaticString = #file,
@@ -45,14 +45,17 @@ final class UnusedDeclarationsTests: XCTestCase {
         testFormatting(for: input, rule: .unusedDeclarations)
     }
 
-    func testPrivateVisibilityPreservesFileprivateDeclaration() {
+    func testFileVisibilityRemovesPrivateAndFileprivateDeclarations() {
         let input = """
         fileprivate func unused() {}
+        private func alsoUnused() {}
         """
         testFormatting(
             for: input,
+            """
+            """,
             rule: .unusedDeclarations,
-            options: FormatOptions(unusedVisibility: .private),
+            options: FormatOptions(unusedVisibility: .file),
             exclude: [.redundantFileprivate]
         )
     }

@@ -190,7 +190,7 @@ Option | Description
 --- | ---
 `--acronyms` | Acronyms to auto-capitalize. Defaults to "ID,URL,UUID"
 `--preserve-acronyms` | List of symbols to be ignored by the acronyms rule
-`--acronym-visibility` | Capitalize acronyms at or below this visibility threshold: "public", "package", "internal" (default), "fileprivate" or "private"
+`--acronym-visibility` | Capitalize acronyms at or below this visibility threshold: "public", "package", "internal" (default) or "file"
 
 <details>
 <summary>Examples</summary>
@@ -691,7 +691,7 @@ Correct common spelling mistakes in comments and identifiers.
 
 Option | Description
 --- | ---
-`--typo-visibility` | Correct typos at or below this visibility threshold: "public", "package", "internal", "fileprivate" (default) or "private"
+`--typo-visibility` | Correct typos at or below this visibility threshold: "public", "package", "internal" or "file" (default)
 `--typos` | Comma-delimited list of typo=correction mappings
 `--ignore-typos` | Comma-delimited list of typos to ignore
 
@@ -3098,7 +3098,7 @@ Replace forwarding overloads with default arguments.
 
 Option | Description
 --- | ---
-`--overload-visibility` | Remove redundant overloads at or below this visibility threshold: "public", "package", "internal" (default), "fileprivate" or "private"
+`--overload-visibility` | Remove redundant overloads at or below this visibility threshold: "public", "package", "internal" (default) or "file"
 
 <details>
 <summary>Examples</summary>
@@ -4366,7 +4366,7 @@ Remove unused declarations.
 Option | Description
 --- | ---
 `--preserve-decls` | Comma separated list of declaration names to exclude
-`--unused-visibility` | Remove unused declarations at or below this visibility threshold: "public", "package", "internal", "fileprivate" (default) or "private"
+`--unused-visibility` | Remove unused declarations at or below this visibility threshold: "public", "package", "internal" or "file" (default)
 
 <details>
 <summary>Examples</summary>

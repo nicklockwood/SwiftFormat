@@ -1310,12 +1310,10 @@ struct _Descriptors {
         displayName: "Acronym Visibility",
         help: "Capitalize acronyms at or below this visibility threshold:",
         keyPath: \.acronymVisibility,
-        options: [
-            "public": .public,
-            "package": .package,
-            "internal": .internal,
-            "fileprivate": .fileprivate,
-            "private": .private,
+        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
+        altOptions: [
+            "private": .file,
+            "fileprivate": .file,
         ]
     )
     let typoVisibility = OptionDescriptor(
@@ -1323,12 +1321,10 @@ struct _Descriptors {
         displayName: "Typo Visibility",
         help: "Correct typos at or below this visibility threshold:",
         keyPath: \.typoVisibility,
-        options: [
-            "public": .public,
-            "package": .package,
-            "internal": .internal,
-            "fileprivate": .fileprivate,
-            "private": .private,
+        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
+        altOptions: [
+            "private": .file,
+            "fileprivate": .file,
         ]
     )
     let overloadVisibility = OptionDescriptor(
@@ -1336,12 +1332,10 @@ struct _Descriptors {
         displayName: "Overload Visibility",
         help: "Remove redundant overloads at or below this visibility threshold:",
         keyPath: \.overloadVisibility,
-        options: [
-            "public": .public,
-            "package": .package,
-            "internal": .internal,
-            "fileprivate": .fileprivate,
-            "private": .private,
+        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
+        altOptions: [
+            "private": .file,
+            "fileprivate": .file,
         ]
     )
     let unusedVisibility = OptionDescriptor(
@@ -1349,12 +1343,10 @@ struct _Descriptors {
         displayName: "Unused Visibility",
         help: "Remove unused declarations at or below this visibility threshold:",
         keyPath: \.unusedVisibility,
-        options: [
-            "public": .public,
-            "package": .package,
-            "internal": .internal,
-            "fileprivate": .fileprivate,
-            "private": .private,
+        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
+        altOptions: [
+            "private": .file,
+            "fileprivate": .file,
         ]
     )
     let typos = OptionDescriptor(

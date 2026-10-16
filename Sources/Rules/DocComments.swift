@@ -147,19 +147,23 @@ extension Formatter {
         }
 
         // Check if this token defines a declaration that supports doc comments
-        var declarationToken = tokens[nextDeclarationIndex]
-        if declarationToken.isAttribute || isModifier(at: nextDeclarationIndex),
-           let index = index(after: nextDeclarationIndex, where: { $0.isDeclarationTypeKeyword })
+        var declarationIndex = nextDeclarationIndex
+        if tokens[declarationIndex].isAttribute || isModifier(at: declarationIndex),
+           let index = index(after: declarationIndex, where: { $0.isDeclarationTypeKeyword })
         {
-            declarationToken = tokens[index]
-        }
-        guard declarationToken.isDeclarationTypeKeyword(excluding: ["import"]) else {
-            return false
+            declarationIndex = index
         }
 
         // Preserve comments before declaration types the user has excluded
-        if options.excludedDeclarationTypes.contains(declarationToken.string) {
+        if let declarationType = declarationType(at: declarationIndex),
+           options.excludedDeclarationTypes.contains(declarationType)
+        {
             return nil
+        }
+
+        let declarationToken = tokens[declarationIndex]
+        guard declarationToken.isDeclarationTypeKeyword(excluding: ["import"]) else {
+            return false
         }
 
         // For local declarations, use standard comments.

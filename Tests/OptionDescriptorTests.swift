@@ -353,6 +353,18 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try descriptor.toOptions(argument, &options))
     }
 
+    func testExcludedDeclarationTypes() {
+        let descriptor = Descriptors.excludedDeclarationTypes
+        var options = FormatOptions()
+        XCTAssertNoThrow(try descriptor.toOptions("case,var,let", &options))
+    }
+
+    func testExcludedDeclarationTypesUnknownType() {
+        let descriptor = Descriptors.excludedDeclarationTypes
+        var options = FormatOptions()
+        XCTAssertThrowsError(try descriptor.toOptions("case,variable", &options))
+    }
+
     func testTypeOrderUnparseableArgument() {
         let argument = "_beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod"
 

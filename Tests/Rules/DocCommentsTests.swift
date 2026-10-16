@@ -925,4 +925,45 @@ final class DocCommentsTests: XCTestCase {
         let options = FormatOptions(excludedDeclarationTypes: ["let"])
         testFormatting(for: input, rule: .docComments, options: options)
     }
+
+    func testExcludedDeclarationTypesWithClassModifier() {
+        let input = """
+        public class Foo {
+            // Makes a value
+            public class func make() {}
+
+            // A class property
+            public class var value: Int {
+                0
+            }
+        }
+        """
+
+        let output = """
+        public class Foo {
+            // Makes a value
+            public class func make() {}
+
+            /// A class property
+            public class var value: Int {
+                0
+            }
+        }
+        """
+
+        let options = FormatOptions(excludedDeclarationTypes: ["func"])
+        testFormatting(for: input, output, rule: .docComments, options: options)
+    }
+
+    func testExcludedDeclarationTypesPreservesImportDocComment() {
+        let input = """
+        /// Used for the Foo type
+        import Foundation
+
+        struct Foo {}
+        """
+
+        let options = FormatOptions(excludedDeclarationTypes: ["import"])
+        testFormatting(for: input, rule: .docComments, options: options)
+    }
 }

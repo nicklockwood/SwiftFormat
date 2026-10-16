@@ -1488,7 +1488,16 @@ struct _Descriptors {
         argumentName: "excluded-declaration-types",
         displayName: "Excluded Declaration Types",
         help: "Declarations whose comments are left as-is, e.g. `case,var`",
-        keyPath: \.excludedDeclarationTypes
+        keyPath: \.excludedDeclarationTypes,
+        validate: { type in
+            guard Token.declarationTypeKeywords.contains(type) else {
+                throw FormatError.invalidOption(
+                    type,
+                    for: "excluded-declaration-types",
+                    with: Token.declarationTypeKeywords.sorted()
+                )
+            }
+        }
     )
     let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
         argumentName: "conditional-assignment",

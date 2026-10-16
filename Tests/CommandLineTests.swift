@@ -32,8 +32,12 @@
 import XCTest
 @testable import SwiftFormat
 
-private func createTmpFile(_ path: String, contents: String) throws -> URL {
-    let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(path)
+private func createTmpFile(
+    _ path: String,
+    contents: String,
+    in baseDirectory: URL = URL(fileURLWithPath: NSTemporaryDirectory())
+) throws -> URL {
+    let url = baseDirectory.appendingPathComponent(path)
     let directory = url.deletingLastPathComponent()
     if !FileManager.default.fileExists(atPath: directory.path) {
         try FileManager.default.createDirectory(
@@ -75,7 +79,7 @@ private func withTmpDirectory(_ files: [String: String], fn: (URL) throws -> Voi
     defer { try? FileManager.default.removeItem(at: directory) }
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     for (path, contents) in files {
-        _ = try createTmpFile("\(directory.lastPathComponent)/\(path)", contents: contents)
+        _ = try createTmpFile(path, contents: contents, in: directory)
     }
     try fn(directory)
 }
@@ -90,6 +94,20 @@ private func readSnapshot(at url: URL) throws -> TestSnapshot {
 }
 
 final class CommandLineTests: XCTestCase {
+    private let temporaryDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent(UUID().uuidString)
+
+    private func createTestFile(_ path: String, contents: String) throws -> URL {
+        try createTmpFile(path, contents: contents, in: temporaryDirectory)
+    }
+
+    override func tearDownWithError() throws {
+        if FileManager.default.fileExists(atPath: temporaryDirectory.path) {
+            try FileManager.default.removeItem(at: temporaryDirectory)
+        }
+        try super.tearDownWithError()
+    }
+
     // MARK: stdin
 
     func testStdin() {
@@ -1205,23 +1223,23 @@ final class CommandLineTests: XCTestCase {
     func testFilterMatchingFileNameAppliesPerFileWithinDirectory() throws {
         CLI.print = { _, _ in }
 
-        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        let configURL = try createTestFile("Test/config.swiftformat", contents: """
         --rules indent
         --indent 1
         """)
 
-        let testsConfigURL = try createTmpFile("Test/tests.swiftformat", contents: """
+        let testsConfigURL = try createTestFile("Test/tests.swiftformat", contents: """
         --filter **Tests.swift
         --indent 4
         """)
 
-        let sourceFile = try createTmpFile("Test/Foo/Foo.swift", contents: """
+        let sourceFile = try createTestFile("Test/Foo/Foo.swift", contents: """
         func foo() {
         print("bar")
         }
         """)
 
-        let testFile = try createTmpFile("Test/Foo/FooTests.swift", contents: """
+        let testFile = try createTestFile("Test/Foo/FooTests.swift", contents: """
         func foo() {
         print("bar")
         }
@@ -1257,39 +1275,39 @@ final class CommandLineTests: XCTestCase {
             }
         }
 
-        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        let configURL = try createTestFile("Test/config.swiftformat", contents: """
         --rules indent
         --rules braces
         --indent 1
         """)
 
-        let testsConfigURL = try createTmpFile("Test/tests.swiftformat", contents: """
+        let testsConfigURL = try createTestFile("Test/tests.swiftformat", contents: """
         --filter **/Tests/**
         --indent 2
         --enable linebreakAtEndOfFile
         """)
 
-        let toolsConfigURL = try createTmpFile("Test/tools.swiftformat", contents: """
+        let toolsConfigURL = try createTestFile("Test/tools.swiftformat", contents: """
         --filter **/Tools/**
         --indent 3
         --disable braces
         """)
 
-        let nonTestFile = try createTmpFile("Test/Foo/Sources/Foo.swift", contents: """
+        let nonTestFile = try createTestFile("Test/Foo/Sources/Foo.swift", contents: """
         func foo()
         {
         print("bar")
         }
         """)
 
-        let testFile = try createTmpFile("Test/Foo/Tests/FooTests.swift", contents: """
+        let testFile = try createTestFile("Test/Foo/Tests/FooTests.swift", contents: """
         func foo()
         {
         print("bar")
         }
         """)
 
-        let toolsFile = try createTmpFile("Test/Tools/MyTool/FooTool.swift", contents: """
+        let toolsFile = try createTestFile("Test/Tools/MyTool/FooTool.swift", contents: """
         func foo()
         {
         print("bar")
@@ -1342,7 +1360,7 @@ final class CommandLineTests: XCTestCase {
             }
         }
 
-        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        let configURL = try createTestFile("Test/config.swiftformat", contents: """
         --indent 1
 
         [Tests]
@@ -1354,19 +1372,19 @@ final class CommandLineTests: XCTestCase {
         --indent 3
         """)
 
-        let nonTestFile = try createTmpFile("Test/Foo/Sources/Foo.swift", contents: """
+        let nonTestFile = try createTestFile("Test/Foo/Sources/Foo.swift", contents: """
         func foo() {
         print("bar")
         }
         """)
 
-        let testFile = try createTmpFile("Test/Foo/Tests/FooTests.swift", contents: """
+        let testFile = try createTestFile("Test/Foo/Tests/FooTests.swift", contents: """
         func foo() {
         print("bar")
         }
         """)
 
-        let toolsFile = try createTmpFile("Test/Tools/MyTool/FooTool.swift", contents: """
+        let toolsFile = try createTestFile("Test/Tools/MyTool/FooTool.swift", contents: """
         func foo() {
         print("bar")
         }
@@ -1417,7 +1435,7 @@ final class CommandLineTests: XCTestCase {
             }
         }
 
-        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        let configURL = try createTestFile("Test/config.swiftformat", contents: """
         --swift-version 6.0
 
         [New test files]
@@ -1434,7 +1452,7 @@ final class CommandLineTests: XCTestCase {
         }
         """
 
-        let newTestFile = try createTmpFile("Test/Tests/NewTests.swift", contents: """
+        let newTestFile = try createTestFile("Test/Tests/NewTests.swift", contents: """
         //  Created on 9/1/26.
 
         import XCTest
@@ -1442,7 +1460,7 @@ final class CommandLineTests: XCTestCase {
         \(testCase)
         """)
 
-        let oldTestFile = try createTmpFile("Test/Tests/OldTests.swift", contents: """
+        let oldTestFile = try createTestFile("Test/Tests/OldTests.swift", contents: """
         //  Created on 8/30/26.
 
         import XCTest
@@ -1450,7 +1468,7 @@ final class CommandLineTests: XCTestCase {
         \(testCase)
         """)
 
-        let undatedTestFile = try createTmpFile("Test/Tests/UndatedTests.swift", contents: """
+        let undatedTestFile = try createTestFile("Test/Tests/UndatedTests.swift", contents: """
         import XCTest
 
         \(testCase)
@@ -1513,12 +1531,12 @@ final class CommandLineTests: XCTestCase {
             }
         }
 
-        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        let configURL = try createTestFile("Test/config.swiftformat", contents: """
         --filter header-creation-date-after:tomorrowish
         --indent 2
         """)
 
-        let file = try createTmpFile("Test/Foo/Foo.swift", contents: """
+        let file = try createTestFile("Test/Foo/Foo.swift", contents: """
         func foo() {}
         """)
 
@@ -1548,7 +1566,7 @@ final class CommandLineTests: XCTestCase {
             }
         }
 
-        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        let configURL = try createTestFile("Test/config.swiftformat", contents: """
         --indent 1
 
         [Tests]
@@ -1560,19 +1578,19 @@ final class CommandLineTests: XCTestCase {
         --indent 3
         """)
 
-        let nonTestFile = try createTmpFile("Test/Foo/Sources/Foo.swift", contents: """
+        let nonTestFile = try createTestFile("Test/Foo/Sources/Foo.swift", contents: """
         func foo() {
         print("bar")
         }
         """)
 
-        let testFile = try createTmpFile("Test/Foo/Tests/FooTests.swift", contents: """
+        let testFile = try createTestFile("Test/Foo/Tests/FooTests.swift", contents: """
         func foo() {
         print("bar")
         }
         """)
 
-        let toolsFile = try createTmpFile("Test/Tools/MyTool/FooTool.swift", contents: """
+        let toolsFile = try createTestFile("Test/Tools/MyTool/FooTool.swift", contents: """
         func foo() {
         print("bar")
         }
@@ -1642,7 +1660,7 @@ final class CommandLineTests: XCTestCase {
             }
         }
 
-        let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        let configURL = try createTestFile("Test/config.swiftformat", contents: """
         --indent 1
 
         [Tests]
@@ -1650,7 +1668,7 @@ final class CommandLineTests: XCTestCase {
         --indent 2
         """)
 
-        let testFile = try createTmpFile("Test/MyModule/Tests/Foo.swift", contents: """
+        let testFile = try createTestFile("Test/MyModule/Tests/Foo.swift", contents: """
         func foo()
         {
         print("bar")
@@ -2229,7 +2247,7 @@ final class CommandLineTests: XCTestCase {
     }
 
     func testJSONReporterInferredFromURL() throws {
-        let outputURL = try createTmpFile("report.json", contents: "")
+        let outputURL = try createTestFile("report.json", contents: "")
         try withTmpFiles([
             "foo.swift": "func foo() {\n}\n",
         ]) { url in
@@ -2325,7 +2343,7 @@ final class CommandLineTests: XCTestCase {
     }
 
     func testXMLReporterInferredFromURL() throws {
-        let outputURL = try createTmpFile("report.xml", contents: "")
+        let outputURL = try createTestFile("report.xml", contents: "")
         try withTmpFiles([
             "foo.swift": "func foo() {\n}\n",
         ]) { url in
@@ -2369,7 +2387,7 @@ final class CommandLineTests: XCTestCase {
     }
 
     func testSARIFReporterInferredFromURL() throws {
-        let outputURL = try createTmpFile("report.sarif", contents: "")
+        let outputURL = try createTestFile("report.sarif", contents: "")
         try withTmpFiles([
             "foo.swift": "func foo() {\n}\n",
         ]) { url in

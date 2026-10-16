@@ -393,6 +393,30 @@ extension Formatter {
     /// is the first token in any declaration. This makes it so that any comment _before_
     /// the MARK comment is treated as part of the previous declaration.
     func adjustBodyDeclarationRanges(in typeDeclaration: TypeDeclaration, order: ParsedOrder) {
+        // A comment on the opening brace line belongs to the type unless it targets the next declaration.
+        if let firstDeclaration = typeDeclaration.body.first,
+           let openingLinebreak = index(of: .nonSpaceOrComment, after: typeDeclaration.openBraceIndex),
+           tokens[openingLinebreak].isLinebreak,
+           let startOfBody = index(of: .nonLinebreak, after: openingLinebreak),
+           firstDeclaration.range.lowerBound < startOfBody
+        {
+            let hasNextDirective = tokens[typeDeclaration.openBraceIndex + 1 ..< openingLinebreak].contains { token in
+                guard case let .commentBody(comment) = token,
+                      let prefix = comment.range(of: "swiftformat:")
+                else { return false }
+                return comment[prefix.upperBound...].components(separatedBy: " ").first?
+                    .components(separatedBy: ":").dropFirst().first == "next"
+            }
+            if hasNextDirective {
+                let indentation = currentIndentForLine(at: firstDeclaration.keywordIndex)
+                insertLinebreak(at: firstDeclaration.range.lowerBound)
+                firstDeclaration.range = firstDeclaration.range.lowerBound + 1 ... firstDeclaration.range.upperBound
+                insertSpace(indentation, at: firstDeclaration.range.lowerBound)
+            } else {
+                firstDeclaration.range = startOfBody ... firstDeclaration.range.upperBound
+            }
+        }
+
         for (index, declaration) in typeDeclaration.body.enumerated() {
             guard index != 0 else { continue }
 
@@ -489,15 +513,12 @@ extension Formatter {
 
                     // Compute how many linebreaks are needed up-front rather than using a
                     // `while` loop, to avoid an infinite loop when there is content (e.g. a
-                    // trailing comment) on the same line as the opening brace. In that case
-                    // `body[0].range.lowerBound == openBraceIndex + 1`, so inserting at
-                    // `openBraceIndex + 1` never shifts `body[0].range.lowerBound` and the
-                    // while-loop condition would never become false.
+                    // trailing comment) on the same line as the opening brace.
                     let neededLinebreaks = max(
                         0, 2 - tokensBetweenStartOfScopeAndFirstDeclaration.numberOfTrailingLinebreaks()
                     )
                     for _ in 0 ..< neededLinebreaks {
-                        insertLinebreak(at: typeDeclaration.openBraceIndex + 1)
+                        insertLinebreak(at: max(typeDeclaration.openBraceIndex + 1, typeDeclaration.body[0].range.lowerBound - 1))
                     }
                 }
             } else if typeExceedsThresholdToAddMarks {

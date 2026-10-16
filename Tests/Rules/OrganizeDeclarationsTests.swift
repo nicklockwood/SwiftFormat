@@ -4650,26 +4650,10 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
-
-        // MARK: Internal
-
-         // some comment
-            let x: Int
-            let y: String
-
-            // MARK: Private
-
-            private func bar() {}
-        }
-        """
-
-        let output2 = """
-        struct Foo {
+        struct Foo { // some comment
 
             // MARK: Internal
 
-            // some comment
             let x: Int
             let y: String
 
@@ -4681,9 +4665,225 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         let options = FormatOptions(organizeStructThreshold: 0)
         testFormatting(
-            for: input, [output, output2],
-            rules: [.organizeDeclarations],
+            for: input, output,
+            rule: .organizeDeclarations,
             options: options,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testOpeningBraceCommentWithRemovedTypeBodyMarks() {
+        let input = """
+        struct A { // TODO: check
+            let a: Int
+
+            func f() {}
+
+            // MARK: Chips
+
+            private struct B {
+                let b: Int
+            }
+        }
+        """
+        let output = """
+        struct A { // TODO: check
+
+            // MARK: Nested Types
+
+            private struct B {
+                let b: Int
+            }
+
+            // MARK: Properties
+
+            let a: Int
+
+            // MARK: Functions
+
+            func f() {}
+
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(organizationMode: .type, typeBodyMarks: .remove),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testOpeningBraceCommentWithPreservedTypeBodyMarks() {
+        let input = """
+        struct A { // TODO: check
+            let a: Int
+
+            func f() {}
+
+            // MARK: Chips
+
+            private struct B {
+                let b: Int
+            }
+        }
+        """
+        let output = """
+        struct A { // TODO: check
+
+            // MARK: Nested Types
+
+            // MARK: Chips
+
+            private struct B {
+                let b: Int
+            }
+
+            // MARK: Properties
+
+            let a: Int
+
+            // MARK: Functions
+
+            func f() {}
+
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(organizationMode: .type),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testOpeningBraceNextDirectiveStaysWithDeclaration() throws {
+        for directive in ["disable:next", "enable:next"] {
+            let input = """
+            class A { // swiftformat:\(directive) redundantType
+                let a: Int = 0
+                private func f() {}
+            }
+            """
+            let output = """
+            class A {
+
+                // MARK: Internal
+
+                // swiftformat:\(directive) redundantType
+                let a: Int = 0
+
+                // MARK: Private
+
+                private func f() {}
+            }
+            """
+            testFormatting(
+                for: input, output,
+                rule: .organizeDeclarations,
+                exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantType, .propertyTypes]
+            )
+            if directive == "disable:next" {
+                XCTAssertEqual(try format(output, rules: [.redundantType], options: FormatOptions(propertyTypes: .inferred)).output, output)
+            }
+        }
+    }
+
+    func testOpeningBraceNextDirectiveWithRemovedTypeBodyMarks() {
+        let input = """
+        struct A { // swiftformat:disable:next redundantType
+            let a: Int
+
+            func f() {}
+
+            // MARK: Chips
+
+            private struct B {
+                let b: Int
+            }
+        }
+        """
+        let output = """
+        struct A {
+
+            // MARK: Nested Types
+
+            private struct B {
+                let b: Int
+            }
+
+            // MARK: Properties
+
+            // swiftformat:disable:next redundantType
+            let a: Int
+
+            // MARK: Functions
+
+            func f() {}
+
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(organizationMode: .type, typeBodyMarks: .remove),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testOpeningBraceOtherDirectivesStayWithType() {
+        for directive in ["disable:this", "disable:previous", "disable", "enable"] {
+            let input = """
+            class A { // swiftformat:\(directive) redundantType
+                let a: Int
+                private func f() {}
+            }
+            """
+            let output = """
+            class A { // swiftformat:\(directive) redundantType
+
+                // MARK: Internal
+
+                let a: Int
+
+                // MARK: Private
+
+                private func f() {}
+            }
+            """
+            testFormatting(
+                for: input, output,
+                rule: .organizeDeclarations,
+                exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            )
+        }
+    }
+
+    func testOpeningBraceCommentWithoutCategoryMarks() {
+        let input = """
+        struct A { // TODO: check
+            func f() {}
+
+            // MARK: Chips
+
+            private struct B { // TODO: nested
+                let b: Int
+            }
+        }
+        """
+        let output = """
+        struct A { // TODO: check
+            private struct B { // TODO: nested
+                let b: Int
+            }
+
+            func f() {}
+
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(markCategories: false, organizationMode: .type, typeBodyMarks: .remove),
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }

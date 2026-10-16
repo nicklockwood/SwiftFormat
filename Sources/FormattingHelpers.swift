@@ -11,11 +11,109 @@ import Foundation
 // MARK: shared helper methods
 
 extension Formatter {
+    /// Renames eligible identifiers and their references, avoiding protected names and collisions.
+    /// Comments are transformed regardless of declaration visibility.
+    func renameIdentifiersAndComments(upTo maximumVisibility: Visibility, using transform: (String) -> String) {
+        var declaredNames = Set<String>()
+        var protectedNames = Set<String>()
+        var eligibleNames = Set<String>()
+        let projectDeclarationNames: ProjectIndex.DeclarationNames? = currentFileURL.flatMap { fileURL in
+            guard maximumVisibility > .fileprivate else { return nil }
+            return projectIndex(requiring: [.declarations])?.declarationNames(
+                upTo: maximumVisibility,
+                visibleFrom: fileURL
+            )
+        }
+        if let projectDeclarationNames {
+            declaredNames.formUnion(projectDeclarationNames.declared)
+            protectedNames.formUnion(projectDeclarationNames.protected)
+            eligibleNames.formUnion(projectDeclarationNames.eligible)
+        }
+        parseDeclarations().forEachRecursiveDeclaration { declaration in
+            let names = namesInDeclaration(at: declaration.keywordIndex) ?? declaration.name.map { [$0] } ?? []
+            declaredNames.formUnion(names)
+
+            let functionArgumentNames: [String]
+            if declaration.keyword.isFunctionDeclarationKeyword,
+               let function = parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
+            {
+                functionArgumentNames = function.arguments.flatMap { argument in
+                    [argument.externalLabel, argument.internalLabel].compactMap { $0 }
+                }
+                declaredNames.formUnion(functionArgumentNames)
+            } else {
+                functionArgumentNames = []
+            }
+
+            if declarationCanBeRenamed(declaration, upTo: maximumVisibility) {
+                eligibleNames.formUnion(names)
+                eligibleNames.formUnion(functionArgumentNames)
+            } else {
+                protectedNames.formUnion(names)
+                protectedNames.formUnion(functionArgumentNames)
+            }
+        }
+
+        // Local declarations aren't included in the declaration tree, but are safe to rename.
+        forEachToken { index, token in
+            guard case .keyword = token,
+                  declarationScope(at: index) == .local,
+                  let names = namesInDeclaration(at: index)
+            else { return }
+            declaredNames.formUnion(names)
+            eligibleNames.formUnion(names)
+            if token.isFunctionDeclarationKeyword, let function = parseFunctionDeclaration(keywordIndex: index) {
+                let argumentNames = function.arguments.flatMap { argument in
+                    [argument.externalLabel, argument.internalLabel].compactMap { $0 }
+                }
+                declaredNames.formUnion(argumentNames)
+                eligibleNames.formUnion(argumentNames)
+            }
+        }
+
+        var renames = [String: String]()
+        var transformedNames = [String: [String]]()
+        for name in eligibleNames.subtracting(protectedNames) {
+            let transformedName = transform(name)
+            guard transformedName != name else { continue }
+            transformedNames[transformedName, default: []].append(name)
+        }
+
+        // Avoid introducing an ambiguous reference or combining two distinct declarations.
+        for (transformedName, names) in transformedNames
+            where names.count == 1 && !declaredNames.contains(transformedName)
+        {
+            renames[names[0]] = transformedName
+        }
+
+        forEachToken { index, token in
+            switch token {
+            case let .identifier(name):
+                let transformedName: String
+                if let renamed = renames[name] {
+                    transformedName = renamed
+                } else if maximumVisibility > .fileprivate,
+                          projectDeclarationNames == nil,
+                          !declaredNames.contains(name)
+                {
+                    transformedName = transform(name)
+                } else {
+                    return
+                }
+                guard transformedName != name else { return }
+                replaceToken(at: index, with: .identifier(transformedName))
+            case let .commentBody(comment):
+                let transformedComment = transform(comment)
+                guard transformedComment != comment else { return }
+                replaceToken(at: index, with: .commentBody(transformedComment))
+            default:
+                break
+            }
+        }
+    }
+
     /// Whether renaming this declaration cannot affect a public or serialized API contract.
-    func declarationCanBeRenamed(
-        _ declaration: Declaration,
-        upTo maximumVisibility: Visibility?
-    ) -> Bool {
+    func declarationCanBeRenamed(_ declaration: Declaration, upTo maximumVisibility: Visibility?) -> Bool {
         guard declaration.keyword != "extension",
               !["case", "import", "operator", "precedencegroup"].contains(declaration.keyword),
               maximumVisibility.map({ effectiveVisibility(of: declaration) <= $0 }) ?? true

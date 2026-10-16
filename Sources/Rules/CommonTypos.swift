@@ -20,121 +20,8 @@ public extension FormatRule {
         for (typo, correction) in formatter.options.typos where typoCorrections[typo.lowercased()] == nil {
             typoCorrections[typo.lowercased()] = correction
         }
-        let declarations = formatter.parseDeclarations()
-        var declaredNames = Set<String>()
-        var protectedNames = Set<String>()
-        var eligibleNames = Set<String>()
-        let projectTypoNames: ProjectIndex.DeclarationNames? = formatter.currentFileURL.flatMap { fileURL in
-            guard formatter.options.typoVisibility > .fileprivate else { return nil }
-            return formatter.projectIndex(requiring: [.declarations])?.declarationNames(
-                upTo: formatter.options.typoVisibility,
-                visibleFrom: fileURL
-            )
-        }
-        if let projectTypoNames {
-            declaredNames.formUnion(projectTypoNames.declared)
-            protectedNames.formUnion(projectTypoNames.protected)
-            eligibleNames.formUnion(projectTypoNames.eligible)
-        }
-
-        declarations.forEachRecursiveDeclaration { declaration in
-            let names = formatter.namesInDeclaration(at: declaration.keywordIndex)
-                ?? declaration.name.map { [$0] }
-                ?? []
-            declaredNames.formUnion(names)
-
-            guard formatter.declarationCanBeRenamed(
-                declaration,
-                upTo: formatter.options.typoVisibility
-            ) else {
-                protectedNames.formUnion(names)
-                if let function = formatter.commonTyposFunctionDeclaration(for: declaration) {
-                    let argumentNames = function.arguments.flatMap { argument in
-                        [argument.externalLabel, argument.internalLabel].compactMap { $0 }
-                    }
-                    declaredNames.formUnion(argumentNames)
-                    protectedNames.formUnion(argumentNames)
-                }
-                return
-            }
-
-            eligibleNames.formUnion(names)
-            if let function = formatter.commonTyposFunctionDeclaration(for: declaration) {
-                let argumentNames = function.arguments.flatMap { argument in
-                    [argument.externalLabel, argument.internalLabel].compactMap { $0 }
-                }
-                declaredNames.formUnion(argumentNames)
-                eligibleNames.formUnion(argumentNames)
-            }
-        }
-
-        // Local declarations aren't included in the declaration tree, but are safe to rename.
-        formatter.forEachToken { index, token in
-            guard case .keyword = token,
-                  formatter.declarationScope(at: index) == .local,
-                  let names = formatter.namesInDeclaration(at: index)
-            else { return }
-            declaredNames.formUnion(names)
-            eligibleNames.formUnion(names)
-            if token.isFunctionDeclarationKeyword,
-               let function = formatter.parseFunctionDeclaration(keywordIndex: index)
-            {
-                let argumentNames = function.arguments.flatMap { argument in
-                    [argument.externalLabel, argument.internalLabel].compactMap { $0 }
-                }
-                declaredNames.formUnion(argumentNames)
-                eligibleNames.formUnion(argumentNames)
-            }
-        }
-
-        var renames = [String: String]()
-        var correctedNames = [String: [String]]()
-        for name in eligibleNames.subtracting(protectedNames) {
-            let correctedName = formatter.correctingCommonTypos(
-                in: name,
-                using: typoCorrections,
-                ignoring: ignoredTypos
-            )
-            guard correctedName != name else { continue }
-            correctedNames[correctedName, default: []].append(name)
-        }
-
-        // Avoid introducing an ambiguous reference or combining two distinct declarations.
-        for (correctedName, names) in correctedNames where names.count == 1 && !declaredNames.contains(correctedName) {
-            renames[names[0]] = correctedName
-        }
-
-        formatter.forEachToken { index, token in
-            switch token {
-            case let .identifier(name):
-                let correctedName: String
-                if let renamed = renames[name] {
-                    correctedName = renamed
-                } else if formatter.options.typoVisibility > .fileprivate,
-                          projectTypoNames == nil,
-                          !declaredNames.contains(name)
-                {
-                    correctedName = formatter.correctingCommonTypos(
-                        in: name,
-                        using: typoCorrections,
-                        ignoring: ignoredTypos
-                    )
-                } else {
-                    return
-                }
-                guard correctedName != name else { return }
-                formatter.replaceToken(at: index, with: .identifier(correctedName))
-            case let .commentBody(comment):
-                let correctedComment = formatter.correctingCommonTypos(
-                    in: comment,
-                    using: typoCorrections,
-                    ignoring: ignoredTypos
-                )
-                guard correctedComment != comment else { return }
-                formatter.replaceToken(at: index, with: .commentBody(correctedComment))
-            default:
-                break
-            }
+        formatter.renameIdentifiersAndComments(upTo: formatter.options.typoVisibility) { text in
+            formatter.correctingCommonTypos(in: text, using: typoCorrections, ignoring: ignoredTypos)
         }
     } examples: {
         """
@@ -149,11 +36,6 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    func commonTyposFunctionDeclaration(for declaration: Declaration) -> FunctionDeclaration? {
-        guard declaration.keyword.isFunctionDeclarationKeyword else { return nil }
-        return parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
-    }
-
     /// Corrects typo dictionary matches while preserving camel case and capitalization.
     func correctingCommonTypos(
         in text: String,

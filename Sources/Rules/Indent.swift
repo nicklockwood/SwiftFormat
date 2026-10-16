@@ -973,7 +973,9 @@ extension Formatter {
     }
 
     func indentForClosureInMultilineCondition(at closureStartIndex: Int) -> String? {
-        guard let closureEndIndex = endOfScope(at: closureStartIndex) else {
+        guard isStartOfClosure(at: closureStartIndex),
+              let closureEndIndex = endOfScope(at: closureStartIndex)
+        else {
             return nil
         }
 
@@ -987,7 +989,11 @@ extension Formatter {
                 {
                     break
                 }
+                // Only realign closures on the condition keyword's line. Wrapped closures
+                // already have their own indentation, and later statements are unrelated.
                 guard let conditionStartIndex = startOfConditionalStatement(at: nextIndex),
+                      conditionStartIndex < closureStartIndex,
+                      onSameLine(conditionStartIndex, closureStartIndex),
                       startOfScope(at: nextIndex) == startOfScope(at: conditionStartIndex),
                       let nextConditionIndex = self.index(
                           of: .nonSpaceOrCommentOrLinebreak,

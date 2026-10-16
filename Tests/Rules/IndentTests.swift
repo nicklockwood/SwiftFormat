@@ -3166,6 +3166,36 @@ final class IndentTests: XCTestCase {
                        options: options, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements, .preferContains])
     }
 
+    func testClosureBeforeUnrelatedMultilineCondition() {
+        let input = """
+        processValues {
+            print($0)
+        }
+
+        if foo,
+           bar
+        {
+            run()
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testConditionalBodyBeforeMultilineCondition() {
+        let input = """
+        if foo {
+            run()
+        }
+
+        if bar,
+           baz
+        {
+            run()
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
     func testClosureAtStartOfMultilineGuardConditions() {
         let input = """
         guard let endCommentIndex = formatter.tokens[index...].firstIndex(where: {

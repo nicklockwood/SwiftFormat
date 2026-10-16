@@ -1484,6 +1484,12 @@ struct _Descriptors {
         keyPath: \.docComments,
         altOptions: ["declarations": .beforeDeclarations, "preserve": .preserve]
     )
+    let excludedDeclarationTypes = OptionDescriptor(
+        argumentName: "excluded-declaration-types",
+        displayName: "Excluded Declaration Types",
+        help: "Declarations whose comments are left as-is, e.g. `case,var`",
+        keyPath: \.excludedDeclarationTypes
+    )
     let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
         argumentName: "conditional-assignment",
         displayName: "Apply conditionalAssignment rule",

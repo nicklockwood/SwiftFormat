@@ -1031,6 +1031,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveSingleLineForEach: Bool
     public var forWhere: ForWhereMode
     public var docComments: DocCommentMode
+    public var excludedDeclarationTypes: Set<String>
     public var conditionalAssignmentOnlyAfterNewProperties: Bool
     public var typeDelimiterSpacing: DelimiterSpacing
     public var initCoderNil: Bool
@@ -1204,6 +1205,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preserveSingleLineForEach: Bool = true,
                 forWhere: ForWhereMode = .always,
                 docComments: DocCommentMode = .beforeDeclarations,
+                excludedDeclarationTypes: Set<String> = [],
                 conditionalAssignmentOnlyAfterNewProperties: Bool = true,
                 typeDelimiterSpacing: DelimiterSpacing = .spaceAfter,
                 initCoderNil: Bool = false,
@@ -1362,6 +1364,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveSingleLineForEach = preserveSingleLineForEach
         self.forWhere = forWhere
         self.docComments = docComments
+        self.excludedDeclarationTypes = excludedDeclarationTypes
         self.conditionalAssignmentOnlyAfterNewProperties = conditionalAssignmentOnlyAfterNewProperties
         self.typeDelimiterSpacing = typeDelimiterSpacing
         self.initCoderNil = initCoderNil

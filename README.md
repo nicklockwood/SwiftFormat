@@ -153,12 +153,14 @@ $ cd SwiftFormat
 $ swift build -c release
 ```
 
+Prebuilt command-line binaries are available from [GitHub Releases](https://github.com/nicklockwood/SwiftFormat/releases). As of 0.64.0, the repository no longer includes a prebuilt binary, and new releases are no longer distributed through CocoaPods.
+
 Another option is to include the binary artifactbundle in your `Package.swift`:
 
 ```swift
 .binaryTarget(
     name: "swiftformat",
-    url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.55.0/swiftformat-macos.artifactbundle.zip",
+    url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.64.0/swiftformat-macos.artifactbundle.zip",
     checksum: "CHECKSUM"
 ),
 ``` 
@@ -299,7 +301,7 @@ let package = Package(
     name: "BuildTools",
     platforms: [.macOS(.v10_11)],
     dependencies: [
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.63.1"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.64.0"),
     ],
     targets: [.target(name: "BuildTools", path: "")]
 )
@@ -376,7 +378,7 @@ You can use `SwiftFormat` as a SwiftPM command plugin.
 ```swift
 dependencies: [
     // ...
-    .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.63.1"),
+    .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.64.0"),
 ]
 ```
 
@@ -618,11 +620,13 @@ let indexUrl: URL // swiftformat:options:this --preserve-acronyms url
 doTheThing(); print("Did the thing")
 ```
 
+Unknown option names or values raise an error by default. Use `--unknown-options warn` to report them as warnings instead, or `--unknown-options ignore` to skip them silently. You can also use `--unknown-options warn/ignore` in your `.swiftformat` [config file](#config-file) to share a single configuration across SwiftFormat versions.
+
 
 Rules
 -----
 
-SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found at [swiftformat.info/rules](https://swiftformat.info/rules) along with documentation for how they are used.
+SwiftFormat includes over 150 rules, and new ones are added all the time. An up-to-date list can be found at [swiftformat.info/rules](https://swiftformat.info/rules) along with documentation for how they are used.
 
 The list of available rules can be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Rules are marked with "(enabled by default)", "(disabled by default)", or "(deprecated)" when displayed using `--rules`.
 
@@ -1147,6 +1151,10 @@ Known issues
 
 * When using the `--self remove` option, the `redundantSelf` rule will remove references to `self` in autoclosure arguments, which may change the meaning of the code, or cause it not to compile. To work around this issue, use the `--self-required` option to provide a comma-delimited list of methods to be excluded from the rule. The `expect()` function from the popular [Nimble](https://github.com/Quick/Nimble) unit testing framework is already excluded by default. If you are using the `--self insert` option then this is not an issue.
 
+* The `acronyms` rule renames identifiers within each file without resolving references across the project. Renaming declarations visible outside the file can leave references inconsistent or alter references to external APIs. Use `--acronym-visibility fileprivate` to limit declaration renaming to file-local visibility, or exclude affected words with `--preserve-acronyms`.
+
+* The `redundantOverload` rule replaces forwarding overloads with default arguments. Default arguments preserve ordinary calls but do not preserve the removed overload's function type when it is used as a function value. For example, a reference to a zero-argument overload cannot be replaced by a reference to a one-argument function with a default value. Use `// swiftformat:disable redundantOverload` around declarations whose overloads must remain available as function values.
+
 * If you assign `SomeClass.self` to a variable and then instantiate an instance of the class using that variable, Swift requires that you use an explicit `.init()`, however, the `redundantInit` rule is not currently capable of detecting this situation in all cases, and may remove the `.init`. To work around this issue, use the `// swiftformat:disable:next redundantInit` comment directive to disable the rule for any affected lines of code (or just disable the `redundantInit` rule completely).
 
 * The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions in other files, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
@@ -1169,7 +1177,7 @@ Known issues
 
 * The `propertyTypes` rule can cause a build failure in cases where the property's type is a protocol / existential like `let shapeStyle: ShapeStyle = .myShapeStyle`, and the value used on the right-hand side is defined in an extension like `extension ShapeStyle where Self == MyShapeStyle { static var myShapeStyle: MyShapeStyle { ... } }`. As a workaround you can use the existential `any` syntax (`let shapeStyle: any ShapeStyle = .myShapeStyle`), which the rule will preserve as-is, or exclude the type name and/or property name with `--preserve-symbols ShapeStyle,myShapeStyle,etc`.
 
-* The `propertyTypes` rule can cause a build failure in cases like `let foo = Foo.bar` where the value is a static member that doesn't return the same time. For example, `let foo: Foo = .bar` would be invalid if the `bar` property was defined as `static var bar: Bar`. As a workaround you can write the name of the type explicitly, like `let foo: Bar = Foo.bar`, or exclude the type name and/or property name with `--preserve-symbols Bar,bar,etc`.
+* The `propertyTypes` rule can cause a build failure in cases like `let foo = Foo.bar` where the value is a static member that doesn't return the same type. For example, `let foo: Foo = .bar` would be invalid if the `bar` property was defined as `static var bar: Bar`. As a workaround you can write the name of the type explicitly, like `let foo: Bar = Foo.bar`, or exclude the type name and/or property name with `--preserve-symbols Bar,bar,etc`.
 
 * The `propertyTypes` rule can cause a build failure in cases like `let value = Tools.makeString()` where `Tools` is used as a namespace (e.g. a caseless enum) and `makeString()` is a static factory method that returns a different type (e.g. `String`). The rule converts this to `let value: Tools = .makeString()`, which fails to compile. As a workaround you can write the type explicitly, like `let value: String = Tools.makeString()`, or exclude the type name and/or property name with `--preserve-symbols Tools,makeString,etc`, or use `// swiftformat:disable:next propertyTypes`.
 

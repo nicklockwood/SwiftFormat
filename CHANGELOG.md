@@ -1,5 +1,47 @@
 # Change Log
 
+## [0.64.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.0) (2026-10-16)
+
+- Added `--snapshot` feature for incrementally adopting formatting without changing files that match a saved snapshot
+- Added `--unknown-options error|warn|ignore` for handling unknown rules, options, and unsupported option values
+- Added `--color auto|always|never` to control colored command-line output
+- Added `nestedIf` rule to merge nested if statements
+- Added `repeatedGuard` rule to merge consecutive guard statements with identical bodies
+- Added `redundantEnumerated` rule to remove unused enumeration indices from for loops
+- Added `extensionAttributes` rule to hoist common member attributes onto extensions
+- Added `contentBuilder` rule, replacing `redundantViewBuilder`, with `--content-builder` and `--prefer-content-builder` options
+- Added `commonTypos` rule, with `--typo-visibility`, `--typos`, and `--ignore-typos` options
+- Added `forWhere` rule with `--for-where always|never`
+- Added `redundantOverload` rule to replace forwarding overloads with default arguments
+- Added `preferStructSwiftTestingSuites` rule
+- Added `wrapClosureBodies`, `wrapDoBodies`, and `wrapSingleLineStrings` rules
+- Added `header-creation-date-after:` config filters for applying rules based on file header dates
+- Added `--scope-blank-lines remove|preserve` for function bodies, closures, and statement blocks
+- Added `--wrap-single-line-enum-cases` option, defaulting to `false`
+- Added `--acronym-visibility` option, defaulting to `internal`
+- Added `--blank-line-after-switch-case never` option
+- Added `--hoist-imports hoist|preserve` option, defaulting to `hoist`
+- Added `--excluded-declaration-types` option for the `docComments` rule
+- Added `attributes-last` import grouping and made import grouping order configurable
+- Added support for sorting array and dictionary literals with `swiftformat:sort` directives
+- Updated SwiftUI rules to support `@ContentBuilder`
+- Updated `redundantExtendedLifetime` to handle write-only references and underscored assignments
+- Updated `redundantParens` to handle optional opaque types in Swift 6.4
+- Updated `noForceUnwrapInTests` to handle force unwraps on the RHS of operators and place `try` at the start of the expression
+- Renamed `privateStateVariables` to `privateSwiftUIDynamicProperties` and expanded it to other SwiftUI dynamic properties in views and view modifiers
+- Fixed `noForceUnwrapInTests` using stale function body ranges and placing `try` before assignment targets
+- Fixed indentation of multiline conditions, method chains, closures, and wrapped case patterns
+- Fixed `redundantSelf` and `redundantStaticSelf` modifying code outside the requested line range
+- Fixed `redundantReturn` removing required returns before expressions in Void functions
+- Fixed formatting of `read` and `modify` accessors
+- Fixed directive handling performance with multiline strings
+- Fixed `organizeDeclarations` timeouts when declarations share a line
+- Fixed crash in `organizeDeclarations` rule when opening brace line has a trailing comment
+- Improved formatting performance and reduced repeated parsing and configuration work
+- Preserved unchanged editor lines when formatting in Xcode
+- SwiftFormat now excludes `.build`, `Build`, and `DerivedData` directories from formatting/linting by default
+- Removed CocoaPods distribution and the prebuilt binary from the repository (use Swift Package Manager or release downloads instead)
+
 ## [0.63.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.63.1) (2026-09-30)
 
 - Added `--locale` option for deterministic sorting

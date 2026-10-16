@@ -222,6 +222,26 @@ extension OptionDescriptor {
         )
     }
 
+    /// Define a visibility threshold, with hidden aliases for file scope.
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        keyPath: WritableKeyPath<FormatOptions, VisibilityThreshold>
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            keyPath: keyPath,
+            type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
+            altOptions: [
+                "private": .file,
+                "fileprivate": .file,
+            ]
+        )
+    }
+
     /// Define a list-type option with automatic mapping between keys and values
     convenience init<T: Equatable>(
         argumentName: String,
@@ -1309,45 +1329,25 @@ struct _Descriptors {
         argumentName: "acronym-visibility",
         displayName: "Acronym Visibility",
         help: "Capitalize acronyms at or below this visibility threshold:",
-        keyPath: \.acronymVisibility,
-        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
-        altOptions: [
-            "private": .file,
-            "fileprivate": .file,
-        ]
+        keyPath: \.acronymVisibility
     )
     let typoVisibility = OptionDescriptor(
         argumentName: "typo-visibility",
         displayName: "Typo Visibility",
         help: "Correct typos at or below this visibility threshold:",
-        keyPath: \.typoVisibility,
-        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
-        altOptions: [
-            "private": .file,
-            "fileprivate": .file,
-        ]
+        keyPath: \.typoVisibility
     )
     let overloadVisibility = OptionDescriptor(
         argumentName: "overload-visibility",
         displayName: "Overload Visibility",
         help: "Remove redundant overloads at or below this visibility threshold:",
-        keyPath: \.overloadVisibility,
-        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
-        altOptions: [
-            "private": .file,
-            "fileprivate": .file,
-        ]
+        keyPath: \.overloadVisibility
     )
     let unusedVisibility = OptionDescriptor(
         argumentName: "unused-visibility",
         displayName: "Unused Visibility",
         help: "Remove unused declarations at or below this visibility threshold:",
-        keyPath: \.unusedVisibility,
-        type: .enum(VisibilityThreshold.allCases.map(\.rawValue)),
-        altOptions: [
-            "private": .file,
-            "fileprivate": .file,
-        ]
+        keyPath: \.unusedVisibility
     )
     let typos = OptionDescriptor(
         argumentName: "typos",

@@ -2940,6 +2940,198 @@ final class WrapArgumentsTests: XCTestCase {
         )
     }
 
+    func testWrapConditionsDisabledKeepsClosureConditionsCompact() {
+        let input = """
+        guard let baseline = LineSegment(start: a, end: b), let c = points.max(by: {
+            baseline.distance(from: $0) < baseline.distance(from: $1)
+        }), baseline.distance(from: c) > epsilon,
+              let basePlane = Plane(points: [a, b, c])
+        else {
+            return (.empty, false)
+        }
+
+        guard let d = points.max(by: {
+            basePlane.distance(from: $0) < basePlane.distance(from: $1)
+        }), basePlane.distance(from: d) > epsilon
+        else {
+            return (.empty, false) // Planar input
+        }
+        """
+        let output = """
+        guard let baseline = LineSegment(start: a, end: b), let c = points.max(by: {
+            baseline.distance(from: $0) < baseline.distance(from: $1)
+        }), baseline.distance(from: c) > epsilon, let basePlane = Plane(points: [a, b, c]) else {
+            return (.empty, false)
+        }
+
+        guard let d = points.max(by: {
+            basePlane.distance(from: $0) < basePlane.distance(from: $1)
+        }), basePlane.distance(from: d) > epsilon else {
+            return (.empty, false) // Planar input
+        }
+        """
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .disabled, guardElsePosition: .nextLine,
+                                              lineBetweenConsecutiveGuards: true))
+    }
+
+    func testWrapConditionsAfterFirstWrapsConditionsFollowingClosures() {
+        let input = """
+        guard let baseline = LineSegment(start: a, end: b), let c = points.max(by: {
+            baseline.distance(from: $0) < baseline.distance(from: $1)
+        }), baseline.distance(from: c) > epsilon,
+              let basePlane = Plane(points: [a, b, c])
+        else {
+            return (.empty, false)
+        }
+
+        guard let d = points.max(by: {
+            basePlane.distance(from: $0) < basePlane.distance(from: $1)
+        }), basePlane.distance(from: d) > epsilon
+        else {
+            return (.empty, false) // Planar input
+        }
+        """
+        let output = """
+        guard let baseline = LineSegment(start: a, end: b), let c = points.max(by: {
+                  baseline.distance(from: $0) < baseline.distance(from: $1)
+              }),
+              baseline.distance(from: c) > epsilon,
+              let basePlane = Plane(points: [a, b, c])
+        else {
+            return (.empty, false)
+        }
+
+        guard let d = points.max(by: {
+                  basePlane.distance(from: $0) < basePlane.distance(from: $1)
+              }),
+              basePlane.distance(from: d) > epsilon
+        else {
+            return (.empty, false) // Planar input
+        }
+        """
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .afterFirst, guardElsePosition: .nextLine,
+                                              lineBetweenConsecutiveGuards: true))
+    }
+
+    func testWrapConditionsBeforeFirstWithClosure() {
+        let input = """
+        guard let value = values.first(where: {
+            $0.isValid
+        }), value.isReady else {
+            return
+        }
+        """
+        let output = """
+        guard
+            let value = values.first(where: {
+                $0.isValid
+            }),
+            value.isReady
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .beforeFirst, guardElsePosition: .nextLine))
+    }
+
+    func testWrapConditionsAfterFirstWithoutPartialWrapping() {
+        let input = """
+        guard isEnabled, let value = values.first(where: {
+            $0.isValid
+        }), value.isReady else {
+            return
+        }
+        """
+        let output = """
+        guard isEnabled,
+              let value = values.first(where: {
+                  $0.isValid
+              }),
+              value.isReady
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .afterFirst, guardElsePosition: .nextLine,
+                                              allowPartialWrapping: false))
+    }
+
+    func testWrapConditionsDisabledRespectsMaxWidth() {
+        let input = """
+        guard let first = first,
+              let second = second
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, rules: [.wrap, .wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .disabled, guardElsePosition: .nextLine,
+                                              maxWidth: 40))
+    }
+
+    func testWrapConditionsDisabledPreservesComments() {
+        let input = """
+        guard let value = value, // Keep this explanation
+              value.isReady
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .disabled, guardElsePosition: .nextLine))
+    }
+
+    func testWrapConditionsAfterFirstPreservesGroupedClauses() {
+        let input = """
+        guard let a = readHex(), let b = readHex(),
+              let c = readHex(), let d = readHex()
+        else {
+            return
+        }
+
+        if let first = vertices.first,
+           let last = vertices.last,
+           first != last, first.x != 0 || last.x != 0
+        {
+            use(first, last)
+        }
+        """
+        testFormatting(for: input, rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .afterFirst))
+    }
+
+    func testWrapConditionsAfterFirstPreservesMultilineCalls() {
+        let input = """
+        if let files = try? manager.contentsOfDirectory(
+            at: url,
+            includingPropertiesForKeys: nil,
+            options: []
+        ), files.contains(where: { $0.isProject }) {
+            return url
+        }
+        """
+        testFormatting(for: input, rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .afterFirst))
+    }
+
+    func testWrapConditionsAfterFirstPreservesGroupingAfterClosure() {
+        let input = """
+        guard let value = values.first(where: {
+                  $0.isValid
+              }),
+              value.isReady, value.isEnabled
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, rules: [.wrapArguments, .indent, .elseOnSameLine],
+                       options: FormatOptions(wrapConditions: .afterFirst))
+    }
+
     func testWrapConditionsAfterFirst() {
         let input = """
         if

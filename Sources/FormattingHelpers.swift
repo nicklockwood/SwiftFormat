@@ -556,6 +556,50 @@ extension Formatter {
         }
     }
 
+    /// Normalize condition separators without changing line breaks inside expressions.
+    func wrapConditionSeparators(after keywordIndex: Int, endToken: Token) {
+        guard options.wrapConditions == .disabled || options.wrapConditions == .beforeFirst ||
+            options.wrapConditions == .afterFirst,
+            let endIndex = index(of: endToken, after: keywordIndex),
+            !onSameLine(keywordIndex, endIndex)
+        else { return }
+
+        // Work backwards so changes do not invalidate the remaining separator indices.
+        var cursor = endIndex
+        while let comma = index(of: .delimiter(","), before: cursor), comma > keywordIndex {
+            cursor = comma
+            guard let nextIndex = index(of: .nonSpaceOrLinebreak, after: comma),
+                  nextIndex < endIndex, !tokens[nextIndex].isComment
+            else { continue }
+            if options.wrapConditions == .disabled, !onSameLine(comma, nextIndex) {
+                let joinedLength = lineLength(upTo: comma + 1) + 1 +
+                    lineLength(from: nextIndex, upTo: endOfLine(at: nextIndex))
+                guard options.maxWidth == 0 || joinedLength <= options.maxWidth else { continue }
+                replaceTokens(in: comma + 1 ..< nextIndex, with: .space(" "))
+            } else if options.wrapConditions != .disabled,
+                      !options.allowPartialWrapping || conditionContainsMultilineClosure(before: comma, after: keywordIndex)
+            {
+                if onSameLine(comma, nextIndex) {
+                    replaceTokens(in: comma + 1 ..< nextIndex, with: linebreakToken(for: comma))
+                }
+            }
+        }
+    }
+
+    func conditionContainsMultilineClosure(before comma: Int, after keywordIndex: Int) -> Bool {
+        let previousComma = index(of: .delimiter(","), before: comma)
+        var cursor = max(keywordIndex, previousComma ?? keywordIndex)
+        while let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: cursor), nextIndex < comma {
+            if tokens[nextIndex] == .startOfScope("{"), isStartOfClosure(at: nextIndex),
+               let endIndex = endOfScope(at: nextIndex), !onSameLine(nextIndex, endIndex)
+            {
+                return true
+            }
+            cursor = nextIndex
+        }
+        return false
+    }
+
     /// Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
@@ -1126,6 +1170,8 @@ extension Formatter {
             default:
                 return
             }
+
+            wrapConditionSeparators(after: index, endToken: endOfConditionsToken)
 
             // Only wrap when this is a control flow condition that spans multiple lines
             guard let endIndex = self.index(of: endOfConditionsToken, after: index),

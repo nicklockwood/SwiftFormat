@@ -436,7 +436,7 @@ final class DocCommentsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .docComments)
+        testFormatting(for: input, output, rule: .docComments, exclude: [.wrapEnumCases])
     }
 
     func testDoesntConvertCommentBeforeSingleEnumCaseWhenPreviousGroupIsPreserved() {

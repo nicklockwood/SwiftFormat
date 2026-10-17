@@ -99,7 +99,7 @@ jobs:
     runs-on: windows-latest
     name: windows (${{ matrix.swift.build }})
     steps:
-      - uses: compnerd/gha-setup-swift@bbae8ce86bac5a3449f3992b3d88bc4ca25f2057 # v0.5.0
+      - uses: compnerd/gha-setup-swift@9ff1ee4c44888c5817fc14d1b257ac8cabb4935f # v0.5.1
         with:
           swift-version: ${{ matrix.swift.version }}
           swift-build: ${{ matrix.swift.build }}

@@ -354,6 +354,39 @@ final class WrapEnumCasesTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapEnumCases)
     }
 
+    func testMultilineEnumCasesAfterRawValues() {
+        let input = """
+        enum Foo: String {
+            case bar = "BAR", baz = #"BAZ"#
+            case quux = "QUUX", corge = "CORGE"
+            case grault, garply
+        }
+
+        enum Bar: Int {
+            case a = 0, b = 1
+            case c = 2, d = 3
+        }
+        """
+        let output = """
+        enum Foo: String {
+            case bar = "BAR"
+            case baz = #"BAZ"#
+            case quux = "QUUX"
+            case corge = "CORGE"
+            case grault
+            case garply
+        }
+
+        enum Bar: Int {
+            case a = 0
+            case b = 1
+            case c = 2
+            case d = 3
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases)
+    }
+
     func testMultilineEnumCasesWithNestedEnumsDoesNothing() {
         let input = """
         public enum SearchTerm: Decodable, Equatable {

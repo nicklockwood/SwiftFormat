@@ -66,6 +66,45 @@ final class PropertyTypesTests: XCTestCase {
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
+    func testConvertsForceUnwrappedInitToExplicitType() {
+        let input = """
+        let url = URL(string: "https://example.com")!
+        """
+
+        let output = """
+        let url: URL = .init(string: "https://example.com")!
+        """
+
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testConvertsInitWithTrailingClosureToExplicitType() {
+        let input = """
+        let button = Button(title: "Tap") {
+            print("tapped")
+        }
+        """
+
+        let output = """
+        let button: Button = .init(title: "Tap") {
+            print("tapped")
+        }
+        """
+
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testPreservesInferredTypeForSubscriptedInit() {
+        let input = """
+        let first = Foo(bar)[0]
+        """
+
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
+    }
+
     func testConvertsTypeMembersToExplicitType() {
         let input = """
         struct Foo {

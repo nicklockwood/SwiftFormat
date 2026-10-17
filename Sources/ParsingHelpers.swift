@@ -1723,13 +1723,11 @@ extension Formatter {
     /// Returns if the `case` keyword at the specified index is part of an enum (as opposed to `if case`)
     func isEnumCase(at i: Int) -> Bool {
         assert(tokens[i] == .keyword("case"))
-        guard let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i) else {
-            return false
-        }
+        let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i)
         switch prevToken {
-        case .identifier, .endOfScope(")"), .startOfScope("{"),
+        case .identifier?, .endOfScope(")")?, .startOfScope("{")?,
              // The raw value of the previous case, e.g. `case foo = 1` or `case foo = "foo"`
-             .number, .endOfScope where prevToken.isStringDelimiter:
+             .number?, .endOfScope? where prevToken?.isStringDelimiter == true:
             return true
         default:
             return false

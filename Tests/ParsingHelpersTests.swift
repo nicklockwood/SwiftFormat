@@ -803,6 +803,30 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isEnumCase(at: 18))
     }
 
+    func testIsEnumCaseAfterRawValue() {
+        let formatter = Formatter(tokenize("""
+        enum Foo: Int {
+            case foo = 1
+            case bar
+        }
+        """))
+        XCTAssert(formatter.isEnumCase(at: 10))
+        XCTAssert(formatter.isEnumCase(at: 19))
+    }
+
+    func testIsEnumCaseAfterStringRawValue() {
+        let formatter = Formatter(tokenize("""
+        enum Foo: String {
+            case foo = "FOO"
+            case bar = #"BAR"#
+            case baz
+        }
+        """))
+        XCTAssert(formatter.isEnumCase(at: 10))
+        XCTAssert(formatter.isEnumCase(at: 21))
+        XCTAssert(formatter.isEnumCase(at: 32))
+    }
+
     func testIsNotEnumCase() {
         let formatter = Formatter(tokenize("""
         if case let .foo(bar) = baz {}

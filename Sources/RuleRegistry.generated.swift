@@ -88,6 +88,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantBackticks": .redundantBackticks,
     "redundantBreak": .redundantBreak,
     "redundantClosure": .redundantClosure,
+    "redundantCompactMap": .redundantCompactMap,
     "redundantEmptyView": .redundantEmptyView,
     "redundantEnumerated": .redundantEnumerated,
     "redundantEquatable": .redundantEquatable,

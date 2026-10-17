@@ -54,6 +54,7 @@
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
 * [redundantClosure](#redundantClosure)
+* [redundantCompactMap](#redundantCompactMap)
 * [redundantEmptyView](#redundantEmptyView)
 * [redundantEnumerated](#redundantEnumerated)
 * [redundantEquatable](#redundantEquatable)
@@ -2719,6 +2720,29 @@ which are called immediately.
 - }()
 + lazy var bar = Bar(baaz: baaz, quux: quux)
 ```
+
+</details>
+<br/>
+
+## redundantCompactMap
+
+Replace `compactMap` with `map` when the transform returns non-optional values.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func name(for value: Value) -> String { ... }
+- let names = values.compactMap { name(for: $0) }
++ let names = values.map { name(for: $0) }
+- let names = values.compactMap(name(for:))
++ let names = values.map(name(for:))
+- let names = values.compactMap(name)
++ let names = values.map(name)
+```
+
+Uses project-indexed return types when available, otherwise declarations in the current file.
+Transforms with optional or unresolved results are preserved.
 
 </details>
 <br/>

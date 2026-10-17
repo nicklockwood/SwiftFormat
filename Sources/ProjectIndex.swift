@@ -147,6 +147,7 @@ struct SourceFileIndex: Codable, Equatable {
     struct TypeDeclaration: Codable, Equatable {
         var name: String
         var visibility: String
+        var isGeneric: Bool = false
     }
 
     struct ClassInheritance: Codable, Equatable {
@@ -170,6 +171,7 @@ struct SourceFileIndex: Codable, Equatable {
         var defaultArgumentIndices: [Int]
         var closureArgumentIndices: [Int]
         var autoclosureArgumentIndices: [Int]
+        var returnType: String?
 
         init(
             name: String,
@@ -180,7 +182,8 @@ struct SourceFileIndex: Codable, Equatable {
             argumentLabels: [String?],
             defaultArgumentIndices: [Int] = [],
             closureArgumentIndices: [Int] = [],
-            autoclosureArgumentIndices: [Int]
+            autoclosureArgumentIndices: [Int],
+            returnType: String? = nil
         ) {
             self.name = name
             self.kind = kind
@@ -191,6 +194,7 @@ struct SourceFileIndex: Codable, Equatable {
             self.defaultArgumentIndices = defaultArgumentIndices
             self.closureArgumentIndices = closureArgumentIndices
             self.autoclosureArgumentIndices = autoclosureArgumentIndices
+            self.returnType = returnType
         }
     }
 
@@ -228,7 +232,7 @@ struct SourceFileIndex: Codable, Equatable {
         var canBeRenamed: Bool
     }
 
-    static let cacheVersion = 2
+    static let cacheVersion = 4
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -319,6 +323,9 @@ struct ProjectIndex {
     private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
     private let memberNamesByModule: [String: MemberNamesByType]
     private let symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]]
+    private let symbolDeclarationCountsByName: [String: Int]
+    private let typeDeclarationCountsByShortName: [String: Int]
+    private let symbolDeclarationNames: Set<String>
 
     init(files: [String: SourceFileIndex]) {
         self.files = files
@@ -328,6 +335,16 @@ struct ProjectIndex {
         var functionReferencesByModule = [String: [String: [SourceFileIndex.FunctionReference]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
         var symbolDeclarationsByModule = [String: [SourceFileIndex.SymbolDeclaration]]()
+        // Resolve extension targets across files before trusting their return types.
+        // A generic parameter can shadow a nominal type with the same name.
+        var typesByModule = [TypeKey: [SourceFileIndex.TypeDeclaration]]()
+        for file in files.values {
+            for module in file.moduleIdentifiers {
+                for type in file.typeDeclarations {
+                    typesByModule[TypeKey(moduleIdentifier: module, name: type.name), default: []].append(type)
+                }
+            }
+        }
         for file in files.values {
             for moduleIdentifier in file.moduleIdentifiers {
                 for declaration in file.typeDeclarations {
@@ -344,7 +361,13 @@ struct ProjectIndex {
                         }
                     }
                 }
-                for declaration in file.functionDeclarations {
+                for var declaration in file.functionDeclarations {
+                    if let owner = declaration.declaringType {
+                        let types = typesByModule[TypeKey(moduleIdentifier: moduleIdentifier, name: owner)] ?? []
+                        if types.count != 1 || types[0].isGeneric {
+                            declaration.returnType = nil
+                        }
+                    }
                     functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
                         .append(declaration)
                 }
@@ -369,6 +392,17 @@ struct ProjectIndex {
                 )
             }
         }
+        var symbolDeclarationCountsByName = [String: Int]()
+        var typeDeclarationCountsByShortName = [String: Int]()
+        for file in files.values {
+            for declaration in file.symbolDeclarations {
+                symbolDeclarationCountsByName[declaration.name, default: 0] += 1
+            }
+            for declaration in file.typeDeclarations {
+                let name = declaration.name.split(separator: ".").last.map(String.init) ?? declaration.name
+                typeDeclarationCountsByShortName[name, default: 0] += 1
+            }
+        }
         self.typeVisibilities = typeVisibilities
         self.inheritedClassNamesByModule = inheritedClassNamesByModule
         inheritedClassNames = inheritedClassNamesByModule.values.reduce(into: []) {
@@ -378,10 +412,13 @@ struct ProjectIndex {
         self.functionReferencesByModule = functionReferencesByModule
         self.memberNamesByModule = memberNamesByModule
         self.symbolDeclarationsByModule = symbolDeclarationsByModule
+        self.symbolDeclarationCountsByName = symbolDeclarationCountsByName
+        self.typeDeclarationCountsByShortName = typeDeclarationCountsByShortName
+        symbolDeclarationNames = Set(symbolDeclarationCountsByName.keys)
         let descriptions = files.keys.sorted().compactMap { path -> (String, String, String)? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
-                .map { "\($0.name):\($0.visibility)" }
+                .map { "\($0.name):\($0.visibility):\($0.isGeneric)" }
                 .sorted()
                 .joined(separator: ",")
             let classInheritances = file.classInheritances
@@ -395,7 +432,7 @@ struct ProjectIndex {
                     let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
                     return "\(declaration.visibility):\(declaration.isStatic):\(declaration.kind.rawValue):" +
-                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(indices)"
+                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(indices):\(declaration.returnType ?? "")"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -537,6 +574,15 @@ struct ProjectIndex {
         }
     }
 
+    func declarationCountsAreUnambiguous(for shortName: String) -> Bool {
+        symbolDeclarationCountsByName[shortName, default: 0] ==
+            typeDeclarationCountsByShortName[shortName, default: 0]
+    }
+
+    func containsSymbolDeclaration(named name: String) -> Bool {
+        symbolDeclarationNames.contains(name)
+    }
+
     /// Whether the class is subclassed anywhere allowed by its visibility.
     /// Short-name matches are deliberately conservative when qualification is ambiguous.
     func isClassSubclassed(
@@ -576,6 +622,28 @@ struct ProjectIndex {
         ), matchesByModule.allSatisfy({ $0.count == 1 })
         else { return nil }
         return ResolvedFunctionCall(matches: matchesByModule.compactMap(\.first))
+    }
+
+    /// Resolves a function value, whose labels must match exactly (defaults aren't omitted).
+    func resolveFunctionReference(
+        named name: String,
+        receiver: FunctionCallReceiver,
+        argumentLabels: [String?]?,
+        visibleFrom fileURL: URL
+    ) -> [SourceFileIndex.FunctionDeclaration]? {
+        guard let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers,
+              !modules.isEmpty
+        else { return nil }
+        var resolved = [SourceFileIndex.FunctionDeclaration]()
+        for module in modules {
+            let matches = (functionDeclarationsByModule[module]?[name] ?? []).filter {
+                $0.kind == .function && $0.matches(receiver: receiver) &&
+                    (argumentLabels == nil || $0.argumentLabels == argumentLabels)
+            }
+            guard matches.count == 1, let declaration = matches.first else { return nil }
+            resolved.append(declaration)
+        }
+        return resolved
     }
 
     private func functionCallMatches(
@@ -901,7 +969,11 @@ func makeSourceFileIndex(
                 if !insidePublicExtension {
                     typeDeclarations.append(.init(
                         name: name,
-                        visibility: (declaration.visibility() ?? .internal).rawValue
+                        visibility: (declaration.visibility() ?? .internal).rawValue,
+                        isGeneric: typeDeclaration.genericParameters != nil ||
+                            declaration.parentDeclarations.contains(where: {
+                                $0.asTypeDeclaration?.genericParameters != nil || $0.keyword == "extension"
+                            })
                     ))
                 }
             }
@@ -989,7 +1061,12 @@ func makeSourceFileIndex(
             argumentLabels: function.arguments.map(\.externalLabel),
             defaultArgumentIndices: defaultArgumentIndices,
             closureArgumentIndices: closureArgumentIndices,
-            autoclosureArgumentIndices: autoclosureArgumentIndices
+            autoclosureArgumentIndices: autoclosureArgumentIndices,
+            returnType: function.genericParameterRange == nil &&
+                !declaration.parentDeclarations.contains(where: {
+                    $0.asTypeDeclaration?.genericParameters != nil
+                })
+                ? function.returnType?.string : nil
         ))
     }
     formatter.clearDerivedCaches()
@@ -1048,25 +1125,9 @@ extension Formatter {
         // An explicitly qualified function value, such as `someMethod(_:)`.
         forEach(.startOfScope("(")) { openParen, _ in
             guard let identifierIndex = parseFunctionIdentifier(beforeStartOfScope: openParen),
-                  let closeParen = endOfScope(at: openParen)
-            else {
-                return
-            }
-            let significantTokens = tokens[(openParen + 1) ..< closeParen]
-                .filter { !$0.isSpaceOrCommentOrLinebreak }
-            var labels = [String?]()
-            var pendingLabel: Token?
-            for token in significantTokens {
-                if let labelToken = pendingLabel {
-                    guard token == .delimiter(":") else { return }
-                    labels.append(labelToken.string == "_" ? nil : labelToken.string)
-                    pendingLabel = nil
-                } else {
-                    guard token.isIdentifier || token.isKeyword else { return }
-                    pendingLabel = token
-                }
-            }
-            guard !labels.isEmpty, pendingLabel == nil else { return }
+                  let closeParen = endOfScope(at: openParen),
+                  let labels = parseFunctionReferenceLabels(at: openParen)
+            else { return }
             explicitReferenceRanges.append(openParen ... closeParen)
             let receiver = indexedFunctionReferenceReceiver(
                 at: identifierIndex,

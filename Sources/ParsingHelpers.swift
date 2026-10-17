@@ -4759,6 +4759,29 @@ extension Formatter {
         return conditions
     }
 
+    /// Parses the nonempty label list in a function reference such as `transform(_:)`.
+    /// Calls, including empty argument lists, aren't function references.
+    func parseFunctionReferenceLabels(at openParen: Int) -> [String?]? {
+        guard tokens[openParen] == .startOfScope("("),
+              let closeParen = endOfScope(at: openParen)
+        else { return nil }
+        let significantTokens = tokens[(openParen + 1) ..< closeParen]
+            .filter { !$0.isSpaceOrCommentOrLinebreak }
+        var labels = [String?]()
+        var pendingLabel: Token?
+        for token in significantTokens {
+            if let labelToken = pendingLabel {
+                guard token == .delimiter(":") else { return nil }
+                labels.append(labelToken.string == "_" ? nil : labelToken.string)
+                pendingLabel = nil
+            } else {
+                guard token.isIdentifier || token.isKeyword else { return nil }
+                pendingLabel = token
+            }
+        }
+        return !labels.isEmpty && pendingLabel == nil ? labels : nil
+    }
+
     /// Parses the function identifier before the `(` start of scope token.
     /// Handles `foo(`, `foo?(`, and `foo!(`.
     func parseFunctionIdentifier(beforeStartOfScope startOfScope: Int) -> Int? {

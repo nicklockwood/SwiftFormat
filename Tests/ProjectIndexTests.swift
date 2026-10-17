@@ -528,7 +528,7 @@ final class ProjectIndexTests: XCTestCase {
                 autoclosureArgumentIndices: []
             ),
             .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
-            .init(name: "identity", argumentLabels: ["value"], autoclosureArgumentIndices: []),
+            .init(name: "identity", argumentLabels: ["value"], autoclosureArgumentIndices: [], returnType: "Int"),
             .init(
                 name: "run",
                 declaringType: "Worker",
@@ -573,7 +573,8 @@ final class ProjectIndexTests: XCTestCase {
                 visibility: Visibility.package.rawValue,
                 argumentLabels: ["configuration"],
                 defaultArgumentIndices: [0],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                returnType: "Worker"
             ),
             .init(
                 name: "init",
@@ -588,7 +589,8 @@ final class ProjectIndexTests: XCTestCase {
                 kind: .subscriptDeclaration,
                 declaringType: "Worker",
                 argumentLabels: ["index"],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                returnType: "Int"
             ),
             .init(
                 name: "outer",
@@ -801,5 +803,21 @@ final class ProjectIndexTests: XCTestCase {
             projectIndex.memberNamesByType(visibleFrom: callURL),
             .init(instance: ["SharedType": ["sharedValue"]])
         )
+    }
+
+    func testGenericTypeContextAffectsDeclarationFingerprint() {
+        let concrete = """
+        struct Transform {}
+        """
+        let generic = """
+        struct Transform<String> {}
+        """
+        let first = ProjectIndex(files: [
+            "/Project/Types.swift": makeSourceFileIndex(from: concrete, moduleIdentifiers: ["App"]),
+        ])
+        let second = ProjectIndex(files: [
+            "/Project/Types.swift": makeSourceFileIndex(from: generic, moduleIdentifiers: ["App"]),
+        ])
+        XCTAssertNotEqual(first.fingerprint(for: [.declarations]), second.fingerprint(for: [.declarations]))
     }
 }

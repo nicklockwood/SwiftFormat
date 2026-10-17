@@ -210,15 +210,26 @@ public extension FormatRule {
                 // A type name followed by a `(` is an implicit `.init(`. Insert a `.init`
                 // so that the init call stays valid after we move the type to the LHS.
                 if formatter.tokens[indexAfterType] == .startOfScope("("),
-                   let endOfInitCallScope = formatter.endOfScope(at: indexAfterType),
-                   rhsExpressionRange.upperBound == endOfInitCallScope
+                   let endOfInitCallScope = formatter.endOfScope(at: indexAfterType)
                 {
                     // Preserve the existing format if `init` is manually excluded
                     if formatter.options.preservedPropertyTypes.contains("init") {
                         return
                     }
 
-                    let initializerHasNoArguments = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType) == endOfInitCallScope
+                    // The init call can be followed by trailing closures or a force unwrap, which are still
+                    // valid after inserting `.init`. Preserve anything else, like `Foo(bar)[0]`, since the
+                    // property may not have type `Foo`.
+                    var endOfInitCall = formatter.parseFunctionCallArguments(startOfScope: indexAfterType).last
+                        .map { max($0.valueRange.upperBound, endOfInitCallScope) } ?? endOfInitCallScope
+                    if formatter.token(at: endOfInitCall + 1) == .operator("!", .postfix) {
+                        endOfInitCall += 1
+                    }
+                    guard rhsExpressionRange.upperBound == endOfInitCall else { return }
+
+                    let isInitCallOnly = endOfInitCall == endOfInitCallScope
+                    let initializerHasNoArguments = isInitCallOnly &&
+                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType) == endOfInitCallScope
 
                     // If this is an empty array initializer, use `[]` instead of `.init()`
                     if rhsType.isArray, initializerHasNoArguments {
@@ -237,7 +248,8 @@ public extension FormatRule {
 
                     // If the type is ExpressibleBy...Literal and the init has a single matching
                     // literal argument, simplify `TypeName(literal)` to just the literal.
-                    else if case let .identifier(typeName) = formatter.tokens[rhsType.range.lowerBound],
+                    else if isInitCallOnly,
+                            case let .identifier(typeName) = formatter.tokens[rhsType.range.lowerBound],
                             let literalRange = formatter.simplifiableLiteralRange(
                                 forTypeName: typeName,
                                 initOpenParen: indexAfterType

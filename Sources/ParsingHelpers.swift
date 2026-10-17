@@ -1727,7 +1727,8 @@ extension Formatter {
         switch prevToken {
         case .identifier?, .endOfScope(")")?, .startOfScope("{")?,
              // The raw value of the previous case, e.g. `case foo = 1` or `case foo = "foo"`
-             .number?, .endOfScope? where prevToken?.isStringDelimiter == true:
+             .number?,
+             .endOfScope? where prevToken?.isStringDelimiter == true:
             return true
         default:
             return false

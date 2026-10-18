@@ -1,5 +1,5 @@
 //
-//  PreferNonFailableStringConversionsTests.swift
+//  PreferNonfailableStringConversionsTests.swift
 //  SwiftFormatTests
 //
 //  Created by Yang Bai on 17/10/2026.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-final class PreferNonFailableStringConversionsTests: XCTestCase {
+final class PreferNonfailableStringConversionsTests: XCTestCase {
     func testForceUnwrappedDataConversion() {
         let input = """
         func foo() {
@@ -21,7 +21,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = Data(string.utf8)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testForceUnwrappedStringConversion() {
@@ -35,7 +35,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = String(decoding: data, as: UTF8.self)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testFullyQualifiedEncodingConverted() {
@@ -51,7 +51,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = String(decoding: data, as: UTF8.self)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testMemberChainReceiverConverted() {
@@ -65,7 +65,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let encoded = Data(user.name.utf8).base64EncodedString()
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testCallReceiverConverted() {
@@ -79,7 +79,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = Data(String(describing: value).utf8)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testStringLiteralReceiverConverted() {
@@ -93,7 +93,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = Data("foo".utf8)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testStringLiteralRootedReceiverConverted() {
@@ -109,7 +109,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let description = Data("foo".description.utf8)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testMultilineStringLiteralReceiverConverted() {
@@ -127,7 +127,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             """.utf8)
         }
         """#
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testStringConversionInsideExpressionConverted() {
@@ -137,7 +137,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
         let output = """
         print(String(decoding: response.body, as: UTF8.self).count)
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testTryXCTUnwrapDataConversion() {
@@ -151,7 +151,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = Data(string.utf8)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testTryRequireStringConversion() {
@@ -165,7 +165,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = String(decoding: data, as: UTF8.self)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testTryXCTUnwrapWithMessageNotConverted() {
@@ -174,7 +174,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = try XCTUnwrap(string.data(using: .utf8), "Invalid string")
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testTryXCTUnwrapWithCallInOperandNotConverted() {
@@ -184,7 +184,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = try XCTUnwrap(String(data: loadData(), encoding: .utf8))
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testTryXCTUnwrapWithPropertyOperandNotConverted() {
@@ -195,7 +195,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = try XCTUnwrap(String(data: source.bytes, encoding: .utf8))
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testTryXCTUnwrapWithSubscriptOperandNotConverted() {
@@ -206,7 +206,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = try #require(String(data: chunks[0], encoding: .utf8))
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testTryXCTUnwrapStringLiteralConverted() {
@@ -220,7 +220,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = Data("foo".utf8)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testTryXCTUnwrapFollowedByMemberCallNotConverted() {
@@ -230,7 +230,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let json = try XCTUnwrap(string.data(using: .utf8)).decoded()
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testOptionalTryXCTUnwrapNotConverted() {
@@ -239,7 +239,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = try? XCTUnwrap(string.data(using: .utf8))
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testGuardStringConversion() {
@@ -257,7 +257,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             print(string)
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testGuardDataConversionWithMultilineElse() {
@@ -279,7 +279,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             return data
         }
         """
-        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, output, rule: .preferNonfailableStringConversions)
     }
 
     func testGuardWithMultipleConditionsNotConverted() {
@@ -290,7 +290,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             print(string)
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testGuardWithCommentInElseNotConverted() {
@@ -304,7 +304,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             print(string)
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testIfLetNotConverted() {
@@ -313,7 +313,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             print(string)
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testOptionalConversionsNotConverted() {
@@ -324,7 +324,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let count = String(data: data, encoding: .utf8)?.count ?? 0
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testOtherEncodingsNotConverted() {
@@ -334,7 +334,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = String(data: data, encoding: .utf16)!
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testLossyConversionNotConverted() {
@@ -343,7 +343,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = string.data(using: .utf8, allowLossyConversion: true)!
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testOptionalChainedReceiverNotConverted() {
@@ -352,7 +352,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = user?.name.data(using: .utf8)!
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testImplicitSelfReceiverNotConverted() {
@@ -363,7 +363,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testCommentInConversionNotConverted() {
@@ -372,7 +372,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = String(data: data /* response body */, encoding: .utf8)!
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testCommentBeforeDataArgumentsNotConverted() {
@@ -381,7 +381,7 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let data = string.data /* keep */ (using: .utf8)!
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 
     func testImplicitMemberOperandNotConverted() {
@@ -391,6 +391,6 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
             let string = String(data: .init(), encoding: .utf8)!
         }
         """
-        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+        testFormatting(for: input, rule: .preferNonfailableStringConversions)
     }
 }

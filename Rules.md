@@ -145,7 +145,7 @@
 * [preferFlatMap](#preferFlatMap)
 * [preferLazyMap](#preferLazyMap)
 * [preferMinOverSorted](#preferMinOverSorted)
-* [preferNonFailableStringConversions](#preferNonFailableStringConversions)
+* [preferNonfailableStringConversions](#preferNonfailableStringConversions)
 * [preferStructSwiftTestingSuites](#preferStructSwiftTestingSuites)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
@@ -2379,9 +2379,9 @@ Prefer `min()` over `sorted().first`.
 </details>
 <br/>
 
-## preferNonFailableStringConversions
+## preferNonfailableStringConversions
 
-Replace unwrapped `data(using: .utf8)` and `String(data:encoding: .utf8)` conversions with the non-failable `Data(_:)` and `String(decoding:as:)` equivalents.
+Replace unwrapped `data(using: .utf8)` and `String(data:encoding: .utf8)` conversions with the nonfailable `Data(_:)` and `String(decoding:as:)` equivalents.
 
 <details>
 <summary>Examples</summary>

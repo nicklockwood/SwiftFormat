@@ -1,5 +1,5 @@
 //
-//  PreferNonFailableStringConversions.swift
+//  PreferNonfailableStringConversions.swift
 //  SwiftFormat
 //
 //  Created by Yang Bai on 17/10/2026.
@@ -9,11 +9,11 @@
 import Foundation
 
 public extension FormatRule {
-    /// Replace failable UTF-8 String/Data conversions with their non-failable equivalents
-    static let preferNonFailableStringConversions = FormatRule(
+    /// Replace failable UTF-8 String/Data conversions with their nonfailable equivalents
+    static let preferNonfailableStringConversions = FormatRule(
         help: """
         Replace unwrapped `data(using: .utf8)` and `String(data:encoding: .utf8)` conversions \
-        with the non-failable `Data(_:)` and `String(decoding:as:)` equivalents.
+        with the nonfailable `Data(_:)` and `String(decoding:as:)` equivalents.
         """,
         disabledByDefault: true
     ) { formatter in
@@ -24,19 +24,19 @@ public extension FormatRule {
             if formatter.token(at: range.upperBound + 1) == .operator("!", .postfix) {
                 // `string.data(using: .utf8)!` or `String(data: data, encoding: .utf8)!`
                 formatter.removeToken(at: range.upperBound + 1)
-                formatter.replaceWithNonFailableConversion(conversion)
+                formatter.replaceWithNonfailableConversion(conversion)
             } else if let (tryIndex, closeParenIndex) = formatter.tryUnwrapIndices(around: range),
                       formatter.isSimpleUTF8ConversionOperand(conversion.operand)
             {
                 // `try XCTUnwrap(...)` or `try #require(...)`. The `try` is removed too, so the
                 // operand mustn't contain any calls, property getters or subscripts that might throw.
                 formatter.removeTokens(in: range.upperBound + 1 ... closeParenIndex)
-                formatter.replaceWithNonFailableConversion(conversion)
+                formatter.replaceWithNonfailableConversion(conversion)
                 formatter.removeTokens(in: tryIndex ..< range.lowerBound)
             } else if let (guardIndex, letIndex, endOfElseScope) = formatter.guardIndices(around: range) {
                 // `guard let string = String(data: data, encoding: .utf8) else { ... }`
                 formatter.removeTokens(in: range.upperBound + 1 ... endOfElseScope)
-                formatter.replaceWithNonFailableConversion(conversion)
+                formatter.replaceWithNonfailableConversion(conversion)
                 formatter.removeTokens(in: guardIndex ..< letIndex)
             }
         }
@@ -169,8 +169,8 @@ extension Formatter {
             && !tokens[operand].contains(.startOfScope("("))
     }
 
-    /// Replaces the given failable conversion with the non-failable equivalent
-    func replaceWithNonFailableConversion(_ conversion: FailableUTF8Conversion) {
+    /// Replaces the given failable conversion with the nonfailable equivalent
+    func replaceWithNonfailableConversion(_ conversion: FailableUTF8Conversion) {
         switch conversion {
         case let .data(receiver, closeParenIndex):
             // `receiver.data(using: .utf8)` -> `Data(receiver.utf8)`

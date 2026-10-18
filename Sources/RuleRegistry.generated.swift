@@ -77,7 +77,7 @@ let ruleRegistry: [String: FormatRule] = [
     "preferKeyPath": .preferKeyPath,
     "preferLazyMap": .preferLazyMap,
     "preferMinOverSorted": .preferMinOverSorted,
-    "preferNonFailableStringConversions": .preferNonFailableStringConversions,
+    "preferNonfailableStringConversions": .preferNonfailableStringConversions,
     "preferStructSwiftTestingSuites": .preferStructSwiftTestingSuites,
     "preferSwiftStringAPI": .preferSwiftStringAPI,
     "preferSwiftTesting": .preferSwiftTesting,

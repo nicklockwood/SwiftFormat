@@ -96,6 +96,22 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
         testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
     }
 
+    func testStringLiteralRootedReceiverConverted() {
+        let input = """
+        func foo() {
+            let data = "foo".lowercased().data(using: .utf8)!
+            let description = "foo".description.data(using: .utf8)!
+        }
+        """
+        let output = """
+        func foo() {
+            let data = Data("foo".lowercased().utf8)
+            let description = Data("foo".description.utf8)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
+    }
+
     func testMultilineStringLiteralReceiverConverted() {
         let input = #"""
         func foo() {
@@ -169,6 +185,42 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .preferNonFailableStringConversions)
+    }
+
+    func testTryXCTUnwrapWithPropertyOperandNotConverted() {
+        // The property getter might throw, so the `try` can't be removed
+        let input = """
+        func testFoo() throws {
+            let data = try XCTUnwrap(source.text.data(using: .utf8))
+            let string = try XCTUnwrap(String(data: source.bytes, encoding: .utf8))
+        }
+        """
+        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+    }
+
+    func testTryXCTUnwrapWithSubscriptOperandNotConverted() {
+        // The subscript might throw, so the `try` can't be removed
+        let input = """
+        func testFoo() throws {
+            let data = try XCTUnwrap(strings[0].data(using: .utf8))
+            let string = try #require(String(data: chunks[0], encoding: .utf8))
+        }
+        """
+        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+    }
+
+    func testTryXCTUnwrapStringLiteralConverted() {
+        let input = """
+        func testFoo() throws {
+            let data = try XCTUnwrap("foo".data(using: .utf8))
+        }
+        """
+        let output = """
+        func testFoo() throws {
+            let data = Data("foo".utf8)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferNonFailableStringConversions)
     }
 
     func testTryXCTUnwrapFollowedByMemberCallNotConverted() {
@@ -318,6 +370,25 @@ final class PreferNonFailableStringConversionsTests: XCTestCase {
         let input = """
         func foo() {
             let string = String(data: data /* response body */, encoding: .utf8)!
+        }
+        """
+        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+    }
+
+    func testCommentBeforeDataArgumentsNotConverted() {
+        let input = """
+        func foo() {
+            let data = string.data /* keep */ (using: .utf8)!
+        }
+        """
+        testFormatting(for: input, rule: .preferNonFailableStringConversions)
+    }
+
+    func testImplicitMemberOperandNotConverted() {
+        // `String(decoding:as:)` is generic, so `.init()` would no longer resolve to `Data`
+        let input = """
+        func foo() {
+            let string = String(data: .init(), encoding: .utf8)!
         }
         """
         testFormatting(for: input, rule: .preferNonFailableStringConversions)

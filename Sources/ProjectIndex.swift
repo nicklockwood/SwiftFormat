@@ -232,13 +232,20 @@ struct SourceFileIndex: Codable, Equatable {
         var canBeRenamed: Bool
     }
 
-    static let cacheVersion = 4
+    struct PropertyDeclaration: Codable, Equatable {
+        var name: String
+        var declaringType: String
+        var type: String?
+    }
+
+    static let cacheVersion = 5
 
     var contentHash: String
     var moduleIdentifiers: [String]
     var typeDeclarations: [TypeDeclaration]
     var classInheritances: [ClassInheritance]
     var functionDeclarations: [FunctionDeclaration]
+    var propertyDeclarations: [PropertyDeclaration]
     var typeMembers: [TypeMembers]
     var symbolDeclarations: [SymbolDeclaration]
     var functionReferences: [FunctionReference]
@@ -252,6 +259,7 @@ struct SourceFileIndex: Codable, Equatable {
         typeDeclarations: [TypeDeclaration],
         classInheritances: [ClassInheritance] = [],
         functionDeclarations: [FunctionDeclaration],
+        propertyDeclarations: [PropertyDeclaration] = [],
         typeMembers: [TypeMembers],
         symbolDeclarations: [SymbolDeclaration],
         functionReferences: [FunctionReference] = [],
@@ -264,6 +272,7 @@ struct SourceFileIndex: Codable, Equatable {
         self.typeDeclarations = typeDeclarations
         self.classInheritances = classInheritances
         self.functionDeclarations = functionDeclarations
+        self.propertyDeclarations = propertyDeclarations
         self.typeMembers = typeMembers
         self.symbolDeclarations = symbolDeclarations
         self.functionReferences = functionReferences
@@ -436,6 +445,9 @@ struct ProjectIndex {
                 }
                 .sorted()
                 .joined(separator: ",")
+            let properties = file.propertyDeclarations
+                .map { "\($0.declaringType).\($0.name):\($0.type ?? "")" }
+                .sorted().joined(separator: ",")
             let members = file.typeMembers
                 .map { members in
                     let instance = members.instanceMembers.sorted().joined(separator: ",")
@@ -457,7 +469,7 @@ struct ProjectIndex {
                 .sorted()
                 .joined(separator: ",")
             let declarations = "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(classInheritances):\(functions):" +
-                "\(members):\(symbolDeclarations)"
+                "\(members):\(properties):\(symbolDeclarations)"
             let symbolReferences = file.symbolReferences.sorted().joined(separator: ",")
             return (declarations, functionReferences, symbolReferences)
         }
@@ -925,6 +937,7 @@ func makeSourceFileIndex(
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
     var classInheritances = [SourceFileIndex.ClassInheritance]()
     var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
+    var propertyDeclarations = [SourceFileIndex.PropertyDeclaration]()
     var typeMembers = [SourceFileIndex.TypeMembers]()
     var symbolDeclarations = [SourceFileIndex.SymbolDeclaration]()
     let declarations = formatter.parseDeclarations()
@@ -1008,6 +1021,20 @@ func makeSourceFileIndex(
             }
         }
 
+        if ["let", "var"].contains(declaration.keyword),
+           let owner = declaration.parentType,
+           let ownerName = owner.fullyQualifiedName,
+           !declaration.modifiers.contains("static"),
+           !declaration.modifiers.contains("class")
+        {
+            propertyDeclarations.append(.init(
+                name: declaration.name ?? "",
+                declaringType: ownerName,
+                type: !declaration.parentDeclarations.contains(where: { $0.asTypeDeclaration?.genericParameters != nil })
+                    ? declaration.parsePropertyDeclaration()?.type?.string : nil
+            ))
+        }
+
         let declarationVisibilities = [declaration.visibility()] + declaration.parentDeclarations.compactMap {
             $0.asTypeDeclaration?.visibility()
         }
@@ -1076,6 +1103,7 @@ func makeSourceFileIndex(
         typeDeclarations: typeDeclarations,
         classInheritances: classInheritances,
         functionDeclarations: functionDeclarations,
+        propertyDeclarations: propertyDeclarations,
         typeMembers: typeMembers,
         symbolDeclarations: symbolDeclarations,
         functionReferences: functionReferences,

@@ -2350,6 +2350,10 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 + let barArray = fooArray.compactMap(\.optionalBar)
 ```
 
+Closures for `compactMap` and `flatMap` are converted only when the return type
+can be determined. This uses the project index when available, otherwise it is
+limited to declarations in the current file.
+
 </details>
 <br/>
 

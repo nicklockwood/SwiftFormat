@@ -145,6 +145,7 @@
 * [preferFlatMap](#preferFlatMap)
 * [preferLazyMap](#preferLazyMap)
 * [preferMinOverSorted](#preferMinOverSorted)
+* [preferNonfailableStringConversions](#preferNonfailableStringConversions)
 * [preferStructSwiftTestingSuites](#preferStructSwiftTestingSuites)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
@@ -2385,6 +2386,30 @@ Prefer `min()` over `sorted().first`.
 
 - let earliest = events.sorted(by: { $0.date < $1.date }).first
 + let earliest = events.min(by: { $0.date < $1.date })
+```
+
+</details>
+<br/>
+
+## preferNonfailableStringConversions
+
+Replace unwrapped `data(using: .utf8)` and `String(data:encoding: .utf8)` conversions with the nonfailable `Data(_:)` and `String(decoding:as:)` equivalents.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let data = string.data(using: .utf8)!
++ let data = Data(string.utf8)
+
+- let string = String(data: data, encoding: .utf8)!
++ let string = String(decoding: data, as: UTF8.self)
+
+- let data = try XCTUnwrap(string.data(using: .utf8))
++ let data = Data(string.utf8)
+
+- guard let string = String(data: data, encoding: .utf8) else { return }
++ let string = String(decoding: data, as: UTF8.self)
 ```
 
 </details>

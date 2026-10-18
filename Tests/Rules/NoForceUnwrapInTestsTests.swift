@@ -98,7 +98,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """#
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .preferNonfailableStringConversions])
     }
 
     func testForceUnwrapInKeyPathNotConverted() {
@@ -144,7 +144,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             let sum = try #require([1, 2, 3].first) + #require(other)
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .preferNonfailableStringConversions])
     }
 
     func testSimpleForceCast() {

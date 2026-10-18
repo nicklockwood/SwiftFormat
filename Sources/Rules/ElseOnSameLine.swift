@@ -57,9 +57,14 @@ public extension FormatRule {
                     shouldWrap = isOnNewLine ||
                         formatter.tokens[i + 1 ..< nextIndex].contains { $0.isLinebreak }
                 case .nextLine:
-                    // Only wrap if guard statement spans multiple lines
-                    shouldWrap = isOnNewLine ||
-                        formatter.tokens[guardIndex + 1 ..< nextIndex].contains { $0.isLinebreak }
+                    // A multiline closure alone does not make the conditions wrapped.
+                    if formatter.onSameLine(guardIndex, prevIndex) {
+                        shouldWrap = isOnNewLine ||
+                            formatter.tokens[i + 1 ..< nextIndex].contains { $0.isLinebreak }
+                    } else {
+                        shouldWrap = formatter.currentIndentForLine(at: prevIndex).count >
+                            formatter.currentIndentForLine(at: guardIndex).count
+                    }
                 case .sameLine:
                     shouldWrap = false
                 }
@@ -72,7 +77,7 @@ public extension FormatRule {
                             formatter.linebreakToken(for: prevIndex + 1))
                         formatter.insertSpace(formatter.currentIndentForLine(at: guardIndex), at: prevIndex + 2)
                     }
-                } else if isOnNewLine {
+                } else if isOnNewLine, !formatter.tokens[prevIndex].isComment {
                     formatter.replaceTokens(in: prevIndex + 1 ..< i, with: .space(" "))
                 }
             case .keyword("catch"):

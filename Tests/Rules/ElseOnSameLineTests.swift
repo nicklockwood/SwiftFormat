@@ -312,6 +312,43 @@ final class ElseOnSameLineTests: XCTestCase {
                        options: options, exclude: [.wrapConditionalBodies])
     }
 
+    func testGuardElseFollowingUnindentedClosureCondition() {
+        let input = """
+        func foo() {
+            guard let value = values.first(where: {
+                $0.isValid
+            }), value.isReady
+            else {
+                return
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            guard let value = values.first(where: {
+                $0.isValid
+            }), value.isReady else {
+                return
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .elseOnSameLine,
+                       options: FormatOptions(guardElsePosition: .nextLine))
+    }
+
+    func testGuardElseFollowingClosureConditionComment() {
+        let input = """
+        guard let value = values.first(where: {
+            $0.isValid
+        }), value.isReady // Keep this explanation
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, rule: .elseOnSameLine,
+                       options: FormatOptions(guardElsePosition: .nextLine))
+    }
+
     func testMultilineGuardElseWrapped() {
         let input = """
         guard let foo = bar,

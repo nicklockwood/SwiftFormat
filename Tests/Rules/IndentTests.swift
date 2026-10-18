@@ -1113,7 +1113,18 @@ final class IndentTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .indent)
+        let output = """
+        do {
+            if let foo = foo(
+                   bar: 5
+               ), let bar = bar,
+               baz == quux
+            {
+                baz()
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.indent, .wrapMultilineStatementBraces])
     }
 
     func testIndentWrappedConditionAlignsWithParen2() {
@@ -1128,7 +1139,18 @@ final class IndentTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .indent)
+        let output = """
+        do {
+            if let foo = foo({
+                   bar()
+               }), bar == baz,
+               let quux == baz
+            {
+                baz()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentUnknownDefault() {
@@ -3194,6 +3216,173 @@ final class IndentTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .indent)
+    }
+
+    func testMultilineCallInWrappedIfAndGuardConditions() {
+        let input = """
+        if let value = lookup(
+            name: name,
+            fallback: fallback
+        ),
+           value.isReady
+        {
+            use(value)
+        }
+
+        guard let value = lookup(
+            name: name,
+            fallback: fallback
+        ),
+              value.isReady
+        else {
+            return
+        }
+        """
+        let output = """
+        if let value = lookup(
+               name: name,
+               fallback: fallback
+           ),
+           value.isReady
+        {
+            use(value)
+        }
+
+        guard let value = lookup(
+                  name: name,
+                  fallback: fallback
+              ),
+              value.isReady
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, output, rule: .indent)
+    }
+
+    func testMultilineCallOnFinalConditionLine() {
+        let input = """
+        if let value = lookup(
+               name: name,
+               fallback: fallback
+           ), value.isReady
+        {
+            use(value)
+        }
+
+        guard let value = lookup(
+                  name: name,
+                  fallback: fallback
+              ), value.isReady
+        else {
+            return
+        }
+        """
+        let output = """
+        if let value = lookup(
+            name: name,
+            fallback: fallback
+        ), value.isReady {
+            use(value)
+        }
+
+        guard let value = lookup(
+            name: name,
+            fallback: fallback
+        ), value.isReady else {
+            return
+        }
+        """
+        testFormatting(for: input, [output], rules: [.indent, .braces, .elseOnSameLine],
+                       options: FormatOptions(guardElsePosition: .nextLine))
+    }
+
+    func testMultilineCallInWrappedConditionsWithXcodeIndentation() {
+        let input = """
+        if let value = lookup(
+               name: name,
+               fallback: fallback
+           ),
+           value.isReady
+        {
+            use(value)
+        }
+
+        guard let value = lookup(
+                  name: name,
+                  fallback: fallback
+              ),
+              value.isReady
+        else {
+            return
+        }
+        """
+        let output = """
+        if let value = lookup(
+            name: name,
+            fallback: fallback
+        ),
+           value.isReady
+        {
+            use(value)
+        }
+
+        guard let value = lookup(
+            name: name,
+            fallback: fallback
+        ),
+              value.isReady
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       options: FormatOptions(xcodeIndentation: true))
+    }
+
+    func testClosureInWrappedIfWithXcodeIndentation() {
+        let input = """
+        if let value = values.first(where: {
+               $0.isValid
+           }),
+           value.isReady
+        {
+            use(value)
+        }
+        """
+        let output = """
+        if let value = values.first(where: {
+            $0.isValid
+        }),
+           value.isReady
+        {
+            use(value)
+        }
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       options: FormatOptions(xcodeIndentation: true))
+    }
+
+    func testClosureBeforePartiallyWrappedGuardConditions() {
+        let input = """
+        guard let value = values.first(where: {
+            $0.isValid
+        }), value.isReady,
+              let result = value.result
+        else {
+            return
+        }
+        """
+        let output = """
+        guard let value = values.first(where: {
+                  $0.isValid
+              }), value.isReady,
+              let result = value.result
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, output, rule: .indent)
     }
 
     func testClosureAtStartOfMultilineGuardConditions() {

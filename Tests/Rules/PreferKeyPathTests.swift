@@ -24,9 +24,19 @@ final class PreferKeyPathTests: XCTestCase {
 
     func testCompactMapPropertyToKeyPath() {
         let input = """
+        struct Item {
+            let foo: Int?
+        }
+
+        let bar: [Item] = []
         let foo = bar.compactMap { $0.foo }
         """
         let output = """
+        struct Item {
+            let foo: Int?
+        }
+
+        let bar: [Item] = []
         let foo = bar.compactMap(\\.foo)
         """
         let options = FormatOptions(swiftVersion: "5.2")
@@ -36,9 +46,19 @@ final class PreferKeyPathTests: XCTestCase {
 
     func testFlatMapPropertyToKeyPath() {
         let input = """
+        struct Item {
+            let foo: Int?
+        }
+
+        let bar: [Item] = []
         let foo = bar.flatMap { $0.foo }
         """
         let output = """
+        struct Item {
+            let foo: Int?
+        }
+
+        let bar: [Item] = []
         let foo = bar.flatMap(\\.foo)
         """
         let options = FormatOptions(swiftVersion: "5.2")
@@ -162,12 +182,206 @@ final class PreferKeyPathTests: XCTestCase {
 
     func testSelfConvertedToKeyPath() {
         let input = """
+        let bar: [Int?] = []
         let foo = bar.compactMap { $0 }
         """
         let output = """
+        let bar: [Int?] = []
         let foo = bar.compactMap(\\.self)
         """
         let options = FormatOptions(swiftVersion: "6")
         testFormatting(for: input, output, rule: .preferKeyPath, options: options)
+    }
+
+    func testNonOptionalAndUnknownPropertiesKeepClosures() {
+        let input = """
+        struct Item {
+            let foo: Int
+        }
+
+        let items: [Item] = []
+        let a = items.compactMap { $0.foo }
+        let b = items.flatMap { $0.foo }
+        let c = unknown.compactMap { $0.foo }
+        let d = unknown.flatMap { $0.foo }
+        """
+        testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
+
+    func testFlatMapCollectionProperty() {
+        let input = """
+        struct Item {
+            let values: [Int]
+        }
+
+        let items: [Item] = []
+        let a = items.flatMap { $0.values }
+        let b = items.compactMap { $0.values }
+        let item: Item? = nil
+        let c = item.flatMap { $0.values }
+        """
+        let output = """
+        struct Item {
+            let values: [Int]
+        }
+
+        let items: [Item] = []
+        let a = items.flatMap(\\.values)
+        let b = items.compactMap { $0.values }
+        let item: Item? = nil
+        let c = item.flatMap { $0.values }
+        """
+        testFormatting(for: input, output, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
+
+    func testNestedOptionalPropertyFromProjectIndex() throws {
+        let declarations = """
+        struct Item {
+            let detail: Detail
+        }
+        struct Detail {
+            let value: Int?
+        }
+        """
+        let input = """
+        let items: [Item] = []
+        let a = items.compactMap { $0.detail.value }
+        let b = items.compactMap({ $0.detail.value })
+        """
+        let output = """
+        let items: [Item] = []
+        let a = items.compactMap(\\.detail.value)
+        let b = items.compactMap(\\.detail.value)
+        """
+        _ = FormatRules.all
+        let fileURL = URL(fileURLWithPath: "/Project/Call.swift")
+        let project = ProjectIndex(files: [
+            "/Project/Types.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.preferKeyPath], to: tokenize(input), with: FormatOptions(swiftVersion: "5.2"),
+            trackChanges: false, range: nil,
+            context: FormattingContext(currentFileURL: fileURL, projectIndex: project)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output)
+    }
+
+    func testRunsAfterRedundantCompactMap() {
+        _ = FormatRules.all
+        XCTAssertLessThan(
+            FormatRule.redundantCompactMap.index,
+            FormatRule.preferKeyPath.index
+        )
+    }
+
+    func testAmbiguousAndGenericPropertyTypesKeepClosures() {
+        let input = """
+        struct Item<T> {
+            let value: T
+        }
+
+        func values<T>(items: [Item<T>]) {
+            let result = items.compactMap { $0.value }
+        }
+        """
+        testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
+
+    func testPropertyTypeChangesInvalidateIndex() {
+        let input = """
+        struct Item { let value: Int? }
+        """
+        let output = """
+        struct Item { let value: Int }
+        """
+        let first = ProjectIndex(files: [
+            "/Project/Types.swift": makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let second = ProjectIndex(files: [
+            "/Project/Types.swift": makeSourceFileIndex(from: output, moduleIdentifiers: ["App"]),
+        ])
+        XCTAssertNotEqual(first.fingerprint(for: [.declarations]), second.fingerprint(for: [.declarations]))
+    }
+
+    func testTypedFunctionArgument() {
+        let input = """
+        struct Item {
+            var value: Int? {
+                nil
+            }
+        }
+
+        func values(items: [Item]) -> [Int] {
+            items.compactMap { $0.value }
+        }
+        """
+        let output = """
+        struct Item {
+            var value: Int? {
+                nil
+            }
+        }
+
+        func values(items: [Item]) -> [Int] {
+            items.compactMap(\\.value)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
+
+    func testShadowedReceiverKeepsClosure() {
+        let input = """
+        struct Item {
+            let value: Int?
+        }
+
+        let items: [Item] = []
+        let result = other.map { items in
+            items.compactMap { $0.value }
+        }
+        """
+        testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
+
+    func testNonOptionalIdentityKeepsClosure() {
+        let input = """
+        let items: [Int] = []
+        let result = items.compactMap { $0 }
+        let unknown = other.compactMap { $0 }
+        """
+        testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "6"))
+    }
+
+    func testTupleBindingShadowsReceiver() {
+        let input = """
+        struct Item {
+            let value: Int?
+        }
+
+        let items: [Item] = []
+        do {
+            let (items, _) = other
+            let result = items.compactMap { $0.value }
+        }
+        """
+        testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
+
+    func testReceiverFromUnrelatedScopeIsNotUsed() {
+        let input = """
+        struct Item {
+            let value: Int?
+        }
+
+        func first(items: [Item]) {
+            print(items)
+        }
+
+        func second() {
+            let result = items.compactMap { $0.value }
+        }
+        """
+        testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
     }
 }

@@ -154,6 +154,7 @@
 * [propertyTypes](#propertyTypes)
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
 * [redundantSendable](#redundantSendable)
+* [redundantSwiftVersionCheck](#redundantSwiftVersionCheck)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
 * [testSuiteAccessControl](#testSuiteAccessControl)
@@ -3473,6 +3474,39 @@ Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder.
     }
   }
 ```
+
+</details>
+<br/>
+
+## redundantSwiftVersionCheck
+
+Remove `#if swift(...)` and `#if compiler(...)` checks that are always true or always false for the specified `--swift-version` and `--language-mode`.
+
+<details>
+<summary>Examples</summary>
+
+With `--swift-version 5.9` or later:
+
+```diff
+- #if compiler(>=5.9)
+  @Observable
+  final class Model {}
+- #else
+- final class Model: ObservableObject {}
+- #endif
+```
+
+```diff
+- #if compiler(>=5.5) && canImport(_Concurrency)
++ #if canImport(_Concurrency)
+  extension Client {
+      func fetch() async throws -> Data { ... }
+  }
+  #endif
+```
+
+`swift(...)` checks use the language mode. For example, a Swift 6 compiler
+in Swift 5 mode satisfies `swift(>=5.10)` but not `swift(>=6)`.
 
 </details>
 <br/>

@@ -10,6 +10,78 @@ import XCTest
 @testable import SwiftFormat
 
 final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
+    func testStateOnlyPreservesInjectedAndOtherDynamicProperties() {
+        let input = """
+        public struct ContentView: View {
+            @State var counter = 0
+            @StateObject var model = Model()
+            @Bindable var viewModel: ViewModel
+            @ObservedObject var store: Store
+            @Binding var isPresented: Bool
+            @Environment(\\.openURL) var openURL
+            @EnvironmentObject var settings: Settings
+            @AppStorage("isVisible") var isVisible = true
+            @SceneStorage("text") var text = ""
+            @FocusState var isFocused: Bool
+            @GestureState var isDragging = false
+            @Namespace var namespace
+        }
+        """
+        let output = """
+        public struct ContentView: View {
+            @State private var counter = 0
+            @StateObject private var model = Model()
+            @Bindable var viewModel: ViewModel
+            @ObservedObject var store: Store
+            @Binding var isPresented: Bool
+            @Environment(\\.openURL) var openURL
+            @EnvironmentObject var settings: Settings
+            @AppStorage("isVisible") var isVisible = true
+            @SceneStorage("text") var text = ""
+            @FocusState var isFocused: Bool
+            @GestureState var isDragging = false
+            @Namespace var namespace
+        }
+        """
+        let options = FormatOptions(privateSwiftUIProperties: .stateOnly)
+        testFormatting(for: input, output, rule: .privateSwiftUIDynamicProperties, options: options)
+        testFormatting(for: input, output, rule: .privateStateVariables, options: options)
+    }
+
+    func testStateOnlyInViewModifierWithNamespacedWrappers() {
+        let input = """
+        struct ContentModifier: ViewModifier {
+            @SwiftUI::State var counter = 0
+            @SwiftUI::StateObject var model = Model()
+            @SwiftUI::Bindable var viewModel: ViewModel
+            @SwiftUI::Environment(\\.openURL) var openURL
+        }
+        """
+        let output = """
+        struct ContentModifier: ViewModifier {
+            @SwiftUI::State private var counter = 0
+            @SwiftUI::StateObject private var model = Model()
+            @SwiftUI::Bindable var viewModel: ViewModel
+            @SwiftUI::Environment(\\.openURL) var openURL
+        }
+        """
+        let options = FormatOptions(privateSwiftUIProperties: .stateOnly)
+        testFormatting(for: input, output, rule: .privateSwiftUIDynamicProperties, options: options)
+    }
+
+    func testStateOnlyPreservesAccessControlAndPreviewable() {
+        let input = """
+        struct ContentView: View {
+            @State internal var counter = 0
+            @StateObject private(set) var model = Model()
+            @Previewable @State var isEnabled = true
+            @Previewable @StateObject var previewModel = Model()
+        }
+        """
+        let options = FormatOptions(privateSwiftUIProperties: .stateOnly)
+        testFormatting(for: input, rule: .privateSwiftUIDynamicProperties, options: options)
+    }
+
     func testPrivateDynamicProperties() {
         let input = """
         struct ContentView: View {
@@ -32,6 +104,8 @@ final class PrivateSwiftUIDynamicPropertiesTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .privateSwiftUIDynamicProperties)
+        let options = FormatOptions(privateSwiftUIProperties: .all)
+        testFormatting(for: input, output, rule: .privateSwiftUIDynamicProperties, options: options)
     }
 
     func testDoesNotMakeBindingPrivateInInternalType() {

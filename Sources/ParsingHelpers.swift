@@ -4260,9 +4260,11 @@ extension Formatter {
             }
         }
 
-        // Append any trailing closures that immediately follow the closing paren
+        // Append any trailing closures that immediately follow the closing paren.
+        // A `{` followed by `willSet` or `didSet` is a property observer block, not a closure.
         if let openBraceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
            tokens[openBraceIndex] == .startOfScope("{"),
+           !isPropertyObserverBlock(at: openBraceIndex),
            let endOfClosure = self.endOfScope(at: openBraceIndex)
         {
             let valueRange = openBraceIndex ... endOfClosure
@@ -4276,6 +4278,14 @@ extension Formatter {
         }
 
         return argumentLabels
+    }
+
+    /// Whether the `{` at the given index starts a `willSet` / `didSet` property observer block.
+    func isPropertyObserverBlock(at startOfScopeIndex: Int) -> Bool {
+        guard tokens[startOfScopeIndex] == .startOfScope("{"),
+              let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex)
+        else { return false }
+        return [.identifier("willSet"), .identifier("didSet")].contains(tokens[firstTokenIndex])
     }
 
     /// Parses the arguments of a function call where the next non-space/comment

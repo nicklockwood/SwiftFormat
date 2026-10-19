@@ -15,8 +15,7 @@ public extension FormatRule {
         help: """
         Remove `#if swift(...)` and `#if compiler(...)` checks that are always true or always \
         false for the specified `--swift-version` and `--language-mode`.
-        """,
-        disabledByDefault: true
+        """
     ) { formatter in
         guard formatter.options.swiftVersion != .undefined else { return }
         formatter.forEach(.startOfScope("#if")) { ifIndex, _ in

@@ -508,6 +508,8 @@ jobs:
         run: swiftformat --lint . --reporter github-actions-log
 ```
 
+> **Note:** `--lint` exits non-zero if any file needs reformatting. If you are adding this workflow to an existing project, run `swiftformat .` once to format the whole codebase before enabling the check. For options such as `--lenient` and `--lintonly`, see the [Linting](#linting) section.
+
 On CI using Danger
 -------------------
 

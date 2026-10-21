@@ -155,6 +155,7 @@
 * [propertyTypes](#propertyTypes)
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
 * [redundantSendable](#redundantSendable)
+* [redundantSwiftUIViewMainActor](#redundantSwiftUIViewMainActor)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
 * [testSuiteAccessControl](#testSuiteAccessControl)
@@ -3472,6 +3473,31 @@ Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder.
 -     }
       .padding(.horizontal, 8)
     }
+  }
+```
+
+</details>
+<br/>
+
+## redundantSwiftUIViewMainActor
+
+Remove redundant @MainActor attributes from types that conform to SwiftUI.View.
+
+<details>
+<summary>Examples</summary>
+
+Requires Swift 6.0 or later, using the SwiftUI SDK from Xcode 16 or later.
+Only direct `View` conformances on a type declaration are considered.
+
+```diff
+- @MainActor
+  struct FooView: View {
+      var body: some View { Text("Hello") }
+  }
+
+- @MainActor struct BarView: View {
++ struct BarView: View {
+      var body: some View { Text("World") }
   }
 ```
 

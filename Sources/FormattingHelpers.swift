@@ -3743,37 +3743,41 @@ extension Formatter {
 
         // Remove the attributes in reverse order to not invalidate indices
         for attributeIndex in attributeIndicesToRemove.reversed() {
-            removeViewBuilderAttribute(at: attributeIndex)
+            removeAttributeWithLinebreak(at: attributeIndex)
         }
     }
 
-    /// Removes a @ViewBuilder attribute at the given index, including the trailing linebreak if on its own line
-    func removeViewBuilderAttribute(at attributeIndex: Int) {
+    /// Removes an attribute at the given index, including the trailing linebreak if on its own line
+    func removeAttributeWithLinebreak(at attributeIndex: Int) {
+        guard let attributeEndIndex = endOfAttribute(at: attributeIndex),
+              !tokens[attributeIndex ... attributeEndIndex].contains(where: \.isComment)
+        else { return }
+
         var startIndex = attributeIndex
-        var endIndex = attributeIndex
+        var endIndex = attributeEndIndex
 
         // Check if there's a leading space (between another attribute and this one)
         let hasLeadingSpace = attributeIndex > 0 && tokens[attributeIndex - 1].isSpace
         let leadingSpaceIsAfterAttribute = hasLeadingSpace && attributeIndex > 1 && !tokens[attributeIndex - 2].isLinebreak
 
-        let nextNonSpaceIndex = index(of: .nonSpace, after: attributeIndex)
+        let nextNonSpaceIndex = index(of: .nonSpace, after: attributeEndIndex)
         let hasTrailingLinebreak = nextNonSpaceIndex != nil && tokens[nextNonSpaceIndex!].isLinebreak
-        let hasTrailingSpace = attributeIndex + 1 < tokens.count && tokens[attributeIndex + 1].isSpace
+        let hasTrailingSpace = token(at: attributeEndIndex + 1)?.isSpace == true
 
         if leadingSpaceIsAfterAttribute {
-            // Remove the space before @ViewBuilder (space between attributes)
+            // Remove the space before the attribute (space between attributes)
             startIndex = attributeIndex - 1
             // Don't remove trailing linebreak - preserve the line structure
             // Don't remove trailing space - it separates from the next token
         } else if hasTrailingLinebreak, let nextIndex = nextNonSpaceIndex {
-            // @ViewBuilder is at the start of the line (possibly with indentation)
+            // The attribute is at the start of the line (possibly with indentation)
             endIndex = nextIndex
             // Also remove leading indentation
             if hasLeadingSpace, attributeIndex > 1, tokens[attributeIndex - 2].isLinebreak {
                 startIndex = attributeIndex - 1
             }
         } else if hasTrailingSpace {
-            endIndex = attributeIndex + 1
+            endIndex = attributeEndIndex + 1
         }
 
         removeTokens(in: startIndex ... endIndex)

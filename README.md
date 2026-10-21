@@ -1079,6 +1079,16 @@ func example() {
 ```
 ````
 
+To make only `@State` and `@StateObject` properties private, while preserving synthesized
+initializers for injected properties such as `@Bindable` and `@ObservedObject`, use:
+
+```text
+--enable privateSwiftUIDynamicProperties
+--private-swiftui-properties state-only
+```
+
+The default value, `all`, applies the rule to all eligible SwiftUI dynamic properties.
+
 FAQ
 -----
 

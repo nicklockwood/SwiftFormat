@@ -1556,6 +1556,12 @@ struct _Descriptors {
             }
         }
     )
+    let privateSwiftUIProperties = OptionDescriptor(
+        argumentName: "private-swiftui-properties",
+        displayName: "Private SwiftUI Dynamic Properties",
+        help: "SwiftUI properties to make private:",
+        keyPath: \.privateSwiftUIProperties
+    )
     let swiftUIPropertiesSortMode = OptionDescriptor(
         argumentName: "sort-swiftui-properties",
         displayName: "Sort SwiftUI Dynamic Properties",

@@ -2530,6 +2530,10 @@ Adds `private` access control to SwiftUI state properties without existing acces
 
 Adds `private` access control to SwiftUI dynamic properties without existing access control modifiers.
 
+Option | Description
+--- | ---
+`--private-swiftui-properties` | SwiftUI properties to make private: "all" (default) or "state-only"
+
 <details>
 <summary>Examples</summary>
 

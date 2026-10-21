@@ -82,8 +82,8 @@ public extension FormatRule {
                 }), let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex) else {
                     return
                 }
-                if !formatter.isStartOfClosure(at: startIndex), !["func", "throws", "rethrows"]
-                    .contains(formatter.lastSignificantKeyword(at: startIndex, excluding: ["where"]) ?? "")
+                if !formatter.isStartOfClosure(at: startIndex), !["func", "rethrows"]
+                    .contains(formatter.lastSignificantKeyword(at: startIndex, excluding: ["where", "throws"]) ?? "")
                 {
                     return
                 }

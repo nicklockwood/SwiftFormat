@@ -84,6 +84,7 @@ public extension FormatRule {
                 }
                 if !formatter.isStartOfClosure(at: startIndex), !["func", "throws", "rethrows"]
                     .contains(formatter.lastSignificantKeyword(at: startIndex, excluding: ["where"]) ?? "")
+                    || formatter.isDoThrowsBody(at: startIndex)
                 {
                     return
                 }
@@ -316,5 +317,16 @@ extension Formatter {
         }
 
         return returnKeywordRangesToRemove
+    }
+}
+
+extension Formatter {
+    /// Whether the `{` at the given index starts the body of a `do throws(Error) {` statement
+    func isDoThrowsBody(at index: Int) -> Bool {
+        guard let keywordIndex = indexOfLastSignificantKeyword(at: index, excluding: ["where"]),
+              tokens[keywordIndex] == .keyword("throws"),
+              let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: keywordIndex)
+        else { return false }
+        return tokens[prevIndex] == .keyword("do")
     }
 }

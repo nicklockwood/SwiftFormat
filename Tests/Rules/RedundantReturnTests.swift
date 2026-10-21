@@ -1668,4 +1668,38 @@ final class RedundantReturnTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantReturn, options: options, exclude: [.elseOnSameLine])
     }
+
+    func testKeepsReturnInDoThrowsBody() {
+        let input = """
+        func join() throws(JoinError) {
+            for _ in 0 ..< 3 {
+                do throws(JoinError) {
+                    try attempt()
+                    return
+                } catch {
+                    print(error)
+                }
+            }
+            throw .exhausted
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testKeepsReturnInDoBody() {
+        let input = """
+        func join() throws {
+            for _ in 0 ..< 3 {
+                do {
+                    try attempt()
+                    return
+                } catch {
+                    print(error)
+                }
+            }
+            throw Failure()
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
 }

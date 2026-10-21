@@ -556,12 +556,20 @@ extension Formatter {
         }
     }
 
+    /// Whether conditions wrap outside nested closures and parenthesized expressions.
+    func conditionsAreWrapped(after keywordIndex: Int, before endIndex: Int) -> Bool {
+        guard let lastConditionIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) else {
+            return false
+        }
+        return index(of: .linebreak, in: keywordIndex + 1 ..< lastConditionIndex) != nil
+    }
+
     /// Normalize condition separators without changing line breaks inside expressions.
     func wrapConditionSeparators(after keywordIndex: Int, endToken: Token) {
         guard options.wrapConditions == .disabled || options.wrapConditions == .beforeFirst ||
             options.wrapConditions == .afterFirst,
             let endIndex = index(of: endToken, after: keywordIndex),
-            !onSameLine(keywordIndex, endIndex)
+            conditionsAreWrapped(after: keywordIndex, before: endIndex)
         else { return }
 
         // Work backwards so changes do not invalidate the remaining separator indices.
@@ -1173,10 +1181,10 @@ extension Formatter {
 
             wrapConditionSeparators(after: index, endToken: endOfConditionsToken)
 
-            // Only wrap when this is a control flow condition that spans multiple lines
+            // Line breaks inside a clause do not make the conditions themselves wrapped.
             guard let endIndex = self.index(of: endOfConditionsToken, after: index),
                   let nextTokenIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
-                  !(onSameLine(index, endIndex) || self.index(of: .nonSpaceOrLinebreak, after: endOfLine(at: index)) == endIndex)
+                  conditionsAreWrapped(after: index, before: endIndex)
             else { return }
 
             switch options.wrapConditions {

@@ -3003,10 +3003,8 @@ final class WrapArgumentsTests: XCTestCase {
         }
 
         guard let d = points.max(by: {
-                  basePlane.distance(from: $0) < basePlane.distance(from: $1)
-              }),
-              basePlane.distance(from: d) > epsilon
-        else {
+            basePlane.distance(from: $0) < basePlane.distance(from: $1)
+        }), basePlane.distance(from: d) > epsilon else {
             return (.empty, false) // Planar input
         }
         """
@@ -3019,7 +3017,8 @@ final class WrapArgumentsTests: XCTestCase {
         let input = """
         guard let value = values.first(where: {
             $0.isValid
-        }), value.isReady else {
+        }),
+              value.isReady else {
             return
         }
         """
@@ -3041,7 +3040,8 @@ final class WrapArgumentsTests: XCTestCase {
         let input = """
         guard isEnabled, let value = values.first(where: {
             $0.isValid
-        }), value.isReady else {
+        }),
+              value.isReady else {
             return
         }
         """
@@ -3083,6 +3083,50 @@ final class WrapArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, rules: [.wrapArguments, .indent, .elseOnSameLine],
                        options: FormatOptions(wrapConditions: .disabled, guardElsePosition: .nextLine))
+    }
+
+    func testWrapConditionsPreservesUnwrappedClausesWithMultilineExpressions() {
+        let input = """
+        if let index = mediaContainers.firstIndex(where: {
+            $0.mediaAttachment?.id == refreshed.id
+        }), case let .uploaded(_, originalImage) = mediaContainers[index].state {
+            use(originalImage)
+        }
+
+        guard let index = mediaContainers.firstIndex(where: {
+            $0.mediaAttachment?.id == refreshed.id
+        }), case let .uploaded(_, originalImage) = mediaContainers[index].state else {
+            return
+        }
+
+        use(originalImage)
+
+        if let value = lookup(
+            first,
+            second
+        ), value.isValid {
+            use(value)
+        }
+
+        guard let value = lookup(
+            first,
+            second
+        ), value.isValid else {
+            return
+        }
+
+        use(value)
+        """
+        for wrapping in [WrapMode.beforeFirst, .afterFirst] {
+            for allowPartialWrapping in [true, false] {
+                testFormatting(
+                    for: input,
+                    rules: [.wrapArguments, .indent, .wrapMultilineStatementBraces, .elseOnSameLine],
+                    options: FormatOptions(wrapConditions: wrapping, guardElsePosition: .nextLine,
+                                           allowPartialWrapping: allowPartialWrapping)
+                )
+            }
+        }
     }
 
     func testWrapConditionsAfterFirstPreservesGroupedClauses() {

@@ -1733,6 +1733,55 @@ extension Formatter {
         }
     }
 
+    /// If the `=` operator at the specified index belongs to a property declaration, enum case raw value,
+    /// or assignment statement that starts on the same line, returns the index of the first token of that
+    /// declaration or statement (including any attributes). These are the assignments that can be aligned
+    /// with the assignments on neighboring lines.
+    func startOfAlignableAssignment(at equalsIndex: Int) -> Int? {
+        // Must be the first `=` in the line, at the same scope as the start of the line
+        let startOfLineIndex = startOfLine(at: equalsIndex, excludingIndent: true)
+        guard index(of: .operator("=", .infix), in: startOfLineIndex ..< equalsIndex + 1) == equalsIndex else {
+            return nil
+        }
+
+        let startIndex: Int
+        if let introducerIndex = index(in: startOfLineIndex ..< equalsIndex, where: {
+            [.keyword("let"), .keyword("var"), .keyword("case")].contains($0)
+        }) {
+            // Exclude conditions like `if let foo = bar` or `if case .foo = bar`
+            startIndex = startOfModifiers(at: introducerIndex, includingAttributes: true)
+            guard startIndex <= startOfLineIndex else {
+                return nil
+            }
+            if tokens[introducerIndex] == .keyword("case") {
+                guard let scopeIndex = startOfScope(at: introducerIndex),
+                      lastSignificantKeyword(at: scopeIndex, excluding: ["where"]) == "enum"
+                else {
+                    return nil
+                }
+            }
+        } else if tokens[startOfLineIndex].isIdentifier {
+            startIndex = startOfLineIndex
+        } else {
+            return nil
+        }
+
+        // Must be a statement in a code block, rather than a default argument
+        // or a condition that continues from the previous line
+        switch currentScope(at: startIndex) {
+        case nil, .startOfScope("{")?, .startOfScope(":")?, .startOfScope("#if")?:
+            break
+        default:
+            return nil
+        }
+        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
+           !isEndOfStatement(at: prevIndex)
+        {
+            return nil
+        }
+        return startIndex
+    }
+
     /// Parses a type name starting at the given index, of one of the following forms:
     ///  - `Foo`
     ///  - `[...]`

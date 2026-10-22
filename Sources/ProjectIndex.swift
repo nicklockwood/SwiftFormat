@@ -1441,8 +1441,69 @@ struct ProjectRoot: Hashable {
     var kind: Kind
 }
 
+/// Shared locations that should not be searched for an enclosing project.
+func projectRootSearchBoundaries(
+    homeDirectory home: URL = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true),
+    environment: [String: String] = ProcessInfo.processInfo.environment
+) -> [URL] {
+    let manager = FileManager.default
+    var directories = [home, home.deletingLastPathComponent(), URL(fileURLWithPath: NSTemporaryDirectory())]
+    let userDirectories: [FileManager.SearchPathDirectory] = [
+        .desktopDirectory, .documentDirectory, .downloadsDirectory,
+        .libraryDirectory, .cachesDirectory, .applicationSupportDirectory,
+        .moviesDirectory, .musicDirectory, .picturesDirectory, .sharedPublicDirectory,
+    ]
+    for directory in userDirectories {
+        directories += manager.urls(for: directory, in: .userDomainMask)
+    }
+    // Environment paths cover redirected profiles and XDG locations that Foundation
+    // may not expose. Windows environment variable names are case-insensitive.
+    let environmentVariables = [
+        "USERPROFILE", "PUBLIC", "PROGRAMDATA", "ALLUSERSPROFILE", "APPDATA", "LOCALAPPDATA",
+        "TEMP", "TMP", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_STATE_HOME",
+        "XDG_RUNTIME_DIR",
+    ]
+    for name in environmentVariables {
+        let path = name.hasPrefix("XDG_") ? environment[name] :
+            environment.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value
+        if let path, (path as NSString).isAbsolutePath {
+            directories.append(URL(fileURLWithPath: path, isDirectory: true))
+        }
+    }
+    #if os(Windows)
+        directories += ["Desktop", "Documents", "Downloads", "Pictures", "Music", "Videos", "AppData"]
+            .map { home.appendingPathComponent($0, isDirectory: true) }
+    #elseif os(Linux)
+        directories += ["/home", "/tmp", "/var/tmp", "/mnt", "/media", "/run/user"]
+            .map { URL(fileURLWithPath: $0, isDirectory: true) }
+        let xdgDefaults = [
+            "XDG_CONFIG_HOME": ".config", "XDG_DATA_HOME": ".local/share",
+            "XDG_CACHE_HOME": ".cache", "XDG_STATE_HOME": ".local/state",
+        ]
+        for (name, path) in xdgDefaults {
+            if !(environment[name, default: ""] as NSString).isAbsolutePath {
+                directories.append(home.appendingPathComponent(path, isDirectory: true))
+            }
+        }
+        for (name, fallback) in ["XDG_CONFIG_DIRS": "/etc/xdg", "XDG_DATA_DIRS": "/usr/local/share:/usr/share"] {
+            let value = environment[name].flatMap { $0.isEmpty ? nil : $0 } ?? fallback
+            directories += value.split(separator: ":").filter { $0.hasPrefix("/") }
+                .map { URL(fileURLWithPath: String($0), isDirectory: true) }
+        }
+    #else
+        directories += ["/Users", "/tmp", "/var/tmp", "/Volumes"]
+            .map { URL(fileURLWithPath: $0, isDirectory: true) }
+    #endif
+    return directories
+}
+
+private let defaultProjectRootSearchBoundaries = projectRootSearchBoundaries()
+
 /// Finds the project root containing an input using filesystem markers where possible.
-func projectRoot(for inputURL: URL) -> ProjectRoot {
+func projectRoot(
+    for inputURL: URL,
+    stoppingAt boundaries: [URL] = defaultProjectRootSearchBoundaries
+) -> ProjectRoot {
     let manager = FileManager.default
     var isDirectory: ObjCBool = false
     let standardizedURL = inputURL.standardizedFileURL
@@ -1451,9 +1512,21 @@ func projectRoot(for inputURL: URL) -> ProjectRoot {
         directory.deleteLastPathComponent()
     }
     let fallback = directory
+    func comparisonPath(_ url: URL) -> String {
+        let path = url.standardizedFileURL.path
+        #if os(Windows)
+            return path.lowercased()
+        #else
+            return path
+        #endif
+    }
+    let boundaryPaths = Set(boundaries.flatMap {
+        [comparisonPath($0), comparisonPath($0.resolvingSymlinksInPath())]
+    })
 
     // Older Foundation versions append ".." when deleting the root's last path component.
-    while directory.pathComponents.count > 1 {
+    // Do not enumerate shared locations or let unrelated markers there capture inputs.
+    while directory.pathComponents.count > 1, !boundaryPaths.contains(comparisonPath(directory)) {
         if manager.fileExists(atPath: directory.appendingPathComponent("Package.swift").path) {
             return ProjectRoot(url: directory, kind: .swiftPackage)
         }

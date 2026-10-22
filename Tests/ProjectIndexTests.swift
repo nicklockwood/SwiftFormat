@@ -103,6 +103,136 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertEqual(root.kind, .directory)
     }
 
+    func testProjectRootStopsBeforeSharedTemporaryDirectory() throws {
+        try withProjectIndexTmpDirectory([
+            "Package.swift": "// Unrelated project marker",
+            "Temporary/Input.swift": "struct Input {}",
+        ]) { directory in
+            let sourceDirectory = directory.appendingPathComponent("Temporary")
+            let root = projectRoot(
+                for: sourceDirectory.appendingPathComponent("Input.swift"),
+                stoppingAt: [directory]
+            )
+            XCTAssertEqual(root.url.path, sourceDirectory.path)
+            XCTAssertEqual(root.kind, .directory)
+        }
+    }
+
+    func testProjectRootFindsProjectInsideTemporaryDirectory() throws {
+        try withProjectIndexTmpDirectory([
+            "Project/Package.swift": "// Package marker",
+            "Project/Sources/Input.swift": "struct Input {}",
+        ]) { directory in
+            let root = projectRoot(
+                for: directory.appendingPathComponent("Project/Sources/Input.swift"),
+                stoppingAt: [directory]
+            )
+            XCTAssertEqual(root.url.path, directory.appendingPathComponent("Project").path)
+            XCTAssertEqual(root.kind, .swiftPackage)
+        }
+    }
+
+    func testProjectRootStopsAtResolvedTemporaryDirectory() throws {
+        try withProjectIndexTmpDirectory([
+            "Temporary/Package.swift": "// Unrelated project marker",
+            "Temporary/Files/Input.swift": "struct Input {}",
+        ]) { directory in
+            let temporaryDirectory = directory.appendingPathComponent("Temporary")
+            let alias = directory.appendingPathComponent("Alias")
+            try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: temporaryDirectory)
+            let sourceDirectory = temporaryDirectory.appendingPathComponent("Files").resolvingSymlinksInPath()
+            let root = projectRoot(
+                for: sourceDirectory.appendingPathComponent("Input.swift"),
+                stoppingAt: [alias]
+            )
+            XCTAssertEqual(root.url.path, sourceDirectory.path)
+            XCTAssertEqual(root.kind, .directory)
+        }
+    }
+
+    func testProjectRootStopsBeforeCommonUserDirectories() {
+        let manager = FileManager.default
+        let home = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+        let directories = [home, home.deletingLastPathComponent()] +
+            manager.urls(for: .documentDirectory, in: .userDomainMask) +
+            manager.urls(for: .downloadsDirectory, in: .userDomainMask) +
+            manager.urls(for: .desktopDirectory, in: .userDomainMask)
+        for directory in directories {
+            let root = projectRoot(for: directory.appendingPathComponent("SwiftFormat-\(UUID()).swift"))
+            XCTAssertEqual(root.url.path, directory.path)
+            XCTAssertEqual(root.kind, .directory)
+        }
+    }
+
+    func testProjectRootDoesNotTreatProjectFolderNamesAsBoundaries() throws {
+        try withProjectIndexTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Documents/Input.swift": "struct Input {}",
+        ]) { directory in
+            let root = projectRoot(for: directory.appendingPathComponent("Documents/Input.swift"))
+            XCTAssertEqual(root.url.path, directory.path)
+            XCTAssertEqual(root.kind, .swiftPackage)
+        }
+    }
+
+    func testProjectRootBoundariesIncludeRedirectedEnvironmentDirectories() throws {
+        try withProjectIndexTmpDirectory([:]) { directory in
+            let names = ["USERPROFILE", "PUBLIC", "ProgramData", "APPDATA", "LOCALAPPDATA",
+                         "TEMP", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME",
+                         "XDG_STATE_HOME", "XDG_RUNTIME_DIR"]
+            let environment = Dictionary(uniqueKeysWithValues: names.map {
+                ($0, directory.appendingPathComponent($0).path)
+            })
+            let paths = Set(projectRootSearchBoundaries(environment: environment).map(\.path))
+            for path in environment.values {
+                XCTAssert(paths.contains(path), "Missing boundary: \(path)")
+            }
+        }
+    }
+
+    func testProjectRootBoundariesIgnoreRelativeEnvironmentDirectories() {
+        let boundaries = projectRootSearchBoundaries(environment: ["XDG_DATA_HOME": "relative", "APPDATA": ""])
+        XCTAssertFalse(boundaries.contains { $0.lastPathComponent == "relative" })
+    }
+
+    #if os(Linux)
+        func testProjectRootBoundariesUseXDGDefaults() {
+            let home = URL(fileURLWithPath: "/home/test")
+            let paths = Set(projectRootSearchBoundaries(homeDirectory: home, environment: [:]).map(\.path))
+            for path in ["/home/test/.config", "/home/test/.local/share", "/home/test/.cache",
+                         "/home/test/.local/state", "/etc/xdg", "/usr/local/share", "/usr/share"]
+            {
+                XCTAssert(paths.contains(path))
+            }
+        }
+
+        func testProjectRootBoundariesHonorXDGSearchPaths() {
+            let paths = Set(projectRootSearchBoundaries(environment: [
+                "XDG_CONFIG_DIRS": "/custom/config:/other/config",
+                "XDG_DATA_DIRS": "/custom/data:relative",
+            ]).map(\.path))
+            XCTAssert(paths.contains("/custom/config"))
+            XCTAssert(paths.contains("/other/config"))
+            XCTAssert(paths.contains("/custom/data"))
+            XCTAssertFalse(paths.contains { $0.hasSuffix("/relative") })
+        }
+    #endif
+
+    #if os(Windows)
+        func testProjectRootBoundariesIgnoreWindowsPathCase() throws {
+            try withProjectIndexTmpDirectory([
+                "Package.swift": "// Unrelated project marker",
+                "Files/Input.swift": "struct Input {}",
+            ]) { directory in
+                let root = projectRoot(
+                    for: directory.appendingPathComponent("Files/Input.swift"),
+                    stoppingAt: [URL(fileURLWithPath: directory.path.uppercased())]
+                )
+                XCTAssertEqual(root.kind, .directory)
+            }
+        }
+    #endif
+
     func testProjectRootFallsBackToInputDirectory() throws {
         try withProjectIndexTmpDirectory([
             "Sources/Input.swift": "struct Input {}",

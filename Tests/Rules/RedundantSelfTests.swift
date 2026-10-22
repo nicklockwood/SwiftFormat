@@ -2368,9 +2368,13 @@ final class RedundantSelfTests: XCTestCase {
 
     func testNoInsertSelfForLocalDeclaredAfterTrailingClosure() {
         let input = """
-        init(_ values: [Int]) {
-            let foo = values.map { $0 + 1 }, bar = foo
-            self.bar = bar
+        struct Foo {
+            let bar: [Int]
+
+            init(_ values: [Int]) {
+                let foo = values.map { $0 + 1 }, bar = foo
+                self.bar = bar
+            }
         }
         """
         let options = FormatOptions(explicitSelf: .insert)

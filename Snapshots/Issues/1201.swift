@@ -17,7 +17,7 @@ public extension Core_Action_ComposedAction {
     var uiAction: Actions {
         switch component {
         case let .actionRedirect(redirect):
-            return Actions.redirect(URL(string: redirect.link.value))
+            return .redirect(URL(string: redirect.link.value))
         case .actionBack:
             return .back
         default:

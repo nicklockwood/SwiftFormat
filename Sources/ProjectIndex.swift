@@ -183,6 +183,7 @@ struct SourceFileIndex: Codable, Equatable {
         var closureArgumentIndices: [Int]
         var autoclosureArgumentIndices: [Int]
         var returnType: String?
+        var argumentTypes: [String]?
 
         init(
             name: String,
@@ -194,7 +195,8 @@ struct SourceFileIndex: Codable, Equatable {
             defaultArgumentIndices: [Int] = [],
             closureArgumentIndices: [Int] = [],
             autoclosureArgumentIndices: [Int],
-            returnType: String? = nil
+            returnType: String? = nil,
+            argumentTypes: [String]? = nil
         ) {
             self.name = name
             self.kind = kind
@@ -206,6 +208,7 @@ struct SourceFileIndex: Codable, Equatable {
             self.closureArgumentIndices = closureArgumentIndices
             self.autoclosureArgumentIndices = autoclosureArgumentIndices
             self.returnType = returnType
+            self.argumentTypes = argumentTypes
         }
     }
 
@@ -408,6 +411,7 @@ struct ProjectIndex {
                         let types = typesByModule[TypeKey(moduleIdentifier: moduleIdentifier, name: owner)] ?? []
                         if types.count != 1 || types[0].isGeneric {
                             declaration.returnType = nil
+                            declaration.argumentTypes = nil
                         }
                     }
                     functionDeclarationsByModule[moduleIdentifier, default: [:]][declaration.name, default: []]
@@ -494,7 +498,7 @@ struct ProjectIndex {
                     let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
                     return "\(declaration.visibility):\(declaration.isStatic):\(declaration.kind.rawValue):" +
-                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(indices):\(declaration.returnType ?? "")"
+                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? "")"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -1199,7 +1203,12 @@ func makeSourceFileIndex(
                 !declaration.parentDeclarations.contains(where: {
                     $0.asTypeDeclaration?.genericParameters != nil
                 })
-                ? function.returnType?.string : nil
+                ? function.returnType?.string : nil,
+            argumentTypes: function.genericParameterRange == nil &&
+                !declaration.parentDeclarations.contains(where: {
+                    $0.asTypeDeclaration?.genericParameters != nil
+                })
+                ? function.arguments.map(\.type.string) : nil
         ))
     }
     formatter.clearDerivedCaches()

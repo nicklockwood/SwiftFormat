@@ -15,7 +15,7 @@ public extension FormatRule {
     ) { formatter in
         let bindings = formatter.tokens.contains(where: {
             $0 == .identifier("compactMap") || $0 == .identifier("flatMap")
-        }) ? formatter.keyPathReceiverTypes() : [:]
+        }) ? formatter.explicitBindingTypes() : [:]
         var project: ProjectIndex?
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard formatter.options.swiftVersion >= "5.2",
@@ -133,78 +133,6 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    struct KeyPathReceiverType {
-        var type: String
-        var scope: AutoUpdatingRange?
-    }
-
-    /// Only use unambiguous, explicitly typed bindings. Unknown and shadowed names
-    /// are deliberately left alone rather than guessing the closure's input type.
-    func keyPathReceiverTypes() -> [String: [KeyPathReceiverType]] {
-        var types = [String: [KeyPathReceiverType]]()
-        var genericNames = Set<String>()
-        parseDeclarations().forEachRecursiveDeclaration { declaration in
-            if let range = declaration.asTypeDeclaration?.genericParameters?.range {
-                genericNames.formUnion(tokens[range].filter(\.isIdentifier).map(\.string))
-            }
-        }
-        forEachToken { i, token in
-            if token == .keyword("let") || token == .keyword("var") {
-                let property = parsePropertyDeclaration(atIntroducerIndex: i)
-                let names = namesInDeclaration(at: i) ?? []
-                let scope = startOfScope(at: i).flatMap { start in
-                    endOfScope(at: start).map { AutoUpdatingRange(range: start ... $0, formatter: self) }
-                }
-                for name in names {
-                    types[name, default: []].append(.init(
-                        type: names.count == 1 ? property?.type?.string ?? "" : "",
-                        scope: scope
-                    ))
-                }
-            } else if token.isFunctionDeclarationKeyword,
-                      let function = parseFunctionDeclaration(keywordIndex: i)
-            {
-                if let range = function.genericParameterRange {
-                    genericNames.formUnion(tokens[range].filter(\.isIdentifier).map(\.string))
-                }
-                for argument in function.arguments {
-                    if let name = argument.internalLabel {
-                        types[name, default: []].append(.init(
-                            type: function.genericParameterRange == nil && function.bodyRange != nil ? argument.type.string : "",
-                            scope: function.bodyRange.map { AutoUpdatingRange(range: $0, formatter: self) }
-                        ))
-                    }
-                }
-            } else if token == .keyword("for"),
-                      let end = index(of: .keyword("in"), after: i)
-            {
-                for token in tokens[i ... end] where token.isIdentifier {
-                    types[token.string, default: []].append(.init(type: ""))
-                }
-            } else if token == .startOfScope("{"), isStartOfClosure(at: i),
-                      let arguments = parseClosureArguments(at: i)
-            {
-                for argument in arguments.argumentIndices {
-                    types[tokens[argument].string, default: []].append(.init(type: ""))
-                }
-                if let captures = arguments.captureListRange {
-                    for token in tokens[captures] where token.isIdentifier {
-                        types[token.string, default: []].append(.init(type: ""))
-                    }
-                }
-            }
-        }
-        return types.mapValues { values in
-            values.map { value in
-                var value = value
-                if tokenize(value.type).contains(where: { $0.isIdentifier && genericNames.contains($0.string) }) {
-                    value.type = ""
-                }
-                return value
-            }
-        }
-    }
-
     func keyPathResultIsCompatible(
         in range: ClosedRange<Int>,
         receiverType: String,

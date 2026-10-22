@@ -448,11 +448,11 @@ struct ProjectIndex {
             // A type can be extended with more conformances in any file, so these aren't scoped to a module.
             for conformance in file.typeConformances {
                 inheritedNamesByTypeName[conformance.typeName.unqualifiedTypeName, default: []]
-                    .formUnion(conformance.conformances.map(\.unqualifiedTypeName))
+                    .formUnion(conformance.conformances.inheritedNamesToResolve)
             }
             for declaration in file.protocolDeclarations {
                 inheritedNamesByTypeName[declaration.name.unqualifiedTypeName, default: []]
-                    .formUnion(declaration.inheritedProtocols.map(\.unqualifiedTypeName))
+                    .formUnion(declaration.inheritedProtocols.inheritedNamesToResolve)
             }
         }
         self.typeVisibilities = typeVisibilities
@@ -683,7 +683,11 @@ struct ProjectIndex {
         guard let moduleIdentifiers = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers,
               !moduleIdentifiers.isEmpty
         else { return .unknown }
-        var visitedNames: Set = [typeName.unqualifiedTypeName]
+        // Methods in an extension of a project protocol may be default implementations of its requirements.
+        guard !files.values.contains(where: { file in
+            file.protocolDeclarations.contains { $0.name.unqualifiedTypeName == typeName.unqualifiedTypeName }
+        }) else { return .unknown }
+        var visitedNames = Set<String>()
         var pendingNames = inheritedNamesByTypeName[typeName.unqualifiedTypeName] ?? []
         var status = ConformanceRequirementStatus.notRequired
         while let name = pendingNames.popFirst() {
@@ -1074,8 +1078,10 @@ func makeSourceFileIndex(
                 classInheritances.append(.init(className: name, inheritedTypes: inheritedTypes))
             }
             if typeDeclaration.keyword == "protocol" {
-                // Requirements of a private protocol aren't indexed, so it can't be relied on
-                if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }) {
+                // Requirements of a private protocol and `where Self:` inheritance aren't indexed, so they can't be relied on
+                if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }),
+                   formatter.index(of: .keyword("where"), in: declaration.keywordIndex ..< typeDeclaration.openBraceIndex) == nil
+                {
                     protocolDeclarations.append(.init(name: name, inheritedProtocols: inheritedTypes))
                 }
             } else {
@@ -1222,6 +1228,14 @@ private extension String {
     /// The last component of a qualified type name, ignoring generic arguments.
     var unqualifiedTypeName: String {
         prefix { $0 != "<" }.split(separator: ".").last.map(String.init) ?? self
+    }
+}
+
+private extension [String] {
+    /// Inherited names that are looked up in the index. A qualified name like `SDK.Loading` is kept as is,
+    /// so it never matches a project declaration, and the unqualified form recorded alongside it is dropped.
+    var inheritedNamesToResolve: [String] {
+        filter { name in !contains { $0.hasSuffix(".\(name)") } }
     }
 }
 

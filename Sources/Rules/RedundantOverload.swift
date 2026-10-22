@@ -148,15 +148,20 @@ extension Formatter {
 
         var candidates = [RedundantOverloadCandidate]()
 
-        for typeDeclarations in typeDeclarationsByName.values {
+        for (name, typeDeclarations) in typeDeclarationsByName {
             // Protocol requirements can't have default arguments. Extensions of a
             // protocol are excluded as well, since they share the same qualified name.
             guard !typeDeclarations.contains(where: { $0.keyword == "protocol" }) else { continue }
 
             // A method with a default argument can't witness a requirement without that parameter,
             // so a type that declares a conformance (or a superclass) here or in a local extension
-            // may need the wrapper.
-            let typeDeclaresConformance = typeDeclarations.contains(where: { !$0.conformances.isEmpty })
+            // may need the wrapper. Conformances declared through a typealias aren't detected.
+            // A module-qualified extension (`extension App.Loader: P`) is grouped under its own name.
+            let typeDeclaresConformance = typeDeclarations.contains(where: { !$0.conformances.isEmpty }) ||
+                typeDeclarationsByName.contains { qualifiedName, declarations in
+                    qualifiedName.hasSuffix(".\(name)") &&
+                        declarations.contains { $0.keyword == "extension" && !$0.conformances.isEmpty }
+                }
 
             let functions = typeDeclarations.flatMap { typeDeclaration in
                 typeDeclaration.body.filter { $0.keyword == "func" }

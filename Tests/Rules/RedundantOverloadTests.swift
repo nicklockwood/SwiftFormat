@@ -710,6 +710,23 @@ final class RedundantOverloadTests: XCTestCase {
         testFormatting(for: input, rule: .redundantOverload)
     }
 
+    func testDoesNotReplaceOverloadInTypeWithConformanceInModuleQualifiedExtension() {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+
+        extension App.Loader: PathLoading {}
+        """
+        testFormatting(for: input, rule: .redundantOverload)
+    }
+
     func testDoesNotReplaceEnumFactoryInEnumWithProtocolConformance() {
         let input = """
         enum Result<Value>: ResultFactory {
@@ -888,6 +905,80 @@ final class RedundantOverloadTests: XCTestCase {
         protocol Loading {
             func start()
         }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadWhenQualifiedConformanceSharesNameWithProjectProtocol() throws {
+        let input = """
+        struct Loader: SDK.Loading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol Loading {}
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadWhenInheritedProtocolSharesNameWithEnclosingType() throws {
+        let input = """
+        enum Namespace {
+            struct Loader: App.Loader {
+                func load(path: String, timeout: Double) {}
+
+                func load(path: String) {
+                    load(path: path, timeout: 30)
+                }
+            }
+        }
+        """
+        let references = """
+        protocol Loader {
+            func load(path: String)
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceDefaultImplementationInProtocolExtensionInAnotherFile() throws {
+        let input = """
+        extension Loading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol Loading {
+            func load(path: String)
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadRequiredByProtocolInheritedThroughWhereClause() throws {
+        let input = """
+        struct Loader: Refined {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol PathLoading {
+            func load(path: String)
+        }
+
+        protocol Refined where Self: PathLoading {}
         """
         try testProjectFormatting(for: input, references: references)
     }

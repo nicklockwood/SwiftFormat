@@ -147,6 +147,11 @@ extension Formatter {
             // protocol are excluded as well, since they share the same qualified name.
             guard !typeDeclarations.contains(where: { $0.keyword == "protocol" }) else { continue }
 
+            // A method with a default argument can't witness a requirement without that
+            // parameter. The protocol may be declared in another file, so skip any type
+            // that declares a conformance (or a superclass) here or in a local extension.
+            guard !typeDeclarations.contains(where: { !$0.conformances.isEmpty }) else { continue }
+
             let functions = typeDeclarations.flatMap { typeDeclaration in
                 typeDeclaration.body.filter { $0.keyword == "func" }
             }

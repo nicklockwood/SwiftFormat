@@ -325,11 +325,12 @@ extension Formatter {
                     case .identifier(removeSelfKeyword ?? "") where isEnabled(at: nextIndex):
                         _ = removeSelf(at: nextIndex, exclude: names, include: include)
                     case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
-                         .startOfScope where token.isStringDelimiter:
+                         .startOfScope where token.isStringDelimiter || isStartOfClosure(at: nextIndex):
                         guard let endIndex = endOfScope(at: nextIndex) else {
                             return fatalError("Expected end of scope", at: nextIndex)
                         }
-                        if let removeSelfKeyword {
+                        // Closure bodies are processed separately (the walk below skips them too)
+                        if let removeSelfKeyword, token != .startOfScope("{") {
                             var i = endIndex - 1
                             while i > nextIndex {
                                 switch tokens[i] {
@@ -349,6 +350,12 @@ extension Formatter {
                         fallthrough
                     case .number, .identifier:
                         index = max(index, nextIndex)
+                        // A trailing closure continues the expression
+                        if let braceIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                           isStartOfClosure(at: braceIndex)
+                        {
+                            continue inner
+                        }
                         if next(.nonSpaceOrCommentOrLinebreak, after: index, if: {
                             $0.isOperator(ofType: .infix) || $0.isOperator(ofType: .postfix) || [
                                 .keyword("is"), .keyword("as"), .delimiter(","),

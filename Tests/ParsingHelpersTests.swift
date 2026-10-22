@@ -1030,7 +1030,7 @@ final class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo", "x", "baz"])
-        XCTAssertEqual(index, 22)
+        XCTAssertEqual(index, 25)
     }
 
     func testProcessDeclaredVariablesInIfCondition() {

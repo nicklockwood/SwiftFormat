@@ -2266,6 +2266,56 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
+    func testShadowedValueAfterTrailingClosureNotRemovedInInit() {
+        let input = """
+        struct Foo {
+            init(_ values: [Int]) {
+                let foo = values.map { $0 + self.baz }, bar = foo
+                self.bar = bar
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            init(_ values: [Int]) {
+                let foo = values.map { $0 + baz }, bar = foo
+                self.bar = bar
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, output, rule: .redundantSelf, options: options,
+                       exclude: [.singlePropertyPerLine])
+    }
+
+    func testShadowedValueAfterImmediatelyInvokedClosureNotRemovedInInit() {
+        let input = """
+        init() {
+            let foo = { 5 }(), bar = foo
+            self.bar = bar
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.singlePropertyPerLine, .redundantClosure])
+    }
+
+    func testNoInsertSelfForLocalDeclaredAfterTrailingClosure() {
+        let input = """
+        struct Foo {
+            let bar: [Int]
+
+            init(_ values: [Int]) {
+                let foo = values.map { $0 + 1 }, bar = foo
+                self.bar = bar
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.singlePropertyPerLine])
+    }
+
     func testShadowedPropertyValueNotRemovedInInit() {
         let input = """
         init() {

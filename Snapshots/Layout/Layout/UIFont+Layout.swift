@@ -45,7 +45,7 @@ extension UIFont {
               let weight = traits[UIFontDescriptor.TraitKey.weight] as? UIFont.Weight
         else {
             fontWeights[fontName] = .regular
-            return UIFont.Weight.regular
+            return .regular
         }
         fontWeights[fontName] = weight
         return weight

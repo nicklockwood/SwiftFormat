@@ -191,9 +191,9 @@ public extension RuntimeType {
     @objc static let uiAccessibilityTraits: RuntimeType = {
         let tabBarTrait: UIAccessibilityTraits
         if #available(iOS 10, *) {
-            tabBarTrait = UIAccessibilityTraits.tabBar
+            tabBarTrait = .tabBar
         } else {
-            tabBarTrait = UIAccessibilityTraits.none
+            tabBarTrait = .none
         }
         let type = RuntimeType(RuntimeType.Kind.options(UIAccessibilityTraits.self, [
             "none": UIAccessibilityTraits.none,

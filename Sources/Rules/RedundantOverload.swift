@@ -33,6 +33,11 @@ public extension FormatRule {
         )
         let projectIndex = indexedProject ?? ProjectIndex(files: [filePath: sourceFileIndex])
         let candidates = overloadCandidates.filter { candidate in
+            // Without a project index, the protocol or superclass may be declared in another file.
+            let mayBeRequired = indexedProject.map {
+                formatter.overloadMayBeRequiredByConformance(candidate, in: $0, visibleFrom: fileURL)
+            } ?? candidate.typeDeclaresConformance
+            guard !mayBeRequired else { return false }
             guard let function = formatter.parseFunctionDeclaration(keywordIndex: candidate.wrapper.keywordIndex),
                   let name = function.name
             else { return true }
@@ -107,6 +112,7 @@ extension Formatter {
         let wrapper: Declaration
         let target: Declaration
         let kind: Kind
+        let typeDeclaresConformance: Bool
     }
 
     struct RedundantDefaultArgumentMatch {
@@ -142,21 +148,28 @@ extension Formatter {
 
         var candidates = [RedundantOverloadCandidate]()
 
-        for typeDeclarations in typeDeclarationsByName.values {
+        for (name, typeDeclarations) in typeDeclarationsByName {
             // Protocol requirements can't have default arguments. Extensions of a
             // protocol are excluded as well, since they share the same qualified name.
             guard !typeDeclarations.contains(where: { $0.keyword == "protocol" }) else { continue }
 
-            // A method with a default argument can't witness a requirement without that
-            // parameter. The protocol may be declared in another file, so skip any type
-            // that declares a conformance (or a superclass) here or in a local extension.
-            guard !typeDeclarations.contains(where: { !$0.conformances.isEmpty }) else { continue }
+            // A method with a default argument can't witness a requirement without that parameter,
+            // so a type that declares a conformance (or a superclass) here or in a local extension
+            // may need the wrapper. Conformances declared through a typealias aren't detected.
+            // A module-qualified extension (`extension App.Loader: P`) is grouped under its own name.
+            let typeDeclaresConformance = typeDeclarations.contains(where: { !$0.conformances.isEmpty }) ||
+                typeDeclarationsByName.contains { qualifiedName, declarations in
+                    qualifiedName.hasSuffix(".\(name)") &&
+                        declarations.contains { $0.keyword == "extension" && !$0.conformances.isEmpty }
+                }
 
             let functions = typeDeclarations.flatMap { typeDeclaration in
                 typeDeclaration.body.filter { $0.keyword == "func" }
             }
 
-            for wrapper in functions where !declarationIsObjectiveC(wrapper) &&
+            // Removing an override changes which implementation the superclass calls, and the
+            // index doesn't contain private superclass methods that the wrapper might override.
+            for wrapper in functions where !declarationIsObjectiveC(wrapper) && !wrapper.hasModifier("override") &&
                 options.overloadVisibility.includes(effectiveVisibility(of: wrapper))
             {
                 let matchingFunctions = functions.filter { target in
@@ -168,7 +181,12 @@ extension Formatter {
                 }
 
                 if matchingFunctions.count == 1, let target = matchingFunctions.first {
-                    candidates.append(.init(wrapper: wrapper, target: target, kind: .function))
+                    candidates.append(.init(
+                        wrapper: wrapper,
+                        target: target,
+                        kind: .function,
+                        typeDeclaresConformance: typeDeclaresConformance
+                    ))
                 }
             }
 
@@ -197,12 +215,49 @@ extension Formatter {
                 }
 
                 if matchingCases.count == 1, let enumCase = matchingCases.first {
-                    candidates.append(.init(wrapper: wrapper, target: enumCase.declaration, kind: .enumCase))
+                    candidates.append(.init(
+                        wrapper: wrapper,
+                        target: enumCase.declaration,
+                        kind: .enumCase,
+                        typeDeclaresConformance: typeDeclaresConformance
+                    ))
                 }
             }
         }
 
         return candidates
+    }
+
+    /// Whether a protocol or superclass of the wrapper's type may require the wrapper or its target.
+    func overloadMayBeRequiredByConformance(
+        _ candidate: RedundantOverloadCandidate,
+        in project: ProjectIndex,
+        visibleFrom fileURL: URL
+    ) -> Bool {
+        let targetLabels: [String?]?
+        switch candidate.kind {
+        case .function:
+            targetLabels = parseFunctionDeclaration(keywordIndex: candidate.target.keywordIndex)?
+                .arguments.map(\.externalLabel)
+        case .enumCase:
+            targetLabels = parseEnumCaseDeclaration(candidate.target)?.parameters.map(\.externalLabel)
+        }
+        guard let wrapperFunction = parseFunctionDeclaration(keywordIndex: candidate.wrapper.keywordIndex),
+              let name = wrapperFunction.name,
+              let typeName = candidate.wrapper.parentType?.fullyQualifiedName,
+              let targetLabels
+        else { return true }
+
+        let isStatic = candidate.wrapper.hasModifier("static") || candidate.wrapper.hasModifier("class")
+        return [wrapperFunction.arguments.map(\.externalLabel), targetLabels].contains { labels in
+            project.conformanceRequirementStatus(
+                forType: typeName,
+                functionName: name,
+                isStatic: isStatic,
+                argumentLabels: labels,
+                visibleFrom: fileURL
+            ) != .notRequired
+        }
     }
 
     func defaultArgumentMatch(

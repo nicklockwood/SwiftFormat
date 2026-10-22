@@ -13,7 +13,8 @@ final class RedundantOverloadTests: XCTestCase {
     private func testProjectFormatting(
         for input: String,
         _ output: String? = nil,
-        references: String,
+        references: String = "",
+        options: FormatOptions = .default,
         file: StaticString = #file,
         line: UInt = #line
     ) throws {
@@ -27,7 +28,7 @@ final class RedundantOverloadTests: XCTestCase {
         let result = try applyRules(
             [.redundantOverload],
             to: tokenize(input),
-            with: .default,
+            with: options,
             trackChanges: false,
             range: nil,
             context: FormattingContext(currentFileURL: declarationsURL, projectIndex: projectIndex)
@@ -709,6 +710,23 @@ final class RedundantOverloadTests: XCTestCase {
         testFormatting(for: input, rule: .redundantOverload)
     }
 
+    func testDoesNotReplaceOverloadInTypeWithConformanceInModuleQualifiedExtension() {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+
+        extension App.Loader: PathLoading {}
+        """
+        testFormatting(for: input, rule: .redundantOverload)
+    }
+
     func testDoesNotReplaceEnumFactoryInEnumWithProtocolConformance() {
         let input = """
         enum Result<Value>: ResultFactory {
@@ -724,6 +742,420 @@ final class RedundantOverloadTests: XCTestCase {
         testFormatting(
             for: input,
             rule: .redundantOverload,
+            options: FormatOptions(swiftVersion: "5.1")
+        )
+    }
+
+    func testReplacesOverloadWhenProtocolInSameFileDoesNotRequireIt() throws {
+        let input = """
+        protocol Resettable {
+            func reset()
+        }
+
+        struct Loader: Resettable {
+            func reset() {}
+
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let output = """
+        protocol Resettable {
+            func reset()
+        }
+
+        struct Loader: Resettable {
+            func reset() {}
+
+            func load(path: String, timeout: Double = 30) {}
+        }
+        """
+        try testProjectFormatting(for: input, output)
+    }
+
+    func testDoesNotReplaceOverloadRequiredByProtocolInAnotherFile() throws {
+        let input = """
+        struct Loader: PathLoading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol PathLoading {
+            func load(path: String)
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testReplacesOverloadWhenProtocolInAnotherFileDoesNotRequireIt() throws {
+        let input = """
+        struct Loader: Resettable {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let output = """
+        struct Loader: Resettable {
+            func load(path: String, timeout: Double = 30) {}
+        }
+        """
+        let references = """
+        protocol Resettable {
+            func reset()
+        }
+        """
+        try testProjectFormatting(for: input, output, references: references)
+    }
+
+    func testDoesNotReplaceOverloadRequiredByProtocolOfExtensionInAnotherFile() throws {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol PathLoading {
+            func load(path: String)
+        }
+
+        extension Loader: PathLoading {}
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadRequiredByInheritedProtocol() throws {
+        let input = """
+        struct Loader: ThrottledLoading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol PathLoading {
+            func load(path: String)
+        }
+
+        protocol ThrottledLoading: PathLoading {}
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadInTypeWithExternalConformance() throws {
+        let input = """
+        struct Loader: Equatable {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        try testProjectFormatting(for: input)
+    }
+
+    func testDoesNotReplaceOverloadInTypeWithPrivateProtocolConformance() throws {
+        let input = """
+        fileprivate protocol PathLoading {
+            func load(path: String)
+        }
+
+        struct Loader: PathLoading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        try testProjectFormatting(for: input)
+    }
+
+    func testDoesNotReplaceOverloadWhenProtocolNameIsDeclaredTwice() throws {
+        let input = """
+        protocol Loading {
+            func reset()
+        }
+
+        struct Loader: Loading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol Loading {
+            func start()
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadWhenQualifiedConformanceSharesNameWithProjectProtocol() throws {
+        let input = """
+        struct Loader: SDK.Loading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol Loading {}
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadWhenInheritedProtocolSharesNameWithEnclosingType() throws {
+        let input = """
+        enum Namespace {
+            struct Loader: App.Loader {
+                func load(path: String, timeout: Double) {}
+
+                func load(path: String) {
+                    load(path: path, timeout: 30)
+                }
+            }
+        }
+        """
+        let references = """
+        protocol Loader {
+            func load(path: String)
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceDefaultImplementationInProtocolExtensionInAnotherFile() throws {
+        let input = """
+        extension Loading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol Loading {
+            func load(path: String)
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverloadRequiredByProtocolInheritedThroughWhereClause() throws {
+        let input = """
+        struct Loader: Refined {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol PathLoading {
+            func load(path: String)
+        }
+
+        protocol Refined where Self: PathLoading {}
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testReplacesOverloadWhenProtocolRequiresDifferentLabelsOrStaticness() throws {
+        let input = """
+        struct Loader: FileLoading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let output = """
+        struct Loader: FileLoading {
+            func load(path: String, timeout: Double = 30) {}
+        }
+        """
+        let references = """
+        protocol FileLoading {
+            func load(file: String)
+            static func load(path: String)
+        }
+        """
+        try testProjectFormatting(for: input, output, references: references)
+    }
+
+    func testDoesNotReplaceOverloadWhenProtocolRequiresTargetSignature() throws {
+        let input = """
+        struct Loader: ThrottledLoading {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        protocol ThrottledLoading {
+            func load(path: String, timeout: Double)
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testReplacesOverloadWhenSuperclassDoesNotDeclareFunction() throws {
+        let input = """
+        class Loader: BaseLoader {
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let output = """
+        class Loader: BaseLoader {
+            func load(path: String, timeout: Double = 30) {}
+        }
+        """
+        let references = """
+        class BaseLoader {
+            func reset() {}
+        }
+        """
+        try testProjectFormatting(for: input, output, references: references)
+    }
+
+    func testDoesNotReplaceOverloadWhenSuperclassDeclaresFunctionWithSameLabels() throws {
+        let input = """
+        class Loader: BaseLoader {
+            func load(path: URL, timeout: Double) {}
+
+            func load(path: URL) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        let references = """
+        class BaseLoader {
+            func load(path: String) {}
+        }
+        """
+        try testProjectFormatting(for: input, references: references)
+    }
+
+    func testDoesNotReplaceOverrideOfPrivateSuperclassMethod() throws {
+        let input = """
+        class BaseLoader {
+            fileprivate func load(path: String) {}
+            fileprivate func load(path: String, timeout: Double) {}
+        }
+
+        class Loader: BaseLoader {
+            override func load(path: String, timeout: Double) {}
+
+            override func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        try testProjectFormatting(for: input)
+    }
+
+    func testDoesNotReplaceOverloadInTypeWithConformanceWhenOverloadVisibilityIsFile() throws {
+        let input = """
+        protocol Resettable {
+            func reset()
+        }
+
+        private struct Loader: Resettable {
+            func reset() {}
+
+            func load(path: String, timeout: Double) {}
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+        """
+        try testProjectFormatting(for: input, options: FormatOptions(overloadVisibility: .file))
+    }
+
+    func testDoesNotReplaceEnumFactoryRequiredByProtocolInAnotherFile() throws {
+        let input = """
+        enum Result<Value>: ResultFactory {
+            case success(value: Value, cached: Bool)
+        }
+
+        extension Result {
+            static func success(value: Value) -> Self {
+                .success(value: value, cached: false)
+            }
+        }
+        """
+        let references = """
+        protocol ResultFactory {
+            static func success(value: Int) -> Self
+        }
+        """
+        try testProjectFormatting(
+            for: input,
+            references: references,
+            options: FormatOptions(swiftVersion: "5.1")
+        )
+    }
+
+    func testReplacesEnumFactoryWhenProtocolInAnotherFileDoesNotRequireIt() throws {
+        let input = """
+        enum Result<Value>: ResultFactory {
+            case success(value: Value, cached: Bool)
+        }
+
+        extension Result {
+            static func success(value: Value) -> Self {
+                .success(value: value, cached: false)
+            }
+        }
+        """
+        let output = """
+        enum Result<Value>: ResultFactory {
+            case success(value: Value, cached: Bool = false)
+        }
+
+        extension Result {
+        }
+        """
+        let references = """
+        protocol ResultFactory {
+            static func failure(error: Error) -> Self
+        }
+        """
+        try testProjectFormatting(
+            for: input,
+            output,
+            references: references,
             options: FormatOptions(swiftVersion: "5.1")
         )
     }

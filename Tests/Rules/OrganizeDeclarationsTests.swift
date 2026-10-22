@@ -4934,4 +4934,38 @@ final class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.semicolons]
         )
     }
+
+    func testOrganizeDeclarationsKeepsPostfixIfdefWithProperty() {
+        let input = """
+        struct Foo {
+            private let bar = Bar()
+            #if DEBUG
+                .debug()
+            #endif
+
+            let baaz = 1
+        }
+        """
+        let output = """
+        struct Foo {
+
+            // MARK: Internal
+
+            let baaz = 1
+
+            // MARK: Private
+
+            private let bar = Bar()
+            #if DEBUG
+                .debug()
+            #endif
+
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

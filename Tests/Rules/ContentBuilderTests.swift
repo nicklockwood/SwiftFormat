@@ -311,6 +311,281 @@ final class ContentBuilderTests: XCTestCase {
         testFormatting(for: input, output, rule: .contentBuilder)
     }
 
+    func testRemoveRedundantViewBuilderOnIfdefWithSingleViewInEachBranch() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                #if FOO
+                    Text("foo")
+                        .bold()
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var helper: some View {
+                #if FOO
+                    Text("foo")
+                        .bold()
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testRemoveRedundantViewBuilderOnIfdefWithElseifAndNestedIfdef() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            func helper() -> some View {
+                #if FOO
+                    Text("foo")
+                #elseif BAR
+                    #if BAZ
+                        Text("bar")
+                    #else
+                        Image("baz")
+                    #endif
+                #else
+                    Color.red
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            func helper() -> some View {
+                #if FOO
+                    Text("foo")
+                #elseif BAR
+                    #if BAZ
+                        Text("bar")
+                    #else
+                        Image("baz")
+                    #endif
+                #else
+                    Color.red
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testKeepViewBuilderOnIfdefBeforeSwift5_4() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                #if FOO
+                    Text("foo")
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.3"))
+    }
+
+    func testKeepViewBuilderOnIfdefWithoutSingleViewInEveryBranch() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var withoutElse: some View {
+                #if FOO
+                    Text("foo")
+                #endif
+            }
+
+            @ViewBuilder
+            var emptyElse: some View {
+                #if FOO
+                    Text("foo")
+                #else
+                #endif
+            }
+
+            @ViewBuilder
+            var multipleViews: some View {
+                #if FOO
+                    Text("foo")
+                    Text("bar")
+                #else
+                    Text("baz")
+                #endif
+            }
+
+            @ViewBuilder
+            var conditional: some View {
+                #if FOO
+                    if condition {
+                        Text("foo")
+                    } else {
+                        Image("bar")
+                    }
+                #else
+                    Text("baz")
+                #endif
+            }
+
+            @ViewBuilder
+            var viewAfterIfdef: some View {
+                #if FOO
+                    Text("foo")
+                #else
+                    Text("bar")
+                #endif
+                Text("baz")
+            }
+        }
+        """
+        testFormatting(for: input, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testKeepViewBuilderOnSwitchWithIfdefAroundCase() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                switch value {
+                case .foo:
+                    Text("foo")
+                #if BAR
+                    case .bar:
+                        Image("bar")
+                #endif
+                default:
+                    Color.red
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testKeepViewBuilderOnSwitchWithIfdefAroundCaseAndSameViewType() {
+        // The view types can't be reliably determined from the source, so
+        // conditionals are kept even if every branch appears to be the same type
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                switch value {
+                case .foo:
+                    Text("foo")
+                #if BAR
+                    case .bar:
+                        Text("bar")
+                #endif
+                default:
+                    Text("baz")
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemoveRedundantViewBuilderOnPostfixIfdef() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            func helper() -> some View {
+                Text("foo")
+                #if FOO
+                    .bold()
+                    .italic()
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            func helper() -> some View {
+                Text("foo")
+                #if FOO
+                    .bold()
+                    .italic()
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder)
+    }
+
+    func testRemoveRedundantViewBuilderOnPostfixIfdefWithMultipleBranches() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                Text("foo")
+                #if FOO
+                    .bold()
+                #elseif BAR
+                    .italic()
+                    #if BAZ
+                        .underline()
+                    #endif
+                #else
+                    .strikethrough()
+                #endif
+                    .padding()
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var helper: some View {
+                Text("foo")
+                #if FOO
+                    .bold()
+                #elseif BAR
+                    .italic()
+                    #if BAZ
+                        .underline()
+                    #endif
+                #else
+                    .strikethrough()
+                #endif
+                    .padding()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder)
+    }
+
+    func testKeepViewBuilderOnPostfixIfdefWithMultipleViews() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var viewAfterPostfixIfdef: some View {
+                Text("foo")
+                #if FOO
+                    .bold()
+                #endif
+                Text("bar")
+            }
+
+            @ViewBuilder
+            var viewInIfdef: some View {
+                Text("foo")
+                #if FOO
+                    Text("bar")
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, rule: .contentBuilder)
+    }
+
     func testKeepViewBuilderOnHelperFuncWithIfWithoutElse() {
         let input = """
         struct Foo: View {
@@ -1635,5 +1910,172 @@ final class ContentBuilderTests: XCTestCase {
         """
         let options = FormatOptions(contentBuilder: .explicit, swiftVersion: "6.4")
         testFormatting(for: input, output, rule: .contentBuilder, options: options)
+    }
+
+    func testRemoveRedundantViewBuilderOnIfdefWithModifiersAndComments() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                #if DEBUG // debug builds
+                    // The debug label
+                    Text("foo")
+                        .bold()
+
+                #else
+                    Image("bar") // release builds
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var helper: some View {
+                #if DEBUG // debug builds
+                    // The debug label
+                    Text("foo")
+                        .bold()
+
+                #else
+                    Image("bar") // release builds
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testRemoveRedundantViewBuilderOnIfdefWithPostfixIfdefInBranch() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                #if FOO
+                    Text("foo")
+                    #if BAR
+                        .bold()
+                    #endif
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var helper: some View {
+                #if FOO
+                    Text("foo")
+                    #if BAR
+                        .bold()
+                    #endif
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testRemoveRedundantViewBuilderOnPostfixIfdefWithEmptyElse() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                Text("foo")
+                #if FOO
+                    .bold()
+                #else
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var helper: some View {
+                Text("foo")
+                #if FOO
+                    .bold()
+                #else
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder)
+    }
+
+    func testRemoveRedundantViewBuilderWithReturn() {
+        // An explicit `return` disables the result builder
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                return Text("foo")
+            }
+
+            @ViewBuilder
+            var platformHelper: some View {
+                #if FOO
+                    return Text("foo")
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var helper: some View {
+                return Text("foo")
+            }
+
+            var platformHelper: some View {
+                #if FOO
+                    return Text("foo")
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.4"),
+                       exclude: [.redundantReturn])
+    }
+
+    func testKeepViewBuilderOnIfWithIfdefInBranch() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                if condition {
+                    #if FOO
+                        Text("foo")
+                    #else
+                        Text("bar")
+                    #endif
+                } else {
+                    Image("baaz")
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testKeepViewBuilderOnIfdefWithElseifButNoElse() {
+        let input = """
+        struct MyView: View {
+            @ViewBuilder
+            var helper: some View {
+                #if FOO
+                    Text("foo")
+                #elseif BAR
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, rule: .contentBuilder, options: FormatOptions(swiftVersion: "5.4"))
     }
 }

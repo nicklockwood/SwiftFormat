@@ -1090,4 +1090,103 @@ final class RedundantClosureTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantClosure, options: options,
                        exclude: [.indent, .wrapMultilineConditionalAssignment])
     }
+
+    func testRemovesClosureWithPostfixIfdef() {
+        let input = """
+        let foo = {
+            Foo()
+            #if DEBUG
+                .debug()
+            #endif
+        }()
+        """
+        let output = """
+        let foo = Foo()
+        #if DEBUG
+            .debug()
+        #endif
+        """
+        testFormatting(for: input, [output], rules: [.redundantClosure, .indent])
+    }
+
+    func testKeepsClosureWithIfdefBody() {
+        let input = """
+        let foo = {
+            #if DEBUG
+                1
+            #else
+                2
+            #endif
+        }()
+        """
+        testFormatting(for: input, rule: .redundantClosure, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testRemovesClosureWithIfExpressionWithIfdefBranch() {
+        let input = """
+        let foo = {
+            if bar {
+                #if DEBUG
+                    1
+                #else
+                    2
+                #endif
+            } else {
+                3
+            }
+        }()
+        """
+        let output = """
+        let foo =
+            if bar {
+                #if DEBUG
+                    1
+                #else
+                    2
+                #endif
+            } else {
+                3
+            }
+        """
+        testFormatting(for: input, [output], rules: [.redundantClosure, .wrapMultilineConditionalAssignment, .indent],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemovesClosureWithReturnAndPostfixIfdef() {
+        let input = """
+        let foo = {
+            return Foo()
+            #if DEBUG
+                .debug()
+            #endif
+        }()
+        """
+        let output = """
+        let foo = Foo()
+        #if DEBUG
+            .debug()
+        #endif
+        """
+        testFormatting(for: input, [output], rules: [.redundantClosure, .indent])
+    }
+
+    func testRemovesClosureWithPostfixIfdefWithEmptyElse() {
+        let input = """
+        let foo = {
+            Foo()
+            #if DEBUG
+                .debug()
+            #else
+            #endif
+        }()
+        """
+        let output = """
+        let foo = Foo()
+        #if DEBUG
+            .debug()
+        #else
+        #endif
+        """
+        testFormatting(for: input, [output], rules: [.redundantClosure, .indent])
+    }
 }

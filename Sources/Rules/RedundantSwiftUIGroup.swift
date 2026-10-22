@@ -58,7 +58,10 @@ public extension FormatRule {
             // - If the Group body is a single non-conditional expression, @ViewBuilder is not needed
             let hasExistingViewBuilder = formatter.indexOfViewBuilderAttribute(for: declaration) != nil
             let needsViewBuilder = !isBodyMember
-                && !formatter.scopeBodyIsSingleNonConditionalExpression(at: groupInfo.closureStartIndex)
+                && !formatter.scopeBodyIsSingleExpression(
+                    at: groupInfo.closureStartIndex,
+                    allowing: .conditionalCompilationBlocks
+                )
 
             // Determine where to add @ViewBuilder if needed, before performing any mutations.
             // This is before the modifiers (a lower index than the Group in the body), so it
@@ -152,14 +155,12 @@ extension Formatter {
         // since the modifiers would otherwise apply to each view individually.
         if hasModifiers {
             // The modifiers must be the last thing in the body
-            guard let modifierRange = parseExpressionRange(startingAt: firstTokenIndex),
-                  index(of: .nonSpaceOrCommentOrLinebreak, after: modifierRange.upperBound) == bodyScope.upperBound
-            else { return nil }
+            guard scopeBodyIsSingleExpression(at: bodyScope.lowerBound) else { return nil }
 
             // Only remove the Group if its body is a single, non-conditional view.
             // Conditional expressions and multiple views rely on the Group to combine
             // them into a single view that the modifiers can apply to.
-            guard scopeBodyIsSingleNonConditionalExpression(at: groupCallInfo.closureStartIndex) else { return nil }
+            guard scopeBodyIsSingleExpression(at: groupCallInfo.closureStartIndex) else { return nil }
         }
 
         return GroupInfo(

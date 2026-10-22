@@ -207,6 +207,148 @@ final class ProjectIndexTests: XCTestCase {
         )
     }
 
+    func testSourceFileIndexExtractsTypeConformances() {
+        let source = """
+        struct Item: Identifiable, Module.Named {
+            struct Detail: Hashable {}
+        }
+        enum Mode: String {}
+        class Child: Parent {}
+        actor Worker {}
+        extension Item: Equatable {}
+        """
+
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+
+        XCTAssertEqual(index.typeConformances, [
+            .init(typeName: "Item", conformances: ["Identifiable", "Module.Named", "Named"]),
+            .init(typeName: "Item.Detail", conformances: ["Hashable"]),
+            .init(typeName: "Mode", conformances: ["String"]),
+            .init(typeName: "Child", conformances: ["Parent"]),
+            .init(typeName: "Worker", conformances: []),
+            .init(typeName: "Item", conformances: ["Equatable"]),
+        ])
+    }
+
+    func testSourceFileIndexExtractsProtocolInheritance() {
+        let source = """
+        protocol Refined: Base, Module.Other {}
+        public protocol Plain {}
+        fileprivate protocol Hidden: Base {}
+        """
+
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
+
+        XCTAssertEqual(index.protocolDeclarations, [
+            .init(name: "Refined", inheritedProtocols: ["Base", "Module.Other", "Other"]),
+            .init(name: "Plain", inheritedProtocols: []),
+        ])
+        XCTAssertEqual(index.typeConformances, [])
+    }
+
+    func testSourceFileIndexRoundTripsConformancesThroughCodable() throws {
+        let index = makeSourceFileIndex(
+            from: """
+            struct Item: Named {}
+            protocol Named: Base {}
+            """,
+            moduleIdentifiers: ["App"]
+        )
+
+        XCTAssertEqual(SourceFileIndex.cacheVersion, 6)
+        XCTAssertEqual(try JSONDecoder().decode(
+            SourceFileIndex.self,
+            from: JSONEncoder().encode(index)
+        ), index)
+    }
+
+    func testDeclarationFingerprintIncludesTypeConformancesAndProtocolInheritance() {
+        func fingerprint(_ source: String) -> String {
+            ProjectIndex(files: [
+                "/Project/Input.swift": makeSourceFileIndex(from: source, moduleIdentifiers: ["App"]),
+            ]).fingerprint(for: [.declarations])
+        }
+
+        XCTAssertNotEqual(
+            fingerprint("extension Item: Named {}"),
+            fingerprint("extension Item: Other {}")
+        )
+        XCTAssertNotEqual(
+            fingerprint("protocol Named: Base {}"),
+            fingerprint("protocol Named: Other {}")
+        )
+    }
+
+    private func conformanceRequirementStatus(
+        forType typeName: String = "Loader",
+        isStatic: Bool = false,
+        argumentLabels: [String?] = ["path"],
+        in sources: [String]
+    ) -> ProjectIndex.ConformanceRequirementStatus {
+        let fileURLs = sources.indices.map { URL(fileURLWithPath: "/Project/Sources/App/File\($0).swift") }
+        let projectIndex = ProjectIndex(files: Dictionary(uniqueKeysWithValues: zip(fileURLs, sources).map {
+            ($0.path, makeSourceFileIndex(from: $1, moduleIdentifiers: ["App"]))
+        }))
+        return projectIndex.conformanceRequirementStatus(
+            forType: typeName,
+            functionName: "load",
+            isStatic: isStatic,
+            argumentLabels: argumentLabels,
+            visibleFrom: fileURLs[0]
+        )
+    }
+
+    func testConformanceRequirementStatusFindsRequirementsInProjectDeclarations() {
+        let protocolSource = "protocol Base { func load(path: String) }"
+
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader: Refined {}", protocolSource, "protocol Refined: Base {}",
+        ]), .required)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader {}", protocolSource, "extension Loader: Base {}",
+        ]), .required)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "class Loader: Child {}", "class Child: Parent {}", "class Parent: Base {}", protocolSource,
+        ]), .required)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "class Loader: Parent {}", "class Parent { func load(path: String) {} }",
+        ]), .required)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader: Equatable, Base {}", protocolSource,
+        ]), .required)
+    }
+
+    func testConformanceRequirementStatusIsNotRequiredForOtherSignatures() {
+        let protocolSource = "protocol Base { func load(path: String) }"
+
+        XCTAssertEqual(conformanceRequirementStatus(in: ["struct Loader {}"]), .notRequired)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader: Base {}", "protocol Base { func reset() }",
+        ]), .notRequired)
+        XCTAssertEqual(conformanceRequirementStatus(argumentLabels: ["file"], in: [
+            "struct Loader: Base {}", protocolSource,
+        ]), .notRequired)
+        XCTAssertEqual(conformanceRequirementStatus(isStatic: true, in: [
+            "struct Loader: Base {}", protocolSource,
+        ]), .notRequired)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader: First {}", "protocol First: Second {}", "protocol Second: First {}",
+        ]), .notRequired)
+    }
+
+    func testConformanceRequirementStatusIsUnknownForExternalOrAmbiguousDeclarations() {
+        XCTAssertEqual(conformanceRequirementStatus(in: ["struct Loader: Equatable {}"]), .unknown)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader: Base {}", "protocol Base: Sendable {}",
+        ]), .unknown)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader: Base {}", "protocol Base {}", "protocol Base {}",
+        ]), .unknown)
+        XCTAssertEqual(conformanceRequirementStatus(in: [
+            "struct Loader: Base {}", "private protocol Base { func reset() }",
+        ]), .unknown)
+    }
+
     func testSourceFileIndexCanOmitFunctionReferences() throws {
         let source = """
         struct Example {

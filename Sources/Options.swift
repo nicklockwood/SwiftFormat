@@ -257,6 +257,14 @@ public enum ContentBuilderMode: String, CaseIterable {
     case explicit
 }
 
+/// Which assignments the `alignAssignments` rule aligns with each other
+public enum AlignAssignmentsMode: String, CaseIterable {
+    /// Align assignments in the same scope that aren't separated by a blank line
+    case consecutive
+    /// Align all assignments in the same scope
+    case scope
+}
+
 /// Whether to insert, remove, or preserve spaces around operators
 public enum OperatorSpacingMode: String, CaseIterable {
     case insert = "spaced"
@@ -1076,6 +1084,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var singleLineTernary: SingleLineTernary
     public var contentBuilder: ContentBuilderMode
     public var preferContentBuilder: Bool
+    public var alignAssignments: AlignAssignmentsMode
 
     /// Deprecated
     public var indentComments: Bool
@@ -1250,6 +1259,7 @@ public struct FormatOptions: CustomStringConvertible {
                 singleLineTernary: SingleLineTernary = .convert,
                 contentBuilder: ContentBuilderMode = .implicit,
                 preferContentBuilder: Bool = false,
+                alignAssignments: AlignAssignmentsMode = .consecutive,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1409,6 +1419,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.singleLineTernary = singleLineTernary
         self.contentBuilder = contentBuilder
         self.preferContentBuilder = preferContentBuilder
+        self.alignAssignments = alignAssignments
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

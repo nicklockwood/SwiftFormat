@@ -12,7 +12,8 @@ on:
 jobs:
   build:
     name: Build SwiftFormat for Windows
-    runs-on: windows-latest
+    # Use VS2022 with the pinned Swift snapshot; newer runner images can fail to load Swift.
+    runs-on: windows-2022
 
     strategy:
       fail-fast: false

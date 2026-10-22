@@ -155,6 +155,17 @@ struct SourceFileIndex: Codable, Equatable {
         var inheritedTypes: [String]
     }
 
+    /// The conformances and superclass declared by a type or extension.
+    struct TypeConformance: Codable, Equatable {
+        var typeName: String
+        var conformances: [String]
+    }
+
+    struct ProtocolDeclaration: Codable, Equatable {
+        var name: String
+        var inheritedProtocols: [String]
+    }
+
     struct FunctionDeclaration: Codable, Equatable {
         enum Kind: String, Codable {
             case function
@@ -238,12 +249,14 @@ struct SourceFileIndex: Codable, Equatable {
         var type: String?
     }
 
-    static let cacheVersion = 5
+    static let cacheVersion = 6
 
     var contentHash: String
     var moduleIdentifiers: [String]
     var typeDeclarations: [TypeDeclaration]
     var classInheritances: [ClassInheritance]
+    var typeConformances: [TypeConformance]
+    var protocolDeclarations: [ProtocolDeclaration]
     var functionDeclarations: [FunctionDeclaration]
     var propertyDeclarations: [PropertyDeclaration]
     var typeMembers: [TypeMembers]
@@ -258,6 +271,8 @@ struct SourceFileIndex: Codable, Equatable {
         moduleIdentifiers: Set<String>,
         typeDeclarations: [TypeDeclaration],
         classInheritances: [ClassInheritance] = [],
+        typeConformances: [TypeConformance] = [],
+        protocolDeclarations: [ProtocolDeclaration] = [],
         functionDeclarations: [FunctionDeclaration],
         propertyDeclarations: [PropertyDeclaration] = [],
         typeMembers: [TypeMembers],
@@ -271,6 +286,8 @@ struct SourceFileIndex: Codable, Equatable {
         self.moduleIdentifiers = moduleIdentifiers.sorted()
         self.typeDeclarations = typeDeclarations
         self.classInheritances = classInheritances
+        self.typeConformances = typeConformances
+        self.protocolDeclarations = protocolDeclarations
         self.functionDeclarations = functionDeclarations
         self.propertyDeclarations = propertyDeclarations
         self.typeMembers = typeMembers
@@ -315,6 +332,15 @@ struct ProjectIndex {
         var protected: Set<String>
     }
 
+    enum ConformanceRequirementStatus: Equatable {
+        /// A protocol or superclass declares a matching function.
+        case required
+        /// Every protocol and superclass is known, and none declares a matching function.
+        case notRequired
+        /// A protocol or superclass isn't a unique project declaration, so its requirements aren't known.
+        case unknown
+    }
+
     private struct TypeKey: Hashable {
         var moduleIdentifier: String
         var name: String
@@ -328,6 +354,8 @@ struct ProjectIndex {
     private let typeVisibilities: [TypeKey: Set<String>]
     private let inheritedClassNamesByModule: [String: Set<String>]
     private let inheritedClassNames: Set<String>
+    private let inheritedNamesByTypeName: [String: Set<String>]
+    private let typeAndProtocolCountsByModule: [TypeKey: Int]
     private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
     private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
     private let memberNamesByModule: [String: MemberNamesByType]
@@ -340,6 +368,7 @@ struct ProjectIndex {
         self.files = files
         var typeVisibilities = [TypeKey: Set<String>]()
         var inheritedClassNamesByModule = [String: Set<String>]()
+        var typeAndProtocolCountsByModule = [TypeKey: Int]()
         var functionDeclarationsByModule = [String: [String: [SourceFileIndex.FunctionDeclaration]]]()
         var functionReferencesByModule = [String: [String: [SourceFileIndex.FunctionReference]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
@@ -359,6 +388,10 @@ struct ProjectIndex {
                 for declaration in file.typeDeclarations {
                     let key = TypeKey(moduleIdentifier: moduleIdentifier, name: declaration.name)
                     typeVisibilities[key, default: []].insert(declaration.visibility)
+                }
+                for name in file.typeDeclarations.map(\.name) + file.protocolDeclarations.map(\.name) {
+                    let key = TypeKey(moduleIdentifier: moduleIdentifier, name: name.unqualifiedTypeName)
+                    typeAndProtocolCountsByModule[key, default: 0] += 1
                 }
                 for inheritance in file.classInheritances {
                     for inheritedType in inheritance.inheritedTypes {
@@ -403,6 +436,7 @@ struct ProjectIndex {
         }
         var symbolDeclarationCountsByName = [String: Int]()
         var typeDeclarationCountsByShortName = [String: Int]()
+        var inheritedNamesByTypeName = [String: Set<String>]()
         for file in files.values {
             for declaration in file.symbolDeclarations {
                 symbolDeclarationCountsByName[declaration.name, default: 0] += 1
@@ -411,12 +445,23 @@ struct ProjectIndex {
                 let name = declaration.name.split(separator: ".").last.map(String.init) ?? declaration.name
                 typeDeclarationCountsByShortName[name, default: 0] += 1
             }
+            // A type can be extended with more conformances in any file, so these aren't scoped to a module.
+            for conformance in file.typeConformances {
+                inheritedNamesByTypeName[conformance.typeName.unqualifiedTypeName, default: []]
+                    .formUnion(conformance.conformances.inheritedNamesToResolve)
+            }
+            for declaration in file.protocolDeclarations {
+                inheritedNamesByTypeName[declaration.name.unqualifiedTypeName, default: []]
+                    .formUnion(declaration.inheritedProtocols.inheritedNamesToResolve)
+            }
         }
         self.typeVisibilities = typeVisibilities
         self.inheritedClassNamesByModule = inheritedClassNamesByModule
         inheritedClassNames = inheritedClassNamesByModule.values.reduce(into: []) {
             $0.formUnion($1)
         }
+        self.inheritedNamesByTypeName = inheritedNamesByTypeName
+        self.typeAndProtocolCountsByModule = typeAndProtocolCountsByModule
         self.functionDeclarationsByModule = functionDeclarationsByModule
         self.functionReferencesByModule = functionReferencesByModule
         self.memberNamesByModule = memberNamesByModule
@@ -432,6 +477,14 @@ struct ProjectIndex {
                 .joined(separator: ",")
             let classInheritances = file.classInheritances
                 .map { "\($0.className):\($0.inheritedTypes.joined(separator: ","))" }
+                .sorted()
+                .joined(separator: ",")
+            let typeConformances = file.typeConformances
+                .map { "\($0.typeName):\($0.conformances.joined(separator: ","))" }
+                .sorted()
+                .joined(separator: ",")
+            let protocolDeclarations = file.protocolDeclarations
+                .map { "\($0.name):\($0.inheritedProtocols.joined(separator: ","))" }
                 .sorted()
                 .joined(separator: ",")
             let functions = file.functionDeclarations
@@ -468,8 +521,8 @@ struct ProjectIndex {
                 }
                 .sorted()
                 .joined(separator: ",")
-            let declarations = "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(classInheritances):\(functions):" +
-                "\(members):\(properties):\(symbolDeclarations)"
+            let declarations = "\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(classInheritances):" +
+                "\(typeConformances):\(protocolDeclarations):\(functions):\(members):\(properties):\(symbolDeclarations)"
             let symbolReferences = file.symbolReferences.sorted().joined(separator: ",")
             return (declarations, functionReferences, symbolReferences)
         }
@@ -614,6 +667,49 @@ struct ProjectIndex {
             let inheritedNames = inheritedClassNamesByModule[moduleIdentifier] ?? []
             return inheritedNames.contains(name) || inheritedNames.contains(unqualifiedName)
         }
+    }
+
+    /// Whether a protocol or superclass of the type declares a function with the given signature.
+    ///
+    /// Protocol inheritance and superclasses are followed. Any protocol or superclass that isn't a
+    /// uniquely named project declaration is `unknown`, since its requirements can't be seen.
+    func conformanceRequirementStatus(
+        forType typeName: String,
+        functionName: String,
+        isStatic: Bool,
+        argumentLabels: [String?],
+        visibleFrom fileURL: URL
+    ) -> ConformanceRequirementStatus {
+        guard let moduleIdentifiers = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers,
+              !moduleIdentifiers.isEmpty
+        else { return .unknown }
+        // Methods in an extension of a project protocol may be default implementations of its requirements.
+        guard !files.values.contains(where: { file in
+            file.protocolDeclarations.contains { $0.name.unqualifiedTypeName == typeName.unqualifiedTypeName }
+        }) else { return .unknown }
+        var visitedNames = Set<String>()
+        var pendingNames = inheritedNamesByTypeName[typeName.unqualifiedTypeName] ?? []
+        var status = ConformanceRequirementStatus.notRequired
+        while let name = pendingNames.popFirst() {
+            guard visitedNames.insert(name).inserted else { continue }
+            guard moduleIdentifiers.allSatisfy({
+                typeAndProtocolCountsByModule[TypeKey(moduleIdentifier: $0, name: name)] == 1
+            }) else {
+                status = .unknown
+                continue
+            }
+            let isRequired = moduleIdentifiers.contains { moduleIdentifier in
+                functionDeclarationsByModule[moduleIdentifier]?[functionName]?.contains {
+                    $0.kind == .function && $0.isStatic == isStatic && $0.argumentLabels == argumentLabels &&
+                        $0.declaringType?.unqualifiedTypeName == name
+                } == true
+            }
+            if isRequired {
+                return .required
+            }
+            pendingNames.formUnion(inheritedNamesByTypeName[name] ?? [])
+        }
+        return status
     }
 
     /// Resolves a project-defined function call in every module containing the current file.
@@ -936,6 +1032,8 @@ func makeSourceFileIndex(
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
     var classInheritances = [SourceFileIndex.ClassInheritance]()
+    var typeConformances = [SourceFileIndex.TypeConformance]()
+    var protocolDeclarations = [SourceFileIndex.ProtocolDeclaration]()
     var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
     var propertyDeclarations = [SourceFileIndex.PropertyDeclaration]()
     var typeMembers = [SourceFileIndex.TypeMembers]()
@@ -966,14 +1064,25 @@ func makeSourceFileIndex(
             })
         }
 
+        let declarationVisibilities = [declaration.visibility()] + declaration.parentDeclarations.compactMap {
+            $0.asTypeDeclaration?.visibility()
+        }
         if let typeDeclaration = declaration.asTypeDeclaration,
            let name = declaration.fullyQualifiedName
         {
+            let inheritedTypes = Array(Set(typeDeclaration.conformances.flatMap(\.conformance.indexedNominalTypeNames))).sorted()
             if typeDeclaration.keyword == "class" {
-                classInheritances.append(.init(
-                    className: name,
-                    inheritedTypes: Array(Set(typeDeclaration.conformances.flatMap(\.conformance.indexedNominalTypeNames))).sorted()
-                ))
+                classInheritances.append(.init(className: name, inheritedTypes: inheritedTypes))
+            }
+            if typeDeclaration.keyword == "protocol" {
+                // Requirements of a private protocol and `where Self:` inheritance aren't indexed, so they can't be relied on
+                if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }),
+                   formatter.index(of: .keyword("where"), in: declaration.keywordIndex ..< typeDeclaration.openBraceIndex) == nil
+                {
+                    protocolDeclarations.append(.init(name: name, inheritedProtocols: inheritedTypes))
+                }
+            } else {
+                typeConformances.append(.init(typeName: name, conformances: inheritedTypes))
             }
             if typeDeclaration.keyword != "extension", typeDeclaration.keyword != "protocol" {
                 let insidePublicExtension = declaration.parentDeclarations.contains(where: {
@@ -1035,9 +1144,6 @@ func makeSourceFileIndex(
             ))
         }
 
-        let declarationVisibilities = [declaration.visibility()] + declaration.parentDeclarations.compactMap {
-            $0.asTypeDeclaration?.visibility()
-        }
         guard ["func", "init", "subscript"].contains(declaration.keyword),
               !declaration.parentDeclarations.contains(where: {
                   ["func", "init", "subscript"].contains($0.keyword)
@@ -1102,6 +1208,8 @@ func makeSourceFileIndex(
         moduleIdentifiers: moduleIdentifiers,
         typeDeclarations: typeDeclarations,
         classInheritances: classInheritances,
+        typeConformances: typeConformances,
+        protocolDeclarations: protocolDeclarations,
         functionDeclarations: functionDeclarations,
         propertyDeclarations: propertyDeclarations,
         typeMembers: typeMembers,
@@ -1111,6 +1219,21 @@ func makeSourceFileIndex(
         includesFunctionReferences: includeFunctionReferences,
         includesSymbolReferences: includeSymbolReferences
     )
+}
+
+private extension String {
+    /// The last component of a qualified type name, ignoring generic arguments.
+    var unqualifiedTypeName: String {
+        prefix { $0 != "<" }.split(separator: ".").last.map(String.init) ?? self
+    }
+}
+
+private extension [String] {
+    /// Inherited names that are looked up in the index. A qualified name like `SDK.Loading` is kept as is,
+    /// so it never matches a project declaration, and the unqualified form recorded alongside it is dropped.
+    var inheritedNamesToResolve: [String] {
+        filter { name in !contains { $0.hasSuffix(".\(name)") } }
+    }
 }
 
 private extension TypeName {

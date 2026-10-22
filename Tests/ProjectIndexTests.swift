@@ -46,6 +46,25 @@ final class ProjectIndexTests: XCTestCase {
         ])
     }
 
+    func testParameterTypesAffectDeclarationFingerprint() throws {
+        let first = """
+        func consume(_ value: First) {}
+        """
+        let second = """
+        func consume(_ value: Second) {}
+        """
+        let file = makeSourceFileIndex(from: first, moduleIdentifiers: ["App"])
+        XCTAssertEqual(file.functionDeclarations.first?.argumentTypes, ["First"])
+        let encoded = try JSONEncoder().encode(file)
+        XCTAssertEqual(try JSONDecoder().decode(SourceFileIndex.self, from: encoded), file)
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": file]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": makeSourceFileIndex(
+                from: second, moduleIdentifiers: ["App"]
+            )]).fingerprint(for: [.declarations])
+        )
+    }
+
     func testDeclarationFingerprintDoesNotDependOnFunctionReferences() {
         let source = "let callback = perform(value:)"
         let declarationsOnly = ProjectIndex(files: [
@@ -762,13 +781,15 @@ final class ProjectIndexTests: XCTestCase {
         let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])
 
         XCTAssertEqual(index.functionDeclarations, [
-            .init(name: "expect", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
-            .init(name: "require", argumentLabels: ["message", nil], autoclosureArgumentIndices: [1]),
+            .init(name: "expect", argumentLabels: [nil], autoclosureArgumentIndices: [0], argumentTypes: ["@autoclosure () -> Bool"]),
+            .init(name: "require", argumentLabels: ["message", nil], autoclosureArgumentIndices: [1],
+                  argumentTypes: ["String", "@escaping @autoclosure () async -> Bool"]),
             .init(
                 name: "evaluate",
                 argumentLabels: [nil],
                 closureArgumentIndices: [0],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                argumentTypes: ["() -> Bool"]
             ),
         ])
     }
@@ -791,22 +812,25 @@ final class ProjectIndexTests: XCTestCase {
                 name: "perform",
                 argumentLabels: ["value", "completion"],
                 closureArgumentIndices: [1],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                argumentTypes: ["Int", "() -> Void"]
             ),
             .init(
                 name: "optional",
                 argumentLabels: ["completion"],
                 closureArgumentIndices: [0],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                argumentTypes: ["(() -> Void)?"]
             ),
-            .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0]),
-            .init(name: "identity", argumentLabels: ["value"], autoclosureArgumentIndices: [], returnType: "Int"),
+            .init(name: "evaluate", argumentLabels: [nil], autoclosureArgumentIndices: [0], argumentTypes: ["@autoclosure () -> Bool"]),
+            .init(name: "identity", argumentLabels: ["value"], autoclosureArgumentIndices: [], returnType: "Int", argumentTypes: ["Int"]),
             .init(
                 name: "run",
                 declaringType: "Worker",
                 argumentLabels: ["completion"],
                 closureArgumentIndices: [0],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                argumentTypes: ["() -> Void"]
             ),
         ])
     }
@@ -836,7 +860,8 @@ final class ProjectIndexTests: XCTestCase {
                 visibility: Visibility.public.rawValue,
                 argumentLabels: [nil, "retries"],
                 defaultArgumentIndices: [1],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                argumentTypes: ["String", "Int"]
             ),
             .init(
                 name: "make",
@@ -846,7 +871,8 @@ final class ProjectIndexTests: XCTestCase {
                 argumentLabels: ["configuration"],
                 defaultArgumentIndices: [0],
                 autoclosureArgumentIndices: [],
-                returnType: "Worker"
+                returnType: "Worker",
+                argumentTypes: ["Configuration"]
             ),
             .init(
                 name: "init",
@@ -854,7 +880,8 @@ final class ProjectIndexTests: XCTestCase {
                 declaringType: "Worker",
                 argumentLabels: ["value"],
                 defaultArgumentIndices: [0],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                argumentTypes: ["Int"]
             ),
             .init(
                 name: "subscript",
@@ -862,13 +889,15 @@ final class ProjectIndexTests: XCTestCase {
                 declaringType: "Worker",
                 argumentLabels: ["index"],
                 autoclosureArgumentIndices: [],
-                returnType: "Int"
+                returnType: "Int",
+                argumentTypes: ["Int"]
             ),
             .init(
                 name: "outer",
                 declaringType: "Worker",
                 argumentLabels: [],
-                autoclosureArgumentIndices: []
+                autoclosureArgumentIndices: [],
+                argumentTypes: []
             ),
         ])
     }

@@ -1318,7 +1318,7 @@ func processInput(_ inputURLs: [URL],
     }
 
     // Load the explicit cache, or one default cache for each project represented by the inputs.
-    let projectRoots = Set(inputURLs.map(projectRoot(for:)))
+    let projectRoots = Set(inputURLs.map { projectRoot(for: $0) })
     let cacheURLsByRoot = Dictionary(uniqueKeysWithValues: projectRoots.compactMap { root in
         cacheLocation.url(for: root).map { (root, $0.standardizedFileURL) }
     })

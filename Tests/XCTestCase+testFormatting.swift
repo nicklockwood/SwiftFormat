@@ -76,6 +76,7 @@ extension XCTestCase {
         precondition(Set(exclude).intersection(rules).isEmpty, "Cannot exclude rule under test")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
         let defaultExclusions = FormatRules.deprecated + [
+            .alignAssignments,
             .linebreakAtEndOfFile,
             .organizeDeclarations,
             .extensionAccessControl,

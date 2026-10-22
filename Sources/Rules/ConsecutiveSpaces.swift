@@ -39,6 +39,11 @@ public extension FormatRule {
                 switch nextToken {
                 case .linebreak, .endOfScope("*/"), .commentBody:
                     return
+                case .operator("=", .infix) where
+                    formatter.options.enabledRules.contains(FormatRule.alignAssignments.name)
+                    && formatter.startOfAlignableAssignment(at: i + 1) != nil:
+                    // Spacing before aligned assignments is handled by the alignAssignments rule
+                    return
                 default:
                     formatter.replaceToken(at: i, with: .space(" "))
                 }

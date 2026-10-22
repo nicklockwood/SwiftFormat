@@ -10,6 +10,7 @@
 /// **Generated automatically when running tests. Do not modify.**
 let ruleRegistry: [String: FormatRule] = [
     "acronyms": .acronyms,
+    "alignAssignments": .alignAssignments,
     "andOperator": .andOperator,
     "anyObjectProtocol": .anyObjectProtocol,
     "applicationMain": .applicationMain,

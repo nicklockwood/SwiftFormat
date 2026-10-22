@@ -343,6 +343,62 @@ final class RedundantOverloadTests: XCTestCase {
         testFormatting(for: input, rule: .redundantOverload)
     }
 
+    func testDoesNotReplaceOverloadInTypeWithProtocolConformance() {
+        let input = """
+        protocol RouteItem {
+            func process() async -> Bool
+        }
+
+        struct CartRouteItem: RouteItem {
+            func process() async -> Bool {
+                await process(onCartPresented: nil)
+            }
+
+            func process(onCartPresented: (() -> Void)?) async -> Bool {
+                onCartPresented?()
+                return true
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantOverload)
+    }
+
+    func testDoesNotReplaceOverloadInTypeWithConformanceInExtension() {
+        let input = """
+        struct Loader {
+            func load(path: String, timeout: Double) {
+                print(path, timeout)
+            }
+
+            func load(path: String) {
+                load(path: path, timeout: 30)
+            }
+        }
+
+        extension Loader: PathLoading {}
+        """
+        testFormatting(for: input, rule: .redundantOverload)
+    }
+
+    func testDoesNotReplaceEnumFactoryInEnumWithProtocolConformance() {
+        let input = """
+        enum Result<Value>: ResultFactory {
+            case success(value: Value, cached: Bool)
+        }
+
+        extension Result {
+            static func success(value: Value) -> Self {
+                .success(value: value, cached: false)
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .redundantOverload,
+            options: FormatOptions(swiftVersion: "5.1")
+        )
+    }
+
     func testPreservesOverloadWithComments() {
         let input = """
         struct Loader {

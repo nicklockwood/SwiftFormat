@@ -127,6 +127,7 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
+* [alignAssignments](#alignAssignments)
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blockComments](#blockComments)
@@ -213,6 +214,52 @@ Option | Description
 - let entityUuid: UUID
 + let entityUUID: UUID
 ```
+
+</details>
+<br/>
+
+## alignAssignments
+
+Align the `=` of neighboring property declarations, enum case raw values, and assignment statements.
+
+Option | Description
+--- | ---
+`--align-assignments` | Assignments to align with each other: "consecutive" (default) or "scope"
+
+<details>
+<summary>Examples</summary>
+
+Assignments in the same scope are aligned until a blank line:
+
+```diff
+  struct DeathStar {
+-     let capacity = 25_000
++     let capacity            = 25_000
+      let commander: Person
+-     var isIndestructible = false
++     var isIndestructible    = false
+      var hasOnlyOneWeakPoint = true
+
+      var shieldStrength = 1.0
+-     var crew = [Person]()
++     var crew           = [Person]()
+  }
+```
+
+With `--align-assignments scope`, all assignments in the same scope are aligned,
+even when separated by blank lines:
+
+```diff
+  struct DeathStar {
+-     let capacity = 25_000
++     let capacity         = 25_000
+      let commander: Person
+
+      var isIndestructible = false
+  }
+```
+
+Assignments are not aligned if doing so would exceed the `--max-width`.
 
 </details>
 <br/>

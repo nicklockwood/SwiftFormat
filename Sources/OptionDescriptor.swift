@@ -1685,6 +1685,12 @@ struct _Descriptors {
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
+    let alignAssignments = OptionDescriptor(
+        argumentName: "align-assignments",
+        displayName: "Align Assignments",
+        help: "Assignments to align with each other:",
+        keyPath: \.alignAssignments
+    )
 
     // MARK: - Internal
 

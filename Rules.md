@@ -76,6 +76,7 @@
 * [redundantRawValues](#redundantRawValues)
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
+* [redundantStaticMemberType](#redundantStaticMemberType)
 * [redundantStaticSelf](#redundantStaticSelf)
 * [redundantSwiftTestingSuite](#redundantSwiftTestingSuite)
 * [redundantSwiftUIGroup](#redundantSwiftUIGroup)
@@ -3432,6 +3433,30 @@ Remove redundant explicit Sendable conformance from non-public structs and enums
       let id: String
   }
 ```
+
+</details>
+<br/>
+
+## redundantStaticMemberType
+
+Remove redundant type qualifiers from static member references.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func foo() -> Bar {
+-     Bar.value
++     .value
+  }
+
+  var foo: Bar
+- foo = Bar.value
++ foo = .value
+```
+
+Uses explicit local types and unambiguous project-indexed property and parameter types.
+Unresolved types and overloaded function calls are preserved.
 
 </details>
 <br/>

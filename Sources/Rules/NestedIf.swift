@@ -66,6 +66,13 @@ extension Formatter {
         }
 
         let separatorRange = outerConditionEnd + 1 ... nestedIfIndex
+        let wrapSeparator = conditionCommentLines.isEmpty && (
+            conditionsAreWrapped(after: ifIndex, before: outerBodyStart) ||
+                conditionsAreWrapped(after: nestedIfIndex, before: nestedBodyStart)
+        )
+        let conditionIndent = spaceEquivalentToTokens(
+            from: startOfLine(at: outerConditionStart), upTo: outerConditionStart
+        )
         let trailingRange = nestedBodyEnd + 1 ... outerBodyEnd
 
         let outerIndent = currentIndentForLine(at: ifIndex)
@@ -89,7 +96,10 @@ extension Formatter {
             removeTokens(in: trailingRange)
         }
 
-        if conditionCommentLines.isEmpty {
+        if wrapSeparator, let nestedContentStart = index(of: .nonSpaceOrLinebreak, after: nestedIfIndex) {
+            replaceTokens(in: outerConditionEnd + 1 ..< nestedContentStart,
+                          with: [.delimiter(","), linebreakToken(for: ifIndex)])
+        } else if conditionCommentLines.isEmpty {
             replaceTokens(in: separatorRange, with: .delimiter(","))
         } else {
             let linebreak = linebreakToken(for: ifIndex)
@@ -123,9 +133,12 @@ extension Formatter {
             replaceNestedIfIndentation(
                 nestedIndent,
                 with: outerIndent,
-                after: ifIndex,
+                after: outerConditionEnd,
                 through: indentationEnd
             )
+        }
+        if wrapSeparator {
+            insertSpace(conditionIndent, at: outerConditionEnd + 3)
         }
         return true
     }

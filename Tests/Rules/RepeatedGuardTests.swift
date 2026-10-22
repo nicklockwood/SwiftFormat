@@ -10,6 +10,81 @@ import XCTest
 @testable import SwiftFormat
 
 final class RepeatedGuardTests: XCTestCase {
+    func testDoesNotWrapForLinebreaksInsideClosure() {
+        let input = """
+        guard values.contains(where: {
+            $0.isValid
+        }) else { return }
+        guard isEnabled else { return }
+        """
+        let output = """
+        guard values.contains(where: {
+            $0.isValid
+        }), isEnabled else { return }
+        """
+        testFormatting(for: input, output, rule: .repeatedGuard)
+    }
+
+    func testMergesConditionsWithFirstWrapped() {
+        let input = """
+        guard isValid,
+              isAuthorized else { return }
+        guard isEnabled else { return }
+        """
+        let output = """
+        guard isValid,
+              isAuthorized,
+              isEnabled else { return }
+        """
+        testFormatting(for: input, [output], rules: [.repeatedGuard, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
+    func testMergesConditionsWithSecondWrapped() {
+        let input = """
+        guard isValid else { return }
+        guard isEnabled,
+              isAuthorized else { return }
+        """
+        let output = """
+        guard isValid,
+              isEnabled,
+              isAuthorized else { return }
+        """
+        testFormatting(for: input, [output], rules: [.repeatedGuard, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
+    func testMergesConditionsWithBothWrapped() {
+        let input = """
+        guard isValid,
+              isAuthorized else { return }
+        guard isEnabled,
+              isReady else { return }
+        """
+        let output = """
+        guard isValid,
+              isAuthorized,
+              isEnabled,
+              isReady else { return }
+        """
+        testFormatting(for: input, [output], rules: [.repeatedGuard, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
+    func testMergesConditionsWithBeforeFirst() {
+        let input = """
+        guard
+            isValid,
+            isAuthorized else { return }
+        guard isEnabled else { return }
+        """
+        let output = """
+        guard
+            isValid,
+            isAuthorized,
+            isEnabled else { return }
+        """
+        testFormatting(for: input, [output], rules: [.repeatedGuard, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
     func testMergesConsecutiveGuardsWithSameBody() {
         let input = """
         guard isValid else { return }

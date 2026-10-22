@@ -10,6 +10,110 @@ import XCTest
 @testable import SwiftFormat
 
 final class NestedIfTests: XCTestCase {
+    func testDoesNotWrapForLinebreaksInsideClosure() {
+        let input = """
+        if values.contains(where: {
+            $0.isValid
+        }) {
+            if isEnabled {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        if values.contains(where: {
+            $0.isValid
+        }), isEnabled {
+            performAction()
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
+    func testMergesConditionsWithFirstWrapped() {
+        let input = """
+        if isValid,
+           isAuthorized {
+            if isEnabled {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        if isValid,
+           isAuthorized,
+           isEnabled
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, [output], rules: [.nestedIf, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
+    func testMergesConditionsWithSecondWrapped() {
+        let input = """
+        if isValid {
+            if isEnabled,
+               isAuthorized {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        if isValid,
+           isEnabled,
+           isAuthorized
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, [output], rules: [.nestedIf, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
+    func testMergesConditionsWithBothWrapped() {
+        let input = """
+        if isValid,
+           isAuthorized {
+            if isEnabled,
+               isReady {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        if isValid,
+           isAuthorized,
+           isEnabled,
+           isReady
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, [output], rules: [.nestedIf, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
+    func testMergesConditionsWithBeforeFirst() {
+        let input = """
+        if
+            isValid,
+            isAuthorized {
+            if isEnabled {
+                performAction()
+            }
+        }
+        """
+        let output = """
+        if
+            isValid,
+            isAuthorized,
+            isEnabled
+        {
+            performAction()
+        }
+        """
+        testFormatting(for: input, [output], rules: [.nestedIf, .wrapMultilineStatementBraces, .elseOnSameLine])
+    }
+
     func testMergesNestedIfStatements() {
         let input = """
         if isValid {
@@ -80,7 +184,8 @@ final class NestedIfTests: XCTestCase {
         }
         """
         let output = """
-        if isValid, isEnabled,
+        if isValid,
+           isEnabled,
            isAuthorized {
             performAction()
         }

@@ -11,7 +11,8 @@ import Foundation
 public extension FormatRule {
     /// Merge consecutive guard statements that have identical bodies.
     static let repeatedGuard = FormatRule(
-        help: "Merge consecutive guard statements that have identical bodies."
+        help: "Merge consecutive guard statements that have identical bodies.",
+        sharedOptions: ["linebreaks", "indent", "tab-width", "smart-tabs"]
     ) { formatter in
         formatter.forEach(.keyword("guard")) { guardIndex, _ in
             while formatter.mergeGuardFollowingGuard(at: guardIndex) {}
@@ -53,7 +54,20 @@ extension Formatter {
             return false
         }
 
-        replaceTokens(in: removalRange, with: .delimiter(","))
+        if conditionsAreWrapped(after: guardIndex, before: firstGuard.elseIndex) ||
+            conditionsAreWrapped(after: nextGuardIndex, before: secondGuard.elseIndex),
+           let firstCondition = parseConditionalStatement(at: guardIndex).first,
+           let secondConditionStart = index(of: .nonSpaceOrLinebreak, after: nextGuardIndex)
+        {
+            let indent = spaceEquivalentToTokens(
+                from: startOfLine(at: firstCondition.range.lowerBound),
+                upTo: firstCondition.range.lowerBound
+            )
+            replaceTokens(in: firstConditionEnd + 1 ..< secondConditionStart,
+                          with: [.delimiter(","), linebreakToken(for: guardIndex), .space(indent)])
+        } else {
+            replaceTokens(in: removalRange, with: .delimiter(","))
+        }
         return true
     }
 

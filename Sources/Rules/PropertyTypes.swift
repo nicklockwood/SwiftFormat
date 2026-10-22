@@ -71,9 +71,9 @@ public extension FormatRule {
                 //  - `let value: ClosedRange<Int> = .zero ... 10` would not be valid to convert to
                 //    `let value = ClosedRange<Int>.zero ... 10`.
                 if let nextInfixOperatorIndex = formatter.index(after: rhsStartIndex, where: { token in
-                    token.isOperator(ofType: .infix) && token != .operator(".", .infix)
-                }),
-                    rhsExpressionRange.contains(nextInfixOperatorIndex)
+                       token.isOperator(ofType: .infix) && token != .operator(".", .infix)
+                   }),
+                   rhsExpressionRange.contains(nextInfixOperatorIndex)
                 {
                     return
                 }
@@ -194,9 +194,9 @@ public extension FormatRule {
                 //  - `let foo = Foo.foo.bar` would not be valid to convert to `let foo: Foo = .foo.bar`.
                 let operatorSearchIndex = formatter.tokens[indexAfterType].isStartOfScope ? (indexAfterType - 1) : indexAfterType
                 if let nextInfixOperatorIndex = formatter.index(after: operatorSearchIndex, where: { token in
-                    token.isOperator(ofType: .infix)
-                }),
-                    rhsExpressionRange.contains(nextInfixOperatorIndex)
+                       token.isOperator(ofType: .infix)
+                   }),
+                   rhsExpressionRange.contains(nextInfixOperatorIndex)
                 {
                     return
                 }

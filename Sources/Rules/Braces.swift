@@ -59,7 +59,7 @@ public extension FormatRule {
                       !formatter.tokens[prevIndex].isComment,
                       // Don't move the brace onto a conditional compilation directive line
                       ![.startOfScope("#if"), .keyword("#elseif"), .keyword("#else"), .endOfScope("#endif")]
-                      .contains(formatter.tokens[formatter.startOfLine(at: prevIndex, excludingIndent: true)])
+                          .contains(formatter.tokens[formatter.startOfLine(at: prevIndex, excludingIndent: true)])
                 else {
                     return
                 }

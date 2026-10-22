@@ -326,9 +326,10 @@ extension Formatter {
             }
             var isType = false
             if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
-                $0.isOperator(".")
-            }), [.identifier("self"), .identifier("init")]
-                .contains(next(.nonSpaceOrCommentOrLinebreak, after: nextIndex))
+                   $0.isOperator(".")
+               }),
+               [.identifier("self"), .identifier("init")]
+                   .contains(next(.nonSpaceOrCommentOrLinebreak, after: nextIndex))
             {
                 isType = true
             } else if next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
@@ -691,12 +692,9 @@ extension Formatter {
     /// and not inside a nested closure or nested function.
     func isInFunctionBody(of functionDecl: FunctionDeclaration, at index: Int) -> Bool {
         guard let bodyRange = functionDecl.bodyRange,
-              bodyRange.contains(index)
+              bodyRange.contains(index),
+              let startOfScopeIndex = startOfScope(at: index)
         else {
-            return false
-        }
-
-        guard let startOfScopeIndex = startOfScope(at: index) else {
             return false
         }
 
@@ -750,8 +748,8 @@ extension Formatter {
         if isConditionalStatement(at: i) {
             if let endIndex = endOfScope(at: i),
                [.startOfScope("("), .operator(".", .infix)]
-               .contains(next(.nonSpaceOrComment, after: endIndex) ?? .space("")) ||
-               next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{")
+                   .contains(next(.nonSpaceOrComment, after: endIndex) ?? .space("")) ||
+                   next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{")
             {
                 return true
             }
@@ -1471,9 +1469,9 @@ extension Formatter {
 
     /// Whether the given index is a `startOfScope("{")` that represents the start of a type body
     func isStartOfTypeBody(at scopeIndex: Int) -> Bool {
-        guard tokens[scopeIndex] == .startOfScope("{") else { return false }
-
-        guard let lastKeyword = lastSignificantKeyword(at: scopeIndex, excluding: ["where"]) else {
+        guard tokens[scopeIndex] == .startOfScope("{"),
+              let lastKeyword = lastSignificantKeyword(at: scopeIndex, excluding: ["where"])
+        else {
             return false
         }
 
@@ -2165,12 +2163,11 @@ extension Formatter {
             }
 
             // Check for operators after prefix keywords (try!, try?, await!)
-            if prevToken.isUnwrapOperator || prevToken == .operator("?", .postfix) {
-                if let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                   prefixKeywords.contains(tokens[beforeOperatorIndex].string)
-                {
-                    return beforeOperatorIndex ... endIndex
-                }
+            if prevToken.isUnwrapOperator || prevToken == .operator("?", .postfix),
+               let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+               prefixKeywords.contains(tokens[beforeOperatorIndex].string)
+            {
+                return beforeOperatorIndex ... endIndex
             }
         }
 
@@ -3621,13 +3618,13 @@ extension Formatter {
     /// Indent level to use for wrapped lines at the specified position (based on statement type)
     func linewrapIndent(at index: Int) -> String {
         guard let commaIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index + 1, if: {
-            $0 == .delimiter(",")
-        }),
-            case let firstToken = startOfLine(at: commaIndex, excludingIndent: true),
-            let firstNonBrace = (firstToken ..< commaIndex).first(where: {
-                let token = self.tokens[$0]
-                return !token.isEndOfScope && !token.isSpaceOrComment
-            })
+                  $0 == .delimiter(",")
+              }),
+              case let firstToken = startOfLine(at: commaIndex, excludingIndent: true),
+              let firstNonBrace = (firstToken ..< commaIndex).first(where: {
+                  let token = self.tokens[$0]
+                  return !token.isEndOfScope && !token.isSpaceOrComment
+              })
         else {
             if next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator(".", .infix),
                var prevIndex = self.index(of: .nonSpaceOrLinebreak, before: index)
@@ -4473,9 +4470,9 @@ extension Formatter {
     /// The name of the declaration defined at the given index
     func declarationName(keywordIndex: Int) -> String? {
         // Conditional compilation blocks don't have a "name"
-        guard tokens[keywordIndex].string != "#if" else { return nil }
-
-        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex) else {
+        guard tokens[keywordIndex].string != "#if",
+              let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex)
+        else {
             return nil
         }
 

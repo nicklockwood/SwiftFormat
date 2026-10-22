@@ -163,14 +163,15 @@ extension Formatter {
             .union(_FormatRules.globalSwiftFunctions)
             .union(staticSelf ? [] : options.selfRequired)
         guard let dotIndex = index(of: .nonSpaceOrLinebreak, after: i, if: {
-            $0 == .operator(".", .infix)
-        }), !exclude.contains(selfKeyword),
-        let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex),
-        isEnabled(at: nextIndex - 1),
-        let token = token(at: nextIndex), token.isIdentifier,
-        case let name = token.unescaped(), (include.map { $0.contains(name) } ?? true),
-        !isSymbol(at: nextIndex, in: exclusionList),
-        !backticksRequired(at: nextIndex, ignoreLeadingDot: true)
+                  $0 == .operator(".", .infix)
+              }),
+              !exclude.contains(selfKeyword),
+              let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex),
+              isEnabled(at: nextIndex - 1),
+              let token = token(at: nextIndex), token.isIdentifier,
+              case let name = token.unescaped(), (include.map { $0.contains(name) } ?? true),
+              !isSymbol(at: nextIndex, in: exclusionList),
+              !backticksRequired(at: nextIndex, ignoreLeadingDot: true)
         else {
             return false
         }
@@ -465,11 +466,10 @@ extension Formatter {
                 guard options.maxWidth == 0 || joinedLength <= options.maxWidth else { continue }
                 replaceTokens(in: comma + 1 ..< nextIndex, with: .space(" "))
             } else if options.wrapConditions != .disabled,
-                      !options.allowPartialWrapping || conditionContainsMultilineClosure(before: comma, after: keywordIndex)
+                      !options.allowPartialWrapping || conditionContainsMultilineClosure(before: comma, after: keywordIndex),
+                      onSameLine(comma, nextIndex)
             {
-                if onSameLine(comma, nextIndex) {
-                    replaceTokens(in: comma + 1 ..< nextIndex, with: linebreakToken(for: comma))
-                }
+                replaceTokens(in: comma + 1 ..< nextIndex, with: linebreakToken(for: comma))
             }
         }
     }
@@ -593,12 +593,11 @@ extension Formatter {
 
                     // TODO: handle where clause
                     if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: cursorIndex - 1),
-                       tokens[nextIndex] == .startOfScope("{")
+                       tokens[nextIndex] == .startOfScope("{"),
+                       // Don't unwrap the brace line if using Allman braces
+                       !options.allmanBraces
                     {
-                        // Don't unwrap the brace line if using Allman braces
-                        if !options.allmanBraces {
-                            unwrapLine(before: nextIndex, preservingComments: true)
-                        }
+                        unwrapLine(before: nextIndex, preservingComments: true)
                     }
                 }
             }
@@ -690,14 +689,14 @@ extension Formatter {
 
             if closingParenOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
-            } else if hasLineBreakAfterOpeningParen {
-                // Insert linebreak before closing paren
-                if let lastIndex = self.index(of: .nonSpace, before: endOfScope) {
-                    endOfScope += insertSpace(indent, at: lastIndex + 1)
-                    if !tokens[lastIndex].isLinebreak {
-                        insertLinebreak(at: lastIndex + 1)
-                        endOfScope += 1
-                    }
+            } else if hasLineBreakAfterOpeningParen,
+                      // Insert linebreak before closing paren
+                      let lastIndex = self.index(of: .nonSpace, before: endOfScope)
+            {
+                endOfScope += insertSpace(indent, at: lastIndex + 1)
+                if !tokens[lastIndex].isLinebreak {
+                    insertLinebreak(at: lastIndex + 1)
+                    endOfScope += 1
                 }
             }
 
@@ -927,13 +926,9 @@ extension Formatter {
             }
             guard mode != .disabled, let firstIdentifierIndex =
                 index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                !isInStringLiteralWithWrappingDisabled(at: i)
+                !isInStringLiteralWithWrappingDisabled(at: i),
+                isEnabled
             else {
-                lastIndex = i
-                return
-            }
-
-            guard isEnabled else {
                 lastIndex = i
                 return
             }
@@ -1257,7 +1252,7 @@ extension Formatter {
             case .startOfScope("{"):
                 if !isStartOfClosure(at: i) ||
                     next(.keyword, after: i) != .keyword("in"),
-                    next(.nonSpace, after: i) != .endOfScope("}")
+                   next(.nonSpace, after: i) != .endOfScope("}")
                 {
                     addBreakPoint(at: i, relativePriority: -6)
                 }
@@ -3088,9 +3083,10 @@ extension Formatter {
 
                     for tokens in localDefiningDeclarations {
                         guard let localIdentifier = tokens.first(where: {
-                            $0.isIdentifier && !_FormatRules.ownershipModifiers.contains($0.string)
-                        }), case let .identifier(name) = localIdentifier,
-                        name != "_"
+                                  $0.isIdentifier && !_FormatRules.ownershipModifiers.contains($0.string)
+                              }),
+                              case let .identifier(name) = localIdentifier,
+                              name != "_"
                         else {
                             continue
                         }

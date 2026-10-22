@@ -30,9 +30,8 @@ public extension FormatRule {
             else { return }
 
             let i = typeDeclaration.keywordIndex
-            guard let name = typeDeclaration.name else { return }
-
-            guard let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
+            guard let name = typeDeclaration.name,
+                  let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
                   // exit if type is conforming to other types or has generic where clause
                   !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
                   let endIndex = formatter.index(of: .endOfScope("}"), after: braceIndex)

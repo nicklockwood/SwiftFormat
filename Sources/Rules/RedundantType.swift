@@ -23,9 +23,10 @@ public extension FormatRule {
 
             let equalsIndex = i
             guard let colonIndex = formatter.index(before: i, where: {
-                [.delimiter(":"), .operator("=", .infix)].contains($0)
-            }), formatter.tokens[colonIndex] == .delimiter(":"),
-            let typeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
+                      [.delimiter(":"), .operator("=", .infix)].contains($0)
+                  }),
+                  formatter.tokens[colonIndex] == .delimiter(":"),
+                  let typeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
             else { return }
 
             // The implementation of RedundantType uses inferred or explicit,
@@ -348,9 +349,8 @@ extension Formatter {
         forTypeName typeName: String,
         initOpenParen parenIndex: Int
     ) -> ClosedRange<Int>? {
-        guard let closeParen = endOfScope(at: parenIndex) else { return nil }
-
-        guard let argStart = index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex),
+        guard let closeParen = endOfScope(at: parenIndex),
+              let argStart = index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex),
               argStart < closeParen
         else { return nil }
 

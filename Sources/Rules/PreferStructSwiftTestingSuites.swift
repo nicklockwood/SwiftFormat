@@ -23,9 +23,10 @@ public extension FormatRule {
 
             switch typeDeclaration.keyword {
             case "class":
-                guard !typeDeclaration.body.containsMutableStoredInstanceVar else { return }
-                guard !typeDeclaration.body.containsDeinitializer else { return }
-                guard typeDeclaration.conformances.isEmpty else { return }
+                guard !typeDeclaration.body.containsMutableStoredInstanceVar,
+                      !typeDeclaration.body.containsDeinitializer,
+                      typeDeclaration.conformances.isEmpty
+                else { return }
                 var keywordIndex = typeDeclaration.keywordIndex
 
                 if let finalIndex = formatter.indexOfModifier("final", forDeclarationAt: keywordIndex),

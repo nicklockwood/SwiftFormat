@@ -20,12 +20,9 @@ public extension FormatRule {
                 elseIndex = nextIndex
             }
             guard let startOfGuardScope = formatter.index(of: .startOfScope("{"), after: elseIndex),
-                  let endOfGuardScope = formatter.endOfScope(at: startOfGuardScope)
+                  let endOfGuardScope = formatter.endOfScope(at: startOfGuardScope),
+                  let nextNonSpaceAndNonLinebreakIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfGuardScope)
             else {
-                return
-            }
-
-            guard let nextNonSpaceAndNonLinebreakIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfGuardScope) else {
                 return
             }
 

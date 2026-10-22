@@ -9,7 +9,7 @@ fi
 cd "$(dirname "$0")"
 
 # Keep this pinned to a published release when developing new formatter changes.
-FORMAT_VERSION=0.63.1
+FORMAT_VERSION=0.64.0
 case "$(uname -s)-$(uname -m)" in
     Darwin-*) ASSET=swiftformat ;;
     Linux-x86_64) ASSET=swiftformat_linux ;;

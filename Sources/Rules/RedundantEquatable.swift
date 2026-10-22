@@ -229,9 +229,8 @@ extension Formatter {
         return typesWithEquatableConformances.compactMap { typeName, declarationWithEquatableConformance in
             // Types conforming to Strideable get a default `==` implementation via that protocol,
             // so a custom `==` on such a type may be intentionally overriding that default.
-            guard !typesWithStrideableConformances.contains(typeName) else { return nil }
-
-            guard let typeDeclaration = typeDeclarationsByFullyQualifiedName[typeName],
+            guard !typesWithStrideableConformances.contains(typeName),
+                  let typeDeclaration = typeDeclarationsByFullyQualifiedName[typeName],
                   let equatableImplementation = equatableImplementationsByFullyQualifiedName[typeName]
             else { return nil }
 

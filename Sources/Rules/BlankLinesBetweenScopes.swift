@@ -83,8 +83,8 @@ public extension FormatRule {
                     default:
                         if formatter.isLabel(at: nextNonCommentIndex), let colonIndex
                             = formatter.index(of: .delimiter(":"), after: nextNonCommentIndex),
-                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: colonIndex)
-                            == .startOfScope("{")
+                           formatter.next(.nonSpaceOrCommentOrLinebreak, after: colonIndex)
+                           == .startOfScope("{")
                         {
                             break outer
                         }

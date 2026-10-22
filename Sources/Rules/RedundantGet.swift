@@ -17,7 +17,8 @@ public extension FormatRule {
             if formatter.isAccessorKeyword(at: i, checkKeyword: false),
                let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                    $0 == .startOfScope("{")
-               }), let openIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+               }),
+               let openIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
                    $0 == .startOfScope("{")
                }),
                let closeIndex = formatter.index(of: .endOfScope("}"), after: openIndex),

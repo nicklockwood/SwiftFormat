@@ -41,9 +41,8 @@ public extension FormatRule {
 
             // After a `Void` we could see the start of a function's body, or if the function is inside a protocol declaration
             // we can find a keyword related to other declarations or the end scope of the protocol definition.
-            guard nextToken == .startOfScope("{") || isInProtocol else { return }
-
-            guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
+            guard nextToken == .startOfScope("{") || isInProtocol,
+                  let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
                   let parenIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
                   let startToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: parenIndex),
                   startToken.isIdentifier || [.startOfScope("{"), .endOfScope("]")].contains(startToken)

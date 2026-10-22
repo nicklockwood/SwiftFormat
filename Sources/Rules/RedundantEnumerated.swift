@@ -40,10 +40,8 @@ extension Formatter {
 
         let bindings = parseTupleArguments(startOfScope: patternStart)
         guard bindings.count == 2,
-              bindings.allSatisfy({ $0.label == nil && $0.valueRange.count == 1 && tokens[$0.valueRange.lowerBound].isIdentifier })
-        else { return }
-
-        guard let sequenceStart = index(of: .nonSpaceOrCommentOrLinebreak, after: inIndex),
+              bindings.allSatisfy({ $0.label == nil && $0.valueRange.count == 1 && tokens[$0.valueRange.lowerBound].isIdentifier }),
+              let sequenceStart = index(of: .nonSpaceOrCommentOrLinebreak, after: inIndex),
               let sequence = parseExpressionRange(startingAt: sequenceStart),
               let enumerated = redundantEnumeratedCall(endingAt: sequence.upperBound),
               startOfMemberCallReceiver(endingAt: enumerated.lowerBound) == sequenceStart,

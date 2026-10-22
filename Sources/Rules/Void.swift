@@ -68,13 +68,13 @@ public extension FormatRule {
             }
         }
         formatter.forEach(.startOfScope("(")) { i, _ in
-            guard formatter.options.useVoid else {
-                return
-            }
-            guard let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
-                $0 == .endOfScope(")")
-            }), let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-            !formatter.isArgumentToken(at: endIndex) else {
+            guard formatter.options.useVoid,
+                  let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                      $0 == .endOfScope(")")
+                  }),
+                  let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                  !formatter.isArgumentToken(at: endIndex)
+            else {
                 return
             }
             if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .operator("->", .infix) {
@@ -131,7 +131,8 @@ extension Formatter {
                let index = self.index(of: .startOfScope("("), before: index),
                let nameIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index, if: {
                    $0.isIdentifier
-               }), last(.nonSpaceOrCommentOrLinebreak, before: nameIndex) == .keyword("func")
+               }),
+               last(.nonSpaceOrCommentOrLinebreak, before: nameIndex) == .keyword("func")
             {
                 return true
             }

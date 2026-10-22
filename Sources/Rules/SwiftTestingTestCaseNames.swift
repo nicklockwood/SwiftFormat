@@ -30,8 +30,7 @@ public extension FormatRule {
 
         let typeKeywords: [String] = ["struct", "class", "actor", "enum"]
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
-            guard typeKeywords.contains(declaration.keyword) else { return }
-            guard declaration.hasModifier("@Suite")
+            guard typeKeywords.contains(declaration.keyword), declaration.hasModifier("@Suite")
                 || declaration.body?.contains(where: { $0.keyword == "func" && $0.hasModifier("@Test") }) == true
             else { return }
 

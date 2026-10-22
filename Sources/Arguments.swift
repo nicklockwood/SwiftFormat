@@ -668,11 +668,11 @@ func mergeArguments(_ args: [String: String], into config: [String: String],
                 input["disable"] = Set(disable).subtracting(_enable).sorted().joined(separator: ",")
             }
         }
-        if let _lintonly = try output["lint-only"].map(parseRules) {
-            if let lintonly = try input["lint-only"].map(parseRules) {
-                input["lint-only"] = Set(lintonly).union(_lintonly).sorted().joined(separator: ",")
-                output["lint-only"] = nil
-            }
+        if let _lintonly = try output["lint-only"].map(parseRules),
+           let lintonly = try input["lint-only"].map(parseRules)
+        {
+            input["lint-only"] = Set(lintonly).union(_lintonly).sorted().joined(separator: ",")
+            output["lint-only"] = nil
         }
     }
     // Merge other arguments

@@ -18,7 +18,7 @@ public extension FormatRule {
         formatter.forEach(.delimiter(";")) { i, _ in
             if let nextToken = formatter
                 .next(.nonSpaceOrCommentOrLinebreak, after: i, if: { $0 != .endOfScope("}") }),
-                let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
+               let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
             {
                 let prevToken = formatter.tokens[prevTokenIndex]
                 if prevToken == .keyword("return") || (

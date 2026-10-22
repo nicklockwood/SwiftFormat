@@ -606,14 +606,14 @@ private struct Inference {
             var nameIndices = [Int]()
             while index < endIndex {
                 guard let externalNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                    if case .identifier = $0 {
-                        return true
-                    }
-                    // Probably an empty argument list
-                    return false
-                }) else { return }
-                guard let nextIndex =
-                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
+                          if case .identifier = $0 {
+                              return true
+                          }
+                          // Probably an empty argument list
+                          return false
+                      }),
+                      let nextIndex =
+                      formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
                 let nextToken = formatter.tokens[nextIndex]
                 switch nextToken {
                 case let .identifier(name):
@@ -642,21 +642,23 @@ private struct Inference {
                 index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
             }
             guard !argNames.isEmpty, let bodyStartIndex = formatter.index(after: endIndex, where: {
-                switch $0 {
-                case .startOfScope("{"): // What we're looking for
-                    return true
-                case .keyword("throws"),
-                     .keyword("rethrows"),
-                     .keyword("where"),
-                     .keyword("is"):
-                    return false // Keep looking
-                case .keyword:
-                    return true // Not valid between end of arguments and start of body
-                default:
-                    return false // Keep looking
-                }
-            }), formatter.tokens[bodyStartIndex] == .startOfScope("{"),
-            let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else {
+                      switch $0 {
+                      case .startOfScope("{"): // What we're looking for
+                          return true
+                      case .keyword("throws"),
+                           .keyword("rethrows"),
+                           .keyword("where"),
+                           .keyword("is"):
+                          return false // Keep looking
+                      case .keyword:
+                          return true // Not valid between end of arguments and start of body
+                      default:
+                          return false // Keep looking
+                      }
+                  }),
+                  formatter.tokens[bodyStartIndex] == .startOfScope("{"),
+                  let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex)
+            else {
                 return
             }
             removeUsed(from: &argNames, with: &nameIndices, in: bodyStartIndex + 1 ..< bodyEndIndex)
@@ -1407,10 +1409,9 @@ private extension Formatter {
     func grouping(for numberType: NumberType) -> Grouping {
         var grouping = [(group: Int, threshold: Int, count: Int)](), lowest = Int.max
         forEachToken { _, token in
-            guard case let .number(number, type) = token else {
-                return
-            }
-            guard numberType == type || numberType == .decimal && type == .integer else {
+            guard case let .number(number, type) = token,
+                  numberType == type || numberType == .decimal && type == .integer
+            else {
                 return
             }
             // Strip prefix/suffix

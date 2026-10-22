@@ -638,11 +638,11 @@ public extension FormatRule {
                         // When inside conditionals, unindent after any commas (which separate conditions)
                         // that were indented by the block above
                         if formatter.lastToken(before: i, where: {
-                            $0.is(.nonSpaceOrCommentOrLinebreak)
-                        }) == .delimiter(","),
-                            let conditionBeginIndex = formatter.startOfConditionalStatementContainingLinewrap(at: i),
-                            let conditionIndent = formatter.indentForConditions(after: conditionBeginIndex),
-                            conditionIndent.count < indent.count
+                               $0.is(.nonSpaceOrCommentOrLinebreak)
+                           }) == .delimiter(","),
+                           let conditionBeginIndex = formatter.startOfConditionalStatementContainingLinewrap(at: i),
+                           let conditionIndent = formatter.indentForConditions(after: conditionBeginIndex),
+                           conditionIndent.count < indent.count
                         {
                             indent = conditionIndent
                             indentStack[indentStack.count - 1] = indent
@@ -737,16 +737,16 @@ public extension FormatRule {
                               || (lineIndex - 1) == scopeStartLineIndexes.last
                     {
                         if formatter.lastToken(before: i, where: {
-                            $0.is(.nonSpaceOrCommentOrLinebreak)
-                        }) == .delimiter(","),
-                            [.endOfScope("}"), .endOfScope(")")].contains(formatter.tokens[
-                                formatter.startOfLine(at: effectiveLastIndex, excludingIndent: true)
-                            ]),
-                            let conditionBeginIndex = formatter.index(before: i, where: {
-                                ["if", "guard", "while", "for"].contains($0.string)
-                            }),
-                            formatter.startOfScope(at: conditionBeginIndex) == formatter.startOfScope(at: i),
-                            let conditionIndent = formatter.indentForConditions(after: conditionBeginIndex)
+                               $0.is(.nonSpaceOrCommentOrLinebreak)
+                           }) == .delimiter(","),
+                           [.endOfScope("}"), .endOfScope(")")].contains(formatter.tokens[
+                               formatter.startOfLine(at: effectiveLastIndex, excludingIndent: true)
+                           ]),
+                           let conditionBeginIndex = formatter.index(before: i, where: {
+                               ["if", "guard", "while", "for"].contains($0.string)
+                           }),
+                           formatter.startOfScope(at: conditionBeginIndex) == formatter.startOfScope(at: i),
+                           let conditionIndent = formatter.indentForConditions(after: conditionBeginIndex)
                         {
                             indent = conditionIndent
                         } else {

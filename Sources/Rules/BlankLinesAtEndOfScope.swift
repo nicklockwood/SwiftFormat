@@ -18,9 +18,8 @@ public extension FormatRule {
         sharedOptions: ["type-blank-lines", "scope-blank-lines"]
     ) { formatter in
         formatter.forEach(.startOfScope) { startOfScope, token in
-            guard ["{", "(", "[", "<"].contains(token.string) else { return }
-
-            guard let endOfScope = formatter.endOfScope(at: startOfScope),
+            guard ["{", "(", "[", "<"].contains(token.string),
+                  let endOfScope = formatter.endOfScope(at: startOfScope),
                   formatter.index(of: .nonSpaceOrComment, after: startOfScope) != endOfScope
             else { return }
 

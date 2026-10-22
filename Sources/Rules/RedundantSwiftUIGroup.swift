@@ -215,10 +215,8 @@ extension Formatter {
     /// Gets the range of the body inside a closure (excluding braces)
     func closureBodyRange(closureStartIndex: Int) -> ClosedRange<Int>? {
         guard let closureEndIndex = endOfScope(at: closureStartIndex),
-              closureStartIndex + 1 < closureEndIndex
-        else { return nil }
-
-        guard let firstToken = index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
+              closureStartIndex + 1 < closureEndIndex,
+              let firstToken = index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
               let lastToken = index(of: .nonSpaceOrCommentOrLinebreak, before: closureEndIndex),
               firstToken <= lastToken
         else { return nil }

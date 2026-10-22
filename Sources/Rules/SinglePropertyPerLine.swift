@@ -351,9 +351,7 @@ extension Formatter {
             (name: argument.value, range: argument.valueRange)
         }
 
-        guard identifiers.count > 1 else { return nil }
-
-        guard var parseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTuple) else { return nil }
+        guard identifiers.count > 1, var parseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTuple) else { return nil }
 
         var propertyType: (range: ClosedRange<Int>, tupleTypes: [(name: String, range: ClosedRange<Int>)]?)?
         var propertyValue: (range: ClosedRange<Int>, tupleValueRanges: [ClosedRange<Int>]?)?

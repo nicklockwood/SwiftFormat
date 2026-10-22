@@ -16,10 +16,12 @@ public extension FormatRule {
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""
             guard formatter.modifiersForDeclaration(at: i, contains: {
-                acl = $1
-                return _FormatRules.aclModifiers.contains(acl)
-            }), let startIndex = formatter.index(of: .startOfScope("{"), after: i),
-            var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex) else {
+                      acl = $1
+                      return _FormatRules.aclModifiers.contains(acl)
+                  }),
+                  let startIndex = formatter.index(of: .startOfScope("{"), after: i),
+                  var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex)
+            else {
                 return
             }
             if acl == "private" {

@@ -35,9 +35,11 @@ public extension FormatRule {
             guard formatter.options.swiftVersion >= "4",
                   let scopeIndex = formatter.index(of: .startOfScope, before: i, if: {
                       $0 == .startOfScope("{")
-                  }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
+                  }),
+                  let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
                       ["class", "actor", "struct", "enum", "extension"].contains($0.string)
-                  }), let nameIndex = formatter.index(of: .identifier, in: typeIndex ..< scopeIndex),
+                  }),
+                  let nameIndex = formatter.index(of: .identifier, in: typeIndex ..< scopeIndex),
                   formatter.next(.nonSpaceOrCommentOrLinebreak, after: nameIndex)?.isOperator(".") == false,
                   case let .identifier(typeName) = formatter.tokens[nameIndex],
                   let endIndex = formatter.index(of: .endOfScope, after: scopeIndex),
@@ -194,9 +196,10 @@ extension Formatter {
                 i = endIndex
             case let .identifier(name) where names.contains(name):
                 if let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                    $0 == .operator(".", .infix)
-                }), last(.nonSpaceOrCommentOrLinebreak, before: dotIndex)
-                    != .identifier("self")
+                       $0 == .operator(".", .infix)
+                   }),
+                   last(.nonSpaceOrCommentOrLinebreak, before: dotIndex)
+                   != .identifier("self")
                 {
                     return true
                 }

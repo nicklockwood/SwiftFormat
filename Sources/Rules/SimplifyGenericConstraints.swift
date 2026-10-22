@@ -148,58 +148,56 @@ extension Formatter {
         let (whereTypes, updatedWhereRange) = parseGenericTypes(from: whereIndex)
 
         // If the where clause has no constraints (empty), remove it
-        if whereTypes.allSatisfy(\.conformances.isEmpty) {
-            // Get the token after the where keyword
-            if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: updatedWhereRange.lowerBound) {
-                let tokenAfterWhere = tokens[tokenAfterWhereIndex]
-                if tokenAfterWhere == .startOfScope("{") {
-                    // Where clause followed by opening brace - remove everything between where and {
-                    removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
-                } else if tokenAfterWhere.isLinebreak || tokenAfterWhere == .endOfScope("}") {
-                    // Where clause followed by linebreak or closing brace - remove where and whitespace
-                    let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
-                        ? whereClauseIndex.index - 1
-                        : whereClauseIndex.index
+        if whereTypes.allSatisfy(\.conformances.isEmpty),
+           // Get the token after the where keyword
+           let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: updatedWhereRange.lowerBound)
+        {
+            let tokenAfterWhere = tokens[tokenAfterWhereIndex]
+            if tokenAfterWhere == .startOfScope("{") {
+                // Where clause followed by opening brace - remove everything between where and {
+                removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
+            } else if tokenAfterWhere.isLinebreak || tokenAfterWhere == .endOfScope("}") {
+                // Where clause followed by linebreak or closing brace - remove where and whitespace
+                let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                    ? whereClauseIndex.index - 1
+                    : whereClauseIndex.index
 
-                    if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
-                        removeTokens(in: startIndex ..< linebreakIndex)
-                    }
+                if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
+                    removeTokens(in: startIndex ..< linebreakIndex)
+                }
+            } else {
+                // Where clause followed by something else (e.g., next function in protocol)
+                // Remove where and any trailing whitespace up to linebreak
+                let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                    ? whereClauseIndex.index - 1
+                    : whereClauseIndex.index
+
+                if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
+                    removeTokens(in: startIndex ..< linebreakIndex)
                 } else {
-                    // Where clause followed by something else (e.g., next function in protocol)
-                    // Remove where and any trailing whitespace up to linebreak
-                    let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
-                        ? whereClauseIndex.index - 1
-                        : whereClauseIndex.index
-
-                    if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
-                        removeTokens(in: startIndex ..< linebreakIndex)
-                    } else {
-                        // No linebreak found - remove where and trailing content
-                        var endIndex = whereClauseIndex.index + 1
-                        while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
-                            endIndex += 1
-                        }
-                        removeTokens(in: startIndex ..< endIndex)
+                    // No linebreak found - remove where and trailing content
+                    var endIndex = whereClauseIndex.index + 1
+                    while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
+                        endIndex += 1
                     }
+                    removeTokens(in: startIndex ..< endIndex)
                 }
             }
         }
 
         // Clean up any trailing commas before the opening brace or end of declaration
-        if let openBraceIndex = index(of: .startOfScope("{"), after: whereClauseIndex.index) {
-            // Search backwards from the brace to find any trailing comma
-            if let commaIndex = index(
-                of: .nonSpaceOrCommentOrLinebreak,
-                before: openBraceIndex,
-                if: { $0 == .delimiter(",") }
-            ) {
-                removeToken(at: commaIndex)
-                // Clean up extra whitespace around the removed comma
-                if tokens[commaIndex - 1].isSpace,
-                   tokens[commaIndex].isSpaceOrLinebreak
-                {
-                    removeToken(at: commaIndex - 1)
-                }
+        if let openBraceIndex = index(of: .startOfScope("{"), after: whereClauseIndex.index),
+           // Search backwards from the brace to find any trailing comma
+           let commaIndex = index(
+               of: .nonSpaceOrCommentOrLinebreak,
+               before: openBraceIndex,
+               if: { $0 == .delimiter(",") }
+           )
+        {
+            removeToken(at: commaIndex)
+            // Clean up extra whitespace around the removed comma
+            if tokens[commaIndex - 1].isSpace, tokens[commaIndex].isSpaceOrLinebreak {
+                removeToken(at: commaIndex - 1)
             }
         }
 
@@ -208,8 +206,7 @@ extension Formatter {
 
         for (typeName, conformances) in constraintsByType {
             // Recalculate the end index after each modification
-            guard let updatedGenericEndIndex = endOfScope(at: updatedGenericStartIndex.index)
-            else { return }
+            guard let updatedGenericEndIndex = endOfScope(at: updatedGenericStartIndex.index) else { return }
 
             // Find where this generic parameter is defined in the angle brackets
             var currentIndex = updatedGenericStartIndex.index + 1

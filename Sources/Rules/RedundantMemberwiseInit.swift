@@ -216,17 +216,17 @@ public extension FormatRule {
 
                         if token == .identifier("self") {
                             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextToken, if: {
-                                $0.isOperator(".")
-                            }),
-                                let propIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
-                                let propToken = formatter.token(at: propIndex),
-                                propToken.isIdentifier,
-                                let equalsIndex = formatter.index(of: .operator("=", .infix), after: propIndex),
-                                let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                                let valueToken = formatter.token(at: valueIndex),
-                                valueToken.isIdentifier,
-                                propToken.string == valueToken.string,
-                                propertiesWithoutDefaults.contains(where: { $0.name == propToken.string })
+                                      $0.isOperator(".")
+                                  }),
+                                  let propIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
+                                  let propToken = formatter.token(at: propIndex),
+                                  propToken.isIdentifier,
+                                  let equalsIndex = formatter.index(of: .operator("=", .infix), after: propIndex),
+                                  let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                                  let valueToken = formatter.token(at: valueIndex),
+                                  valueToken.isIdentifier,
+                                  propToken.string == valueToken.string,
+                                  propertiesWithoutDefaults.contains(where: { $0.name == propToken.string })
                             else {
                                 isRedundant = false
                                 break

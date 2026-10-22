@@ -29,11 +29,13 @@ public extension FormatRule {
             }
 
             guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: initIndex, if: {
-                $0 == .startOfScope("(")
-            }), let coderIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex, if: {
-                $0 == .identifier("coder")
-            }), let endParenIndex = formatter.index(of: .endOfScope(")"), after: coderIndex),
-            let braceIndex = formatter.index(of: .startOfScope("{"), after: endParenIndex)
+                      $0 == .startOfScope("(")
+                  }),
+                  let coderIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex, if: {
+                      $0 == .identifier("coder")
+                  }),
+                  let endParenIndex = formatter.index(of: .endOfScope(")"), after: coderIndex),
+                  let braceIndex = formatter.index(of: .startOfScope("{"), after: endParenIndex)
             else { return }
 
             // make sure the implementation is empty or fatalError

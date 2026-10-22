@@ -166,11 +166,9 @@ extension Formatter {
         let conditionRange = index ... (self.index(of: .nonSpaceOrCommentOrLinebreak, before: questionMarkIndex) ?? index)
 
         // Parse the true branch (between ? and :)
-        guard let trueStart = self.index(of: .nonSpaceOrCommentOrLinebreak, after: questionMarkIndex) else {
-            return nil
-        }
-
-        guard let colonIndex = findTernaryColon(after: questionMarkIndex) else {
+        guard let trueStart = self.index(of: .nonSpaceOrCommentOrLinebreak, after: questionMarkIndex),
+              let colonIndex = findTernaryColon(after: questionMarkIndex)
+        else {
             return nil
         }
 

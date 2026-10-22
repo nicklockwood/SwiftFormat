@@ -25,9 +25,11 @@ public extension FormatRule {
             switch token {
             case .keyword("while"):
                 if let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                    $0 == .endOfScope("}")
-                }), let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex),
-                formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == .keyword("repeat") {
+                       $0 == .endOfScope("}")
+                   }),
+                   let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex),
+                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == .keyword("repeat")
+                {
                     fallthrough
                 }
             case .keyword("else"):
@@ -103,7 +105,8 @@ public extension FormatRule {
                           let prevBraceIndex = (token == .endOfScope("}")) ? prevIndex :
                           formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex, if: {
                               $0 == .endOfScope("}")
-                          }), formatter.bracesContainLinebreak(prevBraceIndex)
+                          }),
+                          formatter.bracesContainLinebreak(prevBraceIndex)
                 {
                     formatter.replaceTokens(in: prevIndex + 1 ..< i, with:
                         formatter.linebreakToken(for: prevIndex + 1))

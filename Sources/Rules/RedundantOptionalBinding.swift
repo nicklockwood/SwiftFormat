@@ -143,8 +143,9 @@ extension Formatter {
     /// Returns true if the `{` at `idx` is the body of a function (`func`, `init`, `subscript`,
     /// `deinit`) or a computed property (`var name: Type { ... }`).
     func isFunctionOrComputedPropertyBody(at idx: Int) -> Bool {
-        guard tokens[idx] == .startOfScope("{"), !isStartOfClosure(at: idx) else { return false }
-        guard let keywordIndex = indexOfLastSignificantKeyword(at: idx, excluding: ["where"]) else {
+        guard tokens[idx] == .startOfScope("{"), !isStartOfClosure(at: idx),
+              let keywordIndex = indexOfLastSignificantKeyword(at: idx, excluding: ["where"])
+        else {
             return false
         }
         switch tokens[keywordIndex].string {

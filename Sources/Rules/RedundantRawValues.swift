@@ -19,7 +19,8 @@ public extension FormatRule {
             ), let colonIndex = formatter.index(
                 of: .nonSpaceOrCommentOrLinebreak, after: nameIndex, if: { $0 == .delimiter(":") }
             ), formatter.next(.nonSpaceOrCommentOrLinebreak, after: colonIndex) == .identifier("String"),
-            let braceIndex = formatter.index(of: .startOfScope("{"), after: colonIndex) else {
+            let braceIndex = formatter.index(of: .startOfScope("{"), after: colonIndex)
+            else {
                 return
             }
             var lastIndex = formatter.index(of: .keyword("case"), after: braceIndex)

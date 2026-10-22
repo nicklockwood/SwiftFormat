@@ -39,10 +39,8 @@ public extension FormatRule {
             guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfFirstBranch),
                   let lvalueRange = formatter.parseExpressionRange(startingAt: firstTokenIndex),
                   let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: lvalueRange.upperBound),
-                  formatter.tokens[equalsIndex] == .operator("=", .infix)
-            else { return }
-
-            guard conditionalBranches.allSatisfy({ formatter.isExhaustiveSingleStatementAssignment($0, lvalueRange: lvalueRange) }),
+                  formatter.tokens[equalsIndex] == .operator("=", .infix),
+                  conditionalBranches.allSatisfy({ formatter.isExhaustiveSingleStatementAssignment($0, lvalueRange: lvalueRange) }),
                   formatter.conditionalBranchesAreExhaustive(conditionKeywordIndex: startOfConditional, branches: conditionalBranches)
             else {
                 return

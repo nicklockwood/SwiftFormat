@@ -128,9 +128,11 @@ public extension FormatRule {
                 formatter.removeParen(at: i)
             case .operator(_, .infix):
                 guard let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: {
-                    $0 == .startOfScope("{")
-                }), let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
-                formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex else {
+                          $0 == .startOfScope("{")
+                      }),
+                      let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
+                      formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex
+                else {
                     fallthrough
                 }
                 formatter.removeParen(at: closingIndex)

@@ -23,11 +23,8 @@ public extension FormatRule {
         formatter.forEach(.startOfScope("//")) { i, _ in
             let startOfLine = formatter.startOfLine(at: i)
             let endOfLine = formatter.endOfLine(at: i)
-            guard formatter.lineLength(from: startOfLine, upTo: endOfLine) > maxWidth else {
-                return
-            }
-
-            guard let startIndex = formatter.index(of: .nonSpace, after: i),
+            guard formatter.lineLength(from: startOfLine, upTo: endOfLine) > maxWidth,
+                  let startIndex = formatter.index(of: .nonSpace, after: i),
                   case var .commentBody(comment) = formatter.tokens[startIndex],
                   !comment.isCommentDirective
             else {

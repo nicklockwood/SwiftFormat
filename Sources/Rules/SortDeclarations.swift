@@ -53,12 +53,12 @@ public extension FormatRule {
 
             if shouldBePartiallySorted {
                 guard let endCommentIndex = formatter.tokens[index...].firstIndex(where: {
-                    $0.isComment && $0.string.contains("swiftformat:sort:end")
-                }),
-                    let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: index),
-                    let firstRangeToken = formatter.index(of: .nonLinebreak, after: sortRangeStart),
-                    let lastRangeToken = formatter.index(of: .nonSpaceOrLinebreak, before: endCommentIndex - 2),
-                    sortRangeStart <= lastRangeToken
+                          $0.isComment && $0.string.contains("swiftformat:sort:end")
+                      }),
+                      let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: index),
+                      let firstRangeToken = formatter.index(of: .nonLinebreak, after: sortRangeStart),
+                      let lastRangeToken = formatter.index(of: .nonSpaceOrLinebreak, before: endCommentIndex - 2),
+                      sortRangeStart <= lastRangeToken
                 else { return }
 
                 rangeToSort = sortRangeStart ... lastRangeToken

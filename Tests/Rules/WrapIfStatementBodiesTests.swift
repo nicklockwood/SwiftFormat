@@ -165,7 +165,7 @@ final class WrapIfStatementBodiesTests: XCTestCase {
             if let font = UIFont(name: name, size: 1) { return font }
             else {
                 assertionFailureOrLog("Unable to load font named: \\(name)")
-                return UIFont.systemFont(ofSize: 1)
+                return .systemFont(ofSize: 1)
             }
         }
         """
@@ -176,7 +176,7 @@ final class WrapIfStatementBodiesTests: XCTestCase {
             }
             else {
                 assertionFailureOrLog("Unable to load font named: \\(name)")
-                return UIFont.systemFont(ofSize: 1)
+                return .systemFont(ofSize: 1)
             }
         }
         """

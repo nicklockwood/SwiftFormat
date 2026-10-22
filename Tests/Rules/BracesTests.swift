@@ -724,4 +724,40 @@ final class BracesTests: XCTestCase {
         """
         testFormatting(for: input, rules: [.braces, .wrapMultilineStatementBraces])
     }
+
+    func testBraceNotUnwrappedOntoConditionalCompilationDirective() {
+        let input = """
+        func test() {
+            let a =
+                if Bool.random() {
+                    #if DEBUG
+                        {
+                            print("here")
+                            return 5
+                        }()
+                    #else
+                        2
+                    #endif
+                } else {
+                    3
+                }
+        }
+        """
+        testFormatting(for: input, rule: .braces)
+    }
+
+    func testBraceNotUnwrappedOntoElseDirective() {
+        let input = """
+        let foo =
+            #if DEBUG
+                1
+            #else
+                {
+                    print("here")
+                    return 2
+                }()
+            #endif
+        """
+        testFormatting(for: input, rule: .braces)
+    }
 }

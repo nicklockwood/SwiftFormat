@@ -52,25 +52,19 @@ private func createTmpFile(
 
 private func withTmpFile(_ path: String? = nil, contents: String, fn: (URL) -> Void) throws {
     let path = path ?? (UUID().uuidString + ".swift")
-    let prefix = UUID().uuidString
-    let url = try createTmpFile("\(prefix)/\(path)", contents: contents)
-    fn(url)
-    try FileManager.default.removeItem(at: url)
+    try withTmpDirectory([path: contents]) { directory in
+        fn(directory.appendingPathComponent(path))
+    }
 }
 
 private func withTmpFiles(_ files: [String: String], fn: (URL) throws -> Void) throws {
-    var urls = [URL]()
-    defer {
-        for url in urls {
-            try? FileManager.default.removeItem(at: url)
+    try withTmpDirectory(files) { directory in
+        for path in files.keys {
+            let url = directory.appendingPathComponent(path)
+            if ["swift", "md"].contains(url.pathExtension) {
+                try fn(url)
+            }
         }
-    }
-    let prefix = UUID().uuidString
-    for (path, contents) in files {
-        try urls.append(createTmpFile("\(prefix)/\(path)", contents: contents))
-    }
-    for url in urls where ["swift", "md"].contains(url.pathExtension) {
-        try fn(url)
     }
 }
 
@@ -3968,6 +3962,25 @@ final class CommandLineTests: XCTestCase {
         }
         let output = try String(contentsOf: outputURL)
         XCTAssert(output.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+    }
+
+    func testTemporaryFileHelperRemovesItsDirectory() throws {
+        var temporaryDirectory: URL?
+        try withTmpFile("Nested/Input.swift", contents: "") { url in
+            temporaryDirectory = url.deletingLastPathComponent().deletingLastPathComponent()
+            XCTAssert(FileManager.default.fileExists(atPath: url.path))
+        }
+        XCTAssertFalse(try FileManager.default.fileExists(atPath: XCTUnwrap(temporaryDirectory).path))
+    }
+
+    func testTemporaryFilesHelperRemovesItsDirectoryAfterError() throws {
+        enum TestError: Error { case expected }
+        var temporaryDirectory: URL?
+        XCTAssertThrowsError(try withTmpFiles(["Nested/Input.swift": ""]) { url in
+            temporaryDirectory = url.deletingLastPathComponent().deletingLastPathComponent()
+            throw TestError.expected
+        })
+        XCTAssertFalse(try FileManager.default.fileExists(atPath: XCTUnwrap(temporaryDirectory).path))
     }
 
     func testSARIFReporterEndToEnd() throws {

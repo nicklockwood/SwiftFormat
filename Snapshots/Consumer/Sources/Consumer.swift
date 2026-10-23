@@ -657,14 +657,14 @@ extension Consumer.Location: CustomStringConvertible {
 
     /// Convenience constructor, used by compiled parsers
     static func at(_ range: Range<String.Index>, in source: String.UnicodeScalarView) -> Consumer.Location {
-        return Consumer.Location(source: source, range: range)
+        return .init(source: source, range: range)
     }
 
     /// Convenience constructor, used for testing
     static func at(_ range: CountableRange<Int>) -> Consumer.Location {
         let source = String(repeating: " ", count: range.upperBound).unicodeScalars
         let range = source.index(source.startIndex, offsetBy: range.lowerBound) ..< source.endIndex
-        return Consumer.Location(source: source, range: range)
+        return .init(source: source, range: range)
     }
 }
 
@@ -744,7 +744,7 @@ private extension Consumer.Charset {
             inverted = true
             set = other.characterSet.subtracting(characterSet)
         }
-        return Consumer.Charset(characterSet: set, inverted: inverted)
+        return .init(characterSet: set, inverted: inverted)
     }
 }
 

@@ -38,6 +38,7 @@
 * [hoistTry](#hoistTry)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
+* [initStyle](#initStyle)
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
@@ -1676,6 +1677,42 @@ Option | Description
 </details>
 <br/>
 
+## initStyle
+
+Use named constructors or contextual `.init()` calls.
+
+Option | Description
+--- | ---
+`--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
+`--preserve-short-type-names` | Preserve constructor type names of four characters or fewer: "true" (default) or "false"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  // --explicit-types auto
+  func makeView() -> CustomView {
+-     CustomView()
++     .init()
+  }
+
+  // --explicit-types always
+  func makeView() -> CustomView {
+-     .init()
++     CustomView()
+  }
+```
+
+By default, `auto` shortens constructors in explicit return-type contexts. `inferred` also
+uses resolved assignment and parameter types, including the project index when available.
+Constructor names of four characters or fewer are preserved unless
+`--preserve-short-type-names false` is specified. Unresolved or ambiguous types are preserved.
+Disable `initStyle` to leave constructors in return, assignment, and argument contexts unchanged.
+Variable declarations are handled by `redundantType` and `propertyTypes`.
+
+</details>
+<br/>
+
 ## isEmpty
 
 Prefer `isEmpty` over comparing `count` against zero.
@@ -2613,13 +2650,15 @@ Adds `private` access control to SwiftUI dynamic properties without existing acc
 
 ## propertyTypes
 
-Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).
+Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = Foo()`).
 
 Option | Description
 --- | ---
 `--property-types` | Types in property declarations: "explicit", "inferred" or "infer-locals-only" (default)
 `--inferred-types` | Prefer inferred types: "exclude-cond-exprs" or "always" (default)
 `--preserved-property-types` | Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule
+`--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
+`--preserve-short-type-names` | Preserve constructor type names of four characters or fewer: "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>
@@ -2660,6 +2699,10 @@ Option | Description
       }
   }
 ```
+`--explicit-types always` retains type qualifiers on the initializer side, independently
+of annotation placement. The default `auto` and `inferred` modes allow their removal
+when the declaration supplies the type. Constructor spelling also respects
+`--preserve-short-type-names`; names of four characters or fewer are preserved by default.
 
 </details>
 <br/>
@@ -3666,6 +3709,8 @@ Remove redundant type from variable declarations.
 Option | Description
 --- | ---
 `--property-types` | Types in property declarations: "explicit", "inferred" or "infer-locals-only" (default)
+`--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
+`--preserve-short-type-names` | Preserve constructor type names of four characters or fewer: "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>
@@ -3690,6 +3735,10 @@ Option | Description
       }
   }
 ```
+`--explicit-types always` retains type qualifiers on the initializer side, independently
+of annotation placement. The default `auto` and `inferred` modes allow their removal
+when the declaration supplies the type. Constructor spelling also respects
+`--preserve-short-type-names`; names of four characters or fewer are preserved by default.
 
 </details>
 <br/>

@@ -100,7 +100,7 @@ public extension Polygon {
     }
 
     func inverted() -> Polygon {
-        return Polygon(
+        return .init(
             unchecked: vertices.reversed().map { $0.inverted() },
             plane: plane.inverted(),
             isConvex: isConvex,

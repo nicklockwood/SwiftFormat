@@ -435,8 +435,8 @@ public extension SCNGeometry {
 private extension Data {
     func index(at index: Int, bytes: Int) -> UInt32 {
         switch bytes {
-        case 1: return UInt32(self[index])
-        case 2: return UInt32(uint16(at: index * 2))
+        case 1: return .init(self[index])
+        case 2: return .init(uint16(at: index * 2))
         case 4: return uint32(at: index * 4)
         default: preconditionFailure()
         }
@@ -466,11 +466,11 @@ private extension Data {
             to: UnsafeMutableBufferPointer(start: &float, count: 1),
             from: index ..< index + 4
         )
-        return Double(float)
+        return .init(float)
     }
 
     func vector(at index: Int) -> Vector {
-        return Vector(
+        return .init(
             float(at: index),
             float(at: index + 4),
             float(at: index + 8)
@@ -498,7 +498,7 @@ public extension Rotation {
 
 public extension Transform {
     static func transform(from scnNode: SCNNode) -> Transform {
-        return Transform(
+        return .init(
             offset: Vector(scnNode.position),
             rotation: Rotation(scnNode.orientation),
             scale: Vector(scnNode.scale)

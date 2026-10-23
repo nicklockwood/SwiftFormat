@@ -53,6 +53,7 @@ let ruleRegistry: [String: FormatRule] = [
     "ifExpressions": .ifExpressions,
     "indent": .indent,
     "initCoderUnavailable": .initCoderUnavailable,
+    "initStyle": .initStyle,
     "isEmpty": .isEmpty,
     "leadingDelimiters": .leadingDelimiters,
     "linebreakAtEndOfFile": .linebreakAtEndOfFile,

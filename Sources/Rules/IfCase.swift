@@ -259,7 +259,7 @@ extension Formatter {
         var scope = startOfScope(at: ifIndex)
         while let scopeIndex = scope {
             if isStartOfClosure(at: scopeIndex) {
-                return isInResultBuilder(at: ifIndex)
+                return isInResultBuilder(at: ifIndex) && scopeBodySupportsResultBuilder(at: scopeIndex)
             }
             if isStartOfDeclarationBody(at: scopeIndex),
                let keywordIndex = indexOfLastSignificantKeyword(at: scopeIndex, excluding: ["where", "throws", "rethrows"]),

@@ -627,6 +627,74 @@ final class IfCaseTests: XCTestCase {
         testFormatting(for: input, output, rule: .ifCase)
     }
 
+    func testExplicitReturnDisablesResultBuilderInInitializerArgument() {
+        let input = """
+        Container(makeValue: {
+            if case let .success(value) = result {
+                return value
+            }
+            bar()
+            return fallback
+        })
+        """
+        let output = """
+        Container(makeValue: {
+            switch result {
+            case let .success(value):
+                return value
+            default:
+                break
+            }
+            bar()
+            return fallback
+        })
+        """
+        testFormatting(for: input, output, rule: .ifCase)
+    }
+
+    func testExplicitReturnDisablesResultBuilderInNestedClosure() {
+        let input = """
+        var body: some View {
+            foo {
+                if case let .success(value) = result {
+                    return value
+                }
+                bar()
+                return fallback
+            }
+        }
+        """
+        let output = """
+        var body: some View {
+            foo {
+                switch result {
+                case let .success(value):
+                    return value
+                default:
+                    break
+                }
+                bar()
+                return fallback
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .ifCase)
+    }
+
+    func testReturnInNestedClosureDoesNotDisableResultBuilder() {
+        let input = """
+        Container(content: {
+            if case .loading = state {
+                Button(action: {
+                    log()
+                    return run()
+                })
+            }
+        })
+        """
+        testFormatting(for: input, rule: .ifCase)
+    }
+
     func testIfCaseInSingleLineString() {
         let input = #"""
         let description = "Value: \(if case .loading = state { "Loading" } else { "Ready" })"

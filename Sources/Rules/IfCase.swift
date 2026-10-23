@@ -24,19 +24,9 @@ public extension FormatRule {
         + switch result {
         + case let .success(value):
               handle(value)
-        + default:
-        +     break
-          }
-        ```
-
-        ```diff
-        - let value = if case let .success(value) = result {
-        + let value = switch result {
-        + case let .success(value):
-              value
         - } else {
         + default:
-              fallback
+              handle(fallback)
           }
         ```
 
@@ -44,11 +34,10 @@ public extension FormatRule {
         - if case let .success(value) = result {
         + switch result {
         + case let .success(value):
-              return value
+              handle(value)
         + default:
-        +     return fallback
+        +     break
           }
-        - return fallback
         ```
         """
     }

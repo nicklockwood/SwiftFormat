@@ -978,7 +978,11 @@ extension Formatter {
     }
 
     func indentForScopeInMultilineCondition(at scopeStartIndex: Int) -> String? {
+        // Only scopes on a condition keyword's line can be realigned.
         guard isStartOfClosure(at: scopeStartIndex) || tokens[scopeStartIndex] == .startOfScope("("),
+              tokens[startOfLine(at: scopeStartIndex) ..< scopeStartIndex].contains(where: {
+                  $0.isKeyword && ["if", "guard", "while", "for", "repeat", "case", "switch"].contains($0.string)
+              }),
               let scopeEndIndex = endOfScope(at: scopeStartIndex),
               !onSameLine(scopeStartIndex, scopeEndIndex)
         else {

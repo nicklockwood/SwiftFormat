@@ -1305,6 +1305,12 @@ struct _Descriptors {
         help: "Minimum type name length for shortening to .init (default is 5)",
         keyPath: \.initTypeMinLength
     )
+    let propertyTypesMode = OptionDescriptor(
+        argumentName: "property-types-mode",
+        displayName: "Property Type Conversion",
+        help: "Move type annotations always or only remove redundant annotations:",
+        keyPath: \.propertyTypesMode
+    )
     let propertyTypes = OptionDescriptor(
         argumentName: "property-types",
         displayName: "Property Types",

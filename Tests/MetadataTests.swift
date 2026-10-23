@@ -288,6 +288,13 @@ final class MetadataTests: XCTestCase {
                             Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
                             Descriptors.noWrapOperators,
                         ]
+                    case .identifier("formatExplicitTypes"):
+                        referencedOptions += [Descriptors.explicitTypes, Descriptors.initTypeMinLength]
+                    case .identifier("removeRedundantPropertyTypes"):
+                        referencedOptions += [Descriptors.propertyTypes, Descriptors.explicitTypes, Descriptors.initTypeMinLength]
+                    case .identifier("formatPropertyTypes"):
+                        referencedOptions += [Descriptors.propertyTypes, Descriptors.propertyTypesMode,
+                                              Descriptors.inferredTypesInConditionalExpressions, Descriptors.preservedPropertyTypes]
                     case .identifier("shouldOmitTypeQualifier"):
                         referencedOptions += [Descriptors.explicitTypes, Descriptors.initTypeMinLength]
                     case .identifier("removeSelf"):

@@ -27,6 +27,7 @@
 * [emptyBraces](#emptyBraces)
 * [enumNamespaces](#enumNamespaces)
 * [environmentEntry](#environmentEntry)
+* [explicitTypes](#explicitTypes)
 * [extensionAccessControl](#extensionAccessControl)
 * [extensionAttributes](#extensionAttributes)
 * [fileHeader](#fileHeader)
@@ -38,7 +39,6 @@
 * [hoistTry](#hoistTry)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
-* [initStyle](#initStyle)
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
@@ -77,13 +77,11 @@
 * [redundantRawValues](#redundantRawValues)
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
-* [redundantStaticMemberType](#redundantStaticMemberType)
 * [redundantStaticSelf](#redundantStaticSelf)
 * [redundantSwiftTestingSuite](#redundantSwiftTestingSuite)
 * [redundantSwiftUIGroup](#redundantSwiftUIGroup)
 * [redundantSwiftVersionCheck](#redundantSwiftVersionCheck)
 * [redundantThrows](#redundantThrows)
-* [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVariable](#redundantVariable)
 * [redundantVoidReturnType](#redundantVoidReturnType)
@@ -179,6 +177,7 @@
 
 * [privateStateVariables](#privateStateVariables)
 * [redundantProperty](#redundantProperty)
+* [redundantType](#redundantType)
 * [redundantViewBuilder](#redundantViewBuilder)
 * [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
@@ -1198,6 +1197,50 @@ Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro.
 </details>
 <br/>
 
+## explicitTypes
+
+Control explicit type qualifiers on static members and constructors.
+
+Option | Description
+--- | ---
+`--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
+`--init-type-min-length` | Minimum type name length for shortening to .init (default is 5)
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  // --explicit-types inferred
+  func foo() -> Bar {
+-     Bar.value
++     .value
+  }
+
+  // --explicit-types auto
+  func makeView() -> CustomView {
+-     CustomView()
++     .init()
+  }
+
+  // --explicit-types always
+  func makeView() -> CustomView {
+-     .init()
++     CustomView()
+  }
+```
+
+`always` expands safely resolvable shorthand. `auto` omits qualifiers when the
+expected type is explicitly stated in the enclosing function or property declaration.
+`inferred` also uses resolved assignment and parameter types, including the project
+index when available. Ambiguous or unresolved expressions are preserved.
+
+`--init-type-min-length` sets the minimum type name length for shortening to `.init`
+(defaults to 5; use 0 for any length). `propertyTypes` controls whether
+variable declarations have type annotations; it runs before this rule.
+
+</details>
+<br/>
+
 ## extensionAccessControl
 
 Configure the placement of an extension's access control keyword.
@@ -1673,39 +1716,6 @@ Option | Description
     fatalError("init(coder:) has not been implemented")
   }
 ```
-
-</details>
-<br/>
-
-## initStyle
-
-Use named constructors or contextual `.init()` calls.
-
-Option | Description
---- | ---
-`--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
-`--init-type-min-length` | Minimum type name length for shortening to .init (default is 5)
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  // --explicit-types auto
-  func makeView() -> CustomView {
--     CustomView()
-+     .init()
-  }
-
-  // --explicit-types always
-  func makeView() -> CustomView {
--     .init()
-+     CustomView()
-  }
-```
-
-By default, `auto` shortens constructors in explicit return-type contexts. `inferred` uses type
-info where available, including from other files and modules. Unresolved or ambiguous types are preserved.
-`--init-type-min-length` sets the minimum type name length for shortening to `.init` (defaults to 5).
 
 </details>
 <br/>
@@ -2635,59 +2645,35 @@ Adds `private` access control to SwiftUI dynamic properties without existing acc
 
 ## propertyTypes
 
-Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = Foo()`).
+Control type annotations in variable declarations. Constructor and member spelling is handled by explicitTypes.
 
 Option | Description
 --- | ---
 `--property-types` | Types in property declarations: "explicit", "inferred" or "infer-locals-only" (default)
+`--property-types-mode` | Move type annotations always or only remove redundant annotations: "always" (default) or "redundant-only"
 `--inferred-types` | Prefer inferred types: "exclude-cond-exprs" or "always" (default)
 `--preserved-property-types` | Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule
-`--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
-`--init-type-min-length` | Minimum type name length for shortening to .init (default is 5)
 
 <details>
 <summary>Examples</summary>
 
 ```diff
-  // with --propertytypes inferred
-- let view: UIView = .init()
-+ let view = UIView()
+  // --property-types inferred
+- let view: CustomView = CustomView()
++ let view = CustomView()
 
-- let color: Color = .red
-+ let color = Color.red
-
-- let array: [Int] = []
-+ let array = [Int]()
+  // --property-types explicit
+- let view = CustomView()
++ let view: CustomView = CustomView()
 ```
 
-```diff
-  // with --propertytypes explicit
-- let view = UIView()
-+ let view: UIView = .init()
+`infer-locals-only` uses inferred types in local scopes and explicit annotations on
+stored properties and globals. `--property-types-mode redundant-only` only removes
+redundant annotations, without moving a type that appears only once.
 
-- let color = Color.red
-+ let color: Color = .red
-
-- let array = [Int]()
-+ let array: [Int] = []
-```
-
-```diff
-  // with --propertytypes infer-locals-only
-  class Foo {
--     let view: UIView = UIView()
-+     let view: UIView = .init()
-
-      func method() {
--         let view: UIView = UIView()
-+         let view = UIView()
-      }
-  }
-```
-`--explicit-types always` retains type qualifiers on the initializer side, independently
-of annotation placement. The default `auto` and `inferred` modes allow their removal
-when the declaration supplies the type. Constructor spelling also respects
-`--init-type-min-length`: names must have at least 5 characters by default; use 0 for any length.
+Use `explicitTypes` to also shorten constructors to
+`.init()`. The `--explicit-types` and `--init-type-min-length` options control
+qualifier omission independently of annotation placement.
 
 </details>
 <br/>
@@ -3465,30 +3451,6 @@ Remove redundant explicit Sendable conformance from non-public structs and enums
 </details>
 <br/>
 
-## redundantStaticMemberType
-
-Remove redundant type qualifiers from static member references.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  func foo() -> Bar {
--     Bar.value
-+     .value
-  }
-
-  var foo: Bar
-- foo = Bar.value
-+ foo = .value
-```
-
-Uses explicit local types and unambiguous project-indexed property and parameter types.
-Unresolved types and overloaded function calls are preserved.
-
-</details>
-<br/>
-
 ## redundantStaticSelf
 
 Remove explicit `Self` where applicable.
@@ -3691,42 +3653,7 @@ This will cause warnings anywhere the updated method is called with `try`, since
 
 Remove redundant type from variable declarations.
 
-Option | Description
---- | ---
-`--property-types` | Types in property declarations: "explicit", "inferred" or "infer-locals-only" (default)
-`--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
-`--init-type-min-length` | Minimum type name length for shortening to .init (default is 5)
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  // with --propertytypes inferred
-- let view: UIView = UIView()
-+ let view = UIView()
-
-  // with --propertytypes explicit
-- let view: UIView = UIView()
-+ let view: UIView = .init()
-
-  // with --propertytypes infer-locals-only
-  class Foo {
--     let view: UIView = UIView()
-+     let view: UIView = .init()
-
-      func method() {
--         let view: UIView = UIView()
-+         let view = UIView()
-      }
-  }
-```
-`--explicit-types always` retains type qualifiers on the initializer side, independently
-of annotation placement. The default `auto` and `inferred` modes allow their removal
-when the declaration supplies the type. Constructor spelling also respects
-`--init-type-min-length`: names must have at least 5 characters by default; use 0 for any length.
-
-</details>
-<br/>
+*Note: redundantType rule is deprecated. Use propertyTypes with --property-types-mode redundant-only instead.*
 
 ## redundantTypedThrows
 

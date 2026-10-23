@@ -681,7 +681,7 @@ final class BracesTests: XCTestCase {
     func testTrailingClosureWrappingAfterSingleParamMethodCall() {
         let input = """
         func build() -> StateStore {
-            StateStore(initial: State(
+            .init(initial: State(
                 foo: foo,
                 bar: bar))
             {

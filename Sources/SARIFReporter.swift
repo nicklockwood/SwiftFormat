@@ -49,18 +49,9 @@ final class SARIFReporter: Reporter {
         if #available(macOS 10.13, iOS 11.0, watchOS 4.0, tvOS 11.0, *) {
             encoder.outputFormatting.insert(.sortedKeys)
         }
-        let stripSlashes: Bool
-        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            stripSlashes = false
-            encoder.outputFormatting.insert(.withoutEscapingSlashes)
-        } else {
-            stripSlashes = true
-        }
+        encoder.outputFormatting.insert(.withoutEscapingSlashes)
         let result = SARIFLog(changes)
-        var data = try encoder.encode(result)
-        if stripSlashes, let string = String(data: data, encoding: .utf8) {
-            data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
-        }
+        let data = try encoder.encode(result)
         return data
     }
 }

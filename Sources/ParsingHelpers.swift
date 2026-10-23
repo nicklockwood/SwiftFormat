@@ -1525,7 +1525,7 @@ extension Formatter {
     func isInResultBuilder(at i: Int) -> Bool {
         var i = i
         while let startIndex = index(before: i, where: {
-            [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains($0)
+            [.startOfScope("{"), .startOfScope("("), .startOfScope(":"), .startOfScope("#if")].contains($0)
         }) {
             guard let prevIndex = index(before: startIndex, where: {
                 !$0.isSpaceOrCommentOrLinebreak && !$0.isEndOfScope

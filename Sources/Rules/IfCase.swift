@@ -102,12 +102,6 @@ extension Formatter {
         }
 
         guard let firstSubject = branches.first?.subject else { return nil }
-        let needsBreak = branches.last?.pattern != nil || branches.contains {
-            tokens[($0.body.startOfBranch + 1) ..< $0.body.endOfBranch].allSatisfy(\.isSpaceOrCommentOrLinebreak)
-        }
-        if needsBreak, isIfCaseInResultBuilder(at: ifIndex) {
-            return nil
-        }
         let subjectTokens = tokens[firstSubject].filter { !$0.isSpaceOrLinebreak }
         guard branches.allSatisfy({ branch in
             branch.subject.map { tokens[$0].filter { !$0.isSpaceOrLinebreak } == subjectTokens } ?? true
@@ -126,6 +120,12 @@ extension Formatter {
         guard var branches = ifCaseBranches(at: ifIndex) else { return }
         if let defaultBranch = addIfCaseDefaultReturnBranch(at: ifIndex, branches: branches) {
             branches.append(defaultBranch)
+        }
+        let needsBreak = branches.last?.pattern != nil || branches.contains {
+            tokens[($0.body.startOfBranch + 1) ..< $0.body.endOfBranch].allSatisfy(\.isSpaceOrCommentOrLinebreak)
+        }
+        if needsBreak, isIfCaseInResultBuilder(at: ifIndex) {
+            return
         }
         guard let subject = branches.first?.subject,
               let lastBranch = branches.last

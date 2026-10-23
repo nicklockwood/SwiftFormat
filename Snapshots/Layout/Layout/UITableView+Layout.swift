@@ -7,7 +7,7 @@ private final class LayoutTableView: UITableView {
         guard layoutNode != nil else {
             return super.intrinsicContentSize
         }
-        return CGSize(
+        return .init(
             width: contentSize.width + contentInset.left + contentInset.right,
             height: contentSize.height + contentInset.top + contentInset.bottom
         )
@@ -462,7 +462,7 @@ public extension UITableView {
             if layoutsData?[identifier] == nil {
                 layoutError(.message("No cell layout has been registered for \(identifier)"))
             }
-            return LayoutNode(view: UITableViewCell())
+            return .init(view: UITableViewCell())
         }
         return node
     }
@@ -572,7 +572,7 @@ extension UITableViewHeaderFooterView: LayoutBacked {
         guard let layoutNode = layoutNode, layoutNode.children.isEmpty else {
             return super.intrinsicContentSize
         }
-        return CGSize(
+        return .init(
             width: UIView.noIntrinsicMetric,
             height: textLabel?.intrinsicContentSize.height ?? UIView.noIntrinsicMetric
         )

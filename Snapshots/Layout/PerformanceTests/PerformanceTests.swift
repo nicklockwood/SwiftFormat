@@ -31,7 +31,7 @@ final class PerformanceTests: XCTestCase {
                 )
             )
         }
-        return LayoutNode(
+        return .init(
             expressions: [
                 "width": "100%",
                 "height": "auto",
@@ -168,7 +168,7 @@ final class PerformanceTests: XCTestCase {
                 )
             )
         }
-        return LayoutNode(
+        return .init(
             expressions: [
                 "width": "100%",
                 "height": "auto",
@@ -196,7 +196,7 @@ final class PerformanceTests: XCTestCase {
                 )
             )
         }
-        return LayoutNode(
+        return .init(
             expressions: [
                 "width": "100%",
                 "height": "auto",

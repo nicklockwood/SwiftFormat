@@ -79,7 +79,7 @@ public extension Plane {
 
     /// Returns the flipside of the plane
     func inverted() -> Plane {
-        return Plane(unchecked: -normal, w: -w)
+        return .init(unchecked: -normal, w: -w)
     }
 
     /// Checks if point is on plane
@@ -171,9 +171,9 @@ enum FlatteningPlane: RawRepresentable {
 
     func flattenPoint(_ point: Vector) -> Vector {
         switch self {
-        case .yz: return Vector(point.y, point.z)
-        case .xz: return Vector(point.x, point.z)
-        case .xy: return Vector(point.x, point.y)
+        case .yz: return .init(point.y, point.z)
+        case .xz: return .init(point.x, point.z)
+        case .xy: return .init(point.x, point.y)
         }
     }
 }

@@ -432,7 +432,7 @@ public struct FormatString {
                 } else if let width = fieldWidth ?? precision {
                     return String(format: formatString, locale: locale, width, value)
                 }
-                return String(format: formatString, locale: locale, value)
+                return .init(format: formatString, locale: locale, value)
             case .float,
                  .uppercaseFloat,
                  .variablePrecisionFloat,
@@ -451,9 +451,9 @@ public struct FormatString {
                 } else if let width = fieldWidth ?? precision {
                     return String(format: formatString, locale: locale, width, value as! Double)
                 }
-                return String(format: formatString, locale: locale, value as! Double)
+                return .init(format: formatString, locale: locale, value as! Double)
             case .pointer:
-                return String(format: formatString, locale: locale, (value as AnyObject).hash)
+                return .init(format: formatString, locale: locale, (value as AnyObject).hash)
             case .bytesWritten,
                  .percentChar, // Shouldn't actually happen
                  .object,

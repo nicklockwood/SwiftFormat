@@ -87,7 +87,7 @@ private func createNodes(_ count: Int) -> LayoutNode {
             )
         )
     }
-    return LayoutNode(
+    return .init(
         expressions: [
             "width": "100%",
             "height": "auto",

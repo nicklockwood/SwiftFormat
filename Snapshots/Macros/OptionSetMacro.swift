@@ -15,7 +15,7 @@ enum OptionSetMacroDiagnostic {
 
 extension OptionSetMacroDiagnostic: DiagnosticMessage {
   func diagnose(at node: some SyntaxProtocol) -> Diagnostic {
-    Diagnostic(node: Syntax(node), message: self)
+    .init(node: Syntax(node), message: self)
   }
 
   var message: String {
@@ -39,7 +39,7 @@ extension OptionSetMacroDiagnostic: DiagnosticMessage {
   }
 
   var diagnosticID: MessageID {
-    MessageID(domain: "Swift", id: "OptionSet.\(self)")
+    .init(domain: "Swift", id: "OptionSet.\(self)")
   }
 }
 

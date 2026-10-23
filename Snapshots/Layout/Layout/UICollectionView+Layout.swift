@@ -34,7 +34,7 @@ private final class LayoutCollectionView: UICollectionView {
         guard layoutNode != nil else {
             return super.intrinsicContentSize
         }
-        return CGSize(
+        return .init(
             width: contentSize.width + contentInset.left + contentInset.right,
             height: contentSize.height + contentInset.top + contentInset.bottom
         )
@@ -383,7 +383,7 @@ public extension UICollectionView {
             }
         } catch {
             layoutError(LayoutError(error))
-            return LayoutNode(view: dequeueReusableCell(withReuseIdentifier: placeholderID, for: indexPath))
+            return .init(view: dequeueReusableCell(withReuseIdentifier: placeholderID, for: indexPath))
         }
     }
 }
@@ -393,7 +393,7 @@ private final class LayoutCollectionViewCell: UICollectionViewCell {
         guard let layoutNode = layoutNode, layoutNode.children.isEmpty else {
             return super.intrinsicContentSize
         }
-        return CGSize(width: UIView.noIntrinsicMetric, height: 44)
+        return .init(width: UIView.noIntrinsicMetric, height: 44)
     }
 
     override func sizeThatFits(_ size: CGSize) -> CGSize {

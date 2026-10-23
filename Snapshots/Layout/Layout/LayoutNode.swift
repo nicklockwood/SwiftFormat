@@ -2541,7 +2541,7 @@ public final class LayoutNode: NSObject {
                 return contentInset
             case .always:
                 let safeAreaInsets = view._safeAreaInsets
-                return UIEdgeInsets(
+                return .init(
                     top: contentInset.top + safeAreaInsets.top,
                     left: contentInset.left + safeAreaInsets.left,
                     bottom: contentInset.bottom + safeAreaInsets.bottom,
@@ -2708,7 +2708,7 @@ public final class LayoutNode: NSObject {
         // Try best fit for content
         size = try inferContentSize()
         let contentInset = try computeContentInset()
-        return CGSize(
+        return .init(
             width: size.width + contentInset.left + contentInset.right,
             height: size.height + contentInset.top + contentInset.bottom
         )

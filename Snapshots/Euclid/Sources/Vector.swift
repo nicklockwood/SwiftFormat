@@ -55,23 +55,23 @@ public extension Vector {
     }
 
     static prefix func - (rhs: Vector) -> Vector {
-        return Vector(-rhs.x, -rhs.y, -rhs.z)
+        return .init(-rhs.x, -rhs.y, -rhs.z)
     }
 
     static func + (lhs: Vector, rhs: Vector) -> Vector {
-        return Vector(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z)
+        return .init(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z)
     }
 
     static func - (lhs: Vector, rhs: Vector) -> Vector {
-        return Vector(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z)
+        return .init(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z)
     }
 
     static func * (lhs: Vector, rhs: Double) -> Vector {
-        return Vector(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs)
+        return .init(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs)
     }
 
     static func / (lhs: Vector, rhs: Double) -> Vector {
-        return Vector(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs)
+        return .init(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs)
     }
 
     var lengthSquared: Double {
@@ -87,7 +87,7 @@ public extension Vector {
     }
 
     func cross(_ a: Vector) -> Vector {
-        return Vector(
+        return .init(
             y * a.z - z * a.y,
             z * a.x - x * a.z,
             x * a.y - y * a.x
@@ -108,7 +108,7 @@ public extension Vector {
     }
 
     func quantized() -> Vector {
-        return Vector(quantize(x), quantize(y), quantize(z))
+        return .init(quantize(x), quantize(y), quantize(z))
     }
 }
 

@@ -10,10 +10,11 @@ import Foundation
 
 public extension FormatRule {
     static let propertyTypes = FormatRule(
-        help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).",
+        help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = Foo()`).",
         disabledByDefault: true,
         orderAfter: [.redundantType],
-        options: ["property-types", "inferred-types", "preserved-property-types"]
+        options: ["property-types", "inferred-types", "preserved-property-types",
+                  "explicit-types", "preserve-short-type-names"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
             // Preserve all properties in conditional statements like `if let foo = Bar() { ... }`
@@ -207,6 +208,10 @@ public extension FormatRule {
                       !rhsType.string.hasPrefix("(")
                 else { return }
 
+                let isInitializer = formatter.tokens[indexAfterType] == .startOfScope("(") ||
+                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: indexAfterType) == .identifier("init")
+                var omitType = formatter.shouldOmitTypeQualifier(rhsType.string, isInitializer: isInitializer)
+
                 // A type name followed by a `(` is an implicit `.init(`. Insert a `.init`
                 // so that the init call stays valid after we move the type to the LHS.
                 if formatter.tokens[indexAfterType] == .startOfScope("("),
@@ -227,6 +232,11 @@ public extension FormatRule {
                     }
                     guard rhsExpressionRange.upperBound == endOfInitCall else { return }
 
+                    if formatter.options.explicitTypes == .always {
+                        formatter.insert([.delimiter(":"), .space(" ")] + rhsType.tokens, at: property.identifierIndex + 1)
+                        return
+                    }
+
                     let isInitCallOnly = endOfInitCall == endOfInitCallScope
                     let initializerHasNoArguments = isInitCallOnly &&
                         formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType) == endOfInitCallScope
@@ -234,16 +244,19 @@ public extension FormatRule {
                     // If this is an empty array initializer, use `[]` instead of `.init()`
                     if rhsType.isArray, initializerHasNoArguments {
                         formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[]"))
+                        omitType = true
                     }
 
                     // If this is an empty dictionary initializer, use `[:]` instead of `.init()`
                     else if rhsType.isDictionary, initializerHasNoArguments {
                         formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[:]"))
+                        omitType = true
                     }
 
                     // If this is an empty set initializer, use `[]` instead of `.init()`
                     else if rhsType.isSet, initializerHasNoArguments {
                         formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[]"))
+                        omitType = true
                     }
 
                     // If the type is ExpressibleBy...Literal and the init has a single matching
@@ -263,6 +276,10 @@ public extension FormatRule {
                     }
 
                     else {
+                        guard omitType else {
+                            formatter.insert([.delimiter(":"), .space(" ")] + rhsType.tokens, at: property.identifierIndex + 1)
+                            return
+                        }
                         formatter.insert([.operator(".", .prefix), .identifier("init")], at: indexAfterType)
                     }
                 }
@@ -287,12 +304,16 @@ public extension FormatRule {
                         return
                     }
 
-                    formatter.replaceToken(at: indexAfterType, with: .operator(".", .prefix))
+                    if omitType {
+                        formatter.replaceToken(at: indexAfterType, with: .operator(".", .prefix))
+                    }
                 }
 
                 // Move the type name to the LHS of the property, followed by a colon
                 let typeTokens = formatter.tokens[rhsType.range]
-                formatter.removeTokens(in: rhsType.range)
+                if omitType {
+                    formatter.removeTokens(in: rhsType.range)
+                }
                 formatter.insert([.delimiter(":"), .space(" ")] + typeTokens, at: property.identifierIndex + 1)
             }
         }
@@ -334,6 +355,10 @@ public extension FormatRule {
               }
           }
         ```
+        `--explicit-types always` retains type qualifiers on the initializer side, independently
+        of annotation placement. The default `auto` and `inferred` modes allow their removal
+        when the declaration supplies the type. Constructor spelling also respects
+        `--preserve-short-type-names`; names of four characters or fewer are preserved by default.
         """
     }
 }

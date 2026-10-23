@@ -1547,7 +1547,7 @@ final class UnusedArgumentsTests: XCTestCase {
         let input = """
         func mapToResponse(_ jsonData: Data) -> Response {
             let jsonData = try! JSONSerialization.jsonObject(with: jsonData, options: []) as! [String: AnyObject]
-            return Response(jsonData)
+            return .init(jsonData)
         }
         """
 

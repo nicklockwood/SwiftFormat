@@ -50,13 +50,13 @@ public extension Vertex {
     /// Invert all orientation-specific data (e.g. vertex normal). Called when the
     /// orientation of a polygon is flipped.
     func inverted() -> Vertex {
-        return Vertex(unchecked: position, -normal, texcoord)
+        return .init(unchecked: position, -normal, texcoord)
     }
 
     /// Linearly interpolate between two vertices.
     /// Interpolation is applied to the position, texture coordinate and normal.
     func lerp(_ other: Vertex, _ t: Double) -> Vertex {
-        return Vertex(
+        return .init(
             unchecked: position.lerp(other.position, t),
             normal.lerp(other.normal, t),
             texcoord.lerp(other.texcoord, t)

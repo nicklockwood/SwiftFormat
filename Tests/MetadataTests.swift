@@ -288,6 +288,8 @@ final class MetadataTests: XCTestCase {
                             Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
                             Descriptors.noWrapOperators,
                         ]
+                    case .identifier("shouldOmitTypeQualifier"):
+                        referencedOptions += [Descriptors.explicitTypes, Descriptors.preserveShortTypeNames]
                     case .identifier("removeSelf"):
                         referencedOptions += [
                             Descriptors.selfRequired,

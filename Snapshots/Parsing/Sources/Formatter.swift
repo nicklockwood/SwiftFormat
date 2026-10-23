@@ -37,7 +37,7 @@ extension Expression: CustomStringConvertible {
     public var description: String {
         switch self {
         case .number(let double):
-            return String(format: "%g", double)
+            return .init(format: "%g", double)
         case .string(let string):
             let escapedString = string
                 .replacingOccurrences(of: "\\", with: "\\\\")

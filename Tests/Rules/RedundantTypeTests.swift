@@ -10,6 +10,56 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantTypeTests: XCTestCase {
+    func testExplicitStaticMemberQualifierPolicy() {
+        let input = """
+        var value: LongBar = LongBar.value
+        """
+        let output = """
+        var value: LongBar = .value
+        """
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: FormatOptions(propertyTypes: .explicit))
+        testFormatting(for: input, rule: .redundantType,
+                       options: FormatOptions(explicitTypes: .always, propertyTypes: .explicit))
+    }
+
+    func testExplicitQualifierPolicy() {
+        let input = """
+        var value: LongBar = LongBar()
+        """
+        let contextual = """
+        var value: LongBar = .init()
+        """
+        testFormatting(for: input, rule: .redundantType,
+                       options: FormatOptions(explicitTypes: .always, propertyTypes: .explicit))
+        testFormatting(for: input, contextual, rule: .redundantType,
+                       options: FormatOptions(propertyTypes: .explicit))
+    }
+
+    func testPreservesShortConstructorNamesByDefault() {
+        let input = """
+        var value: Tiny = Tiny()
+        """
+        let shortened = """
+        var value: Tiny = .init()
+        """
+        testFormatting(for: input, rule: .redundantType,
+                       options: FormatOptions(propertyTypes: .explicit))
+        testFormatting(for: input, shortened, rule: .redundantType,
+                       options: FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit))
+    }
+
+    func testExplicitQualifiersWithInferredAnnotations() {
+        let input = """
+        var value: LongBar = LongBar()
+        """
+        let output = """
+        var value = LongBar()
+        """
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: FormatOptions(explicitTypes: .always, propertyTypes: .inferred))
+    }
+
     func testVarRedundantTypeRemoval() {
         let input = """
         var view: UIView = UIView()
@@ -359,7 +409,7 @@ final class RedundantTypeTests: XCTestCase {
             .init("bar")
         }
         """
-        let options = FormatOptions(propertyTypes: .explicit, swiftVersion: "5.9")
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit, swiftVersion: "5.9")
         testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.wrapMultilineConditionalAssignment, .propertyTypes])
     }
 
@@ -437,7 +487,7 @@ final class RedundantTypeTests: XCTestCase {
             .init("quux")
         }
         """
-        let options = FormatOptions(propertyTypes: .explicit, swiftVersion: "5.9")
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit, swiftVersion: "5.9")
         testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.wrapMultilineConditionalAssignment, .propertyTypes])
     }
 
@@ -671,7 +721,7 @@ final class RedundantTypeTests: XCTestCase {
         let output = """
         let url: URL = .init(fileURLWithPath: #file).deletingLastPathComponent()
         """
-        let options = FormatOptions(propertyTypes: .explicit, swiftVersion: "5.4")
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit, swiftVersion: "5.4")
         testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.propertyTypes])
     }
 
@@ -708,7 +758,7 @@ final class RedundantTypeTests: XCTestCase {
         if foo {}
         let foo: Foo = .init()
         """
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .redundantType,
                        options: options, exclude: [.propertyTypes])
     }
@@ -810,7 +860,7 @@ final class RedundantTypeTests: XCTestCase {
         let globalString: String = "foo"
         """
 
-        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, output, rule: .redundantType,
                        options: options, exclude: [.propertyTypes])
     }
@@ -960,7 +1010,7 @@ final class RedundantTypeTests: XCTestCase {
         let output = """
         let a: UInt8 = .init(someVariable)
         """
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .redundantType,
                        options: options, exclude: [.propertyTypes])
     }

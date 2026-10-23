@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Removes explicit type declarations from initialization declarations
     static let redundantType = FormatRule(
         help: "Remove redundant type from variable declarations.",
-        options: ["property-types"]
+        options: ["property-types", "explicit-types", "preserve-short-type-names"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { i, _ in
             guard let keyword = formatter.lastSignificantKeyword(at: i),
@@ -74,6 +74,7 @@ public extension FormatRule {
                     let endIndex = formatter.endOfExpression(at: j, upTo: []),
                     endIndex > j
                 {
+                    guard formatter.options.explicitTypes != .always else { return }
                     let allowChains = formatter.options.swiftVersion >= "5.4"
                     if formatter.next(.nonSpaceOrComment, after: j) == .startOfScope("(") {
                         // Check if TypeName(literal) can be simplified to just the literal,
@@ -94,6 +95,9 @@ public extension FormatRule {
                             of: .operator(".", .infix),
                             in: j ..< endIndex
                         ) == nil {
+                            guard formatter.shouldOmitTypeQualifier(
+                                formatter.tokens[valueStartIndex ... j].string, isInitializer: true
+                            ) else { return }
                             formatter.replaceTokens(in: valueStartIndex ... j, with: [
                                 .operator(".", .infix), .identifier("init"),
                             ])
@@ -106,6 +110,10 @@ public extension FormatRule {
                         of: .operator(".", .infix),
                         in: (nextIndex + 1) ..< endIndex
                     ) == nil {
+                        guard formatter.shouldOmitTypeQualifier(
+                            formatter.tokens[valueStartIndex ... j].string,
+                            isInitializer: formatter.next(.nonSpaceOrComment, after: nextIndex) == .identifier("init")
+                        ) else { return }
                         formatter.removeTokens(in: valueStartIndex ... j)
                     }
                 }
@@ -179,6 +187,10 @@ public extension FormatRule {
               }
           }
         ```
+        `--explicit-types always` retains type qualifiers on the initializer side, independently
+        of annotation placement. The default `auto` and `inferred` modes allow their removal
+        when the declaration supplies the type. Constructor spelling also respects
+        `--preserve-short-type-names`; names of four characters or fewer are preserved by default.
         """
     }
 }

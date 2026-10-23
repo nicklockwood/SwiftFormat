@@ -795,33 +795,33 @@ private extension AnyExpression {
             case let boolValue as Bool:
                 return boolValue ? NanBox.trueValue : NanBox.falseValue
             case let floatValue as Float:
-                return Double(floatValue)
+                return .init(floatValue)
             case is Int,
                  is UInt,
                  is Int32,
                  is UInt32:
-                return Double(truncating: value as! NSNumber)
+                return .init(truncating: value as! NSNumber)
             case let uintValue as UInt64:
                 if uintValue <= 9007199254740992 as UInt64 {
-                    return Double(uintValue)
+                    return .init(uintValue)
                 }
             case let intValue as Int64:
                 if intValue <= 9007199254740992 as Int64, intValue >= -9223372036854775808 as Int64 {
-                    return Double(intValue)
+                    return .init(intValue)
                 }
             case let numberValue as NSNumber:
                 // Hack to avoid losing type info for UIFont.Weight, etc
                 if "\(value)".contains("rawValue") {
                     break
                 }
-                return Double(truncating: numberValue)
+                return .init(truncating: numberValue)
             case _ where AnyExpression.isNil(value):
                 return NanBox.nilValue
             default:
                 break
             }
             values.append(value)
-            return Double(bitPattern: NanBox.bitPattern(for: values.count - 1))
+            return .init(bitPattern: NanBox.bitPattern(for: values.count - 1))
         }
 
         /// Retrieve a value from the box, if it exists
@@ -1117,7 +1117,7 @@ private protocol _String {
 
 extension String: _String {
     var substring: Substring {
-        return Substring(self)
+        return .init(self)
     }
 }
 
@@ -1129,7 +1129,7 @@ extension Substring: _String {
 
 extension NSString: _String {
     var substring: Substring {
-        return Substring(self as String)
+        return .init(self as String)
     }
 }
 

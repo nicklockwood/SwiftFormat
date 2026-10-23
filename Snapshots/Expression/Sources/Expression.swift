@@ -494,7 +494,7 @@ public final class Expression: CustomStringConvertible {
             subexpression = .error(error as! Error, expression)
         }
         input = Substring.UnicodeScalarView(unicodeScalarView)
-        return ParsedExpression(root: subexpression)
+        return .init(root: subexpression)
     }
 
     /// Clear the expression cache (useful for testing, or in low memory situations)
@@ -1270,7 +1270,7 @@ private extension UnicodeScalarView {
     /// with `parseEscapedIdentifier()` because they should be updated together
     func escapedIdentifier() -> String {
         guard let delimiter = first, "`'\"".unicodeScalars.contains(delimiter) else {
-            return String(self)
+            return .init(self)
         }
         var result = String(delimiter)
         var index = self.index(after: startIndex)

@@ -197,7 +197,7 @@ extension UIViewController: LayoutManaged {
 
     private func updatedBarItem(_ item: UIBarButtonItem?, title: String) -> UIBarButtonItem {
         guard var item = item else {
-            return UIBarButtonItem(title: title, style: .plain, target: nil, action: nil)
+            return .init(title: title, style: .plain, target: nil, action: nil)
         }
         if item.title != title {
             let oldItem = item
@@ -209,7 +209,7 @@ extension UIViewController: LayoutManaged {
 
     private func updatedBarItem(_ item: UIBarButtonItem?, image: UIImage) -> UIBarButtonItem {
         guard var item = item else {
-            return UIBarButtonItem(image: image, style: .plain, target: nil, action: nil)
+            return .init(image: image, style: .plain, target: nil, action: nil)
         }
         if item.image != image {
             let oldItem = item
@@ -221,7 +221,7 @@ extension UIViewController: LayoutManaged {
 
     private func updatedBarItem(_ item: UIBarButtonItem?, systemItem: UIBarButtonItem.SystemItem) -> UIBarButtonItem {
         guard var item = item else {
-            return UIBarButtonItem(barButtonSystemItem: systemItem, target: nil, action: nil)
+            return .init(barButtonSystemItem: systemItem, target: nil, action: nil)
         }
         let oldItem = item
         item = UIBarButtonItem(barButtonSystemItem: systemItem, target: oldItem.target, action: oldItem.action)

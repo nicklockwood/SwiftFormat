@@ -162,6 +162,16 @@ public enum WrapEffects: String, CaseIterable {
     case never
 }
 
+/// Whether contextual type qualifiers should be written explicitly.
+public enum ExplicitTypes: String, CaseIterable {
+    /// Keep contextual type qualifiers explicit.
+    case always
+    /// Omit qualifiers when the enclosing declaration explicitly supplies the type.
+    case auto
+    /// Also infer qualifiers from resolved assignment targets and parameter types.
+    case inferred
+}
+
 /// Argument type for whether explicit or inferred properties are preferred
 public enum PropertyTypes: String, CaseIterable {
     /// Preserves the type as a part of the property definition:
@@ -1031,6 +1041,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
+    public var explicitTypes: ExplicitTypes
+    public var preserveShortTypeNames: Bool
     public var propertyTypes: PropertyTypes
     public var preservedPropertyTypes: Set<String>
     public var inferredTypesInConditionalExpressions: Bool
@@ -1206,6 +1218,8 @@ public struct FormatOptions: CustomStringConvertible {
                 swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode = .none,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
+                explicitTypes: ExplicitTypes = .auto,
+                preserveShortTypeNames: Bool = true,
                 propertyTypes: PropertyTypes = .inferLocalsOnly,
                 preservedPropertyTypes: Set<String> = ["Package"],
                 inferredTypesInConditionalExpressions: Bool = false,
@@ -1366,6 +1380,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.swiftUIPropertiesSortMode = swiftUIPropertiesSortMode
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
+        self.explicitTypes = explicitTypes
+        self.preserveShortTypeNames = preserveShortTypeNames
         self.propertyTypes = propertyTypes
         self.preservedPropertyTypes = preservedPropertyTypes
         self.inferredTypesInConditionalExpressions = inferredTypesInConditionalExpressions

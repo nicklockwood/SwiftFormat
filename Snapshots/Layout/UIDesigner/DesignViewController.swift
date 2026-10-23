@@ -11,17 +11,17 @@ enum DeviceType: Int {
     var portraitSize: CGSize {
         switch self {
         case .iPhone5:
-            return CGSize(width: 320, height: 568)
+            return .init(width: 320, height: 568)
         case .iPhone7:
-            return CGSize(width: 375, height: 667)
+            return .init(width: 375, height: 667)
         case .iPhone7Plus:
-            return CGSize(width: 414, height: 736)
+            return .init(width: 414, height: 736)
         }
     }
 
     var landscapeSize: CGSize {
         let size = portraitSize
-        return CGSize(width: size.height, height: size.width)
+        return .init(width: size.height, height: size.width)
     }
 }
 

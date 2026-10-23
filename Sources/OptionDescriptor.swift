@@ -1293,6 +1293,18 @@ struct _Descriptors {
         help: "Access control keyword placement:",
         keyPath: \.extensionACLPlacement
     )
+    let explicitTypes = OptionDescriptor(
+        argumentName: "explicit-types",
+        displayName: "Explicit Types",
+        help: "Explicit type qualifiers:",
+        keyPath: \.explicitTypes
+    )
+    let preserveShortTypeNames = OptionDescriptor(
+        argumentName: "preserve-short-type-names",
+        displayName: "Preserve Short Type Names",
+        help: "Preserve constructor type names of four characters or fewer:",
+        keyPath: \.preserveShortTypeNames
+    )
     let propertyTypes = OptionDescriptor(
         argumentName: "property-types",
         displayName: "Property Types",

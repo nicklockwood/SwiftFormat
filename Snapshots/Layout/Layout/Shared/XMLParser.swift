@@ -252,7 +252,7 @@ private extension String {
         while let char = chars.first, NSCharacterSet.whitespacesAndNewlines.contains(char) {
             chars.removeFirst()
         }
-        return String(chars)
+        return .init(chars)
     }
 
     func rtrim() -> String {
@@ -260,6 +260,6 @@ private extension String {
         while let char = chars.last, NSCharacterSet.whitespacesAndNewlines.contains(char) {
             chars.removeLast()
         }
-        return String(chars)
+        return .init(chars)
     }
 }

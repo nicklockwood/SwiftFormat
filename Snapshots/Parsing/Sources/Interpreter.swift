@@ -31,7 +31,7 @@ enum Value: CustomStringConvertible, Equatable {
     var description: String {
         switch self {
         case .number(let double):
-            return String(format: "%g", double)
+            return .init(format: "%g", double)
         case .string(let string):
             return string
         }

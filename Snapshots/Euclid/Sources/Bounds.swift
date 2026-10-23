@@ -90,14 +90,14 @@ public extension Bounds {
     }
 
     func union(_ other: Bounds) -> Bounds {
-        return Bounds(
+        return .init(
             min: Euclid.min(min, other.min),
             max: Euclid.max(max, other.max)
         )
     }
 
     func intersection(_ other: Bounds) -> Bounds {
-        return Bounds(
+        return .init(
             min: Euclid.max(min, other.min),
             max: Euclid.min(max, other.max)
         )
@@ -119,9 +119,9 @@ public extension Bounds {
 }
 
 private func min(_ lhs: Vector, _ rhs: Vector) -> Vector {
-    return Vector(min(lhs.x, rhs.x), min(lhs.y, rhs.y), min(lhs.z, rhs.z))
+    return .init(min(lhs.x, rhs.x), min(lhs.y, rhs.y), min(lhs.z, rhs.z))
 }
 
 private func max(_ lhs: Vector, _ rhs: Vector) -> Vector {
-    return Vector(max(lhs.x, rhs.x), max(lhs.y, rhs.y), max(lhs.z, rhs.z))
+    return .init(max(lhs.x, rhs.x), max(lhs.y, rhs.y), max(lhs.z, rhs.z))
 }

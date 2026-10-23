@@ -3188,6 +3188,22 @@ final class IndentTests: XCTestCase {
                        options: options, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements, .preferContains])
     }
 
+    func testLargeArrayOfMultilineInitializersDoesNotTimeOut() {
+        let element = """
+          .init(
+            filePath: "Sources/Example.swift",
+            newTypealias: "Dependencies"
+          ),
+        """
+        let input = """
+        let values: [ScreenDefinition] = [
+        \(Array(repeating: element, count: 500).joined(separator: "\n"))
+        ]
+        """
+        let options = FormatOptions(indent: "  ", timeout: 0.5)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testClosureBeforeUnrelatedMultilineCondition() {
         let input = """
         processValues {

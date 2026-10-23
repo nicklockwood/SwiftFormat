@@ -163,7 +163,7 @@ public final class RuntimeType: NSObject {
     }
 
     public static func array(of type: RuntimeType) -> RuntimeType {
-        return RuntimeType(.array(type))
+        return .init(.array(type))
     }
 
     public static func array(of type: Any.Type) -> RuntimeType {

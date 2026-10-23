@@ -438,7 +438,7 @@ struct LayoutExpression {
         }
         func unescapedName(_ name: String) -> String {
             if name.first == "`" {
-                return String(name.dropFirst().dropLast())
+                return .init(name.dropFirst().dropLast())
             }
             return name
         }

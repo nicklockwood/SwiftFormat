@@ -465,7 +465,7 @@ final class EnvironmentEntryTests: XCTestCase {
         /// the real `dismiss` action when no explicit `customDismiss` was set.
         private struct CustomDismissActionKey: EnvironmentKey {
             static var defaultValue: CustomDismissAction {
-                CustomDismissAction(fallback: true, body: {})
+                .init(fallback: true, body: {})
             }
         }
 
@@ -477,7 +477,7 @@ final class EnvironmentEntryTests: XCTestCase {
 
                     if dismiss.fallback {
                         let trueDismiss = self.dismiss
-                        return CustomDismissAction(fallback: false, body: {
+                        return .init(fallback: false, body: {
                             trueDismiss()
                         })
                     } else {

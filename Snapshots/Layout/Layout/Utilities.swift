@@ -26,7 +26,7 @@ func nameOfClass(_ name: AnyClass) -> String {
     let name = NSStringFromClass(name)
     let prefix = "\(classPrefix)."
     if name.hasPrefix(prefix) {
-        return String(name[prefix.endIndex...])
+        return .init(name[prefix.endIndex...])
     }
     return name
 }

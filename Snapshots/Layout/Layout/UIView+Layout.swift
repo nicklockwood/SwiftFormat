@@ -207,7 +207,7 @@ extension UIView: LayoutManaged {
                 return window.safeAreaInsets
             }
         }
-        return UIEdgeInsets(
+        return .init(
             top: _layoutGuideController?.topLayoutGuide.length ?? 0,
             left: 0,
             bottom: _layoutGuideController?.bottomLayoutGuide.length ?? 0,

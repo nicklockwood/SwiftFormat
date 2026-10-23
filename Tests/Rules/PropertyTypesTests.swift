@@ -10,6 +10,65 @@ import XCTest
 @testable import SwiftFormat
 
 final class PropertyTypesTests: XCTestCase {
+    func testExplicitStaticMemberQualifierPolicy() {
+        let input = """
+        var value = LongBar.value
+        """
+        let output = """
+        var value: LongBar = .value
+        """
+        testFormatting(for: input, output, rule: .propertyTypes,
+                       options: FormatOptions(propertyTypes: .explicit))
+        let explicit = """
+        var value: LongBar = LongBar.value
+        """
+        testFormatting(for: input, explicit, rule: .propertyTypes,
+                       options: FormatOptions(explicitTypes: .always, propertyTypes: .explicit))
+    }
+
+    func testExplicitQualifierPolicy() {
+        let input = """
+        var value = LongBar()
+        """
+        let explicit = """
+        var value: LongBar = LongBar()
+        """
+        let contextual = """
+        var value: LongBar = .init()
+        """
+        testFormatting(for: input, explicit, rule: .propertyTypes,
+                       options: FormatOptions(explicitTypes: .always, propertyTypes: .explicit))
+        testFormatting(for: input, contextual, rule: .propertyTypes,
+                       options: FormatOptions(propertyTypes: .explicit))
+    }
+
+    func testPreservesShortConstructorNamesByDefault() {
+        let input = """
+        var value = Tiny()
+        """
+        let preserved = """
+        var value: Tiny = Tiny()
+        """
+        let shortened = """
+        var value: Tiny = .init()
+        """
+        testFormatting(for: input, preserved, rule: .propertyTypes,
+                       options: FormatOptions(propertyTypes: .explicit))
+        testFormatting(for: input, shortened, rule: .propertyTypes,
+                       options: FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit))
+    }
+
+    func testExplicitQualifiersWithInferredAnnotations() {
+        let input = """
+        var value: LongBar = .init()
+        """
+        let output = """
+        var value = LongBar()
+        """
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit],
+                       options: FormatOptions(explicitTypes: .always, propertyTypes: .inferred))
+    }
+
     func testConvertsExplicitTypeToInferredType() {
         let input = """
         let foo: Foo = .init()
@@ -62,7 +121,7 @@ final class PropertyTypesTests: XCTestCase {
         let genericType: MyGenericType<Foo, Bar> = .init()
         """
 
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -75,7 +134,7 @@ final class PropertyTypesTests: XCTestCase {
         let url: URL = .init(string: "https://example.com")!
         """
 
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -118,7 +177,7 @@ final class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -135,7 +194,7 @@ final class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -164,7 +223,7 @@ final class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -199,7 +258,7 @@ final class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
@@ -284,7 +343,7 @@ final class PropertyTypesTests: XCTestCase {
         let foo: Foo = .init()
         """
 
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes], options: options)
     }
 
@@ -309,7 +368,7 @@ final class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes, .redundantInit], options: options)
     }
 
@@ -420,7 +479,7 @@ final class PropertyTypesTests: XCTestCase {
         struct MyShapeStyle: ShapeStyle {}
 
         extension ShapeStyle where Self == MyShapeStyle {
-            static var myShape: MyShapeStyle { MyShapeStyle() }
+            static var myShape: MyShapeStyle { .init() }
         }
 
         /// This compiles
@@ -530,7 +589,7 @@ final class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .inferLocalsOnly, preservedPropertyTypes: ["Foo", "Baaz", "quux"])
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .inferLocalsOnly, preservedPropertyTypes: ["Foo", "Baaz", "quux"])
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -857,7 +916,7 @@ final class PropertyTypesTests: XCTestCase {
         let output = """
         let a: UInt8 = .init(someVariable)
         """
-        let options = FormatOptions(propertyTypes: .explicit)
+        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 

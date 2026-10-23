@@ -39,7 +39,7 @@ public struct PathPoint: Hashable {
 
 public extension PathPoint {
     static func point(_ position: Vector) -> PathPoint {
-        return PathPoint(position, isCurved: false)
+        return .init(position, isCurved: false)
     }
 
     static func point(_ x: Double, _ y: Double, _ z: Double = 0) -> PathPoint {
@@ -47,7 +47,7 @@ public extension PathPoint {
     }
 
     static func curve(_ position: Vector) -> PathPoint {
-        return PathPoint(position, isCurved: true)
+        return .init(position, isCurved: true)
     }
 
     static func curve(_ x: Double, _ y: Double, _ z: Double = 0) -> PathPoint {
@@ -61,7 +61,7 @@ public extension PathPoint {
 
     func lerp(_ other: PathPoint, _ t: Double) -> PathPoint {
         let isCurved = self.isCurved || other.isCurved
-        return PathPoint(position.lerp(other.position, t), isCurved: isCurved)
+        return .init(position.lerp(other.position, t), isCurved: isCurved)
     }
 }
 

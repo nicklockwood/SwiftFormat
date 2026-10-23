@@ -37,7 +37,7 @@ public struct Mesh: Hashable {
 public extension Mesh {
     /// Computed bounds
     var bounds: Bounds {
-        return Bounds(bounds: polygons.map { $0.bounds })
+        return .init(bounds: polygons.map { $0.bounds })
     }
 
     /// Polygons grouped by material

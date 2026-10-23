@@ -16,7 +16,7 @@ final class AlignAssignmentsTests: XCTestCase {
             let capacity = 25000
             let isIndestructible = false
             let hasOnlyOneWeakPoint = true
-            return DeathStar(capacity, isIndestructible, hasOnlyOneWeakPoint)
+            return .init(capacity, isIndestructible, hasOnlyOneWeakPoint)
         }
         """
         let output = """
@@ -24,7 +24,7 @@ final class AlignAssignmentsTests: XCTestCase {
             let capacity            = 25000
             let isIndestructible    = false
             let hasOnlyOneWeakPoint = true
-            return DeathStar(capacity, isIndestructible, hasOnlyOneWeakPoint)
+            return .init(capacity, isIndestructible, hasOnlyOneWeakPoint)
         }
         """
         testFormatting(for: input, output, rule: .alignAssignments)

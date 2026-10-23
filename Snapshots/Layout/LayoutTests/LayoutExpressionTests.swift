@@ -15,7 +15,7 @@ func makeLayout(
     macros: [String: String] = [:],
     children: [Layout] = []
 ) -> Layout {
-    return Layout(
+    return .init(
         className: "UIView",
         id: nil,
         expressions: expressions,

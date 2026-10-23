@@ -158,7 +158,7 @@ public extension Rotation {
 
     static prefix func - (rhs: Rotation) -> Rotation {
         // transpose matrix
-        return Rotation(
+        return .init(
             rhs.m11,
             rhs.m21,
             rhs.m31,
@@ -172,7 +172,7 @@ public extension Rotation {
     }
 
     static func * (lhs: Rotation, rhs: Rotation) -> Rotation {
-        return Rotation(
+        return .init(
             lhs.m11 * rhs.m11 + lhs.m21 * rhs.m12 + lhs.m31 * rhs.m13,
             lhs.m12 * rhs.m11 + lhs.m22 * rhs.m12 + lhs.m32 * rhs.m13,
             lhs.m13 * rhs.m11 + lhs.m23 * rhs.m12 + lhs.m33 * rhs.m13,
@@ -291,7 +291,7 @@ public extension Mesh {
 
 public extension Polygon {
     func translated(by v: Vector) -> Polygon {
-        return Polygon(
+        return .init(
             unchecked: vertices.map { $0.translated(by: v) },
             normal: plane.normal,
             isConvex: isConvex,
@@ -301,7 +301,7 @@ public extension Polygon {
     }
 
     func rotated(by m: Rotation) -> Polygon {
-        return Polygon(
+        return .init(
             unchecked: vertices.map { $0.rotated(by: m) },
             normal: plane.normal.rotated(by: m),
             isConvex: isConvex,
@@ -326,7 +326,7 @@ public extension Polygon {
 
         let vertices = self.vertices.map { $0.scaled(by: v) }
         let vn = Vector(1 / v.x, 1 / v.y, 1 / v.z)
-        return Polygon(
+        return .init(
             unchecked: flipped ? vertices.reversed() : vertices,
             normal: plane.normal.scaled(by: vn).normalized(),
             isConvex: isConvex,
@@ -360,7 +360,7 @@ public extension Polygon {
         if v.z < 0 {
             flipped = !flipped
         }
-        return Polygon(
+        return .init(
             unchecked: flipped ? vertices.reversed() : vertices,
             normal: plane.normal,
             isConvex: isConvex,
@@ -372,20 +372,20 @@ public extension Polygon {
 
 public extension Vertex {
     func translated(by v: Vector) -> Vertex {
-        return Vertex(position + v, normal, texcoord)
+        return .init(position + v, normal, texcoord)
     }
 
     func rotated(by m: Rotation) -> Vertex {
-        return Vertex(position.rotated(by: m), normal.rotated(by: m), texcoord)
+        return .init(position.rotated(by: m), normal.rotated(by: m), texcoord)
     }
 
     func scaled(by v: Vector) -> Vertex {
         let vn = Vector(1 / v.x, 1 / v.y, 1 / v.z)
-        return Vertex(position.scaled(by: v), normal.scaled(by: vn).normalized(), texcoord)
+        return .init(position.scaled(by: v), normal.scaled(by: vn).normalized(), texcoord)
     }
 
     func scaled(by f: Double) -> Vertex {
-        return Vertex(position * f, normal, texcoord)
+        return .init(position * f, normal, texcoord)
     }
 
     func transformed(by t: Transform) -> Vertex {
@@ -397,7 +397,7 @@ public extension Vector {
     // NOTE: no need for a translated() function because of the + operator
 
     func rotated(by m: Rotation) -> Vector {
-        return Vector(
+        return .init(
             x * m.m11 + y * m.m21 + z * m.m31,
             x * m.m12 + y * m.m22 + z * m.m32,
             x * m.m13 + y * m.m23 + z * m.m33
@@ -405,7 +405,7 @@ public extension Vector {
     }
 
     func scaled(by v: Vector) -> Vector {
-        return Vector(x * v.x, y * v.y, z * v.z)
+        return .init(x * v.x, y * v.y, z * v.z)
     }
 
     func transformed(by t: Transform) -> Vector {
@@ -415,23 +415,23 @@ public extension Vector {
 
 public extension PathPoint {
     func translated(by v: Vector) -> PathPoint {
-        return PathPoint(position + v, isCurved: isCurved)
+        return .init(position + v, isCurved: isCurved)
     }
 
     func rotated(by r: Rotation) -> PathPoint {
-        return PathPoint(position.rotated(by: r), isCurved: isCurved)
+        return .init(position.rotated(by: r), isCurved: isCurved)
     }
 
     func scaled(by v: Vector) -> PathPoint {
-        return PathPoint(position.scaled(by: v), isCurved: isCurved)
+        return .init(position.scaled(by: v), isCurved: isCurved)
     }
 
     func scaled(by f: Double) -> PathPoint {
-        return PathPoint(position * f, isCurved: isCurved)
+        return .init(position * f, isCurved: isCurved)
     }
 
     func transformed(by t: Transform) -> PathPoint {
-        return PathPoint(position.transformed(by: t), isCurved: isCurved)
+        return .init(position.transformed(by: t), isCurved: isCurved)
     }
 }
 
@@ -475,21 +475,21 @@ public extension Path {
 
 public extension Plane {
     func translated(by v: Vector) -> Plane {
-        return Plane(unchecked: normal, pointOnPlane: normal * w + v)
+        return .init(unchecked: normal, pointOnPlane: normal * w + v)
     }
 
     func rotated(by r: Rotation) -> Plane {
-        return Plane(unchecked: normal.rotated(by: r), w: w)
+        return .init(unchecked: normal.rotated(by: r), w: w)
     }
 
     func scaled(by v: Vector) -> Plane {
         let vn = Vector(1 / v.x, 1 / v.y, 1 / v.z)
         let p = (normal * w).scaled(by: v)
-        return Plane(unchecked: normal.scaled(by: vn).normalized(), pointOnPlane: p)
+        return .init(unchecked: normal.scaled(by: vn).normalized(), pointOnPlane: p)
     }
 
     func scaled(by f: Double) -> Plane {
-        return Plane(unchecked: normal, w: w * f)
+        return .init(unchecked: normal, w: w * f)
     }
 
     func transformed(by t: Transform) -> Plane {
@@ -499,22 +499,22 @@ public extension Plane {
 
 public extension Bounds {
     func translated(by v: Vector) -> Bounds {
-        return Bounds(min: min + v, max: max + v)
+        return .init(min: min + v, max: max + v)
     }
 
     func rotated(by r: Rotation) -> Bounds {
-        return Bounds(points: corners.map { $0.rotated(by: r) })
+        return .init(points: corners.map { $0.rotated(by: r) })
     }
 
     func scaled(by v: Vector) -> Bounds {
-        return Bounds(min: min.scaled(by: v), max: max.scaled(by: v))
+        return .init(min: min.scaled(by: v), max: max.scaled(by: v))
     }
 
     func scaled(by f: Double) -> Bounds {
-        return Bounds(min: min * f, max: max * f)
+        return .init(min: min * f, max: max * f)
     }
 
     func transformed(by t: Transform) -> Bounds {
-        return Bounds(points: corners.map { $0.transformed(by: t) })
+        return .init(points: corners.map { $0.transformed(by: t) })
     }
 }

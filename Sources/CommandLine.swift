@@ -1915,8 +1915,15 @@ func processInput(_ inputURLs: [URL],
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            encoder.outputFormatting.insert(.withoutEscapingSlashes)
-            let data = try encoder.encode(state.snapshot)
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+                encoder.outputFormatting.insert(.withoutEscapingSlashes)
+            }
+            var data = try encoder.encode(state.snapshot)
+            if #unavailable(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0),
+               let string = String(data: data, encoding: .utf8)
+            {
+                data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)
+            }
             try data.write(to: snapshotURL, options: .atomic)
         } catch {
             if FileManager.default.fileExists(atPath: snapshotDirectory.path) {

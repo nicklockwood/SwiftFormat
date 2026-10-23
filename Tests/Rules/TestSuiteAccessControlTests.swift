@@ -138,7 +138,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         import XCTest
 
         final class MyTests: XCTestCase {
-            private let dependency: Dependency = Dependency()
+            private let dependency: Dependency = .init()
 
             public init() {
                 // Custom initialization
@@ -154,7 +154,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         import XCTest
 
         final class MyTests: XCTestCase {
-            private let dependency: Dependency = Dependency()
+            private let dependency: Dependency = .init()
 
             init() {
                 // Custom initialization

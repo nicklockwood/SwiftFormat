@@ -19,8 +19,8 @@ final class RedundantTypeTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantType,
                        options: FormatOptions(propertyTypes: .explicit))
-        testFormatting(for: input, rule: .redundantType,
-                       options: FormatOptions(explicitTypes: .always, propertyTypes: .explicit))
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: FormatOptions(initTypes: .always, propertyTypes: .explicit))
     }
 
     func testExplicitQualifierPolicy() {
@@ -31,7 +31,7 @@ final class RedundantTypeTests: XCTestCase {
         var value: LongBar = .init()
         """
         testFormatting(for: input, rule: .redundantType,
-                       options: FormatOptions(explicitTypes: .always, propertyTypes: .explicit))
+                       options: FormatOptions(initTypes: .always, propertyTypes: .explicit))
         testFormatting(for: input, contextual, rule: .redundantType,
                        options: FormatOptions(propertyTypes: .explicit))
     }
@@ -57,7 +57,7 @@ final class RedundantTypeTests: XCTestCase {
         var value = LongBar()
         """
         testFormatting(for: input, output, rule: .redundantType,
-                       options: FormatOptions(explicitTypes: .always, propertyTypes: .inferred))
+                       options: FormatOptions(initTypes: .always, propertyTypes: .inferred))
     }
 
     func testVarRedundantTypeRemoval() {
@@ -263,7 +263,7 @@ final class RedundantTypeTests: XCTestCase {
         let input = """
         let foo: [Void] = [Void]()
         """
-        let options = FormatOptions(propertyTypes: .inferred)
+        let options = FormatOptions(initTypes: .always, propertyTypes: .inferred)
         testFormatting(for: input, rule: .redundantType, options: options)
     }
 
@@ -271,7 +271,7 @@ final class RedundantTypeTests: XCTestCase {
         let input = """
         let foo: Array<Void> = Array<Void>()
         """
-        let options = FormatOptions(propertyTypes: .inferred)
+        let options = FormatOptions(initTypes: .always, propertyTypes: .inferred)
         testFormatting(for: input, rule: .redundantType,
                        options: options, exclude: [.typeSugar])
     }

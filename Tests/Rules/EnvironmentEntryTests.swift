@@ -293,7 +293,7 @@ final class EnvironmentEntryTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .environmentEntry,
-            options: FormatOptions(swiftVersion: "6.0"),
+            options: FormatOptions(initTypes: .always, swiftVersion: "6.0"),
             exclude: [.redundantType]
         )
     }
@@ -407,7 +407,7 @@ final class EnvironmentEntryTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .environmentEntry,
-            options: FormatOptions(swiftVersion: "6.0"),
+            options: FormatOptions(initTypes: .always, swiftVersion: "6.0"),
             exclude: [.redundantType]
         )
     }

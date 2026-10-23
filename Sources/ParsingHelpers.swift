@@ -5112,9 +5112,7 @@ extension Formatter {
 
 extension Formatter {
     /// Visits expressions whose expected type can be resolved without compiler type checking.
-    func forEachContextualType(policy: ExplicitTypes = .inferred, includingInitializers: Bool = false,
-                               includingShorthand: Bool = false, _ body: (Int, String) -> Void)
-    {
+    func forEachContextualType(allowInferredTypes: Bool, includingInitializers: Bool, includingShorthand: Bool, _ body: (Int, String) -> Void) {
         let bindings = explicitBindingTypes()
         var shadowedFunctions = Set(bindings.keys)
         var genericNames = Set<String>()
@@ -5155,10 +5153,14 @@ extension Formatter {
             project = result
             return result
         }
-        forEachToken(where: { $0.isIdentifier || (includingShorthand && $0.isOperator(".", .prefix)) }) { i, token in
+        forEachToken(where: {
+            $0.isIdentifier || (includingShorthand && $0.isOperator(".", .prefix)) ||
+                (includingInitializers && $0 == .startOfScope("["))
+        }) { i, token in
             guard !token.isIdentifier || bindings[token.string] == nil,
-                  token.isOperator(".", .prefix) || next(.nonSpace, after: i)?.isOperator(".") == true ||
-                  (includingInitializers && next(.nonSpace, after: i) == .startOfScope("(")),
+                  token.isOperator(".", .prefix) || token == .startOfScope("[") ||
+                  next(.nonSpace, after: i)?.isOperator(".") == true ||
+                  (includingInitializers && [Token.startOfScope("("), .startOfScope("<")].contains(next(.nonSpace, after: i) ?? .space(""))),
                   let previous = self.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
             else { return }
             let expectedType: String?
@@ -5168,12 +5170,25 @@ extension Formatter {
             case .startOfScope("{"):
                 expectedType = staticMemberReturnType(at: i, implicit: true)
             case .operator("=", .infix):
-                guard policy != .auto else { return }
-                expectedType = staticMemberAssignmentType(
-                    before: previous, bindings: bindings, project: contextIndex, fileURL: fileURL
-                )
+                if let keyword = indexOfLastSignificantKeyword(at: previous),
+                   ["let", "var"].contains(tokens[keyword].string),
+                   let property = parsePropertyDeclaration(atIntroducerIndex: keyword),
+                   property.value?.expressionRange.lowerBound == i
+                {
+                    if let declaration = declarationIndexAndScope(at: previous).index,
+                       modifiersForDeclaration(at: declaration, contains: "@Model")
+                    {
+                        return
+                    }
+                    expectedType = property.type?.string
+                } else {
+                    guard allowInferredTypes else { return }
+                    expectedType = staticMemberAssignmentType(
+                        before: previous, bindings: bindings, project: contextIndex, fileURL: fileURL
+                    )
+                }
             case .startOfScope("("), .delimiter(","), .delimiter(":"):
-                guard policy != .auto else { return }
+                guard allowInferredTypes else { return }
                 expectedType = staticMemberArgumentType(
                     at: i, project: contextIndex(), fileURL: fileURL, shadowedFunctions: shadowedFunctions
                 )
@@ -5229,8 +5244,7 @@ extension Formatter {
     }
 
     func staticMemberBindingType(
-        named name: String, at index: Int,
-        bindings: [String: [ExplicitBindingType]]
+        named name: String, at index: Int, bindings: [String: [ExplicitBindingType]]
     ) -> String? {
         guard let matches = bindings[name], matches.count == 1, let binding = matches.first,
               !binding.type.isEmpty, binding.scope?.range.contains(index) != false
@@ -5270,8 +5284,7 @@ extension Formatter {
     }
 
     func staticMemberArgumentType(
-        at expression: Int, project: ProjectIndex,
-        fileURL: URL, shadowedFunctions: Set<String>
+        at expression: Int, project: ProjectIndex, fileURL: URL, shadowedFunctions: Set<String>
     ) -> String? {
         guard let scope = startOfScope(at: expression), tokens[scope] == .startOfScope("("),
               let function = parseFunctionIdentifier(beforeStartOfScope: scope),
@@ -5292,5 +5305,223 @@ extension Formatter {
         }
         guard types.count == resolved.matches.count, Set(types).count == 1 else { return nil }
         return types.first
+    }
+}
+
+extension Formatter {
+    /// Compares whether or not two types are equivalent
+    func compare(typeStartingAfter j: Int, withTypeStartingAfter i: Int, typeEndIndex: Int)
+        -> (matches: Bool, i: Int, j: Int, wasValue: Bool)
+    {
+        var i = i, j = j, wasValue = false
+
+        while let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+              typeIndex <= typeEndIndex,
+              let valueIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: j)
+        {
+            let typeToken = tokens[typeIndex]
+            let valueToken = tokens[valueIndex]
+            if !wasValue {
+                switch valueToken {
+                case _ where valueToken.isStringDelimiter, .number,
+                     .identifier("true"), .identifier("false"):
+                    if options.propertyTypes == .explicit {
+                        // We never remove the value in this case, so exit early
+                        return (false, i, j, wasValue)
+                    }
+                    wasValue = true
+                default:
+                    break
+                }
+            }
+            guard typeToken == self.typeToken(forValueToken: valueToken) else {
+                return (false, i, j, wasValue)
+            }
+            // Avoid introducing "inferred to have type 'Void'" warning
+            if options.propertyTypes == .inferred, typeToken == .identifier("Void") ||
+                typeToken == .endOfScope(")") && tokens[i] == .startOfScope("(")
+            {
+                return (false, i, j, wasValue)
+            }
+            i = typeIndex
+            j = valueIndex
+            if tokens[j].isStringDelimiter, let next = endOfScope(at: j) {
+                j = next
+            }
+        }
+        guard i == typeEndIndex else {
+            return (false, i, j, wasValue)
+        }
+
+        // Check for ternary
+        if let endOfExpression = endOfExpression(at: j, upTo: [.operator("?", .infix)]),
+           next(.nonSpaceOrCommentOrLinebreak, after: endOfExpression) == .operator("?", .infix)
+        {
+            return (false, i, j, wasValue)
+        }
+
+        return (true, i, j, wasValue)
+    }
+
+    /// For a type annotation of the form `TypeName<SingleArg>`, returns the indices of
+    /// the base type, the opening `<`, and the generic argument token.
+    /// Returns nil if the type has multiple generic arguments, a complex argument type,
+    /// or no generic argument at all.
+    func singleGenericArgType(afterColon colonIndex: Int, typeEndIndex: Int)
+        -> (baseTypeIndex: Int, openAngle: Int, argTypeIndex: Int)?
+    {
+        guard let baseTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+              case .identifier = tokens[baseTypeIndex],
+              let openAngle = index(of: .nonSpaceOrCommentOrLinebreak, after: baseTypeIndex),
+              tokens[openAngle] == .startOfScope("<"),
+              let argTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: openAngle),
+              case .identifier = tokens[argTypeIndex],
+              let closeAngle = index(of: .nonSpaceOrCommentOrLinebreak, after: argTypeIndex),
+              closeAngle == typeEndIndex,
+              tokens[closeAngle] == .endOfScope(">")
+        else {
+            return nil
+        }
+        return (baseTypeIndex, openAngle, argTypeIndex)
+    }
+
+    /// Returns the inferred element type for a homogeneous array literal, or nil if the
+    /// array is empty, contains non-literal elements, or has mixed element types.
+    func inferredArrayLiteralElementType(at index: Int) -> Token? {
+        guard tokens[index] == .startOfScope("["),
+              let endIndex = endOfScope(at: index)
+        else { return nil }
+
+        var elementType: Token? = nil
+        var i = index
+
+        while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+              nextIndex < endIndex
+        {
+            let token = tokens[nextIndex]
+
+            if token == .delimiter(",") {
+                i = nextIndex
+                continue
+            }
+
+            let inferred = typeToken(forValueToken: token)
+            // typeToken returns the token unchanged for non-literals; skip those
+            guard inferred != token else { return nil }
+
+            if let existing = elementType {
+                if existing != inferred {
+                    return nil
+                }
+            } else {
+                elementType = inferred
+            }
+            i = token.isStringDelimiter ? (endOfScope(at: nextIndex) ?? nextIndex) : nextIndex
+        }
+
+        return elementType
+    }
+
+    /// Returns the equivalent type token for a given value token
+    func typeToken(forValueToken token: Token) -> Token {
+        switch token {
+        case let .number(_, type):
+            switch type {
+            case .decimal:
+                return .identifier("Double")
+            default:
+                return .identifier("Int")
+            }
+        case let .identifier(name):
+            return ["true", "false"].contains(name) ? .identifier("Bool") : .identifier(name)
+        case let token:
+            return token.isStringDelimiter ? .identifier("String") : token
+        }
+    }
+
+    // MARK: - Literal-expressible types
+
+    /// Standard library types known to conform to `ExpressibleByIntegerLiteral`
+    static let integerLiteralTypes: Set<String> = [
+        "Int", "Int8", "Int16", "Int32", "Int64", "Int128",
+        "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "UInt128",
+        "Double", "Float", "Float16", "Float80",
+        "StaticBigInt",
+    ]
+
+    /// Standard library types known to conform to `ExpressibleByFloatLiteral`
+    static let floatLiteralTypes: Set<String> = [
+        "Double", "Float", "Float16", "Float80",
+    ]
+
+    /// Standard library types known to conform to `ExpressibleByStringLiteral`
+    static let stringLiteralTypes: Set<String> = [
+        "String", "Substring", "StaticString",
+    ]
+
+    /// Standard library types known to conform to `ExpressibleByArrayLiteral`
+    static let arrayLiteralTypes: Set<String> = [
+        "ArraySlice", "ContiguousArray", "Set",
+        "SIMD2", "SIMD3", "SIMD4", "SIMD8", "SIMD16", "SIMD32", "SIMD64",
+        "SIMDMask",
+    ]
+
+    /// For an init call like `TypeName(singleLiteral)`, checks if the type is known
+    /// to conform to the corresponding `ExpressibleBy...Literal` protocol and the init
+    /// call can be simplified to just the literal value.
+    /// Returns the range of the literal tokens if simplification is possible, nil otherwise.
+    func simplifiableLiteralRange(
+        forTypeName typeName: String,
+        initOpenParen parenIndex: Int
+    ) -> ClosedRange<Int>? {
+        guard let closeParen = endOfScope(at: parenIndex),
+              let argStart = index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex),
+              argStart < closeParen
+        else { return nil }
+
+        let argToken = tokens[argStart]
+
+        // Determine the end of the single argument
+        let argEnd: Int
+        switch argToken {
+        case .number:
+            argEnd = argStart
+        case .identifier("true"), .identifier("false"):
+            argEnd = argStart
+        case _ where argToken.isStringDelimiter:
+            guard let end = endOfScope(at: argStart) else { return nil }
+            argEnd = end
+        case .startOfScope("["):
+            guard let end = endOfScope(at: argStart) else { return nil }
+            argEnd = end
+        default:
+            return nil
+        }
+
+        // Ensure the literal is the only argument (no trailing comma, label, or extra args)
+        guard let afterArg = index(of: .nonSpaceOrCommentOrLinebreak, after: argEnd),
+              afterArg == closeParen
+        else { return nil }
+
+        // Check if the type conforms to the matching ExpressibleBy...Literal protocol
+        switch argToken {
+        case let .number(_, numType):
+            switch numType {
+            case .decimal:
+                guard Formatter.floatLiteralTypes.contains(typeName) else { return nil }
+            default:
+                guard Formatter.integerLiteralTypes.contains(typeName) else { return nil }
+            }
+        case _ where argToken.isStringDelimiter:
+            guard Formatter.stringLiteralTypes.contains(typeName) else { return nil }
+        case .identifier("true"), .identifier("false"):
+            guard typeName == "Bool" else { return nil }
+        case .startOfScope("["):
+            guard Formatter.arrayLiteralTypes.contains(typeName) else { return nil }
+        default:
+            return nil
+        }
+
+        return argStart ... argEnd
     }
 }

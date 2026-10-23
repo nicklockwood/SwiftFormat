@@ -1525,7 +1525,7 @@ extension Formatter {
     func isInResultBuilder(at i: Int) -> Bool {
         var i = i
         while let startIndex = index(before: i, where: {
-            [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains($0)
+            [.startOfScope("{"), .startOfScope("("), .startOfScope(":"), .startOfScope("#if")].contains($0)
         }) {
             guard let prevIndex = index(before: startIndex, where: {
                 !$0.isSpaceOrCommentOrLinebreak && !$0.isEndOfScope
@@ -1545,6 +1545,12 @@ extension Formatter {
                     i = prevIndex
                 }
                 continue
+            }
+
+            if isStartOfClosure(at: startIndex) || isStartOfDeclarationBody(at: startIndex),
+               !scopeBodySupportsResultBuilder(at: startIndex, incompatibleKeywords: ["return"])
+            {
+                return false
             }
 
             if case let .identifier(name) = tokens[prevIndex], name.first?.isUppercase == true {
@@ -2734,9 +2740,11 @@ extension Formatter {
         return startOfGetter ... endOfGetter
     }
 
-    /// Whether the body of the scope at the given index would behave the same if a
-    /// result builder attribute like `@ViewBuilder` was applied to the declaration.
-    func scopeBodySupportsResultBuilder(at startOfScopeIndex: Int) -> Bool {
+    /// Whether a scope body supports a result builder, ignoring nested closures and declarations.
+    func scopeBodySupportsResultBuilder(
+        at startOfScopeIndex: Int,
+        incompatibleKeywords: Set<String> = Formatter.resultBuilderIncompatibleKeywords
+    ) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
 
         // `if` / `switch` branches are built by the result builder, so this walks into them,
@@ -2749,7 +2757,7 @@ extension Formatter {
             {
                 index = endOfNestedScope
             } else if case let .keyword(keyword) = tokens[index],
-                      Formatter.resultBuilderIncompatibleKeywords.contains(keyword)
+                      incompatibleKeywords.contains(keyword)
             {
                 return false
             }

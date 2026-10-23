@@ -441,6 +441,28 @@ final class NestedIfTests: XCTestCase {
         testFormatting(for: input, rule: .nestedIf)
     }
 
+    func testMergesNestedIfInClosureWithExplicitReturn() {
+        let input = """
+        Container(makeValue: {
+            if isValid {
+                if isEnabled {
+                    return first
+                }
+            }
+            return fallback
+        })
+        """
+        let output = """
+        Container(makeValue: {
+            if isValid, isEnabled {
+                return first
+            }
+            return fallback
+        })
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
     func testDoesNotMergeNestedIfContainingMultilineString() {
         let input = #"""
         if isValid {

@@ -1158,6 +1158,48 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertTrue(rules.contains(FormatRule.privateSwiftUIDynamicProperties.name))
     }
 
+    func testLegacyRedundantTypeSelectionPreservesDeclarationBehavior() throws {
+        let enabled = try rulesFor(["enable": "redundantType"], lint: false)
+        XCTAssertTrue(enabled.contains("redundantType"))
+        XCTAssertFalse(enabled.contains("propertyTypes"))
+        let disabled = try rulesFor(["disable": "redundantType"], lint: false)
+        XCTAssertFalse(disabled.contains("redundantType"))
+        XCTAssertFalse(disabled.contains("propertyTypes"))
+    }
+
+    func testPropertyTypeModeDoesNotChangeSelectedRules() throws {
+        let enabled = try rulesFor(["enable": "redundantType,propertyTypes"], lint: false)
+        XCTAssertTrue(enabled.contains("propertyTypes"))
+        let selected = try rulesFor(["rules": "redundantType", "property-types-mode": "always"], lint: false)
+        XCTAssertEqual(selected, ["redundantType"])
+    }
+
+    func testExplicitAllRulesDoesNotSelectLegacyTypeBehavior() throws {
+        let rules = try rulesFor(["enable": "all", "disable": "redundantType"], lint: false)
+        XCTAssertTrue(rules.contains("propertyTypes"))
+    }
+
+    func testLegacyTypeConfigurationSurvivesOptionOverrides() throws {
+        var options = try Options(["enable": "redundantType"], in: "")
+        try options.addArguments(["indent": "2"], in: "")
+        try options.addArguments(["maxwidth": "100"], in: "")
+        XCTAssertTrue(options.rules?.contains("redundantType") == true)
+        XCTAssertFalse(options.rules?.contains("propertyTypes") == true)
+    }
+
+    func testLegacyRuleSelectionPreservesInheritedPropertyTypes() throws {
+        var options = try Options(["enable": "propertyTypes"], in: "")
+        try options.addArguments(["enable": "redundantType"], in: "")
+        XCTAssertTrue(options.rules?.contains("propertyTypes") == true)
+        XCTAssertTrue(options.rules?.contains("redundantType") == true)
+    }
+
+    func testDisablingPropertyTypesDoesNotImplyLegacyConfiguration() throws {
+        let rules = try rulesFor(["disable": "propertyTypes"], lint: false)
+        XCTAssertFalse(rules.contains("propertyTypes"))
+        XCTAssertFalse(rules.contains("redundantType"))
+    }
+
     func testParseAllRule() throws {
         let rules = try parseRules("all", ignoreUnknown: false)
         XCTAssertEqual(rules, FormatRules.all.compactMap {

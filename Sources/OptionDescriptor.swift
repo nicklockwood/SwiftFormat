@@ -1293,17 +1293,23 @@ struct _Descriptors {
         help: "Access control keyword placement:",
         keyPath: \.extensionACLPlacement
     )
-    let explicitTypes = OptionDescriptor(
-        argumentName: "explicit-types",
-        displayName: "Explicit Types",
-        help: "Explicit type qualifiers:",
-        keyPath: \.explicitTypes
+    let initTypes = OptionDescriptor(
+        argumentName: "init-types",
+        displayName: "Initializer Types",
+        help: "Explicit constructor type names:",
+        keyPath: \.initTypes
     )
     let initTypeMinLength = OptionDescriptor(
         argumentName: "init-type-min-length",
         displayName: "Initializer Type Minimum Length",
         help: "Minimum type name length for shortening to .init (default is 5)",
         keyPath: \.initTypeMinLength
+    )
+    let propertyTypesMode = OptionDescriptor(
+        argumentName: "property-types-mode",
+        displayName: "Property Type Conversion",
+        help: "Move type annotations always or only remove redundant annotations:",
+        keyPath: \.propertyTypesMode
     )
     let propertyTypes = OptionDescriptor(
         argumentName: "property-types",

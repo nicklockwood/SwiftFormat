@@ -162,14 +162,20 @@ public enum WrapEffects: String, CaseIterable {
     case never
 }
 
-/// Whether contextual type qualifiers should be written explicitly.
-public enum ExplicitTypes: String, CaseIterable {
-    /// Keep contextual type qualifiers explicit.
+/// Whether constructor type names should be written explicitly.
+public enum InitTypes: String, CaseIterable {
+    /// Keep constructor type names explicit.
     case always
-    /// Omit qualifiers when the enclosing declaration explicitly supplies the type.
+    /// Use .init when the enclosing declaration explicitly supplies the type.
     case auto
-    /// Also infer qualifiers from resolved assignment targets and parameter types.
+    /// Also use .init with resolved assignment targets and parameter types.
     case inferred
+}
+
+/// Whether annotations are moved even when the type only appears once.
+public enum PropertyTypesMode: String, CaseIterable {
+    case always
+    case redundantOnly = "redundant-only"
 }
 
 /// Argument type for whether explicit or inferred properties are preferred
@@ -1041,8 +1047,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
-    public var explicitTypes: ExplicitTypes
+    public var initTypes: InitTypes
     public var initTypeMinLength: Int
+    public var propertyTypesMode: PropertyTypesMode
     public var propertyTypes: PropertyTypes
     public var preservedPropertyTypes: Set<String>
     public var inferredTypesInConditionalExpressions: Bool
@@ -1218,8 +1225,9 @@ public struct FormatOptions: CustomStringConvertible {
                 swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode = .none,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
-                explicitTypes: ExplicitTypes = .auto,
+                initTypes: InitTypes = .auto,
                 initTypeMinLength: Int = 5,
+                propertyTypesMode: PropertyTypesMode = .always,
                 propertyTypes: PropertyTypes = .inferLocalsOnly,
                 preservedPropertyTypes: Set<String> = ["Package"],
                 inferredTypesInConditionalExpressions: Bool = false,
@@ -1380,8 +1388,9 @@ public struct FormatOptions: CustomStringConvertible {
         self.swiftUIPropertiesSortMode = swiftUIPropertiesSortMode
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
-        self.explicitTypes = explicitTypes
+        self.initTypes = initTypes
         self.initTypeMinLength = initTypeMinLength
+        self.propertyTypesMode = propertyTypesMode
         self.propertyTypes = propertyTypes
         self.preservedPropertyTypes = preservedPropertyTypes
         self.inferredTypesInConditionalExpressions = inferredTypesInConditionalExpressions

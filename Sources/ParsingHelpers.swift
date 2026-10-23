@@ -1490,7 +1490,7 @@ extension Formatter {
     func isInResultBuilder(at i: Int) -> Bool {
         var i = i
         while let startIndex = index(before: i, where: {
-            [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains($0)
+            [.startOfScope("{"), .startOfScope("("), .startOfScope(":"), .startOfScope("#if")].contains($0)
         }) {
             if tokens[startIndex] == .startOfScope("{"),
                ["func", "var", "subscript"].contains(lastSignificantKeyword(at: startIndex, excluding: ["where", "throws", "rethrows"]) ?? "") ||

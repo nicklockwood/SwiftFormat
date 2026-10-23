@@ -551,6 +551,82 @@ final class IfCaseTests: XCTestCase {
         testFormatting(for: input, rule: .ifCase)
     }
 
+    func testDoesNotConvertNonexhaustiveResultBuilderInInitializerArgument() {
+        let input = """
+        var navigationBar: some View {
+            NavigationBar(
+                leading: {
+                    if case .result = state {
+                        BackButton()
+                    }
+                },
+                trailing: {
+                    if case .input = state {
+                        CloseButton()
+                    }
+                }
+            )
+        }
+        """
+        testFormatting(for: input, rule: .ifCase)
+    }
+
+    func testDoesNotConvertNonexhaustiveResultBuilderInStandaloneInitializer() {
+        let input = """
+        Container(content: {
+            if case .loading = state {
+                ProgressView()
+            }
+        })
+        """
+        testFormatting(for: input, rule: .ifCase)
+    }
+
+    func testExhaustiveResultBuilderInInitializerArgument() {
+        let input = """
+        Container(content: {
+            if case .loading = state {
+                ProgressView()
+            } else {
+                Text("Ready")
+            }
+        })
+        """
+        let output = """
+        Container(content: {
+            switch state {
+            case .loading:
+                ProgressView()
+            default:
+                Text("Ready")
+            }
+        })
+        """
+        testFormatting(for: input, output, rule: .ifCase)
+    }
+
+    func testReturningBranchesInInitializerArgument() {
+        let input = """
+        Container(makeValue: {
+            if case .loading = state {
+                return true
+            }
+            return false
+        })
+        """
+        let output = """
+        Container(makeValue: {
+            switch state {
+            case .loading:
+                return true
+            default:
+                return false
+            }
+        })
+        """
+        testFormatting(for: input, output, rule: .ifCase)
+    }
+
     func testIfCaseInSingleLineString() {
         let input = #"""
         let description = "Value: \(if case .loading = state { "Loading" } else { "Ready" })"

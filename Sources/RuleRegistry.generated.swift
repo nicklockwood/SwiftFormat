@@ -50,6 +50,7 @@ let ruleRegistry: [String: FormatRule] = [
     "hoistAwait": .hoistAwait,
     "hoistPatternLet": .hoistPatternLet,
     "hoistTry": .hoistTry,
+    "ifCase": .ifCase,
     "ifExpressions": .ifExpressions,
     "indent": .indent,
     "initCoderUnavailable": .initCoderUnavailable,

@@ -161,8 +161,9 @@ public extension FormatRule {
                 return
             }
 
-            // Only strip return from conditional block if conditionalAssignment rule is enabled
+            // Strip conditional returns when a rule that prefers conditional expressions is enabled.
             var stripConditionalReturn = formatter.options.enabledRules.contains("conditionalAssignment")
+                || formatter.options.enabledRules.contains("ifCase")
 
             // Don't strip return if type is opaque
             // (https://github.com/nicklockwood/SwiftFormat/issues/1819)

@@ -135,6 +135,7 @@
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
 * [forWhere](#forWhere)
+* [ifCase](#ifCase)
 * [ifExpressions](#ifExpressions)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
@@ -1563,6 +1564,48 @@ Option | Description
 ```diff
 - let foo = String(try await getFoo())
 + let foo = try String(await getFoo())
+```
+
+</details>
+<br/>
+
+## ifCase
+
+Convert if case chains matching the same value to switch statements or expressions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if case let .success(value) = result {
++ switch result {
++ case let .success(value):
+      handle(value)
++ default:
++     break
+  }
+```
+
+```diff
+- let value = if case let .success(value) = result {
++ let value = switch result {
++ case let .success(value):
+      value
+- } else {
++ default:
+      fallback
+  }
+```
+
+```diff
+- if case let .success(value) = result {
++ switch result {
++ case let .success(value):
+      return value
++ default:
++     return fallback
+  }
+- return fallback
 ```
 
 </details>

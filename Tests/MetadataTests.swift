@@ -289,7 +289,7 @@ final class MetadataTests: XCTestCase {
                             Descriptors.noWrapOperators,
                         ]
                     case .identifier("shouldOmitTypeQualifier"):
-                        referencedOptions += [Descriptors.explicitTypes, Descriptors.preserveShortTypeNames]
+                        referencedOptions += [Descriptors.explicitTypes, Descriptors.initTypeMinLength]
                     case .identifier("removeSelf"):
                         referencedOptions += [
                             Descriptors.selfRequired,

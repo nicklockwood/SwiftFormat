@@ -107,6 +107,29 @@ final class InitStyleTests: XCTestCase {
         testFormatting(for: input, output, rule: .initStyle)
     }
 
+    func testCustomTypeNameThreshold() {
+        let input = """
+        func medium() -> Medium {
+            Medium()
+        }
+
+        func longest() -> Longest {
+            Longest()
+        }
+        """
+        let output = """
+        func medium() -> Medium {
+            Medium()
+        }
+
+        func longest() -> Longest {
+            .init()
+        }
+        """
+        testFormatting(for: input, output, rule: .initStyle,
+                       options: FormatOptions(initTypeMinLength: 7))
+    }
+
     func testShortTypeNamesCanBeRemoved() {
         let input = """
         func foo() -> Foo {
@@ -119,7 +142,7 @@ final class InitStyleTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .initStyle,
-                       options: FormatOptions(preserveShortTypeNames: false))
+                       options: FormatOptions(initTypeMinLength: 0))
     }
 
     func testAssignmentsAndArguments() {

@@ -3870,6 +3870,6 @@ extension Formatter {
     /// Whether a contextual type qualifier can be omitted under the selected style.
     func shouldOmitTypeQualifier(_ typeName: String, isInitializer: Bool) -> Bool {
         guard options.explicitTypes != .always else { return false }
-        return !isInitializer || !options.preserveShortTypeNames || typeName.count > 4
+        return !isInitializer || typeName.count >= options.initTypeMinLength
     }
 }

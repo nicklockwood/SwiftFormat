@@ -249,33 +249,3 @@ extension Formatter {
         }
     }
 }
-
-extension ProjectIndex {
-    /// A missing `?` alone is not proof: typealiases and generic parameters can be optional.
-    func isKnownNonOptionalType(_ name: String, visibleFrom fileURL: URL) -> Bool {
-        let formatter = Formatter(tokenize(name))
-        guard let type = formatter.parseType(at: 0), !type.isOptionalType else { return false }
-        if type.isArray || type.isDictionary {
-            return formatter.endOfScope(at: type.range.lowerBound) == type.range.upperBound
-        }
-        if type.isTuple || type.isClosure {
-            return true
-        }
-        let name = type.withoutParens().string
-        let shortName = name.split(separator: ".").last.map(String.init) ?? name
-        if containsType(named: name, visibleFrom: fileURL),
-           declarationCountsAreUnambiguous(for: shortName)
-        {
-            return true
-        }
-        let standardTypes: Set = [
-            "Bool", "String", "Character", "Int", "Int8", "Int16", "Int32", "Int64",
-            "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "Float", "Double", "Void",
-        ]
-        if name.hasPrefix("Swift.") {
-            return standardTypes.contains(String(name.dropFirst(6)))
-        }
-        // A local or project declaration can shadow a standard-library type.
-        return standardTypes.contains(name) && !containsSymbolDeclaration(named: name)
-    }
-}

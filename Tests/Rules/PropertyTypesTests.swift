@@ -10,6 +10,179 @@ import XCTest
 @testable import SwiftFormat
 
 final class PropertyTypesTests: XCTestCase {
+    func testIndexedStaticPropertyAndFactoryReturnTypes() throws {
+        let declarations = """
+        enum Tools {
+            static var text: String { "hello" }
+            static func count() -> Int { 1 }
+        }
+        """
+        let input = """
+        let text = Tools.text
+        let count = Tools.count()
+        """
+        let output = """
+        let text: String = Tools.text
+        let count: Int = Tools.count()
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: output, placement: .explicit)
+    }
+
+    func testIndexedOverloadsPreserveContextualAnnotations() throws {
+        let declarations = """
+        struct Value {
+            static func make() -> Value { Value() }
+            static func make() -> Int { 1 }
+            static var choice: Value { Value() }
+            static var choice: String { "value" }
+        }
+        """
+        let input = """
+        let named: Value = Value.make()
+        let shorthand: Value = .make()
+        let property: Value = .choice
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: input, placement: .inferred)
+        let untyped = """
+        let value = Value.make()
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: untyped, output: untyped, placement: .explicit)
+    }
+
+    func testIndexedImplicitlyUnwrappedResultsPreserveAnnotations() throws {
+        let declarations = """
+        struct Value {
+            init!() {}
+            static func make() -> Value! { Value() }
+            static var shared: Value! { Value() }
+        }
+        """
+        let input = """
+        let constructor: Value = Value()
+        let initializer: Value = .init()
+        let factory: Value = Value.make()
+        let shorthand: Value = .make()
+        let property: Value = .shared
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: input, placement: .inferred)
+        let untyped = """
+        let value = Value()
+        let factory = Value.make()
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: untyped, output: untyped, placement: .explicit)
+    }
+
+    func testIndexedFailableInitializerPreserved() throws {
+        let declarations = """
+        struct Value {
+            init?() { nil }
+        }
+        """
+        let input = """
+        let value = Value()
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: input, placement: .explicit)
+    }
+
+    func testIndexedProtocolStaticMemberPreservesExistential() throws {
+        let declarations = """
+        protocol Style {}
+        struct CustomStyle: Style {}
+        extension Style where Self == CustomStyle {
+            static var custom: CustomStyle { CustomStyle() }
+        }
+        """
+        let input = """
+        let style: Style = .custom
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: input, placement: .inferred)
+    }
+
+    func testIndexedUnambiguousStaticMembersAllowInference() throws {
+        let declarations = """
+        struct Value {
+            static var shared: Value { Value() }
+            static func make() -> Value { Value() }
+        }
+        """
+        let input = """
+        let named: Value = Value.make()
+        let shorthand: Value = .shared
+        """
+        let output = """
+        let named = Value.make()
+        let shorthand = Value.shared
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: output, placement: .inferred)
+    }
+
+    func testIndexedConditionalBranchesPreserveAmbiguousAnnotations() throws {
+        let declarations = """
+        struct Value {
+            static func make() -> Value { Value() }
+            static func make() -> Int { 1 }
+        }
+        """
+        let input = """
+        let value: Value = if flag { .make() } else { .make() }
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: input, placement: .inferred)
+    }
+
+    func testIndexedNestedResultTypeIsNotAssumedGlobal() throws {
+        let declarations = """
+        struct Tools {
+            struct Result {}
+            static var result: Result { Result() }
+            static var results: [Result] { [] }
+        }
+        struct Result {}
+        """
+        let input = """
+        let result = Tools.result
+        let results = Tools.results
+        """
+        try testPropertyTypeIndex(declarations: declarations, input: input, output: input, placement: .explicit)
+    }
+
+    func testIndexedStaticMemberRespectsPreservedSymbols() {
+        let input = """
+        enum Tools {
+            static var text: String {
+                "hello"
+            }
+        }
+
+        let value = Tools.text
+        """
+        for symbol in ["Tools", "text", "String"] {
+            testFormatting(for: input, rule: .propertyTypes,
+                           options: FormatOptions(propertyTypes: .explicit, preservedPropertyTypes: [symbol]))
+        }
+    }
+
+    private func testPropertyTypeIndex(
+        declarations: String, input: String, output: String, placement: PropertyTypes,
+        file: StaticString = #file, line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let fileURL = URL(fileURLWithPath: "/Project/Use.swift")
+        let options = FormatOptions(propertyTypes: placement, inferredTypesInConditionalExpressions: true, swiftVersion: "5.9")
+        let project = ProjectIndex(files: [
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.propertyTypes], to: tokenize(input), with: options, trackChanges: false, range: nil,
+            context: FormattingContext(currentFileURL: fileURL, projectIndex: project)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output, file: file, line: line)
+        let localInput = declarations + "\n" + input
+        let local = try applyRules([.propertyTypes], to: tokenize(localInput), with: options,
+                                   trackChanges: false, range: nil)
+        XCTAssertEqual(sourceCode(for: local.tokens), declarations + "\n" + output, file: file, line: line)
+    }
+
     func testExplicitStaticMemberQualifierPolicy() {
         let input = """
         var value = LongBar.value

@@ -27,6 +27,22 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testIndexesStaticPropertiesAndFailableInitializers() {
+        let input = """
+        struct Example {
+            var instance: String
+            static var shared: Int { 1 }
+            init!() { instance = "" }
+            init?(value: String) { instance = value }
+            init(value: Int) { instance = "" }
+        }
+        """
+        let index = makeSourceFileIndex(from: input, moduleIdentifiers: ["App"])
+        XCTAssertEqual(index.propertyDeclarations.map(\.isStatic), [false, true])
+        XCTAssertEqual(index.propertyDeclarations.map(\.type), ["String", "Int"])
+        XCTAssertEqual(index.functionDeclarations.map(\.isFailable), [true, true, false])
+    }
+
     func testProjectIndexProviderBuildsOnDemandAndReusesFeatures() {
         var requestedFeatures = [Set<ProjectContextFeature>]()
         let provider = ProjectIndexProvider { features in
@@ -404,7 +420,7 @@ final class ProjectIndexTests: XCTestCase {
             moduleIdentifiers: ["App"]
         )
 
-        XCTAssertEqual(SourceFileIndex.cacheVersion, 6)
+        XCTAssertEqual(SourceFileIndex.cacheVersion, 7)
         XCTAssertEqual(try JSONDecoder().decode(
             SourceFileIndex.self,
             from: JSONEncoder().encode(index)

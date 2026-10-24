@@ -3931,6 +3931,269 @@ extension Date {
 }
 
 extension Formatter {
+    func formatExplicitTypes() {
+        var functionNames = Set<String>()
+        forEach(.keyword("func")) { i, _ in
+            if let name = parseFunctionDeclaration(keywordIndex: i)?.name {
+                functionNames.insert(name)
+            }
+        }
+        forEachContextualType(
+            policy: options.explicitTypes,
+            includingInitializers: true,
+            includingShorthand: options.explicitTypes == .always
+        ) { i, expectedType in
+            if !functionNames.contains(tokens[i].string),
+               !functionNames.contains(expectedType),
+               formatContextualInitializer(at: i, expectedType: expectedType)
+            {
+                return
+            }
+            formatStaticMemberType(at: i, expectedType: expectedType)
+        }
+    }
+
+    func formatStaticMemberType(at start: Int, expectedType: String) {
+        let typeTokens = tokenize(expectedType).filter { !$0.isSpaceOrLinebreak }
+        guard !typeTokens.isEmpty, typeTokens.allSatisfy({ $0.isIdentifier || $0.isOperator(".") }),
+              !typeTokens.contains(.identifier("Self"))
+        else { return }
+        let isImplicit = tokens[start].isOperator(".", .prefix)
+        guard isImplicit == (options.explicitTypes == .always) else { return }
+        var dot = start
+        if !isImplicit {
+            for token in typeTokens {
+                guard tokens[dot] == token, let next = index(of: .nonSpace, after: dot) else { return }
+                dot = next
+            }
+        }
+        guard tokens[dot].isOperator("."),
+              let member = index(of: .nonSpace, after: dot), tokens[member].isIdentifier,
+              !["self", "init"].contains(tokens[member].string),
+              let expression = parseExpressionRange(startingAt: start)
+        else { return }
+        var end = member
+        if let next = index(of: .nonSpaceOrCommentOrLinebreak, after: member),
+           [Token.startOfScope("("), .startOfScope("{")].contains(tokens[next]),
+           !isPropertyObserverBlock(at: next), let close = endOfContextualInitializer(at: next)
+        {
+            end = close
+        }
+        guard expression.upperBound == end else { return }
+        if isImplicit {
+            replaceToken(at: dot, with: .operator(".", .infix))
+            insert(typeTokens, at: start)
+        } else {
+            removeTokens(in: start ..< dot)
+        }
+    }
+}
+
+extension Formatter {
+    func formatContextualInitializer(at start: Int, expectedType: String) -> Bool {
+        let typeTokens = tokenize(expectedType).filter { !$0.isSpaceOrLinebreak }
+        // Optional promotion and existential types need compiler type checking.
+        guard !typeTokens.isEmpty,
+              typeTokens.allSatisfy({
+                  $0.isIdentifier || $0.isOperator(".") ||
+                      [.startOfScope("<"), .endOfScope(">"), .startOfScope("["), .endOfScope("]"),
+                       .delimiter(","), .delimiter(":")].contains($0)
+              }),
+              !typeTokens.contains(.identifier("Self")),
+              let expression = parseExpressionRange(startingAt: start)
+        else { return false }
+
+        if tokens[start].isOperator(".", .prefix) {
+            guard options.explicitTypes == .always,
+                  let member = index(of: .nonSpace, after: start), tokens[member] == .identifier("init"),
+                  let open = index(of: .nonSpace, after: member), tokens[open] == .startOfScope("("),
+                  endOfContextualInitializer(at: open) == expression.upperBound
+            else { return false }
+            replaceTokens(in: start ... member, with: typeTokens)
+            return true
+        } else {
+            guard shouldOmitTypeQualifier(typeTokens.string, isInitializer: true)
+            else { return false }
+            var cursor = start
+            for token in typeTokens {
+                guard tokens[cursor] == token,
+                      let next = index(of: .nonSpace, after: cursor)
+                else { return false }
+                cursor = next
+            }
+            // Only rewrite complete constructor calls, not a receiver within a larger expression.
+            guard tokens[cursor] == .startOfScope("("), endOfContextualInitializer(at: cursor) == expression.upperBound else {
+                return false
+            }
+            replaceTokens(in: start ..< cursor, with: [.operator(".", .prefix), .identifier("init")])
+            return true
+        }
+    }
+
+    func endOfContextualInitializer(at openParen: Int) -> Int? {
+        guard let closeParen = endOfScope(at: openParen) else { return nil }
+        var end = parseFunctionCallArguments(startOfScope: openParen).last
+            .map { max($0.valueRange.upperBound, closeParen) } ?? closeParen
+        if let next = index(of: .nonSpace, after: end), tokens[next] == .operator("!", .postfix) {
+            end = next
+        }
+        return end
+    }
+}
+
+extension Formatter {
+    func removeRedundantPropertyTypes(legacyQualifiers: Bool = false) {
+        forEach(.operator("=", .infix)) { i, _ in
+            guard let keyword = lastSignificantKeyword(at: i),
+                  ["var", "let"].contains(keyword)
+            else {
+                return
+            }
+
+            let equalsIndex = i
+            guard let colonIndex = index(before: i, where: {
+                      [.delimiter(":"), .operator("=", .infix)].contains($0)
+                  }),
+                  tokens[colonIndex] == .delimiter(":"),
+                  let typeEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
+            else { return }
+
+            // Redundant annotations use inferred or explicit placement,
+            // potentially depending on the context.
+            let isInferred: Bool
+            let declarationKeywordIndex: Int?
+            switch options.propertyTypes {
+            case .inferred:
+                isInferred = true
+                declarationKeywordIndex = nil
+            case .explicit:
+                isInferred = false
+                declarationKeywordIndex = declarationIndexAndScope(at: equalsIndex).index
+            case .inferLocalsOnly:
+                let (index, scope) = declarationIndexAndScope(at: equalsIndex)
+                switch scope {
+                case .global, .type:
+                    isInferred = false
+                    declarationKeywordIndex = index
+                case .local:
+                    isInferred = true
+                    declarationKeywordIndex = nil
+                }
+            }
+
+            // Explicit type can't be safely removed from @Model classes
+            // https://github.com/nicklockwood/SwiftFormat/issues/1649
+            if !isInferred,
+               let declarationKeywordIndex,
+               modifiersForDeclaration(at: declarationKeywordIndex, contains: "@Model")
+            {
+                return
+            }
+
+            // Removes a type already processed by `compare(typeStartingAfter:withTypeStartingAfter:)`
+            func removeType(after indexBeforeStartOfType: Int, i: Int, j: Int, wasValue: Bool) {
+                if isInferred {
+                    removeTokens(in: colonIndex ... typeEndIndex)
+                    if tokens[colonIndex - 1].isSpace {
+                        removeToken(at: colonIndex - 1)
+                    }
+                } else if !wasValue, let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: indexBeforeStartOfType),
+                          !isConditionalStatement(at: i),
+                          let endIndex = endOfExpression(at: j, upTo: []),
+                          endIndex > j
+                {
+                    let allowChains = options.swiftVersion >= "5.4"
+                    if next(.nonSpaceOrComment, after: j) == .startOfScope("(") {
+                        // Check if TypeName(literal) can be simplified to just the literal,
+                        // because the type conforms to the corresponding ExpressibleBy...Literal protocol.
+                        if let parenIndex = index(of: .nonSpaceOrComment, after: j),
+                           let closeParen = endOfScope(at: parenIndex),
+                           closeParen >= endIndex,
+                           let typeStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+                           case let .identifier(typeName) = tokens[typeStartIndex],
+                           let literalRange = simplifiableLiteralRange(
+                               forTypeName: typeName,
+                               initOpenParen: parenIndex
+                           )
+                        {
+                            let literalTokens = Array(tokens[literalRange])
+                            replaceTokens(in: valueStartIndex ... closeParen, with: literalTokens)
+                        } else if legacyQualifiers, allowChains || index(
+                            of: .operator(".", .infix),
+                            in: j ..< endIndex
+                        ) == nil {
+                            guard shouldOmitTypeQualifier(tokens[valueStartIndex ... j].string, isInitializer: true) else { return }
+                            replaceTokens(in: valueStartIndex ... j, with: [
+                                .operator(".", .infix), .identifier("init"),
+                            ])
+                        }
+                    } else if legacyQualifiers, let nextIndex = index(
+                        of: .nonSpaceOrCommentOrLinebreak,
+                        after: j,
+                        if: { $0 == .operator(".", .infix) }
+                    ), allowChains || index(
+                        of: .operator(".", .infix),
+                        in: (nextIndex + 1) ..< endIndex
+                    ) == nil {
+                        guard shouldOmitTypeQualifier(
+                            tokens[valueStartIndex ... j].string,
+                            isInitializer: next(.nonSpaceOrComment, after: nextIndex) == .identifier("init")
+                        ) else { return }
+                        removeTokens(in: valueStartIndex ... j)
+                    }
+                }
+            }
+
+            // In Swift 5.9+ (SE-0380) we need to handle if / switch expressions by checking each branch
+            if let tokenAfterEquals = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+               let conditionalBranches = conditionalBranches(at: tokenAfterEquals),
+               allRecursiveConditionalBranches(
+                   in: conditionalBranches,
+                   satisfy: { branch in
+                       compare(typeStartingAfter: branch.startOfBranch, withTypeStartingAfter: colonIndex, typeEndIndex: typeEndIndex).matches
+                   }
+               )
+            {
+                if isInferred {
+                    removeTokens(in: colonIndex ... typeEndIndex)
+                    if tokens[colonIndex - 1].isSpace {
+                        removeToken(at: colonIndex - 1)
+                    }
+                } else {
+                    forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
+                        let (_, i, j, wasValue) = compare(
+                            typeStartingAfter: branch.startOfBranch,
+                            withTypeStartingAfter: colonIndex,
+                            typeEndIndex: typeEndIndex
+                        )
+
+                        removeType(after: branch.startOfBranch, i: i, j: j, wasValue: wasValue)
+                    }
+                }
+            }
+
+            // Otherwise this is just a simple assignment expression where the RHS is a single value
+            else {
+                let (matches, i, j, wasValue) = compare(typeStartingAfter: equalsIndex, withTypeStartingAfter: colonIndex, typeEndIndex: typeEndIndex)
+                if matches {
+                    removeType(after: equalsIndex, i: i, j: j, wasValue: wasValue)
+                } else if isInferred,
+                          let tokenAfterEquals = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                          tokens[tokenAfterEquals] == .startOfScope("["),
+                          let (baseTypeIndex, openAngle, argTypeIndex) = singleGenericArgType(afterColon: colonIndex, typeEndIndex: typeEndIndex),
+                          tokens[baseTypeIndex] == .identifier("Set"),
+                          let elementType = inferredArrayLiteralElementType(at: tokenAfterEquals),
+                          tokens[argTypeIndex] == elementType
+                {
+                    // The generic argument is redundant (inferred from the array literal)
+                    removeTokens(in: openAngle ... typeEndIndex)
+                }
+            }
+        }
+    }
+}
+
+extension Formatter {
     /// Whether a contextual type qualifier can be omitted under the selected style.
     func shouldOmitTypeQualifier(_ typeName: String, isInitializer: Bool) -> Bool {
         guard options.explicitTypes != .always else { return false }

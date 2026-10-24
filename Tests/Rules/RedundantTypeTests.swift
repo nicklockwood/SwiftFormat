@@ -263,7 +263,7 @@ final class RedundantTypeTests: XCTestCase {
         let input = """
         let foo: [Void] = [Void]()
         """
-        let options = FormatOptions(propertyTypes: .inferred)
+        let options = FormatOptions(explicitTypes: .always, propertyTypes: .inferred)
         testFormatting(for: input, rule: .redundantType, options: options)
     }
 
@@ -271,7 +271,7 @@ final class RedundantTypeTests: XCTestCase {
         let input = """
         let foo: Array<Void> = Array<Void>()
         """
-        let options = FormatOptions(propertyTypes: .inferred)
+        let options = FormatOptions(explicitTypes: .always, propertyTypes: .inferred)
         testFormatting(for: input, rule: .redundantType,
                        options: options, exclude: [.typeSugar])
     }

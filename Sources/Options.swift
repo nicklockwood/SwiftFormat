@@ -172,6 +172,12 @@ public enum ExplicitTypes: String, CaseIterable {
     case inferred
 }
 
+/// Whether annotations are moved even when the type only appears once.
+public enum PropertyTypesMode: String, CaseIterable {
+    case always
+    case redundantOnly = "redundant-only"
+}
+
 /// Argument type for whether explicit or inferred properties are preferred
 public enum PropertyTypes: String, CaseIterable {
     /// Preserves the type as a part of the property definition:
@@ -1043,6 +1049,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var extensionACLPlacement: ExtensionACLPlacement
     public var explicitTypes: ExplicitTypes
     public var initTypeMinLength: Int
+    public var propertyTypesMode: PropertyTypesMode
     public var propertyTypes: PropertyTypes
     public var preservedPropertyTypes: Set<String>
     public var inferredTypesInConditionalExpressions: Bool
@@ -1220,6 +1227,7 @@ public struct FormatOptions: CustomStringConvertible {
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 explicitTypes: ExplicitTypes = .auto,
                 initTypeMinLength: Int = 5,
+                propertyTypesMode: PropertyTypesMode = .always,
                 propertyTypes: PropertyTypes = .inferLocalsOnly,
                 preservedPropertyTypes: Set<String> = ["Package"],
                 inferredTypesInConditionalExpressions: Bool = false,
@@ -1382,6 +1390,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.extensionACLPlacement = extensionACLPlacement
         self.explicitTypes = explicitTypes
         self.initTypeMinLength = initTypeMinLength
+        self.propertyTypesMode = propertyTypesMode
         self.propertyTypes = propertyTypes
         self.preservedPropertyTypes = preservedPropertyTypes
         self.inferredTypesInConditionalExpressions = inferredTypesInConditionalExpressions

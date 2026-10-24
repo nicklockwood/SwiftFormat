@@ -14,7 +14,7 @@ public extension FormatRule {
         disabledByDefault: true,
         orderAfter: [.redundantType],
         options: ["property-types", "inferred-types", "preserved-property-types",
-                  "explicit-types", "preserve-short-type-names"]
+                  "explicit-types", "init-type-min-length"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
             // Preserve all properties in conditional statements like `if let foo = Bar() { ... }`
@@ -358,7 +358,7 @@ public extension FormatRule {
         `--explicit-types always` retains type qualifiers on the initializer side, independently
         of annotation placement. The default `auto` and `inferred` modes allow their removal
         when the declaration supplies the type. Constructor spelling also respects
-        `--preserve-short-type-names`; names of four characters or fewer are preserved by default.
+        `--init-type-min-length`: names must have at least 5 characters by default; use 0 for any length.
         """
     }
 }

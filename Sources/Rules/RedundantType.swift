@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Removes explicit type declarations from initialization declarations
     static let redundantType = FormatRule(
         help: "Remove redundant type from variable declarations.",
-        options: ["property-types", "explicit-types", "preserve-short-type-names"]
+        options: ["property-types", "explicit-types", "init-type-min-length"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { i, _ in
             guard let keyword = formatter.lastSignificantKeyword(at: i),
@@ -190,7 +190,7 @@ public extension FormatRule {
         `--explicit-types always` retains type qualifiers on the initializer side, independently
         of annotation placement. The default `auto` and `inferred` modes allow their removal
         when the declaration supplies the type. Constructor spelling also respects
-        `--preserve-short-type-names`; names of four characters or fewer are preserved by default.
+        `--init-type-min-length`: names must have at least 5 characters by default; use 0 for any length.
         """
     }
 }

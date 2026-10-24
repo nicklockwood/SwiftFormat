@@ -63,10 +63,9 @@ public extension FormatRule {
             }
 
             // Make sure the body is a single statement (the same check redundantReturn uses)
-            guard formatter.blockBodyHasSingleStatement(
-                atStartOfScope: startOfScopeIndex,
-                includingConditionalStatements: true,
-                includingReturnStatements: true
+            guard formatter.scopeBodyIsSingleExpression(
+                at: startOfScopeIndex,
+                allowing: [.returnStatement, .conditionalExpressions, .returnStatementsInConditionalBranches]
             ) else {
                 return
             }
@@ -464,11 +463,7 @@ extension Formatter {
             let endOfBranch = branch.endOfBranch
 
             // Check that the branch body is a single statement
-            guard blockBodyHasSingleStatement(
-                atStartOfScope: startOfBranch,
-                includingConditionalStatements: false,
-                includingReturnStatements: false
-            ) else {
+            guard scopeBodyIsSingleExpression(at: startOfBranch) else {
                 continue
             }
 

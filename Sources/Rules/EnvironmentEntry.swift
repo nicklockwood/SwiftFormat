@@ -95,9 +95,9 @@ extension Formatter {
         }
 
         else if let body = property.body {
-            // If the body contains multiple expressions, the final output will need to be wrapped
-            // in an immediately-executed closure.
-            if !scopeBodyIsSingleExpression(at: body.scopeRange.lowerBound) {
+            // If the body can't be moved after the `=`, the final output will need to be
+            // wrapped in an immediately-executed closure.
+            if !scopeBodyIsSingleExpression(at: body.scopeRange.lowerBound, allowing: .conditionalExpressions) {
                 let existingBodyScope = Array(tokens[body.scopeRange])
                 return existingBodyScope + [.startOfScope("("), .endOfScope(")")]
             } else {

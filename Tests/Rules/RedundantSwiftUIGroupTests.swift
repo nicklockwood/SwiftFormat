@@ -108,6 +108,26 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
     }
 
+    func testRemoveGroupWithSingleViewWithoutSpacesAndModifiers() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {Text(status)}
+                    .padding(.horizontal, 8)
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                Text(status)
+                    .padding(.horizontal, 8)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent], exclude: [.spaceInsideBraces])
+    }
+
     func testKeepGroupWithMultipleViewsAndModifiers() {
         // Modifiers apply to each view individually if the Group is removed
         let input = """
@@ -625,6 +645,43 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
     }
 
+    func testDoesntAddViewBuilderWhenRemovingGroupWithIfdef() {
+        // Swift 5.4+ returns the view in each `#if` branch implicitly
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                content
+            }
+
+            var content: some View {
+                Group {
+                    #if os(iOS)
+                        Text("foo")
+                    #else
+                        Image("bar")
+                    #endif
+                }
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                content
+            }
+
+            var content: some View {
+                #if os(iOS)
+                    Text("foo")
+                #else
+                    Image("bar")
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent], options: FormatOptions(swiftVersion: "5.4"))
+    }
+
     func testRemoveGroupWithConditionalInViewBody() {
         // View.body has implied @ViewBuilder, so Group can be removed
         let input = """
@@ -684,5 +741,78 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantSwiftUIGroup)
+    }
+
+    func testRemoveGroupWithPostfixIfdefModifier() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    Text(status)
+                }
+                #if os(iOS)
+                    .padding(.horizontal, 8)
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                Text(status)
+                #if os(iOS)
+                    .padding(.horizontal, 8)
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testRemoveGroupAroundViewWithPostfixIfdefAndModifiers() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    Text(status)
+                    #if os(iOS)
+                        .bold()
+                    #endif
+                }
+                .padding()
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                Text(status)
+                #if os(iOS)
+                    .bold()
+                #endif
+                    .padding()
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testKeepGroupAroundIfdefWithModifiers() {
+        // The modifiers can't be applied to an `#if` block
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    #if os(iOS)
+                        Text(status)
+                    #else
+                        Image(status)
+                    #endif
+                }
+                .padding()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSwiftUIGroup, options: FormatOptions(swiftVersion: "5.4"))
     }
 }

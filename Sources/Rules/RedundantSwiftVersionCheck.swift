@@ -124,30 +124,12 @@ extension Formatter {
     func conditionalCompilationClauses(at ifIndex: Int) -> (
         clauses: [ConditionalCompilationClause], endifIndex: Int
     )? {
-        var keywordIndices = [ifIndex]
-        var endifIndex: Int?
-        var depth = 0
-        // Directives don't need to be balanced with other scopes, so they are matched manually
-        loop: for i in ifIndex ..< tokens.count {
-            switch tokens[i] {
-            case .startOfScope("#if"):
-                depth += 1
-            case .keyword("#elseif") where depth == 1, .keyword("#else") where depth == 1:
-                keywordIndices.append(i)
-            case .endOfScope("#endif"):
-                depth -= 1
-                if depth == 0 {
-                    endifIndex = i
-                    break loop
-                }
-            default:
-                break
-            }
+        guard let directives = conditionalCompilationDirectives(at: ifIndex), let endifIndex = directives.last else {
+            return nil
         }
 
-        guard let endifIndex else { return nil }
         var clauses = [ConditionalCompilationClause]()
-        for keywordIndex in keywordIndices + [endifIndex] {
+        for keywordIndex in directives {
             // Each directive must be on its own line, optionally followed by a comment
             guard startOfLine(at: keywordIndex, excludingIndent: true) == keywordIndex,
                   index(of: .linebreak, after: keywordIndex) ?? tokens.count == endOfLine(at: keywordIndex)

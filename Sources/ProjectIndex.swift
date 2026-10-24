@@ -183,6 +183,7 @@ struct SourceFileIndex: Codable, Equatable {
         var closureArgumentIndices: [Int]
         var autoclosureArgumentIndices: [Int]
         var returnType: String?
+        var isFailable: Bool
         var argumentTypes: [String]?
 
         init(
@@ -196,6 +197,7 @@ struct SourceFileIndex: Codable, Equatable {
             closureArgumentIndices: [Int] = [],
             autoclosureArgumentIndices: [Int],
             returnType: String? = nil,
+            isFailable: Bool = false,
             argumentTypes: [String]? = nil
         ) {
             self.name = name
@@ -208,6 +210,7 @@ struct SourceFileIndex: Codable, Equatable {
             self.closureArgumentIndices = closureArgumentIndices
             self.autoclosureArgumentIndices = autoclosureArgumentIndices
             self.returnType = returnType
+            self.isFailable = isFailable
             self.argumentTypes = argumentTypes
         }
     }
@@ -250,9 +253,10 @@ struct SourceFileIndex: Codable, Equatable {
         var name: String
         var declaringType: String
         var type: String?
+        var isStatic: Bool = false
     }
 
-    static let cacheVersion = 6
+    static let cacheVersion = 7
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -355,6 +359,9 @@ struct ProjectIndex {
     private let functionReferencesFingerprint: String
     private let symbolReferencesFingerprint: String
     private let typeVisibilities: [TypeKey: Set<String>]
+    private let typesByModule: [TypeKey: [SourceFileIndex.TypeDeclaration]]
+    private let protocolsByModule: Set<TypeKey>
+    private let staticPropertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
     private let inheritedClassNamesByModule: [String: Set<String>]
     private let inheritedClassNames: Set<String>
     private let inheritedNamesByTypeName: [String: Set<String>]
@@ -379,8 +386,17 @@ struct ProjectIndex {
         // Resolve extension targets across files before trusting their return types.
         // A generic parameter can shadow a nominal type with the same name.
         var typesByModule = [TypeKey: [SourceFileIndex.TypeDeclaration]]()
+        var protocolsByModule = Set<TypeKey>()
+        var staticPropertiesByModule = [TypeKey: [SourceFileIndex.PropertyDeclaration]]()
         for file in files.values {
             for module in file.moduleIdentifiers {
+                for declaration in file.protocolDeclarations {
+                    protocolsByModule.insert(TypeKey(moduleIdentifier: module, name: declaration.name))
+                }
+                for property in file.propertyDeclarations where property.isStatic {
+                    let key = TypeKey(moduleIdentifier: module, name: "\(property.declaringType).\(property.name)")
+                    staticPropertiesByModule[key, default: []].append(property)
+                }
                 for type in file.typeDeclarations {
                     typesByModule[TypeKey(moduleIdentifier: module, name: type.name), default: []].append(type)
                 }
@@ -459,6 +475,9 @@ struct ProjectIndex {
                     .formUnion(declaration.inheritedProtocols.inheritedNamesToResolve)
             }
         }
+        self.typesByModule = typesByModule
+        self.protocolsByModule = protocolsByModule
+        self.staticPropertiesByModule = staticPropertiesByModule
         self.typeVisibilities = typeVisibilities
         self.inheritedClassNamesByModule = inheritedClassNamesByModule
         inheritedClassNames = inheritedClassNamesByModule.values.reduce(into: []) {
@@ -497,13 +516,13 @@ struct ProjectIndex {
                     let defaults = declaration.defaultArgumentIndices.map(String.init).joined(separator: ",")
                     let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
-                    return "\(declaration.visibility):\(declaration.isStatic):\(declaration.kind.rawValue):" +
+                    return "\(declaration.visibility):\(declaration.isStatic):\(declaration.isFailable):\(declaration.kind.rawValue):" +
                         "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? "")"
                 }
                 .sorted()
                 .joined(separator: ",")
             let properties = file.propertyDeclarations
-                .map { "\($0.declaringType).\($0.name):\($0.type ?? "")" }
+                .map { "\($0.declaringType).\($0.name):\($0.isStatic):\($0.type ?? "")" }
                 .sorted().joined(separator: ",")
             let members = file.typeMembers
                 .map { members in
@@ -1136,15 +1155,16 @@ func makeSourceFileIndex(
 
         if ["let", "var"].contains(declaration.keyword),
            let owner = declaration.parentType,
-           let ownerName = owner.fullyQualifiedName,
-           !declaration.modifiers.contains("static"),
-           !declaration.modifiers.contains("class")
+           let ownerName = owner.fullyQualifiedName
         {
             propertyDeclarations.append(.init(
                 name: declaration.name ?? "",
                 declaringType: ownerName,
-                type: !declaration.parentDeclarations.contains(where: { $0.asTypeDeclaration?.genericParameters != nil })
-                    ? declaration.parsePropertyDeclaration()?.type?.string : nil
+                type: !declaration.parentDeclarations.contains(where: {
+                    $0.asTypeDeclaration?.genericParameters != nil
+                })
+                    ? declaration.parsePropertyDeclaration()?.type?.string : nil,
+                isStatic: declaration.modifiers.contains("static") || declaration.modifiers.contains("class")
             ))
         }
 
@@ -1204,6 +1224,8 @@ func makeSourceFileIndex(
                     $0.asTypeDeclaration?.genericParameters != nil
                 })
                 ? function.returnType?.string : nil,
+            isFailable: kind == .initializer &&
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: declaration.keywordIndex)?.isUnwrapOperator == true,
             argumentTypes: function.genericParameterRange == nil &&
                 !declaration.parentDeclarations.contains(where: {
                     $0.asTypeDeclaration?.genericParameters != nil
@@ -2020,5 +2042,95 @@ private struct OpenStepPropertyListParser {
             }
         }
         return tokens
+    }
+}
+
+extension ProjectIndex {
+    enum PropertyTypeResult {
+        case unknown
+        case unsafe
+        case type(String)
+    }
+
+    /// Resolve without using the property's annotation to select an overload.
+    func propertyValueType(
+        owner: String, member: String, argumentLabels: [String?]?, visibleFrom fileURL: URL
+    ) -> PropertyTypeResult {
+        guard let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers,
+              !modules.isEmpty else { return .unknown }
+        var resultTypes = Set<String>()
+        for module in modules {
+            let ownerKey = TypeKey(moduleIdentifier: module, name: owner)
+            // A protocol existential is not the concrete Self used by a constrained extension.
+            if protocolsByModule.contains(ownerKey) {
+                return .unsafe
+            }
+            let owners = typesByModule[ownerKey] ?? []
+            if owners.count > 1 || owners.contains(where: \.isGeneric) {
+                return .unsafe
+            }
+            let type: String?
+            if let argumentLabels {
+                let candidates = (functionDeclarationsByModule[module]?[member] ?? []).filter {
+                    $0.declaringType == owner &&
+                        (member == "init" ? $0.kind == .initializer : $0.kind == .function && $0.isStatic) &&
+                        $0.parameterIndices(matching: argumentLabels) != nil
+                }
+                guard !candidates.isEmpty else { return modules.count == 1 ? .unknown : .unsafe }
+                guard candidates.count == 1, let candidate = candidates.first,
+                      !candidate.isFailable else { return .unsafe }
+                type = member == "init" ? owner : candidate.returnType
+            } else {
+                let key = TypeKey(moduleIdentifier: module, name: "\(owner).\(member)")
+                let candidates = staticPropertiesByModule[key] ?? []
+                guard !candidates.isEmpty else { return modules.count == 1 ? .unknown : .unsafe }
+                guard candidates.count == 1 else { return .unsafe }
+                type = candidates.first?.type
+            }
+            guard let type, !type.hasSuffix("!"), type != "Self",
+                  !containsType(named: "\(owner).\(type)", visibleFrom: fileURL),
+                  isKnownNonOptionalType(type, visibleFrom: fileURL)
+            else { return .unsafe }
+            let typeTokens = tokenize(type)
+            let referencedTypes = typeTokens.filter(\.isIdentifier).map(\.string)
+            // A member's nested types and aliases may not be available unqualified at the use site.
+            guard !referencedTypes.contains(where: {
+                containsType(named: "\(owner).\($0)", visibleFrom: fileURL) ||
+                    (typeTokens.contains(where: \.isStartOfScope) && !isKnownNonOptionalType($0, visibleFrom: fileURL))
+            }) else { return .unsafe }
+            resultTypes.insert(type)
+        }
+        guard resultTypes.count == 1, let type = resultTypes.first else { return .unsafe }
+        return .type(type)
+    }
+}
+
+extension ProjectIndex {
+    /// A missing `?` alone is not proof: typealiases and generic parameters can be optional.
+    func isKnownNonOptionalType(_ name: String, visibleFrom fileURL: URL) -> Bool {
+        let formatter = Formatter(tokenize(name))
+        guard let type = formatter.parseType(at: 0), !type.isOptionalType else { return false }
+        if type.isArray || type.isDictionary {
+            return formatter.endOfScope(at: type.range.lowerBound) == type.range.upperBound
+        }
+        if type.isTuple || type.isClosure {
+            return true
+        }
+        let name = type.withoutParens().string
+        let shortName = name.split(separator: ".").last.map(String.init) ?? name
+        if containsType(named: name, visibleFrom: fileURL),
+           declarationCountsAreUnambiguous(for: shortName)
+        {
+            return true
+        }
+        let standardTypes: Set = [
+            "Bool", "String", "Character", "Int", "Int8", "Int16", "Int32", "Int64",
+            "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "Float", "Double", "Void",
+        ]
+        if name.hasPrefix("Swift.") {
+            return standardTypes.contains(String(name.dropFirst(6)))
+        }
+        // A local or project declaration can shadow a standard-library type.
+        return standardTypes.contains(name) && !containsSymbolDeclaration(named: name)
     }
 }

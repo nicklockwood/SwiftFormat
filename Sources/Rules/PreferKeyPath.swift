@@ -161,7 +161,7 @@ extension Formatter {
         var resultType = element
         for token in tokens[range].dropFirst() where token.isIdentifier {
             let matches = properties.filter {
-                $0.declaringType == resultType && $0.name == token.string
+                !$0.isStatic && $0.declaringType == resultType && $0.name == token.string
             }
             guard matches.count == 1, let propertyType = matches.first?.type else { return false }
             resultType = propertyType

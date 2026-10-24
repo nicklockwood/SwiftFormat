@@ -3997,7 +3997,10 @@ extension Formatter {
 }
 
 extension Formatter {
-    func removeRedundantPropertyTypes(legacyQualifiers: Bool = false) {
+    func removeRedundantPropertyTypes(
+        legacyQualifiers: Bool = false,
+        canRemoveType: ((String, ClosedRange<Int>) -> Bool)? = nil
+    ) {
         forEach(.operator("=", .infix)) { i, _ in
             guard let keyword = lastSignificantKeyword(at: i),
                   ["var", "let"].contains(keyword)
@@ -4034,6 +4037,16 @@ extension Formatter {
                     isInferred = true
                     declarationKeywordIndex = nil
                 }
+            }
+
+            if isInferred, let canRemoveType,
+               let start = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+               let expression = parseExpressionRange(startingAt: start),
+               let typeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+               let type = parseType(at: typeStart),
+               !canRemoveType(type.withoutParens().string, expression)
+            {
+                return
             }
 
             // Explicit type can't be safely removed from @Model classes

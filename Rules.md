@@ -1684,7 +1684,7 @@ Use named constructors or contextual `.init()` calls.
 Option | Description
 --- | ---
 `--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
-`--preserve-short-type-names` | Preserve constructor type names of four characters or fewer: "true" (default) or "false"
+`--init-type-min-length` | Minimum type name length for shortening to .init (default is 5)
 
 <details>
 <summary>Examples</summary>
@@ -1703,12 +1703,9 @@ Option | Description
   }
 ```
 
-By default, `auto` shortens constructors in explicit return-type contexts. `inferred` also
-uses resolved assignment and parameter types, including the project index when available.
-Constructor names of four characters or fewer are preserved unless
-`--preserve-short-type-names false` is specified. Unresolved or ambiguous types are preserved.
-Disable `initStyle` to leave constructors in return, assignment, and argument contexts unchanged.
-Variable declarations are handled by `redundantType` and `propertyTypes`.
+By default, `auto` shortens constructors in explicit return-type contexts. `inferred` uses type
+info where available, including from other files and modules. Unresolved or ambiguous types are preserved.
+`--init-type-min-length` sets the minimum type name length for shortening to `.init` (defaults to 5).
 
 </details>
 <br/>
@@ -2658,7 +2655,7 @@ Option | Description
 `--inferred-types` | Prefer inferred types: "exclude-cond-exprs" or "always" (default)
 `--preserved-property-types` | Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule
 `--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
-`--preserve-short-type-names` | Preserve constructor type names of four characters or fewer: "true" (default) or "false"
+`--init-type-min-length` | Minimum type name length for shortening to .init (default is 5)
 
 <details>
 <summary>Examples</summary>
@@ -2702,7 +2699,7 @@ Option | Description
 `--explicit-types always` retains type qualifiers on the initializer side, independently
 of annotation placement. The default `auto` and `inferred` modes allow their removal
 when the declaration supplies the type. Constructor spelling also respects
-`--preserve-short-type-names`; names of four characters or fewer are preserved by default.
+`--init-type-min-length`: names must have at least 5 characters by default; use 0 for any length.
 
 </details>
 <br/>
@@ -3710,7 +3707,7 @@ Option | Description
 --- | ---
 `--property-types` | Types in property declarations: "explicit", "inferred" or "infer-locals-only" (default)
 `--explicit-types` | Explicit type qualifiers: "always", "auto" (default) or "inferred"
-`--preserve-short-type-names` | Preserve constructor type names of four characters or fewer: "true" (default) or "false"
+`--init-type-min-length` | Minimum type name length for shortening to .init (default is 5)
 
 <details>
 <summary>Examples</summary>
@@ -3738,7 +3735,7 @@ Option | Description
 `--explicit-types always` retains type qualifiers on the initializer side, independently
 of annotation placement. The default `auto` and `inferred` modes allow their removal
 when the declaration supplies the type. Constructor spelling also respects
-`--preserve-short-type-names`; names of four characters or fewer are preserved by default.
+`--init-type-min-length`: names must have at least 5 characters by default; use 0 for any length.
 
 </details>
 <br/>

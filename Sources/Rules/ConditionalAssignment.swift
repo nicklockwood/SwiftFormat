@@ -183,29 +183,6 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Whether or not the conditional statement that starts at the given index
-    /// has branches that are exhaustive
-    func conditionalBranchesAreExhaustive(
-        conditionKeywordIndex: Int,
-        branches: [Formatter.ConditionalBranch]
-    ) -> Bool {
-        // Switch statements are compiler-guaranteed to be exhaustive
-        if tokens[conditionKeywordIndex] == .keyword("switch") {
-            return true
-        }
-
-        // If statements are only exhaustive if the last branch
-        // is `else` (not `else if`).
-        else if tokens[conditionKeywordIndex] == .keyword("if"),
-                let lastCondition = branches.last,
-                let tokenBeforeLastCondition = index(of: .nonSpaceOrCommentOrLinebreak, before: lastCondition.startOfBranch)
-        {
-            return tokens[tokenBeforeLastCondition] == .keyword("else")
-        }
-
-        return false
-    }
-
     /// Whether or not the given conditional branch body qualifies as a single statement
     /// that assigns a value to `identifier`. This is either:
     ///  1. a single assignment to `lvalue =`
@@ -252,11 +229,7 @@ extension Formatter {
             tempScopeTokens.append(.endOfScope("}"))
 
             let tempFormatter = Formatter(tempScopeTokens, options: options)
-            guard tempFormatter.blockBodyHasSingleStatement(
-                atStartOfScope: 0,
-                includingConditionalStatements: true,
-                includingReturnStatements: false
-            ) else {
+            guard tempFormatter.scopeBodyIsSingleExpression(at: 0, allowing: .conditionalExpressions) else {
                 return false
             }
 

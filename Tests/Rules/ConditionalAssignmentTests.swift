@@ -825,4 +825,31 @@ final class ConditionalAssignmentTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rules: [.conditionalAssignment, .wrapMultilineConditionalAssignment, .indent], options: options)
     }
+
+    func testConvertsConditionalAssignmentWithPostfixIfdef() {
+        let input = """
+        let foo: Foo
+        if condition {
+            foo = makeFoo()
+            #if DEBUG
+                .debug()
+            #endif
+        } else {
+            foo = makeFoo()
+        }
+        """
+        let output = """
+        let foo: Foo =
+            if condition {
+                makeFoo()
+                #if DEBUG
+                    .debug()
+                #endif
+            } else {
+                makeFoo()
+            }
+        """
+        testFormatting(for: input, [output], rules: [.conditionalAssignment, .wrapMultilineConditionalAssignment, .indent],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
 }

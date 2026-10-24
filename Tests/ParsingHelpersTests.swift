@@ -2034,6 +2034,31 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[1].tokens.string, "private lazy var y = f()")
     }
 
+    func testParsePropertyDeclarationWithPostfixIfdef() {
+        let input = """
+        struct Foo {
+            let bar = Bar()
+            #if DEBUG
+                .debug()
+            #endif
+
+            let baaz = 1
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()[0].body ?? []
+        XCTAssertEqual(declarations.map(\.keyword), ["let", "let"])
+        XCTAssertEqual(declarations[0].tokens.string, """
+            let bar = Bar()
+            #if DEBUG
+                .debug()
+            #endif
+
+
+        """)
+    }
+
     func testParseDeclarationsWithMalformedTypes() {
         let input = """
         extension Foo {
@@ -2906,6 +2931,91 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(parseExpression(in: input, at: 2), "foo.contains")
     }
 
+    func testParsePostfixIfdefExpressions() {
+        XCTAssert(isSingleExpression("""
+        Text("foo")
+        #if os(iOS)
+            .bold()
+        #endif
+        """))
+
+        XCTAssert(isSingleExpression("""
+        Text("foo")
+        #if os(iOS)
+            .bold()
+        #elseif os(macOS)
+            .italic()
+            #if DEBUG
+                .underline()
+            #endif
+        #else
+            .font(.body)
+        #endif
+            .padding()
+        """))
+
+        XCTAssert(isSingleExpression("""
+        Text("foo")
+        #if os(iOS)
+            .bold()
+        #else
+        #endif
+        """))
+
+        XCTAssert(isSingleExpression("""
+        Text("foo")
+        #if os(iOS)
+            #if DEBUG
+                .bold()
+            #endif
+            .italic()
+        #endif
+        """))
+
+        // An `#if` block of statements isn't part of the expression
+        XCTAssertFalse(isSingleExpression("""
+        foo()
+        #if DEBUG
+            bar()
+        #endif
+        """))
+
+        // The first branch must start with a member access
+        XCTAssertFalse(isSingleExpression("""
+        foo
+        #if DEBUG
+        #else
+            .bar()
+        #endif
+        """))
+
+        XCTAssertFalse(isSingleExpression("""
+        foo
+        #if DEBUG
+            .bar()
+            baaz()
+        #endif
+        """))
+
+        let input = """
+        foo
+        #if DEBUG
+            .bar()
+        #endif
+        baaz
+        """
+
+        XCTAssertEqual(parseExpressions(input), [
+            """
+            foo
+            #if DEBUG
+                .bar()
+            #endif
+            """,
+            "baaz",
+        ])
+    }
+
     func isSingleExpression(_ string: String, allowConditionalExpressions: Bool = false) -> Bool {
         let formatter = Formatter(tokenize(string))
         guard let expressionRange = formatter.parseExpressionRange(startingAt: 0, allowConditionalExpressions: allowConditionalExpressions) else { return false }
@@ -3014,6 +3124,30 @@ final class ParsingHelpersTests: XCTestCase {
         """)
     }
 
+    func testParsePostfixIfdefExpressionEndingAt() {
+        XCTAssert(isSingleExpressionParsedFromEnd("""
+        Text("foo")
+        #if os(iOS)
+            .bold()
+        #endif
+        """))
+
+        XCTAssert(isSingleExpressionParsedFromEnd("""
+        Text("foo")
+        #if os(iOS)
+            .bold()
+        #endif
+            .padding()
+        """))
+
+        XCTAssertFalse(isSingleExpressionParsedFromEnd("""
+        foo()
+        #if DEBUG
+            bar()
+        #endif
+        """))
+    }
+
     func isSingleExpressionParsedFromEnd(_ input: String) -> Bool {
         let formatter = Formatter(tokenize(input))
         let lastTokenIndex = formatter.tokens.count - 1
@@ -3065,6 +3199,256 @@ final class ParsingHelpersTests: XCTestCase {
             return nil
         }
         return formatter.tokens[range].string
+    }
+
+    func testScopeBodyIsSingleExpression() {
+        XCTAssert(isSingleExpressionBody("var foo: Int { bar }"))
+        XCTAssert(isSingleExpressionBody("var foo: Int {bar}"))
+        XCTAssert(isSingleExpressionBody("let foo = { bar in bar.baaz }"))
+        XCTAssert(isSingleExpressionBody("let foo = {bar in bar.baaz}"))
+        XCTAssert(isSingleExpressionBody("""
+        var foo: some View {
+            Text("foo")
+            #if DEBUG
+                .bold()
+            #endif
+        }
+        """))
+        XCTAssertFalse(isSingleExpressionBody("var foo: Int { bar; baaz }"))
+        XCTAssertFalse(isSingleExpressionBody("var foo: Int {}"))
+    }
+
+    func testScopeBodyIsSingleExpressionWithReturnStatement() {
+        XCTAssertFalse(isSingleExpressionBody("var foo: Int { return bar }"))
+        XCTAssert(isSingleExpressionBody("var foo: Int { return bar }", allowing: .returnStatement))
+        XCTAssertFalse(isSingleExpressionBody("func foo() { return }", allowing: .returnStatement))
+    }
+
+    func testScopeBodyIsSingleExpressionWithConditionalExpression() {
+        let input = "var foo: Int { if bar { 1 } else { 2 } }"
+        XCTAssertFalse(isSingleExpressionBody(input))
+        XCTAssert(isSingleExpressionBody(input, allowing: .conditionalExpressions))
+        XCTAssertFalse(isSingleExpressionBody(input, allowing: .conditionalExpressions, swiftVersion: "5.8"))
+
+        XCTAssertFalse(isSingleExpressionBody(
+            "var foo: Int { if bar { print(bar); 1 } else { 2 } }",
+            allowing: .conditionalExpressions
+        ))
+
+        XCTAssert(isSingleExpressionBody(
+            "func foo() throws -> Int { if bar { 1 } else { throw FooError() } }",
+            allowing: .conditionalExpressions
+        ))
+        XCTAssert(isSingleExpressionBody("""
+        func foo() throws -> Int {
+            switch bar {
+            case .foo:
+                1
+            default:
+                log("Unexpected value")
+                throw FooError()
+            }
+        }
+        """, allowing: .conditionalExpressions))
+        XCTAssertFalse(isSingleExpressionBody("func foo() throws -> Int { throw FooError() }", allowing: .conditionalExpressions))
+
+        XCTAssert(isSingleExpressionBody(
+            "func foo() throws -> Int { try if bar { baaz() } else { 1 } }",
+            allowing: .conditionalExpressions
+        ))
+        XCTAssert(isSingleExpressionBody(
+            "func foo() async -> Int { await if bar { baaz() } else { 1 } }",
+            allowing: .conditionalExpressions
+        ))
+
+        // An `if` without an `else` isn't an expression
+        let withoutElse = "var foo: Int { if bar { 1 } }"
+        XCTAssertFalse(isSingleExpressionBody(withoutElse, allowing: .conditionalExpressions))
+        XCTAssertFalse(isSingleExpressionBody(withoutElse, allowing: .conditionalExpressions, swiftVersion: "5.8"))
+        XCTAssertFalse(isSingleExpressionBody(
+            "var foo: Int { if bar { 1 } else if baaz { 2 } }",
+            allowing: .conditionalExpressions
+        ))
+
+        XCTAssert(isSingleExpressionBody(
+            "var foo: Int { return if bar { 1 } else { 2 } }",
+            allowing: [.returnStatement, .conditionalExpressions]
+        ))
+
+        let returnInBranches = "var foo: Int { if bar { return 1 } else { return 2 } }"
+        XCTAssertFalse(isSingleExpressionBody(returnInBranches, allowing: [.returnStatement, .conditionalExpressions]))
+        XCTAssert(isSingleExpressionBody(
+            returnInBranches,
+            allowing: [.conditionalExpressions, .returnStatementsInConditionalBranches]
+        ))
+
+        XCTAssert(isSingleExpressionBody("""
+        var foo: Int {
+            switch bar {
+            case .foo:
+                1
+            #if DEBUG
+                case .bar:
+                    2
+            #endif
+            default:
+                3
+            }
+        }
+        """, allowing: .conditionalExpressions))
+    }
+
+    func testScopeBodyIsSingleExpressionWithConditionalCompilationBlock() {
+        let input = """
+        var foo: Int {
+            #if DEBUG
+                1
+            #elseif BAR
+                #if BAAZ
+                    2
+                #else
+                    3
+                #endif
+            #else
+                4
+            #endif
+        }
+        """
+        XCTAssertFalse(isSingleExpressionBody(input))
+        XCTAssert(isSingleExpressionBody(input, allowing: .conditionalCompilationBlocks, swiftVersion: "5.4"))
+        XCTAssertFalse(isSingleExpressionBody(input, allowing: .conditionalCompilationBlocks, swiftVersion: "5.3"))
+
+        XCTAssertFalse(isSingleExpressionBody("""
+        var foo: Int {
+            #if DEBUG
+                1
+            #endif
+        }
+        """, allowing: .conditionalCompilationBlocks))
+
+        XCTAssertFalse(isSingleExpressionBody("""
+        var foo: Int {
+            #if DEBUG
+                print("debug")
+                1
+            #else
+                2
+            #endif
+        }
+        """, allowing: .conditionalCompilationBlocks))
+
+        XCTAssert(isSingleExpressionBody("""
+        var foo: Int {
+            #if DEBUG
+                return 1
+            #else
+                2
+            #endif
+        }
+        """, allowing: [.returnStatement, .conditionalCompilationBlocks]))
+
+        let conditionalInBranch = """
+        var foo: Int {
+            #if DEBUG
+                if bar { 1 } else { 2 }
+            #else
+                3
+            #endif
+        }
+        """
+        XCTAssertFalse(isSingleExpressionBody(conditionalInBranch, allowing: .conditionalCompilationBlocks))
+        XCTAssert(isSingleExpressionBody(
+            conditionalInBranch,
+            allowing: [.conditionalExpressions, .conditionalCompilationBlocks]
+        ))
+
+        let ifdefInBranch = """
+        var foo: Int {
+            if bar {
+                #if DEBUG
+                    1
+                #else
+                    2
+                #endif
+            } else {
+                3
+            }
+        }
+        """
+        // The branches of an `if` or `switch` expression can always contain an `#if` block
+        XCTAssert(isSingleExpressionBody(ifdefInBranch, allowing: .conditionalExpressions))
+        XCTAssertFalse(isSingleExpressionBody(ifdefInBranch, allowing: .conditionalExpressions, swiftVersion: "5.8"))
+    }
+
+    func testIsIfExpressionWithIfdefInBranch() throws {
+        let input = """
+        let foo = if bar {
+            #if DEBUG
+                1
+            #else
+                2
+            #endif
+        } else {
+            3
+        }
+        """
+        let formatter = Formatter(tokenize(input), options: FormatOptions(swiftVersion: "5.9"))
+        let ifIndex = try XCTUnwrap(formatter.index(of: .keyword("if"), after: -1))
+        XCTAssert(formatter.isIfExpression(at: ifIndex))
+    }
+
+    func testIsIfExpressionWithThrowingBranch() throws {
+        let formatter = Formatter(tokenize("""
+        let foo = if bar { 1 } else { throw FooError() }
+        """), options: FormatOptions(swiftVersion: "5.9"))
+        let ifIndex = try XCTUnwrap(formatter.tokens.firstIndex(of: .keyword("if")))
+        XCTAssert(formatter.isIfExpression(at: ifIndex))
+    }
+
+    func testConditionalCompilationDirectivesAroundSwitchCases() throws {
+        let input = """
+        switch foo {
+        case .bar:
+            bar()
+        #if DEBUG
+        case .baaz:
+            baaz()
+        #else
+        case .quux:
+            quux()
+        #endif
+        }
+        """
+        let formatter = Formatter(tokenize(input))
+        let ifIndex = try XCTUnwrap(formatter.tokens.firstIndex(of: .startOfScope("#if")))
+        XCTAssertEqual(
+            formatter.conditionalCompilationDirectives(at: ifIndex)?.map { formatter.tokens[$0].string },
+            ["#if", "#else", "#endif"]
+        )
+    }
+
+    func testIsIfExpressionInClosureWithArguments() throws {
+        let formatter = Formatter(tokenize("""
+        let foo = { bar in if bar { 1 } else { 2 } }
+        """), options: FormatOptions(swiftVersion: "5.9"))
+        let ifIndex = try XCTUnwrap(formatter.tokens.firstIndex(of: .keyword("if")))
+        XCTAssert(formatter.isIfExpression(at: ifIndex))
+    }
+
+    func testParsePropertyDeclarationBodyWithoutSpaces() {
+        let formatter = Formatter(tokenize("var foo: Foo {Foo.bar}"))
+        let property = formatter.parsePropertyDeclaration(atIntroducerIndex: 0)
+        XCTAssertEqual(property?.body.map { formatter.tokens[$0.range].string }, "Foo.bar")
+    }
+
+    func isSingleExpressionBody(
+        _ input: String,
+        allowing allowed: SwiftFormat.Formatter.SingleExpressionOptions = [],
+        swiftVersion: Version = "5.9"
+    ) -> Bool {
+        let formatter = Formatter(tokenize(input), options: FormatOptions(swiftVersion: swiftVersion))
+        guard let startOfScopeIndex = formatter.index(of: .startOfScope("{"), after: -1) else { return false }
+        return formatter.scopeBodyIsSingleExpression(at: startOfScopeIndex, allowing: allowed)
     }
 
     // MARK: isStoredProperty

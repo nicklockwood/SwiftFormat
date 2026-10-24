@@ -13,7 +13,7 @@ public extension FormatRule {
     static let initStyle = FormatRule(
         help: "Use named constructors or contextual `.init()` calls.",
         orderAfter: [.redundantType, .propertyTypes, .redundantStaticMemberType, .redundantReturn],
-        options: ["explicit-types", "preserve-short-type-names"]
+        options: ["explicit-types", "init-type-min-length"]
     ) { formatter in
         formatter.formatContextualInitializers()
     } examples: {
@@ -32,12 +32,9 @@ public extension FormatRule {
           }
         ```
 
-        By default, `auto` shortens constructors in explicit return-type contexts. `inferred` also
-        uses resolved assignment and parameter types, including the project index when available.
-        Constructor names of four characters or fewer are preserved unless
-        `--preserve-short-type-names false` is specified. Unresolved or ambiguous types are preserved.
-        Disable `initStyle` to leave constructors in return, assignment, and argument contexts unchanged.
-        Variable declarations are handled by `redundantType` and `propertyTypes`.
+        By default, `auto` shortens constructors in explicit return-type contexts. `inferred` uses type
+        info where available, including from other files and modules. Unresolved or ambiguous types are preserved.
+        `--init-type-min-length` sets the minimum type name length for shortening to `.init` (defaults to 5).
         """
     }
 }

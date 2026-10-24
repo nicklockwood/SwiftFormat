@@ -42,7 +42,10 @@ public extension FormatRule {
 
 extension Formatter {
     func formatPropertyTypes() {
-        removeRedundantPropertyTypes()
+        let typeContext = propertyTypeContext()
+        removeRedundantPropertyTypes { type, expression in
+            self.canRemovePropertyType(type, from: expression, context: typeContext)
+        }
         guard options.propertyTypesMode == .always else { return }
         forEach(.operator("=", .infix)) { equalsIndex, _ in
             // Preserve all properties in conditional statements like `if let foo = Bar() { ... }`
@@ -82,6 +85,11 @@ extension Formatter {
                 // If the type is wrapped in redundant parens, retrieve the inner type value
                 // before we check for types like `any Type` or `Type?`.
                 let typeWithoutParens = type.withoutParens()
+                guard canRemovePropertyType(
+                    typeWithoutParens.string,
+                    from: rhsExpressionRange,
+                    context: typeContext
+                ) else { return }
 
                 // Preserve the existing formatting if the LHS type is optional.
                 //  - `let foo: Foo? = .foo` is valid, but `let foo = Foo?.foo`
@@ -136,7 +144,10 @@ extension Formatter {
                 {
                     var hasInvalidConditionalBranch = false
                     forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
-                        guard let firstTokenInBranch = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else {
+                        guard let firstTokenInBranch = index(
+                            of: .nonSpaceOrCommentOrLinebreak,
+                            after: branch.startOfBranch
+                        ) else {
                             hasInvalidConditionalBranch = true
                             return
                         }
@@ -157,7 +168,9 @@ extension Formatter {
 
                     // Insert a copy of the type on the RHS before the dot in each branch
                     forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
-                        guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return }
+                        guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else {
+                            return
+                        }
 
                         // Update the . token from a prefix operator to an infix operator.
                         replaceToken(at: dotIndex, with: .operator(".", .infix))
@@ -219,6 +232,24 @@ extension Formatter {
                     [.operator(".", .infix), .startOfScope("(")].contains(tokens[indexAfterType]),
                     !rhsType.string.contains(".")
                 else { return }
+
+                switch propertyValueType(in: rhsExpressionRange, expectedType: nil, context: typeContext) {
+                case .unsafe: return
+                case .unknown: break
+                case let .type(result):
+                    if result != rhsType.string {
+                        guard !options.preservedPropertyTypes.contains(result),
+                              !options.preservedPropertyTypes.contains(rhsType.string) else { return }
+                        if tokens[indexAfterType].isOperator("."),
+                           let member = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType),
+                           options.preservedPropertyTypes.contains(tokens[member].string)
+                        {
+                            return
+                        }
+                        insert([.delimiter(":"), .space(" ")] + tokenize(result), at: property.identifierIndex + 1)
+                        return
+                    }
+                }
 
                 // Preserve the existing formatting if the RHS expression has a top-level operator.
                 //  - `let foo = Foo.foo.bar` would not be valid to convert to `let foo: Foo = .foo.bar`.
@@ -324,6 +355,89 @@ extension Formatter {
                 }
                 insert([.delimiter(":"), .space(" ")] + typeTokens, at: property.identifierIndex + 1)
             }
+        }
+    }
+}
+
+extension Formatter {
+    struct PropertyTypeContext {
+        let project: ProjectIndex
+        let fileURL: URL
+    }
+
+    func propertyTypeContext() -> PropertyTypeContext {
+        let fileURL = currentFileURL ?? URL(fileURLWithPath: "/SwiftFormat/Input.swift")
+        let filePath = fileURL.standardizedFileURL.path
+        let indexed = projectIndex(requiring: [.declarations]).flatMap { project in
+            project.files[filePath]?.moduleIdentifiers.isEmpty == false ? project : nil
+        }
+        let project = indexed ?? ProjectIndex(files: [
+            filePath: makeSourceFileIndex(
+                from: sourceCode(for: tokens), moduleIdentifiers: ["SwiftFormat.CurrentFile"],
+                includeFunctionReferences: false, includeSymbolReferences: false
+            ),
+        ])
+        return PropertyTypeContext(project: project, fileURL: fileURL)
+    }
+
+    func propertyValueType(
+        in expression: ClosedRange<Int>, expectedType: String?, context: PropertyTypeContext
+    ) -> ProjectIndex.PropertyTypeResult {
+        let start = expression.lowerBound
+        let owner: String
+        let memberIndex: Int
+        if tokens[start].isOperator(".", .prefix), let expectedType {
+            owner = expectedType
+            memberIndex = start
+        } else {
+            guard let type = parseType(at: start, excludeLowercaseIdentifiers: true),
+                  let next = index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound)
+            else { return .unknown }
+            owner = type.string
+            memberIndex = next
+        }
+        let member: String
+        let arguments: [String?]?
+        if tokens[memberIndex] == .startOfScope("(") {
+            guard endOfScope(at: memberIndex) == expression.upperBound else { return .unknown }
+            member = "init"
+            arguments = parseFunctionCallArguments(startOfScope: memberIndex).map(\.label)
+        } else {
+            guard tokens[memberIndex].isOperator("."),
+                  let name = index(of: .nonSpaceOrCommentOrLinebreak, after: memberIndex),
+                  tokens[name].isIdentifier || tokens[name] == .keyword("init") else { return .unknown }
+            member = tokens[name].string
+            if name == expression.upperBound {
+                arguments = nil
+            } else {
+                guard let open = index(of: .nonSpaceOrCommentOrLinebreak, after: name),
+                      tokens[open] == .startOfScope("("), endOfScope(at: open) == expression.upperBound
+                else { return .unknown }
+                arguments = parseFunctionCallArguments(startOfScope: open).map(\.label)
+            }
+        }
+        return context.project.propertyValueType(
+            owner: owner, member: member, argumentLabels: arguments, visibleFrom: context.fileURL
+        )
+    }
+
+    func canRemovePropertyType(
+        _ type: String, from expression: ClosedRange<Int>, context: PropertyTypeContext
+    ) -> Bool {
+        if let branches = conditionalBranches(at: expression.lowerBound) {
+            return allRecursiveConditionalBranches(in: branches) { branch in
+                guard let start = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
+                      let range = parseExpressionRange(startingAt: start) else { return false }
+                return canRemovePropertyType(type, from: range, context: context)
+            }
+        }
+        switch propertyValueType(in: expression, expectedType: type, context: context) {
+        case .unknown:
+            return true
+        case .unsafe:
+            return false
+        case let .type(result):
+            return tokenize(result).filter { !$0.isSpaceOrLinebreak } == tokenize(type).filter { !$0.isSpaceOrLinebreak }
         }
     }
 }

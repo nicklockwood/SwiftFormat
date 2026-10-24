@@ -4162,10 +4162,10 @@ extension Formatter {
             currentIndex = funcNameIndex
         }
 
-        // If this is a failable initializer (`init?`), skip over the ? token
+        // If this is a failable initializer (`init?` or `init!`), skip the unwrap token
         if tokens[keywordIndex] == .keyword("init"),
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
-           tokens[nextToken] == .operator("?", .postfix)
+           tokens[nextToken].isUnwrapOperator
         {
             currentIndex = nextToken
         }
@@ -5436,7 +5436,7 @@ extension Formatter {
             let project = project()
             let modules = Set(project.files[fileURL.standardizedFileURL.path]?.moduleIdentifiers ?? [])
             let properties = project.files.values.filter { !modules.isDisjoint(with: $0.moduleIdentifiers) }
-                .flatMap(\.propertyDeclarations).filter { $0.declaringType == owner && $0.name == tokens[name].string }
+                .flatMap(\.propertyDeclarations).filter { !$0.isStatic && $0.declaringType == owner && $0.name == tokens[name].string }
             guard properties.count == 1 else { return nil }
             return properties.first?.type
         }

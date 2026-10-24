@@ -1042,7 +1042,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var explicitTypes: ExplicitTypes
-    public var preserveShortTypeNames: Bool
+    public var initTypeMinLength: Int
     public var propertyTypes: PropertyTypes
     public var preservedPropertyTypes: Set<String>
     public var inferredTypesInConditionalExpressions: Bool
@@ -1219,7 +1219,7 @@ public struct FormatOptions: CustomStringConvertible {
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 explicitTypes: ExplicitTypes = .auto,
-                preserveShortTypeNames: Bool = true,
+                initTypeMinLength: Int = 5,
                 propertyTypes: PropertyTypes = .inferLocalsOnly,
                 preservedPropertyTypes: Set<String> = ["Package"],
                 inferredTypesInConditionalExpressions: Bool = false,
@@ -1381,7 +1381,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.explicitTypes = explicitTypes
-        self.preserveShortTypeNames = preserveShortTypeNames
+        self.initTypeMinLength = initTypeMinLength
         self.propertyTypes = propertyTypes
         self.preservedPropertyTypes = preservedPropertyTypes
         self.inferredTypesInConditionalExpressions = inferredTypesInConditionalExpressions

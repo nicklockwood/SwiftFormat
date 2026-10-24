@@ -10,6 +10,17 @@ import XCTest
 @testable import SwiftFormat
 
 final class OptionDescriptorTests: XCTestCase {
+    func testInitializerTypeMinLength() throws {
+        var options = FormatOptions.default
+        XCTAssertEqual(options.initTypeMinLength, 5)
+        try Descriptors.initTypeMinLength.toOptions("7", &options)
+        XCTAssertEqual(options.initTypeMinLength, 7)
+        XCTAssertEqual(Descriptors.initTypeMinLength.fromOptions(options), "7")
+        try Descriptors.initTypeMinLength.toOptions("0", &options)
+        XCTAssertEqual(options.initTypeMinLength, 0)
+        XCTAssertThrowsError(try Descriptors.initTypeMinLength.toOptions("true", &options))
+    }
+
     func testWrapClosureBodiesList() throws {
         var options = FormatOptions.default
         XCTAssertEqual(options.wrapClosureBodies, ["Task", "Task.detached"])

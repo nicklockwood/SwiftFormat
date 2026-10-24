@@ -1299,11 +1299,11 @@ struct _Descriptors {
         help: "Explicit type qualifiers:",
         keyPath: \.explicitTypes
     )
-    let preserveShortTypeNames = OptionDescriptor(
-        argumentName: "preserve-short-type-names",
-        displayName: "Preserve Short Type Names",
-        help: "Preserve constructor type names of four characters or fewer:",
-        keyPath: \.preserveShortTypeNames
+    let initTypeMinLength = OptionDescriptor(
+        argumentName: "init-type-min-length",
+        displayName: "Initializer Type Minimum Length",
+        help: "Minimum type name length for shortening to .init (default is 5)",
+        keyPath: \.initTypeMinLength
     )
     let propertyTypes = OptionDescriptor(
         argumentName: "property-types",

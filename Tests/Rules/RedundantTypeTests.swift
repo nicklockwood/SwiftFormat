@@ -46,7 +46,7 @@ final class RedundantTypeTests: XCTestCase {
         testFormatting(for: input, rule: .redundantType,
                        options: FormatOptions(propertyTypes: .explicit))
         testFormatting(for: input, shortened, rule: .redundantType,
-                       options: FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit))
+                       options: FormatOptions(initTypeMinLength: 4, propertyTypes: .explicit))
     }
 
     func testExplicitQualifiersWithInferredAnnotations() {
@@ -409,7 +409,7 @@ final class RedundantTypeTests: XCTestCase {
             .init("bar")
         }
         """
-        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit, swiftVersion: "5.9")
+        let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .explicit, swiftVersion: "5.9")
         testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.wrapMultilineConditionalAssignment, .propertyTypes])
     }
 
@@ -487,7 +487,7 @@ final class RedundantTypeTests: XCTestCase {
             .init("quux")
         }
         """
-        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit, swiftVersion: "5.9")
+        let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .explicit, swiftVersion: "5.9")
         testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.wrapMultilineConditionalAssignment, .propertyTypes])
     }
 
@@ -721,7 +721,7 @@ final class RedundantTypeTests: XCTestCase {
         let output = """
         let url: URL = .init(fileURLWithPath: #file).deletingLastPathComponent()
         """
-        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit, swiftVersion: "5.4")
+        let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .explicit, swiftVersion: "5.4")
         testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.propertyTypes])
     }
 
@@ -758,7 +758,7 @@ final class RedundantTypeTests: XCTestCase {
         if foo {}
         let foo: Foo = .init()
         """
-        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
+        let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .redundantType,
                        options: options, exclude: [.propertyTypes])
     }
@@ -860,7 +860,7 @@ final class RedundantTypeTests: XCTestCase {
         let globalString: String = "foo"
         """
 
-        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .inferLocalsOnly)
+        let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, output, rule: .redundantType,
                        options: options, exclude: [.propertyTypes])
     }
@@ -1010,7 +1010,7 @@ final class RedundantTypeTests: XCTestCase {
         let output = """
         let a: UInt8 = .init(someVariable)
         """
-        let options = FormatOptions(preserveShortTypeNames: false, propertyTypes: .explicit)
+        let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .redundantType,
                        options: options, exclude: [.propertyTypes])
     }

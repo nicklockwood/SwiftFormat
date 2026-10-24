@@ -952,25 +952,8 @@ extension Formatter {
         // containing if/switch is itself an if expression.
         let outermostIndex = outermostConditionalKeyword(startingAt: i)
 
-        // If the outermost conditional is an `if` without an else branch, it can't be
-        // an if expression (if expressions must be exhaustive).
-        if tokens[outermostIndex] == .keyword("if"),
-           !ifStatementHasElseBranch(at: outermostIndex)
-        {
-            return false
-        }
-
-        // All branches must be single expressions (no return keyword) for this to be a valid
-        // if expression. e.g. `if condition { return foo } else { bar }` is an if statement.
-        if let branches = conditionalBranches(at: outermostIndex),
-           !branches.allSatisfy({ branch in
-               blockBodyHasSingleStatement(
-                   atStartOfScope: branch.startOfBranch,
-                   includingConditionalStatements: true,
-                   includingReturnStatements: false
-               )
-           })
-        {
+        // The outermost conditional must be a valid expression, unlike `if foo { return bar } else { baaz }`
+        guard endOfConditionalExpression(at: outermostIndex, allowing: .conditionalExpressions) != nil else {
             return false
         }
 
@@ -1011,32 +994,7 @@ extension Formatter {
             }
         }
 
-        return scopeBodyIsSingleExpression(at: containingScope)
-    }
-
-    /// Returns true if the `if` statement at the given index has an `else` branch
-    /// (either `else` or `else if ... else`).
-    func ifStatementHasElseBranch(at ifIndex: Int) -> Bool {
-        assert(tokens[ifIndex] == .keyword("if"))
-        var currentIndex = ifIndex
-
-        while let startOfBody = startOfConditionalBranchBody(after: currentIndex),
-              let endOfBody = endOfScope(at: startOfBody)
-        {
-            guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBody),
-                  tokens[nextIndex] == .keyword("else")
-            else {
-                return false
-            }
-            // Check if this is a plain `else` (not `else if`)
-            if let afterElse = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex),
-               tokens[afterElse] != .keyword("if")
-            {
-                return true
-            }
-            currentIndex = nextIndex
-        }
-        return false
+        return scopeBodyIsSingleExpression(at: containingScope, allowing: .conditionalExpressions)
     }
 
     /// Walks outward from the given if/switch keyword index through `{` if/switch scopes,
@@ -1999,6 +1957,7 @@ extension Formatter {
     ///  - Any value can be followed by an infix operator plus a right-hand-side expression.
     ///  - Any value can be followed by an arbitrary number of method calls `(...)`, subscripts `[...]`, or generic arguments `<...>`.
     ///  - Any value can be followed by a `.identifier`
+    ///  - Any value can be followed by a postfix `#if` block, like `foo #if DEBUG .bar() #endif`
     func parseExpressionRange(
         startingAt startIndex: Int,
         allowConditionalExpressions: Bool = false
@@ -2082,6 +2041,14 @@ extension Formatter {
                 else { return startIndex ... endOfExpression }
 
                 endOfExpression = nextIdentifierIndex
+
+            // Any value can be followed by a postfix `#if` block
+            case .startOfScope("#if"):
+                guard let endOfPostfixIfdef = endOfPostfixConditionalCompilationBlock(at: nextTokenIndex) else {
+                    return startIndex ... endOfExpression
+                }
+
+                endOfExpression = endOfPostfixIfdef
 
             // Any value can be followed by a postfix operator
             case .operator(_, .postfix):
@@ -2229,14 +2196,23 @@ extension Formatter {
             return previousExpression.lowerBound ... endIndex
         }
 
-        // Handle end of scope tokens ), ], }, "
+        // Handle end of scope tokens ), ], }, ", #endif
         if case .endOfScope = token {
             guard let startOfScope = index(of: .startOfScope, before: endIndex) else { return nil }
 
+            let previousExpression = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
+                .flatMap { parseExpressionRange(endingAt: $0) }
+
+            // An `#endif` is only part of an expression if it ends a postfix `#if` block
+            if token == .endOfScope("#endif") {
+                guard let previousExpression,
+                      endOfPostfixConditionalCompilationBlock(at: startOfScope) == endIndex
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
+            }
+
             // Check if there's something before the scope (method call, subscript)
-            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
-               let previousExpression = parseExpressionRange(endingAt: prevIndex)
-            {
+            if let previousExpression {
                 return previousExpression.lowerBound ... endIndex
             }
 
@@ -2285,6 +2261,216 @@ extension Formatter {
         else { return nil }
 
         return backwardRange
+    }
+
+    /// The index of the `#endif` of the postfix `#if` block at the given index, like:
+    ///
+    ///     Text("foo")
+    ///     #if os(iOS)
+    ///         .bold()
+    ///     #endif
+    ///
+    func endOfPostfixConditionalCompilationBlock(at ifIndex: Int) -> Int? {
+        // The first branch must start with a member access, but the others can be empty
+        guard tokens[ifIndex] == .startOfScope("#if"),
+              let firstTokenInBlock = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfLine(at: ifIndex)),
+              tokens[firstTokenInBlock].isOperator(".") || tokens[firstTokenInBlock] == .startOfScope("#if"),
+              let branches = conditionalCompilationBranches(at: ifIndex),
+              branches.allSatisfy({ branch in
+                  let range = branch.startOfBranch + 1 ..< branch.endOfBranch
+                  return isMemberAccessChain(in: range) || index(of: .nonSpaceOrCommentOrLinebreak, in: range) == nil
+              })
+        else { return nil }
+        return branches.last?.endOfBranch
+    }
+
+    /// Whether the tokens in the given range are member accesses, like `.foo().bar`
+    func isMemberAccessChain(in range: Range<Int>) -> Bool {
+        guard var startOfMemberAccess = index(of: .nonSpaceOrCommentOrLinebreak, in: range) else { return false }
+        while startOfMemberAccess < range.upperBound {
+            let endOfMemberAccess: Int?
+            if tokens[startOfMemberAccess].isOperator(".") {
+                endOfMemberAccess = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfMemberAccess)
+                    .flatMap { parseExpressionRange(startingAt: $0)?.upperBound }
+            } else {
+                endOfMemberAccess = endOfPostfixConditionalCompilationBlock(at: startOfMemberAccess)
+            }
+            guard let endOfMemberAccess,
+                  let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfMemberAccess)
+            else { return false }
+            startOfMemberAccess = nextIndex
+        }
+        return startOfMemberAccess == range.upperBound
+    }
+
+    /// The indices of the directives of the `#if` block at the given index, from `#if` to `#endif`
+    func conditionalCompilationDirectives(at ifIndex: Int) -> [Int]? {
+        guard tokens[ifIndex] == .startOfScope("#if") else { return nil }
+        var directives = [ifIndex]
+        var depth = 0
+        // Matched manually, since `endOfScope` fails when directives wrap switch cases
+        for i in ifIndex ..< tokens.count {
+            switch tokens[i] {
+            case .startOfScope("#if"):
+                depth += 1
+            case .keyword("#elseif") where depth == 1, .keyword("#else") where depth == 1:
+                directives.append(i)
+            case .endOfScope("#endif"):
+                depth -= 1
+                if depth == 0 {
+                    return directives + [i]
+                }
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
+    /// A branch of an `#if` block: its directive, and the bounds of its code
+    typealias ConditionalCompilationBranch = (directiveIndex: Int, startOfBranch: Int, endOfBranch: Int)
+
+    /// The branches of the `#if` block at the given index
+    func conditionalCompilationBranches(at ifIndex: Int) -> [ConditionalCompilationBranch]? {
+        guard let directives = conditionalCompilationDirectives(at: ifIndex) else { return nil }
+        var branches = [ConditionalCompilationBranch]()
+        for (directiveIndex, nextDirectiveIndex) in zip(directives, directives.dropFirst()) {
+            // Each directive must be on its own line
+            let endOfDirective = endOfLine(at: directiveIndex)
+            guard endOfDirective < nextDirectiveIndex else { return nil }
+            branches.append((directiveIndex: directiveIndex, startOfBranch: endOfDirective, endOfBranch: nextDirectiveIndex))
+        }
+        return branches
+    }
+
+    /// Constructs a single expression body can contain besides a plain expression
+    struct SingleExpressionOptions: OptionSet {
+        let rawValue: Int
+
+        /// A `return` before the expression, like `{ return foo }`.
+        /// The branches of an `if` or `switch` use `returnStatementsInConditionalBranches` instead.
+        static let returnStatement = SingleExpressionOptions(rawValue: 1 << 0)
+
+        /// An `if` or `switch` expression, like `{ if foo { bar } else { baaz } }`. Requires Swift 5.9.
+        static let conditionalExpressions = SingleExpressionOptions(rawValue: 1 << 1)
+
+        /// A `return` in the branches of an `if` or `switch` expression
+        static let returnStatementsInConditionalBranches = SingleExpressionOptions(rawValue: 1 << 2)
+
+        /// An `#if` block with an `#else` branch. Requires Swift 5.4.
+        /// Unlike an expression, it can't be moved after an `=`, so this only applies to the top
+        /// level of the body. The branches of an `if` or `switch` expression can always use them.
+        static let conditionalCompilationBlocks = SingleExpressionOptions(rawValue: 1 << 3)
+    }
+
+    /// Whether the body of the scope at the given index is a single expression,
+    /// like `var foo: Int { bar }`. `allowed` lists any other constructs it can contain.
+    func scopeBodyIsSingleExpression(at startOfScopeIndex: Int, allowing allowed: SingleExpressionOptions = []) -> Bool {
+        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
+        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
+        return isSingleExpression(in: startOfBody + 1 ..< endOfScopeIndex, allowing: allowed)
+    }
+
+    /// Whether the tokens in the given range are a single expression, like the body of a scope
+    /// or branch. The upper bound is the token that ends the body, like a closing `}`.
+    func isSingleExpression(in range: Range<Int>, allowing allowed: SingleExpressionOptions = []) -> Bool {
+        guard var startIndex = index(of: .nonSpaceOrCommentOrLinebreak, in: range) else { return false }
+
+        let endIndex: Int
+        if tokens[startIndex] == .startOfScope("#if") {
+            // Without an `#else`, the body would be empty when no condition is met
+            guard allowed.contains(.conditionalCompilationBlocks),
+                  options.swiftVersion >= "5.4",
+                  let branches = conditionalCompilationBranches(at: startIndex),
+                  let lastBranch = branches.last,
+                  tokens[lastBranch.directiveIndex] == .keyword("#else"),
+                  branches.allSatisfy({ branch in
+                      isSingleExpression(in: branch.startOfBranch + 1 ..< branch.endOfBranch, allowing: allowed)
+                  })
+            else { return false }
+            endIndex = lastBranch.endOfBranch
+        } else {
+            if tokens[startIndex] == .keyword("return") {
+                guard allowed.contains(.returnStatement),
+                      let expressionIndex = index(of: .nonSpaceOrCommentOrLinebreak, in: startIndex + 1 ..< range.upperBound)
+                else { return false }
+                startIndex = expressionIndex
+            }
+
+            if conditionalBranches(at: startIndex) != nil {
+                guard let endOfConditional = endOfConditionalExpression(at: startIndex, allowing: allowed) else {
+                    return false
+                }
+                endIndex = endOfConditional
+            } else {
+                guard let expressionRange = parseExpressionRange(startingAt: startIndex) else { return false }
+                endIndex = expressionRange.upperBound
+            }
+        }
+
+        return index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex) == range.upperBound
+    }
+
+    /// The end of the `if` or `switch` expression at the given index, or `nil` if it isn't valid.
+    /// An `if` needs an `else`, and each branch must be a single expression or throw an error.
+    func endOfConditionalExpression(at startIndex: Int, allowing allowed: SingleExpressionOptions) -> Int? {
+        guard allowed.contains(.conditionalExpressions),
+              options.swiftVersion >= "5.9",
+              let branches = conditionalBranches(at: startIndex),
+              let lastBranch = branches.last,
+              let keywordIndex = index(in: startIndex ..< lastBranch.endOfBranch, where: {
+                  [.keyword("if"), .keyword("switch")].contains($0)
+              }),
+              conditionalBranchesAreExhaustive(conditionKeywordIndex: keywordIndex, branches: branches)
+        else { return nil }
+
+        var branchAllowed = allowed.union(.conditionalCompilationBlocks)
+        if allowed.contains(.returnStatementsInConditionalBranches) {
+            branchAllowed.insert(.returnStatement)
+        } else {
+            branchAllowed.remove(.returnStatement)
+        }
+
+        let branchesAreExpressions = branches.allSatisfy { branch in
+            let range = branch.startOfBranch + 1 ..< branch.endOfBranch
+            return !conditionalBranchHasUnsupportedCastOperator(startOfScopeIndex: branch.startOfBranch)
+                && (isSingleExpression(in: range, allowing: branchAllowed) || endsWithThrowStatement(in: range))
+        }
+        return branchesAreExpressions ? lastBranch.endOfBranch : nil
+    }
+
+    /// Whether the code in the given range ends with a `throw`, like `log(error); throw error`
+    func endsWithThrowStatement(in range: Range<Int>) -> Bool {
+        guard let lastTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound),
+              lastTokenIndex >= range.lowerBound,
+              let errorRange = parseExpressionRange(endingAt: lastTokenIndex),
+              let throwIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: errorRange.lowerBound),
+              throwIndex >= range.lowerBound
+        else { return false }
+        return tokens[throwIndex] == .keyword("throw")
+    }
+
+    /// Whether or not the conditional statement that starts at the given index
+    /// has branches that are exhaustive
+    func conditionalBranchesAreExhaustive(
+        conditionKeywordIndex: Int,
+        branches: [Formatter.ConditionalBranch]
+    ) -> Bool {
+        // Switch statements are compiler-guaranteed to be exhaustive
+        if tokens[conditionKeywordIndex] == .keyword("switch") {
+            return true
+        }
+
+        // If statements are only exhaustive if the last branch
+        // is `else` (not `else if`).
+        else if tokens[conditionKeywordIndex] == .keyword("if"),
+                let lastCondition = branches.last,
+                let tokenBeforeLastCondition = index(of: .nonSpaceOrCommentOrLinebreak, before: lastCondition.startOfBranch)
+        {
+            return tokens[tokenBeforeLastCondition] == .keyword("else")
+        }
+
+        return false
     }
 
     /// Parses all of the declarations in the source file.
@@ -2626,27 +2812,6 @@ extension Formatter {
         }
     }
 
-    /// Whether or not the body within this scope is a single expression
-    func scopeBodyIsSingleExpression(at startOfScopeIndex: Int) -> Bool {
-        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
-              startOfScopeIndex + 1 != endOfScopeIndex,
-              let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex + 1),
-              let expressionRange = parseExpressionRange(startingAt: firstTokenInBody, allowConditionalExpressions: true)
-        else { return false }
-
-        return index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound) == endOfScopeIndex
-    }
-
-    /// Whether the body is a single expression that is not a conditional (if/switch).
-    /// Conditional expressions need @ViewBuilder when branches return different types.
-    func scopeBodyIsSingleNonConditionalExpression(at startOfScopeIndex: Int) -> Bool {
-        guard let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex),
-              tokens[firstTokenInBody] != .keyword("if"),
-              tokens[firstTokenInBody] != .keyword("switch")
-        else { return false }
-        return scopeBodyIsSingleExpression(at: startOfScopeIndex)
-    }
-
     /// Whether the given type conforms to View
     func isViewType(_ type: TypeDeclaration?) -> Bool {
         guard let type else { return false }
@@ -2942,7 +3107,7 @@ extension Formatter {
 
             let rangeInsideBody: ClosedRange<Int>
             if startOfBodyIndex + 1 != endOfScope {
-                if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBodyIndex + 1),
+                if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBodyIndex),
                    let lastTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope),
                    firstTokenInBody <= lastTokenInBody
                 {
@@ -5196,8 +5361,7 @@ extension Formatter {
             else { return nil }
             if implicit {
                 guard index(of: .nonSpaceOrCommentOrLinebreak, after: scope) == expression,
-                      blockBodyHasSingleStatement(atStartOfScope: scope, includingConditionalStatements: false,
-                                                  includingReturnStatements: false)
+                      scopeBodyIsSingleExpression(at: scope)
                 else { return nil }
             }
             if tokens[keyword].isFunctionDeclarationKeyword,

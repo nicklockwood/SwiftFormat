@@ -1759,74 +1759,6 @@ extension Formatter {
         removeTokens(in: effectIndex ... endIndex)
     }
 
-    /// Whether or not the code block starting at the given `.startOfScope` token
-    /// has a single statement. This makes it eligible to be used with implicit return.
-    func blockBodyHasSingleStatement(
-        atStartOfScope startOfScopeIndex: Int,
-        includingConditionalStatements: Bool,
-        includingReturnStatements: Bool,
-        includingReturnInConditionalStatements: Bool? = nil
-    ) -> Bool {
-        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
-        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
-
-        // The body should contain exactly one expression.
-        // We can confirm this by parsing the body with `parseExpressionRange`,
-        // and checking that the token after that expression is just the end of the scope.
-        guard var firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody) else {
-            return false
-        }
-
-        // Skip over any optional `return` keyword
-        if includingReturnStatements, tokens[firstTokenInBody] == .keyword("return") {
-            guard let tokenAfterReturnKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenInBody) else { return false }
-            firstTokenInBody = tokenAfterReturnKeyword
-        }
-
-        // In Swift 5.9+, if and switch statements where each branch is a single statement
-        // are also considered single statements
-        if options.swiftVersion >= "5.9",
-           includingConditionalStatements,
-           let conditionalBranches = conditionalBranches(at: firstTokenInBody)
-        {
-            let isSupportedSingleStatement = conditionalBranches.allSatisfy { branch in
-                // In Swift 5.9, there's a bug that prevents you from writing an
-                // if or switch expression using an `as?` on one of the branches:
-                // https://github.com/apple/swift/issues/68764
-                //
-                //  if condition {
-                //    foo as? String
-                //  } else {
-                //    "bar"
-                //  }
-                //
-                if conditionalBranchHasUnsupportedCastOperator(startOfScopeIndex: branch.startOfBranch) {
-                    return false
-                }
-
-                return blockBodyHasSingleStatement(
-                    atStartOfScope: branch.startOfBranch,
-                    includingConditionalStatements: true,
-                    includingReturnStatements: includingReturnInConditionalStatements ?? includingReturnStatements,
-                    includingReturnInConditionalStatements: includingReturnInConditionalStatements
-                )
-            }
-
-            let endOfStatement = conditionalBranches.last?.endOfBranch ?? firstTokenInBody
-            let isOnlyStatement = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfStatement) == endOfScopeIndex
-
-            return isSupportedSingleStatement && isOnlyStatement
-        }
-
-        guard let expressionRange = parseExpressionRange(startingAt: firstTokenInBody),
-              let nextIndexAfterExpression = index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound)
-        else {
-            return false
-        }
-
-        return nextIndexAfterExpression == endOfScopeIndex
-    }
-
     /// The token before the body of the scope following the given `startOfScopeIndex`.
     /// If this is a closure, the body starts after any `in` clause that may exist.
     func startOfBody(atStartOfScope startOfScopeIndex: Int) -> Int {
@@ -3796,9 +3728,13 @@ extension Formatter {
 
             // The attribute is redundant if:
             // 1. It's the body protocol requirement of a View/ViewModifier, OR
-            // 2. The body contains only a single non-conditional expression
+            // 2. The body contains only a single non-conditional expression,
+            //    even after processing directives
             let isRedundant = isBodyMember
-                || scopeBodyIsSingleNonConditionalExpression(at: bodyScope.lowerBound)
+                || scopeBodyIsSingleExpression(
+                    at: bodyScope.lowerBound,
+                    allowing: [.returnStatement, .conditionalCompilationBlocks]
+                )
 
             if isRedundant {
                 attributeIndicesToRemove.append(viewBuilderIndex)

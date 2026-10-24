@@ -1702,4 +1702,369 @@ final class RedundantReturnTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantReturn)
     }
+
+    func testRemoveRedundantReturnInIfdefBranches() {
+        let input = """
+        var foo: Int {
+            #if DEBUG
+                return 1
+            #elseif BAR
+                return 2
+            #else
+                return 3
+            #endif
+        }
+        """
+        let output = """
+        var foo: Int {
+            #if DEBUG
+                1
+            #elseif BAR
+                2
+            #else
+                3
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testKeepsReturnInIfdefBranchesBeforeSwift5_4() {
+        let input = """
+        var foo: Int {
+            #if DEBUG
+                return 1
+            #else
+                return 2
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.3"))
+    }
+
+    func testRemoveRedundantReturnInIfdefInsideIfExpression() {
+        let input = """
+        func foo() -> Int {
+            if bar {
+                #if DEBUG
+                    return 1
+                #else
+                    return 2
+                #endif
+            } else {
+                return 3
+            }
+        }
+        """
+        let output = """
+        func foo() -> Int {
+            if bar {
+                #if DEBUG
+                    1
+                #else
+                    2
+                #endif
+            } else {
+                3
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testKeepsReturnInIfWithoutElseInClosure() {
+        // An `if` without an `else` isn't an expression
+        let input = """
+        foo.forEach { bar in
+            if bar.isValid {
+                return process(bar)
+            }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemoveRedundantReturnInIfExpressionWithThrowingBranch() {
+        let input = """
+        func foo() throws -> Int {
+            if bar {
+                return 1
+            } else {
+                throw FooError()
+            }
+        }
+        """
+        let output = """
+        func foo() throws -> Int {
+            if bar {
+                1
+            } else {
+                throw FooError()
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemoveRedundantReturnInIfExpressionInIfdefBranch() {
+        let input = """
+        var foo: Int {
+            #if DEBUG
+                if bar {
+                    return 1
+                } else {
+                    return 2
+                }
+            #else
+                return 3
+            #endif
+        }
+        """
+        let output = """
+        var foo: Int {
+            #if DEBUG
+                if bar {
+                    1
+                } else {
+                    2
+                }
+            #else
+                3
+            #endif
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemoveRedundantReturnInSomeIfdefBranches() {
+        let input = """
+        var foo: Int {
+            #if DEBUG
+                return 1
+            #else
+                2
+            #endif
+        }
+        """
+        let output = """
+        var foo: Int {
+            #if DEBUG
+                1
+            #else
+                2
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testRemoveRedundantReturnInNestedIfdefBranches() {
+        let input = """
+        var foo: Int {
+            #if DEBUG
+                #if BAR
+                    return 1
+                #else
+                    return 2
+                #endif
+            #else
+                return 3
+            #endif
+        }
+        """
+        let output = """
+        var foo: Int {
+            #if DEBUG
+                #if BAR
+                    1
+                #else
+                    2
+                #endif
+            #else
+                3
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testRemoveRedundantReturnInClosureWithIfdefBranches() {
+        let input = """
+        let foo = { () -> Int in
+            #if DEBUG
+                return 1
+            #else
+                return 2
+            #endif
+        }
+        """
+        let output = """
+        let foo = { () -> Int in
+            #if DEBUG
+                1
+            #else
+                2
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testKeepsReturnInIfdefWithoutElse() {
+        let input = """
+        DispatchQueue.main.async {
+            #if DEBUG
+                return log("debug")
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.4"))
+    }
+
+    func testRemoveRedundantReturnBeforePostfixIfdef() {
+        let input = """
+        var foo: Foo {
+            return Foo()
+            #if DEBUG
+                .bar()
+            #endif
+        }
+        """
+        let output = """
+        var foo: Foo {
+            Foo()
+            #if DEBUG
+                .bar()
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testRemoveRedundantReturnBeforeIfExpressionWithIfdefBranch() {
+        let input = """
+        var foo: Int {
+            return if bar {
+                #if DEBUG
+                    1
+                #else
+                    2
+                #endif
+            } else {
+                3
+            }
+        }
+        """
+        let output = """
+        var foo: Int {
+            if bar {
+                #if DEBUG
+                    1
+                #else
+                    2
+                #endif
+            } else {
+                3
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn, options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemoveRedundantReturnInIfExpressionWithThrowingBranchStatements() {
+        let input = """
+        func foo() throws -> Int {
+            if bar {
+                return 1
+            } else {
+                log("Failed")
+                throw FooError()
+            }
+        }
+        """
+        let output = """
+        func foo() throws -> Int {
+            if bar {
+                1
+            } else {
+                log("Failed")
+                throw FooError()
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemoveRedundantReturnInSwitchWithIfdefAroundCase() {
+        let input = """
+        func foo(_ value: Value) -> Int {
+            switch value {
+            case .foo:
+                return 1
+            #if DEBUG
+                case .bar:
+                    return 2
+            #endif
+            default:
+                return 3
+            }
+        }
+        """
+        let output = """
+        func foo(_ value: Value) -> Int {
+            switch value {
+            case .foo:
+                1
+            #if DEBUG
+                case .bar:
+                    2
+            #endif
+            default:
+                3
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testRemoveRedundantReturnInIfdefSwitchCaseBody() {
+        let input = """
+        func foo(_ value: Value) -> Int {
+            switch value {
+            case .foo:
+                #if DEBUG
+                    return 1
+                #else
+                    return 2
+                #endif
+
+            default:
+                return 3
+            }
+        }
+        """
+        let output = """
+        func foo(_ value: Value) -> Int {
+            switch value {
+            case .foo:
+                #if DEBUG
+                    1
+                #else
+                    2
+                #endif
+
+            default:
+                3
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
 }

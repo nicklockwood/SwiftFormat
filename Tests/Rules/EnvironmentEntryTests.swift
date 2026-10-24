@@ -494,4 +494,275 @@ final class EnvironmentEntryTests: XCTestCase {
 
         testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
+
+    func testReplaceEnvironmentKeyWithReturnInIfExpressionDefaultValue() {
+        let input = """
+        struct IsEnabledKey: EnvironmentKey {
+            static var defaultValue: Bool {
+                if ProcessInfo.processInfo.arguments.contains("-enabled") {
+                    log("Enabled from launch arguments")
+                    return true
+                } else {
+                    return false
+                }
+            }
+        }
+
+        extension EnvironmentValues {
+            var isEnabled: Bool {
+                get { self[IsEnabledKey.self] }
+                set { self[IsEnabledKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var isEnabled: Bool = {
+                if ProcessInfo.processInfo.arguments.contains("-enabled") {
+                    log("Enabled from launch arguments")
+                    return true
+                } else {
+                    return false
+                }
+            }()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testReplaceEnvironmentKeyWithIfdefDefaultValue() {
+        let input = """
+        struct IsDebugKey: EnvironmentKey {
+            static var defaultValue: Bool {
+                #if DEBUG
+                    true
+                #else
+                    false
+                #endif
+            }
+        }
+
+        extension EnvironmentValues {
+            var isDebug: Bool {
+                get { self[IsDebugKey.self] }
+                set { self[IsDebugKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var isDebug: Bool = {
+                #if DEBUG
+                    true
+                #else
+                    false
+                #endif
+            }()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testReplaceEnvironmentKeyWithPostfixIfdefDefaultValue() {
+        let input = """
+        struct ThemeKey: EnvironmentKey {
+            static var defaultValue: Theme {
+                makeDefaultTheme()
+                #if DEBUG
+                    .withDebugColors()
+                #endif
+            }
+        }
+
+        extension EnvironmentValues {
+            var theme: Theme {
+                get { self[ThemeKey.self] }
+                set { self[ThemeKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var theme: Theme = makeDefaultTheme()
+            #if DEBUG
+                .withDebugColors()
+            #endif
+        }
+        """
+        testFormatting(for: input, [output], rules: [.environmentEntry, .indent], options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testReplaceEnvironmentKeyWithDefaultValueWithoutSpaces() {
+        let input = """
+        struct ThemeKey: EnvironmentKey {
+            static var defaultValue: Theme {makeDefaultTheme()}
+        }
+
+        extension EnvironmentValues {
+            var theme: Theme {
+                get { self[ThemeKey.self] }
+                set { self[ThemeKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var theme: Theme = makeDefaultTheme()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testReplaceEnvironmentKeyWithIfExpressionDefaultValue() {
+        let input = """
+        struct IsEnabledKey: EnvironmentKey {
+            static var defaultValue: Bool {
+                if ProcessInfo.processInfo.arguments.contains("-enabled") {
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+
+        extension EnvironmentValues {
+            var isEnabled: Bool {
+                get { self[IsEnabledKey.self] }
+                set { self[IsEnabledKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var isEnabled: Bool = if ProcessInfo.processInfo.arguments.contains("-enabled") {
+                true
+            } else {
+                false
+            }
+        }
+        """
+        testFormatting(
+            for: input, [output],
+            rules: [.environmentEntry, .indent],
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.wrapMultilineConditionalAssignment]
+        )
+    }
+
+    func testReplaceEnvironmentKeyWithIfExpressionWithIfdefBranchDefaultValue() {
+        let input = """
+        struct IsEnabledKey: EnvironmentKey {
+            static var defaultValue: Bool {
+                if isFeatureAvailable {
+                    #if DEBUG
+                        true
+                    #else
+                        false
+                    #endif
+                } else {
+                    false
+                }
+            }
+        }
+
+        extension EnvironmentValues {
+            var isEnabled: Bool {
+                get { self[IsEnabledKey.self] }
+                set { self[IsEnabledKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var isEnabled: Bool = if isFeatureAvailable {
+                #if DEBUG
+                    true
+                #else
+                    false
+                #endif
+            } else {
+                false
+            }
+        }
+        """
+        testFormatting(
+            for: input, [output],
+            rules: [.environmentEntry, .indent],
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.wrapMultilineConditionalAssignment]
+        )
+    }
+
+    func testReplaceEnvironmentKeyWithSwitchExpressionDefaultValue() {
+        let input = """
+        struct SpacingKey: EnvironmentKey {
+            static var defaultValue: Double {
+                switch Platform.current {
+                case .iOS:
+                    8
+                case .macOS:
+                    12
+                }
+            }
+        }
+
+        extension EnvironmentValues {
+            var spacing: Double {
+                get { self[SpacingKey.self] }
+                set { self[SpacingKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var spacing: Double = switch Platform.current {
+            case .iOS:
+                8
+            case .macOS:
+                12
+            }
+        }
+        """
+        testFormatting(
+            for: input, [output],
+            rules: [.environmentEntry, .indent],
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.wrapMultilineConditionalAssignment]
+        )
+    }
+
+    func testReplaceEnvironmentKeyWithNestedPostfixIfdefDefaultValue() {
+        let input = """
+        struct ThemeKey: EnvironmentKey {
+            static var defaultValue: Theme {
+                makeDefaultTheme()
+                #if DEBUG
+                    #if targetEnvironment(simulator)
+                        .withSimulatorColors()
+                    #endif
+                    .withDebugColors()
+                #endif
+            }
+        }
+
+        extension EnvironmentValues {
+            var theme: Theme {
+                get { self[ThemeKey.self] }
+                set { self[ThemeKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var theme: Theme = makeDefaultTheme()
+            #if DEBUG
+                #if targetEnvironment(simulator)
+                    .withSimulatorColors()
+                #endif
+                    .withDebugColors()
+            #endif
+        }
+        """
+        testFormatting(for: input, [output], rules: [.environmentEntry, .indent], options: FormatOptions(swiftVersion: "6.0"))
+    }
 }

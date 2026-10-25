@@ -329,6 +329,48 @@ final class SwiftFormatTests: XCTestCase {
         }
     }
 
+    func testProjectIndexBuildDoesNotConsumeRuleTimeout() throws {
+        let provider = ProjectIndexProvider { _ in
+            Thread.sleep(forTimeInterval: 0.3)
+            return ProjectIndex(files: [:])
+        }
+        let rule = FormatRule(help: "") { formatter in
+            XCTAssertNotNil(formatter.projectIndex(requiring: [.declarations]))
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.05
+        let input = """
+        let foo = 1
+        """
+        _ = try applyRules([rule], to: tokenize(input), with: options,
+                           trackChanges: false, range: nil, context: FormattingContext(projectIndexProvider: provider))
+    }
+
+    func testRuleTimeoutResumesAfterProjectIndexBuild() {
+        let provider = ProjectIndexProvider { _ in
+            Thread.sleep(forTimeInterval: 0.3)
+            return ProjectIndex(files: [:])
+        }
+        let rule = FormatRule(help: "") { formatter in
+            _ = formatter.projectIndex(requiring: [.declarations])
+            Thread.sleep(forTimeInterval: 1)
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.05
+        let input = """
+        let foo = 1
+        """
+        XCTAssertThrowsError(try applyRules([rule], to: tokenize(input), with: options,
+                                            trackChanges: false, range: nil,
+                                            context: FormattingContext(projectIndexProvider: provider)))
+        { error in
+            guard case let FormatError.writing(message) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+            XCTAssert(message.hasSuffix("rule timed out"), message)
+        }
+    }
+
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)

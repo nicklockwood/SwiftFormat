@@ -257,11 +257,11 @@ extension Formatter {
     /// that returns `Void`, either implicitly or with an explicit return type.
     func isBodyOfVoidFunction(at startOfScopeIndex: Int) -> Bool {
         guard let keywordIndex = indexOfLastSignificantKeyword(
-            at: startOfScopeIndex, excluding: ["throws", "rethrows", "where"]
-        ),
-            tokens[keywordIndex] == .keyword("func"),
-            let function = parseFunctionDeclaration(keywordIndex: keywordIndex),
-            function.bodyRange?.lowerBound == startOfScopeIndex
+                  at: startOfScopeIndex, excluding: ["throws", "rethrows", "where"]
+              ),
+              tokens[keywordIndex] == .keyword("func"),
+              let function = parseFunctionDeclaration(keywordIndex: keywordIndex),
+              function.bodyRange?.lowerBound == startOfScopeIndex
         else {
             return false
         }

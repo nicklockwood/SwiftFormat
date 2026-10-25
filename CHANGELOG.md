@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.64.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.2) (2026-10-25)
+
+- Fixed severe `indent` performance regression on large arrays of multiline initializers
+- Improved handling of `#if` directives in single-expression bodies, including return removal and SwiftUI formatting
+- Fixed unreachable-code warnings when building JSON encoding code with newer Swift versions
+- Fixed Windows release build setup
+
 ## [0.64.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.1) (2026-10-22)
 
 - Fixed `nestedIf` and `repeatedGuard` losing condition wrapping when merging statements

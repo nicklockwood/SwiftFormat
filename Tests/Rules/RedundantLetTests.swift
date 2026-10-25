@@ -86,6 +86,53 @@ final class RedundantLetTests: XCTestCase {
         testFormatting(for: input, rule: .redundantLet)
     }
 
+    func testRemoveLetInClosureWithExplicitReturn() {
+        let input = """
+        Container(makeValue: {
+            let _ = log()
+            if ready {
+                return first
+            }
+            return second
+        })
+        """
+        let output = """
+        Container(makeValue: {
+            _ = log()
+            if ready {
+                return first
+            }
+            return second
+        })
+        """
+        testFormatting(for: input, output, rule: .redundantLet)
+    }
+
+    func testReturnInCallbackDoesNotDisableResultBuilder() {
+        let input = """
+        Container(content: {
+            let _ = log()
+            Button(action: {
+                log()
+                return run()
+            })
+        })
+        """
+        testFormatting(for: input, rule: .redundantLet)
+    }
+
+    func testNoRemoveLetInResultBuilderWithForLoop() {
+        let input = """
+        VStack {
+            for item in items {
+                let _ = log(item)
+                Text(item)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantLet)
+    }
+
     func testNoRemoveLetInViewBuilderModifier() {
         let input = """
         VStack {

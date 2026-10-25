@@ -751,6 +751,7 @@ func applyRules(
                                   trackChanges: trackChanges, range: range,
                                   logger: logger, context: context)
         let progress = RuleProgress()
+        formatter.projectIndexRequestStateChanged = { progress.isIndexing = $0 }
         queue.async(group: group) {
             for (index, rule) in rules.enumerated() {
                 progress.index = index
@@ -761,14 +762,15 @@ func applyRules(
             formatter.clearDerivedCaches()
         }
         // Each rule is allowed `timeout` seconds. The wait is re-armed whenever a new rule starts,
-        // so a single dispatch per iteration is enough.
-        var lastIndex = -1
+        // and after project indexing, which is shared work independent of the file size.
+        // A single dispatch per iteration is enough.
+        var lastGeneration = -1
         while group.wait(timeout: .now() + timeout) == .timedOut {
-            let index = progress.index
-            guard index != lastIndex else {
-                throw FormatError.writing("\(rules[index].name) rule timed out")
+            let state = progress.snapshot
+            guard state.isIndexing || state.generation != lastGeneration else {
+                throw FormatError.writing("\(rules[state.index].name) rule timed out")
             }
-            lastIndex = index
+            lastGeneration = state.generation
         }
 
         // Abort if there are fatal errors
@@ -946,9 +948,30 @@ func stripMarkdown(_ input: String) -> String {
 private final class RuleProgress {
     private let queue = DispatchQueue(label: "swiftformat.ruleprogress")
     private var _index = 0
+    private var _isIndexing = false
+    private var generation = 0
 
     var index: Int {
         get { queue.sync { _index } }
-        set { queue.sync { _index = newValue } }
+        set {
+            queue.sync {
+                _index = newValue
+                generation += 1
+            }
+        }
+    }
+
+    var isIndexing: Bool {
+        get { queue.sync { _isIndexing } }
+        set {
+            queue.sync {
+                _isIndexing = newValue
+                generation += 1
+            }
+        }
+    }
+
+    var snapshot: (index: Int, isIndexing: Bool, generation: Int) {
+        queue.sync { (_index, _isIndexing, generation) }
     }
 }

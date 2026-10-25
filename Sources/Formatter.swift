@@ -81,8 +81,13 @@ public final class Formatter: NSObject {
         return context.sourceFileIndexAccess.get(preferredIndex: indexedFile)
     }
 
+    /// Excludes shared project indexing from the per-file rule timeout.
+    var projectIndexRequestStateChanged: ((Bool) -> Void)?
+
     func projectIndex(requiring features: Set<ProjectContextFeature>) -> ProjectIndex? {
-        context.projectIndexAccess.index(requiring: features)
+        projectIndexRequestStateChanged?(true)
+        defer { projectIndexRequestStateChanged?(false) }
+        return context.projectIndexAccess.index(requiring: features)
     }
 
     /// The token array managed by the formatter (read-only)

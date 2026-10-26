@@ -24,7 +24,10 @@ public extension FormatRule {
         ] + formatter.options.neverTrailing)
 
         formatter.forEach(.startOfScope("(")) { functionOpenParen, _ in
-            guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: functionOpenParen) else { return }
+            guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: functionOpenParen),
+                  // A paren that starts a line isn't a call of what comes before it
+                  !formatter.tokens[identifierIndex ..< functionOpenParen].contains(where: \.isLinebreak)
+            else { return }
             let name = formatter.tokens[identifierIndex].string
 
             guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: functionOpenParen),

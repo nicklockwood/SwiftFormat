@@ -4409,6 +4409,141 @@ final class ParsingHelpersTests: XCTestCase {
         """))
     }
 
+    private func assertIsInResultBuilder(
+        _ source: String,
+        expected: Bool,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) {
+        let formatter = Formatter(tokenize(source))
+        var checked = 0
+        formatter.forEach(.identifier("marker")) { index, _ in
+            checked += 1
+            XCTAssertEqual(formatter.isInResultBuilder(at: index), expected, file: file, line: line)
+        }
+        XCTAssertGreaterThan(checked, 0, file: file, line: line)
+    }
+
+    func testIsInResultBuilderAtTopLevel() {
+        assertIsInResultBuilder("""
+        marker()
+        """, expected: false)
+    }
+
+    func testIsInResultBuilderInUnidentifiedScope() {
+        assertIsInResultBuilder("""
+        { marker() }
+        """, expected: false)
+    }
+
+    func testIsInResultBuilderInCapitalizedTrailingClosure() {
+        assertIsInResultBuilder("""
+        VStack {
+            marker()
+        }
+        let view = HStack(spacing: 0) {
+            marker()
+        }
+        """, expected: true)
+    }
+
+    func testIsInResultBuilderInOrdinaryClosure() {
+        assertIsInResultBuilder("""
+        perform {
+            marker()
+        }
+        let callback = {
+            marker()
+        }
+        """, expected: false)
+    }
+
+    func testIsInResultBuilderInPreviewMacro() {
+        assertIsInResultBuilder("""
+        #Preview {
+            marker()
+        }
+        #Preview("Example") {
+            marker()
+        }
+        """, expected: true)
+    }
+
+    func testIsInResultBuilderInOpaqueComputedProperty() {
+        assertIsInResultBuilder("""
+        struct Example: View {
+            var body: some View {
+                marker()
+            }
+        }
+        """, expected: true)
+    }
+
+    func testIsInResultBuilderSkipsTypeBodies() {
+        assertIsInResultBuilder("""
+        struct Example {
+            let value = marker()
+        }
+        class ExampleClass: Parent {
+            func perform() { marker() }
+        }
+        enum ExampleEnum {
+            static let value = marker()
+        }
+        extension Example {
+            func perform() { marker() }
+        }
+        actor ExampleActor {
+            func perform() { marker() }
+        }
+        """, expected: false)
+    }
+
+    func testIsInResultBuilderInNestedControlFlow() {
+        assertIsInResultBuilder("""
+        VStack {
+            if condition {
+                marker()
+            } else {
+                marker()
+            }
+            for value in values {
+                marker()
+            }
+            switch value {
+            case .first:
+                marker()
+            default:
+                marker()
+            }
+            #if DEBUG
+                marker()
+            #else
+                marker()
+            #endif
+        }
+        """, expected: true)
+    }
+
+    func testIsInResultBuilderInOrdinaryControlFlow() {
+        assertIsInResultBuilder("""
+        func perform() {
+            if condition {
+                marker()
+            }
+            switch value {
+            case .first:
+                marker()
+            default:
+                marker()
+            }
+            #if DEBUG
+                marker()
+            #endif
+        }
+        """, expected: false)
+    }
+
     // MARK: resultBuilderTarget
 
     /// The tokens of the scope a result builder would apply to in the given source

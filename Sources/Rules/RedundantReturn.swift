@@ -303,7 +303,19 @@ extension Formatter {
                     return nil
                 }
 
-                returnKeywordRangesToRemove.append(contentsOf: self.returnKeywordRangesToRemove(in: branch.startOfBranch + 1 ..< branch.endOfBranch, returnIndices: &returnIndices) ?? [])
+                let branchRange = branch.startOfBranch + 1 ..< branch.endOfBranch
+                let branchRanges = self.returnKeywordRangesToRemove(in: branchRange, returnIndices: &returnIndices) ?? []
+
+                // A nested if / switch whose branches all throw has no value,
+                // so it can't be used as an expression
+                if branchRanges.isEmpty,
+                   let firstInBranch = index(of: .nonSpaceOrCommentOrLinebreak, in: branchRange),
+                   self.conditionalBranches(at: firstInBranch) != nil
+                {
+                    return nil
+                }
+
+                returnKeywordRangesToRemove.append(contentsOf: branchRanges)
             }
         }
 

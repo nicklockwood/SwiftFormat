@@ -27,6 +27,372 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testInheritedProtocolResultBuilders() {
+        let declarations = """
+        @resultBuilder enum Custom {}
+        protocol Parent {
+            @Custom func render()
+            @Custom func renderAsync() async throws
+            @Custom var content: () { get }
+            @Custom subscript(value: Int) -> () { get }
+            @Custom static func make()
+            @available(*, deprecated) func ordinary()
+        }
+        protocol Child: Parent {}
+        extension Example: Child {}
+        """
+        let input = """
+        struct Example {
+            func render() { builder() }
+            func renderAsync() async throws { builder() }
+            var content: () { builder() }
+            subscript(value: Int) -> () { get { builder() } }
+            static func make() { builder() }
+            func make() { ordinary() }
+            func render(value: Int) { ordinary() }
+            func ordinary() { ordinary() }
+        }
+        extension Parent {
+            func render() { builder() }
+        }
+        struct Unrelated {
+            func render() { ordinary() }
+        }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let formatter = Formatter(tokenize(input), context: FormattingContext(currentFileURL: fileURL, projectIndex: project))
+        formatter.forEach(.identifier("builder")) { index, _ in
+            XCTAssertTrue(formatter.isInResultBuilder(at: index), "Expected builder after \(formatter.tokens[..<index].string)")
+        }
+        formatter.forEach(.identifier("ordinary")) { index, _ in
+            XCTAssertFalse(formatter.isInResultBuilder(at: index), "Unexpected builder at token \(index)")
+        }
+    }
+
+    func testProtocolBuilderProtectsFormattingRules() throws {
+        let declarations = """
+        protocol Parent {
+            @CustomBuilder func render()
+        }
+        protocol Child: Parent {}
+        """
+        let input = """
+        struct Example: Child {
+            func render() {
+                let _ = work()
+                if first {
+                    if second {
+                        work()
+                    }
+                }
+            }
+        }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.redundantLet, .nestedIf], to: tokenize(input), with: .default, trackChanges: false, range: nil,
+            context: FormattingContext(currentFileURL: fileURL, projectIndex: project)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), input)
+    }
+
+    func testProtocolBuildersRespectNamespacesAndModules() {
+        let declarations = """
+        enum Namespace {
+            @resultBuilder enum Custom {}
+            protocol Parent {
+                @Custom func render()
+            }
+            protocol Child: Parent {}
+        }
+        """
+        let externalDeclarations = """
+        protocol Other {
+            @CustomBuilder func render()
+        }
+        """
+        let input = """
+        extension Namespace {
+            struct Example: Child {
+                func render() { builder() }
+            }
+        }
+        struct Unrelated: Other {
+            func render() { ordinary() }
+        }
+        """
+        let localDeclarations = """
+        protocol Other { func render() }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Builders.swift": makeSourceFileIndex(from: externalDeclarations, moduleIdentifiers: ["OtherModule"]),
+            "/Project/Local.swift": makeSourceFileIndex(from: localDeclarations, moduleIdentifiers: ["App"]),
+            "/Project/Namespace.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let formatter = Formatter(tokenize(input), context: FormattingContext(currentFileURL: fileURL, projectIndex: project))
+        formatter.forEach(.identifier("builder")) { index, _ in
+            XCTAssertTrue(formatter.isInResultBuilder(at: index))
+        }
+        formatter.forEach(.identifier("ordinary")) { index, _ in
+            XCTAssertFalse(formatter.isInResultBuilder(at: index))
+        }
+    }
+
+    func testProtocolBuilderAttributesAffectFingerprint() throws {
+        let ordinary = """
+        protocol Example {
+            func render()
+        }
+        """
+        let builder = """
+        protocol Example {
+            @CustomBuilder func render()
+        }
+        """
+        let first = makeSourceFileIndex(from: ordinary, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: builder, moduleIdentifiers: ["App"])
+        XCTAssertEqual(second.protocolDeclarations.first?.attributedRequirements.first?.attributes, ["@CustomBuilder"])
+        XCTAssertEqual(try JSONDecoder().decode(SourceFileIndex.self, from: JSONEncoder().encode(second)), second)
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
+    private func assertProtocolBuilderScopes(
+        _ input: String,
+        declarations: String,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) {
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let formatter = Formatter(tokenize(input), context: FormattingContext(currentFileURL: fileURL, projectIndex: project))
+        defer { formatter.clearDerivedCaches() }
+        var checkedScopes = 0
+        formatter.forEach(.identifier) { index, token in
+            guard ["builder", "ordinary"].contains(token.string) else { return }
+            checkedScopes += 1
+            XCTAssertEqual(
+                formatter.isInResultBuilder(at: index), token.string == "builder",
+                "Unexpected classification after \(formatter.tokens[..<index].string)", file: file, line: line
+            )
+        }
+        XCTAssertGreaterThan(checkedScopes, 0, file: file, line: line)
+    }
+
+    func testGenericProtocolBuilderWitnessesAndOverloads() {
+        let declarations = """
+        protocol Rendering {
+            associatedtype Output
+            @CustomBuilder func render(_ value: Int) -> Output
+            @CustomBuilder static var content: Output { get }
+            @CustomBuilder subscript(value: Int) -> Output { get }
+        }
+        """
+        let input = """
+        struct Example<T>: Rendering {
+            func render(_ value: Int) -> () { builder() }
+            func render(label value: Int) -> () { ordinary() }
+            func render(_ first: Int, _ second: Int) -> () { ordinary() }
+            static func render(_ value: Int) -> () { ordinary() }
+            static var content: () { get { builder() } }
+            var content: () { ordinary() }
+            subscript(value: Int) -> () { builder() }
+            subscript(label value: Int) -> () { ordinary() }
+        }
+        """
+        assertProtocolBuilderScopes(input, declarations: declarations)
+    }
+
+    func testProtocolBuildersThroughSuperclassAndDiamondInheritance() {
+        let declarations = """
+        protocol Root {
+            @CustomBuilder func render()
+        }
+        protocol Left: Root {}
+        protocol Right: Root {}
+        protocol Diamond: Left, Right {}
+        class Base: Diamond {}
+        """
+        let input = """
+        class Example: Base {
+            func render() { builder() }
+            func unrelated() { ordinary() }
+        }
+        extension Example {
+            func render(value: Int) { ordinary() }
+        }
+        extension Diamond {
+            func render() { builder() }
+        }
+        """
+        assertProtocolBuilderScopes(input, declarations: declarations)
+    }
+
+    func testProtocolBuilderNamespaceShadowingAndOuterLookup() {
+        let declarations = """
+        @resultBuilder enum Custom {}
+        protocol Rendering { @Custom func render() }
+        enum Outer {
+            enum Inner {
+                enum Custom {}
+                protocol Rendering { @Custom func render() }
+            }
+        }
+        """
+        let input = """
+        extension Outer.Inner {
+            struct Shadowed: Rendering {
+                func render() { ordinary() }
+            }
+        }
+        extension Outer {
+            struct UsesGlobal: Rendering {
+                func render() { builder() }
+            }
+        }
+        """
+        assertProtocolBuilderScopes(input, declarations: declarations)
+    }
+
+    func testProtocolBuilderDoesNotApplyToSetterOrOtherDeclarationKinds() {
+        let declarations = """
+        protocol Rendering {
+            @CustomBuilder var content: () { get }
+            @CustomBuilder func render()
+        }
+        """
+        let input = """
+        struct Example: Rendering {
+            var content: () {
+                get { () }
+                set { ordinary() }
+            }
+            init() { ordinary() }
+            func render() {
+                if condition { builder() }
+            }
+        }
+        func render() { ordinary() }
+        """
+        assertProtocolBuilderScopes(input, declarations: declarations)
+    }
+
+    func testUnknownAndAmbiguousProtocolBuildersRemainUnresolved() {
+        let declarations = """
+        protocol Duplicate { @CustomBuilder func render() }
+        protocol Duplicate { func render() }
+        protocol First: Second {}
+        protocol Second: First {}
+        protocol UnknownAttribute { @ExternalCustom func render() }
+        private protocol Hidden { @CustomBuilder func render() }
+        """
+        let input = """
+        struct A: Duplicate { func render() { ordinary() } }
+        struct B: First { func render() { ordinary() } }
+        struct C: ExternalProtocol { func render() { ordinary() } }
+        struct D: UnknownAttribute { func render() { ordinary() } }
+        struct E: Hidden { func render() { ordinary() } }
+        """
+        assertProtocolBuilderScopes(input, declarations: declarations)
+    }
+
+    func testProtocolBuilderInAnyTargetProtectsSharedSource() {
+        let builder = """
+        protocol Rendering { @CustomBuilder func render() }
+        """
+        let ordinary = """
+        protocol Rendering { func render() }
+        """
+        let input = """
+        struct Example: Rendering { func render() { marker() } }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App", "Other"]),
+            "/Project/Builder.swift": makeSourceFileIndex(from: builder, moduleIdentifiers: ["App"]),
+            "/Project/Ordinary.swift": makeSourceFileIndex(from: ordinary, moduleIdentifiers: ["Other"]),
+        ])
+        let formatter = Formatter(tokenize(input), context: FormattingContext(currentFileURL: fileURL, projectIndex: project))
+        defer { formatter.clearDerivedCaches() }
+        formatter.forEach(.identifier("marker")) { index, _ in
+            XCTAssertTrue(formatter.isInResultBuilder(at: index))
+        }
+        for context in [FormattingContext.empty, FormattingContext(
+            currentFileURL: URL(fileURLWithPath: "/Project/Missing.swift"), projectIndex: project
+        )] {
+            let formatter = Formatter(tokenize(input), context: context)
+            defer { formatter.clearDerivedCaches() }
+            formatter.forEach(.identifier("marker")) { index, _ in
+                XCTAssertFalse(formatter.isInResultBuilder(at: index))
+            }
+        }
+    }
+
+    func testProtocolBuilderQueryRejectsNonWitnessScopes() {
+        let declarations = """
+        protocol Rendering { @CustomBuilder func render() }
+        """
+        let input = """
+        struct Example: Rendering {
+            init() { marker() }
+            let callback = { marker() }
+            func render() {
+                if condition { marker() }
+            }
+        }
+        func unrelated() { marker() }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let formatter = Formatter(tokenize(input))
+        defer { formatter.clearDerivedCaches() }
+        var checkedScopes = 0
+        formatter.forEach(.identifier("marker")) { index, _ in
+            guard let scope = formatter.startOfScope(at: index) else {
+                return XCTFail("Missing scope")
+            }
+            checkedScopes += 1
+            XCTAssertFalse(project.hasInheritedResultBuilder(at: scope, in: formatter, visibleFrom: fileURL))
+        }
+        XCTAssertEqual(checkedScopes, 4)
+    }
+
+    func testCustomBuilderDefinitionAffectsFingerprint() throws {
+        let ordinary = """
+        enum Custom {}
+        """
+        let builder = """
+        @resultBuilder enum Custom {}
+        """
+        let first = makeSourceFileIndex(from: ordinary, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: builder, moduleIdentifiers: ["App"])
+        XCTAssertEqual(first.typeDeclarations.first?.isResultBuilder, false)
+        XCTAssertEqual(second.typeDeclarations.first?.isResultBuilder, true)
+        XCTAssertEqual(try JSONDecoder().decode(SourceFileIndex.self, from: JSONEncoder().encode(second)), second)
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
     func testResultBuilderClosureInference() throws {
         let declarations = """
         struct Ordinary {
@@ -606,7 +972,7 @@ final class ProjectIndexTests: XCTestCase {
             moduleIdentifiers: ["App"]
         )
 
-        XCTAssertEqual(SourceFileIndex.cacheVersion, 8)
+        XCTAssertEqual(SourceFileIndex.cacheVersion, 9)
         XCTAssertEqual(try JSONDecoder().decode(
             SourceFileIndex.self,
             from: JSONEncoder().encode(index)

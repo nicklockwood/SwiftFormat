@@ -177,6 +177,16 @@ final class TrailingClosuresTests: XCTestCase {
                        exclude: [.wrapConditionalBodies])
     }
 
+    func testParenthesizedClosureOnNewLineNotMadeTrailing() {
+        let input = """
+        let bar = foo
+        ({
+            print(bar)
+        })()
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
     func testClosureMadeTrailingForNumericTupleMember() {
         let input = """
         foo.1(5, { bar })

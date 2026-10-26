@@ -1478,13 +1478,20 @@ extension Formatter {
         }
     }
 
-    /// Crude check to detect if code is inside a Result Builder
-    /// Note: this will produce false positives for any init that takes a closure
+    /// Detect whether code may be inside a result builder.
+    /// Uses indexed closure parameters when available, otherwise falls back to syntax heuristics.
     func isInResultBuilder(at i: Int) -> Bool {
         var i = i
         while let startIndex = index(before: i, where: {
             [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains($0)
         }) {
+            if tokens[startIndex] == .startOfScope("{"), isStartOfClosure(at: startIndex),
+               let fileURL = currentFileURL,
+               let project = projectIndex(requiring: [.declarations]),
+               let isBuilder = project.isResultBuilderClosure(at: startIndex, in: self, visibleFrom: fileURL)
+            {
+                return isBuilder
+            }
             guard let prevIndex = index(before: startIndex, where: {
                 !$0.isSpaceOrCommentOrLinebreak && !$0.isEndOfScope
             }) else {
@@ -2503,7 +2510,7 @@ extension Formatter {
     /// This enables declarations to read the `isEnabled` state from comment directives.
     /// This can be disabled with `_useForEachToken: false` to avoid reentrancy if you
     /// need to call `parseDeclarations` from within an existing `forEachToken` call.
-    private func parseDeclarations(in range: Range<Int>, _useForEachToken: Bool) -> [Declaration] {
+    func parseDeclarations(in range: Range<Int>, _useForEachToken: Bool) -> [Declaration] {
         // A temporary declaration value. We can't create a `DeclarationV2` directly
         // within the `forEachToken` call, since `forEachToken` doesn't support reentrancy.
         struct _Declaration {

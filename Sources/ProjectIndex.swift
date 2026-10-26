@@ -182,6 +182,7 @@ struct SourceFileIndex: Codable, Equatable {
         var defaultArgumentIndices: [Int]
         var closureArgumentIndices: [Int]
         var autoclosureArgumentIndices: [Int]
+        var attributedArgumentIndices: [Int]
         var returnType: String?
         var isFailable: Bool
         var argumentTypes: [String]?
@@ -196,6 +197,7 @@ struct SourceFileIndex: Codable, Equatable {
             defaultArgumentIndices: [Int] = [],
             closureArgumentIndices: [Int] = [],
             autoclosureArgumentIndices: [Int],
+            attributedArgumentIndices: [Int] = [],
             returnType: String? = nil,
             isFailable: Bool = false,
             argumentTypes: [String]? = nil
@@ -208,6 +210,7 @@ struct SourceFileIndex: Codable, Equatable {
             self.argumentLabels = argumentLabels
             self.defaultArgumentIndices = defaultArgumentIndices
             self.closureArgumentIndices = closureArgumentIndices
+            self.attributedArgumentIndices = attributedArgumentIndices
             self.autoclosureArgumentIndices = autoclosureArgumentIndices
             self.returnType = returnType
             self.isFailable = isFailable
@@ -256,7 +259,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isStatic: Bool = false
     }
 
-    static let cacheVersion = 7
+    static let cacheVersion = 8
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -515,9 +518,10 @@ struct ProjectIndex {
                     let labels = declaration.argumentLabels.map { $0 ?? "_" }.joined(separator: ",")
                     let defaults = declaration.defaultArgumentIndices.map(String.init).joined(separator: ",")
                     let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
+                    let attributes = declaration.attributedArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
                     return "\(declaration.visibility):\(declaration.isStatic):\(declaration.isFailable):\(declaration.kind.rawValue):" +
-                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? "")"
+                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(attributes):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? "")"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -901,6 +905,82 @@ struct ProjectIndex {
         return .unqualified(declaringType: enclosingTypeName, isStatic: isStatic)
     }
 
+    /// Classify a closure only when every containing module has one matching declaration.
+    /// Unknown parameter attributes may be custom builders, regardless of their name.
+    func isResultBuilderClosure(at closure: Int, in formatter: Formatter, visibleFrom fileURL: URL) -> Bool? {
+        guard let call = formatter.callContainingClosure(at: closure),
+              let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers,
+              !modules.isEmpty,
+              let receiver = functionCallReceiver(at: call.identifier, in: formatter, visibleFrom: fileURL)
+        else { return nil }
+        let name = formatter.tokens[call.identifier].unescaped()
+        let isInitializer = containsType(named: name, visibleFrom: fileURL)
+        if isInitializer, formatter.last(.nonSpaceOrCommentOrLinebreak, before: call.identifier)?.isOperator(".") == true {
+            return nil
+        }
+        let arguments = formatter.parseFunctionCallArguments(startOfScope: call.scope)
+        guard let argumentIndex = arguments.firstIndex(where: { $0.valueRange.lowerBound == closure }) else { return nil }
+        let scopeEnd = formatter.endOfScope(at: call.scope) ?? call.scope
+        let trailingIndex = arguments.firstIndex {
+            formatter.tokens[call.scope] == .startOfScope("{") || $0.valueRange.lowerBound > scopeEnd
+        }
+        var isBuilder = false
+        for module in modules {
+            let declarations = functionDeclarationsByModule[module]?[isInitializer ? "init" : name] ?? []
+            let matches = declarations.compactMap { declaration -> (SourceFileIndex.FunctionDeclaration, Int)? in
+                let matchesReceiver = isInitializer
+                    ? declaration.kind == .initializer && declaration.declaringType == name
+                    : declaration.kind == .function && declaration.matches(receiver: receiver)
+                guard matchesReceiver, let parameters = declaration.parameterIndices(
+                    matching: arguments.map(\.label), ignoringLabelAt: trailingIndex
+                )
+                else { return nil }
+                return (declaration, parameters[argumentIndex])
+            }
+            guard matches.count == 1, let (declaration, parameter) = matches.first else { return nil }
+            guard declaration.closureArgumentIndices.contains(parameter),
+                  trailingIndex == nil || Set(declaration.defaultArgumentIndices)
+                      .isDisjoint(with: declaration.closureArgumentIndices)
+            else { return nil }
+            isBuilder = isBuilder || declaration.attributedArgumentIndices.contains(parameter)
+        }
+        let localDeclarations = formatter.tokens.enumerated().compactMap { index, token -> Int? in
+            guard ["let", "var", "func"].contains(token.string),
+                  formatter.namesInDeclaration(at: index)?.contains(name) == true else { return nil }
+            return index
+        }
+        // Private overloads and local function values aren't represented in the project index.
+        if localDeclarations.contains(where: {
+            formatter.tokens[$0] == .keyword("func")
+                ? formatter.declarationScope(at: $0) == .local
+                : formatter.declarationScope(at: $0) != .local
+        }) {
+            return nil
+        }
+        let declarations = formatter.parseDeclarations(in: formatter.tokens.indices, _useForEachToken: false)
+        var hasPrivateOverload = false
+        declarations.forEachRecursiveDeclaration { declaration in
+            if declaration.name == name || isInitializer && declaration.keyword == "init" && declaration.parentType?.fullyQualifiedName == name,
+               ([declaration] + declaration.parentDeclarations).contains(where: {
+                   [Visibility.private, .fileprivate].contains($0.visibility() ?? .internal)
+               })
+            {
+                hasPrivateOverload = true
+            }
+        }
+        if hasPrivateOverload {
+            return nil
+        }
+        if formatter.localDeclarationShadowsReference(
+            named: name, at: call.identifier,
+            declarations: declarations,
+            localDeclarations: localDeclarations
+        ) {
+            return nil
+        }
+        return isBuilder
+    }
+
     /// Whether an expression is nested inside a resolved `@autoclosure` argument.
     func isAutoclosureArgument(
         containing expressionIndex: Int,
@@ -1219,6 +1299,9 @@ func makeSourceFileIndex(
             defaultArgumentIndices: defaultArgumentIndices,
             closureArgumentIndices: closureArgumentIndices,
             autoclosureArgumentIndices: autoclosureArgumentIndices,
+            attributedArgumentIndices: function.arguments.indices.filter {
+                !function.arguments[$0].attributes.isEmpty
+            },
             returnType: function.genericParameterRange == nil &&
                 !declaration.parentDeclarations.contains(where: {
                     $0.asTypeDeclaration?.genericParameters != nil
@@ -1282,6 +1365,33 @@ private extension TypeName {
 }
 
 extension Formatter {
+    /// Finds the call for a parenthesized or trailing closure argument.
+    func callContainingClosure(at closure: Int) -> (identifier: Int, scope: Int)? {
+        guard let previous = index(of: .nonSpaceOrCommentOrLinebreak, before: closure) else { return nil }
+        if tokens[previous] == .delimiter(":"),
+           let label = index(of: .nonSpaceOrCommentOrLinebreak, before: previous),
+           isTrailingClosureLabel(at: label),
+           let end = index(of: .nonSpaceOrCommentOrLinebreak, before: label),
+           tokens[end] == .endOfScope("}"), let start = startOfScope(at: end)
+        {
+            return callContainingClosure(at: start)
+        }
+        if tokens[previous] == .endOfScope(")"), let scope = startOfScope(at: previous),
+           let identifier = parseFunctionIdentifier(beforeStartOfScope: scope)
+        {
+            return (identifier, scope)
+        }
+        if tokens[previous].isIdentifier {
+            return (previous, closure)
+        }
+        if let scope = startOfScope(at: closure), tokens[scope] == .startOfScope("("),
+           let identifier = parseFunctionIdentifier(beforeStartOfScope: scope)
+        {
+            return (identifier, scope)
+        }
+        return nil
+    }
+
     /// All identifier spellings that may refer to a declaration in another source file.
     func indexedSymbolReferences() -> [String] {
         var references = Set<String>()

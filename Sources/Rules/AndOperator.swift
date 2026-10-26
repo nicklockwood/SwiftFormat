@@ -71,7 +71,7 @@ public extension FormatRule {
                     }
                 case .operator("<", .infix):
                     chevronIndex = index
-                case .operator("||", .infix), .operator("=", .infix), .keyword("try"):
+                case .operator("||", .infix), .operator("?", .infix), .operator("=", .infix), .keyword("try"):
                     index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? endIndex

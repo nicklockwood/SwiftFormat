@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.64.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.3) (2026-10-26)
+
+- Fixed `andOperator` replacing `&&` with commas inside ternary expression branches
+- Fixed `trailingClosures` attaching a parenthesized closure on a new line to the preceding statement
+
 ## [0.64.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.2) (2026-10-25)
 
 - Fixed severe `indent` performance regression on large arrays of multiline initializers

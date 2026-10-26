@@ -417,7 +417,17 @@ func preprocessArguments(
     var namedArgs: [String: String] = [:]
     var name = ""
     var ignoringUnknownOption = false
+    var optionsEnded = false
     for arg in args {
+        if optionsEnded {
+            namedArgs[String(anonymousArgs)] = arg
+            anonymousArgs += 1
+            continue
+        }
+        if arg == "--" {
+            optionsEnded = true
+            continue
+        }
         if arg.hasPrefix("--") {
             ignoringUnknownOption = false
             name = ""
@@ -511,6 +521,9 @@ private func unknownOptionsMode(in args: [String]) -> UnknownOptionsMode? {
     var result: UnknownOptionsMode?
     for index in args.indices.dropLast() {
         let argument = args[index].lowercased()
+        if argument == "--" {
+            break
+        }
         guard ["--unknown-options", "--unknownoptions", "--unknown-rules", "--unknownrules"].contains(argument) else {
             continue
         }

@@ -1164,6 +1164,31 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testLintFilesAfterEndOfOptions() throws {
+        let input = """
+        let foo=bar
+        """
+        try withTmpDirectory(["--help.swift": input, "-v.swift": input]) { directory in
+            var errors = [String]()
+            let lock = NSLock()
+            CLI.print = { message, type in
+                if type == .error {
+                    lock.lock()
+                    errors.append(message)
+                    lock.unlock()
+                }
+            }
+            XCTAssertEqual(processArguments([
+                "", "--cache", "ignore", "--rules", "spaceAroundOperators",
+                "--lint", "--", "--help.swift", "-v.swift",
+            ], in: directory.path), .lintFailure)
+            for name in ["--help.swift", "-v.swift"] {
+                XCTAssertTrue(errors.contains { $0.contains(name) && $0.contains("spaceAroundOperators") }, errors.joined(separator: "\n"))
+                XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent(name)), input)
+            }
+        }
+    }
+
     func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {
         var output: [String] = []
         CLI.print = { message, _ in

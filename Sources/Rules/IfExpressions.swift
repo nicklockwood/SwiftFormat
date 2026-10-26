@@ -13,7 +13,7 @@ public extension FormatRule {
     static let ifExpressions = FormatRule(
         help: "Prefer if expressions over ternary operators in functions and computed properties.",
         disabledByDefault: true,
-        orderAfter: [.redundantReturn],
+        orderAfter: [.nestedIf, .redundantReturn],
         options: ["single-line-ternary"],
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in

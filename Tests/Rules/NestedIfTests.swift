@@ -10,6 +10,251 @@ import XCTest
 @testable import SwiftFormat
 
 final class NestedIfTests: XCTestCase {
+    func testFlatteningElseEnablesConditionalReturnExpression() {
+        let input = """
+        func getValue(value: Int?, error: SampleError?) throws(SampleError) -> Int {
+            if let value {
+                return value
+            } else {
+                if let error {
+                    throw error
+                } else {
+                    throw .unavailable
+                }
+            }
+        }
+        """
+        let output = """
+        func getValue(value: Int?, error: SampleError?) throws(SampleError) -> Int {
+            if let value {
+                value
+            } else if let error {
+                throw error
+            } else {
+                throw .unavailable
+            }
+        }
+        """
+        let rules: [FormatRule] = [.ifExpressions, .conditionalAssignment, .redundantReturn, .nestedIf]
+        var options = FormatOptions(swiftVersion: "6.0")
+        options.enabledRules = Set(rules.map(\.name))
+        // Verify conversion in one pass, without relying on the formatter's repeated passes.
+        let formatter = Formatter(tokenize(input), options: options)
+        for rule in rules.sorted() {
+            rule.apply(with: formatter)
+        }
+        XCTAssertEqual(sourceCode(for: formatter.tokens), output)
+        testFormatting(for: input, [output], rules: rules, options: options)
+    }
+
+    func testFlattensElseWithThrowingIf() {
+        let input = """
+        if let value {
+            return value // Keep this comment
+        } else {
+            if let error {
+                throw error
+            } else {
+                throw .unavailable
+            }
+        }
+        """
+        let output = """
+        if let value {
+            return value // Keep this comment
+        } else if let error {
+            throw error
+        } else {
+            throw .unavailable
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
+    func testFlattensRepeatedElseIf() {
+        let input = """
+        if first {
+            one()
+        } else if second {
+            two()
+        } else {
+            if third {
+                // Preserve the branch comment
+                three()
+            } else {
+                if fourth {
+                    four()
+                }
+            }
+        }
+        """
+        let output = """
+        if first {
+            one()
+        } else if second {
+            two()
+        } else if third {
+            // Preserve the branch comment
+            three()
+        } else if fourth {
+            four()
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
+    func testPreservesElseWithLeadingComment() {
+        let input = """
+        if first {
+            one()
+        } else {
+            // Explain the fallback
+            if second {
+                two()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
+    func testPreservesElseWithTrailingComment() {
+        let input = """
+        if first {
+            one()
+        } else {
+            if second {
+                two()
+            }
+            // Explain the end
+        }
+        """
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
+    func testPreservesElseWithOtherStatement() {
+        let input = """
+        if first {
+            one()
+        } else {
+            if second {
+                two()
+            }
+            finish()
+        }
+        """
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
+    func testPreservesElseWithDeclaration() {
+        let input = """
+        if first {
+            one()
+        } else {
+            let second = enabled
+            if second {
+                two()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
+    func testPreservesElseIfInResultBuilder() {
+        let input = """
+        @ViewBuilder var body: some View {
+            if first {
+                Text("one")
+            } else {
+                if second {
+                    Text("two")
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
+    func testPreservesNestedElseInIfExpression() {
+        let input = """
+        let value =
+            if first {
+                1
+            } else {
+                if second {
+                    2
+                } else {
+                    3
+                }
+            }
+        """
+        testFormatting(for: input, rule: .nestedIf, options: FormatOptions(swiftVersion: "5.9"))
+    }
+
+    func testPreservesGuardElseIf() {
+        let input = """
+        guard first else {
+            if second {
+                two()
+            }
+            return
+        }
+        """
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
+    func testFlattensElseIfWithWrappedConditions() {
+        let input = """
+        if first {
+            one()
+        } else {
+            if second,
+               third
+            {
+                two()
+            }
+        }
+        """
+        let output = """
+        if first {
+            one()
+        } else if second,
+                  third
+        {
+            two()
+        }
+        """
+        testFormatting(for: input, [output], rules: [.nestedIf, .indent])
+    }
+
+    func testPreservesElseIfWithFormattingDirective() {
+        let input = """
+        if first {
+            one()
+        } else {
+            if second {
+                // swiftformat:disable:next redundantSelf
+                self.two()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
+    func testPreservesElseIfContainingMultilineString() {
+        let input = #"""
+        if first {
+            one()
+        } else {
+            if second {
+                print("""
+                two
+                """)
+            }
+        }
+        """#
+        testFormatting(for: input, rule: .nestedIf)
+    }
+
     func testDoesNotWrapForLinebreaksInsideClosure() {
         let input = """
         if values.contains(where: {

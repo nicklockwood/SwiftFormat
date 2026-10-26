@@ -1915,7 +1915,7 @@ Ensure that all modifiers are on the same line as the declaration keyword.
 
 ## nestedIf
 
-Merge nested if statements into a single statement with comma-delimited conditions.
+Merge nested if statements using comma-delimited conditions or else-if chains.
 
 <details>
 <summary>Examples</summary>
@@ -1926,6 +1926,18 @@ Merge nested if statements into a single statement with comma-delimited conditio
 + if isValid, isEnabled {
           performAction()
 -     }
+  }
+```
+
+```diff
+  if isValid {
+      performAction()
+- } else {
+-     if isEnabled {
+-         performFallback()
+-     }
++ } else if isEnabled {
++     performFallback()
   }
 ```
 

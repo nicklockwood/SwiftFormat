@@ -11,11 +11,11 @@ import Foundation
 public extension FormatRule {
     /// Merge nested if statements when each outer branch contains only another if statement.
     static let nestedIf = FormatRule(
-        help: "Merge nested if statements into a single statement with comma-delimited conditions.",
+        help: "Merge nested if statements using comma-delimited conditions or else-if chains.",
         sharedOptions: ["linebreaks", "indent", "tab-width", "smart-tabs"]
     ) { formatter in
         formatter.forEach(.keyword("if")) { ifIndex, _ in
-            while formatter.mergeNestedIf(at: ifIndex) {}
+            while formatter.mergeNestedIf(at: ifIndex) || formatter.flattenElseIf(at: ifIndex) {}
         }
     } examples: {
         """
@@ -27,11 +27,56 @@ public extension FormatRule {
         -     }
           }
         ```
+
+        ```diff
+          if isValid {
+              performAction()
+        - } else {
+        -     if isEnabled {
+        -         performFallback()
+        -     }
+        + } else if isEnabled {
+        +     performFallback()
+          }
+        ```
         """
     }
 }
 
 extension Formatter {
+    /// Flattens an else body containing only an if statement into an else-if chain.
+    func flattenElseIf(at ifIndex: Int) -> Bool {
+        let branches = ifStatementBranches(at: ifIndex)
+        guard !isIfExpression(at: ifIndex),
+              // Explicit returns rule out a builder even when its return type looks like one.
+              !isInResultBuilder(at: ifIndex) || branches.contains(where: {
+                  next(.nonSpaceOrCommentOrLinebreak, after: $0.startOfBranch) == .keyword("return")
+              }),
+              let outerBranch = branches.last,
+              let elseIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: outerBranch.startOfBranch),
+              tokens[elseIndex] == .keyword("else"),
+              let nestedIfIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: outerBranch.startOfBranch),
+              tokens[nestedIfIndex] == .keyword("if"),
+              let nestedEnd = ifStatementBranches(at: nestedIfIndex).last?.endOfBranch,
+              index(of: .nonSpaceOrCommentOrLinebreak, after: nestedEnd) == outerBranch.endOfBranch,
+              !tokens[elseIndex + 1 ..< nestedIfIndex].contains(where: \.isComment),
+              !tokens[nestedEnd + 1 ..< outerBranch.endOfBranch].contains(where: \.isComment),
+              !tokens[nestedIfIndex ... nestedEnd].contains(where: { token in
+                  if case let .commentBody(body) = token {
+                      return body.isCommentDirective
+                  }
+                  return token.isMultilineStringDelimiter
+              })
+        else { return false }
+
+        let outerIndent = currentIndentForLine(at: elseIndex)
+        let nestedIndent = currentIndentForLine(at: nestedIfIndex)
+        removeTokens(in: nestedEnd + 1 ... outerBranch.endOfBranch)
+        replaceNestedIfIndentation(nestedIndent, with: outerIndent, after: nestedIfIndex, through: nestedEnd)
+        replaceTokens(in: elseIndex + 1 ..< nestedIfIndex, with: .space(" "))
+        return true
+    }
+
     /// Merges an if statement that is the only statement in the body of the if at `ifIndex`.
     func mergeNestedIf(at ifIndex: Int) -> Bool {
         guard tokens[ifIndex] == .keyword("if"),

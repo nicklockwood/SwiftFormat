@@ -11,7 +11,8 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant return keyword
     static let redundantReturn = FormatRule(
-        help: "Remove unneeded `return` keyword."
+        help: "Remove unneeded `return` keyword.",
+        orderAfter: [.nestedIf]
     ) { formatter in
         // indices of returns that are safe to remove
         var returnIndices = [Int]()

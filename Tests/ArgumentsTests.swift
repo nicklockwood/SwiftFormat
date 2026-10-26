@@ -166,6 +166,41 @@ final class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    func testEndOfOptionsAfterLint() {
+        let input = ["", "--cache", ".build/cache", "--config", ".swiftformat", "--lint", "--", "Foo.swift", "Bar.swift"]
+        XCTAssertEqual(try preprocessArguments(input, commandLineArguments), [
+            "0": "", "cache": ".build/cache", "config": ".swiftformat", "lint": "",
+            "1": "Foo.swift", "2": "Bar.swift",
+        ])
+    }
+
+    func testEndOfOptionsPreservesLiteralArguments() {
+        let input = ["", "Before.swift", "--", "--help", "-v", "--", "file,", "Other.swift"]
+        XCTAssertEqual(try preprocessArguments(input, commandLineArguments), [
+            "0": "", "1": "Before.swift", "2": "--help", "3": "-v",
+            "4": "--", "5": "file,", "6": "Other.swift",
+        ])
+    }
+
+    func testEndOfOptionsWithoutFollowingArguments() {
+        XCTAssertEqual(try preprocessArguments(["", "--lint", "--"], commandLineArguments), ["0": "", "lint": ""])
+    }
+
+    func testEndOfOptionsStopsIgnoringUnknownOption() {
+        XCTAssertEqual(try preprocessArguments([
+            "", "--unknown-options", "ignore", "--future-option", "--", "Foo.swift",
+        ], commandLineArguments), ["0": "", "unknown-options": "ignore", "1": "Foo.swift"])
+    }
+
+    func testUnknownOptionsModeAfterSeparatorDoesNotAffectParsing() {
+        XCTAssertThrowsError(try preprocessArguments([
+            "", "--future-option", "--", "--unknown-options", "ignore",
+        ], commandLineArguments))
+        XCTAssertEqual(try preprocessArguments([
+            "", "--unknown-options", "ignore", "--future-option", "--", "--unknown-options", "error",
+        ], commandLineArguments), ["0": "", "unknown-options": "ignore", "1": "--unknown-options", "2": "error"])
+    }
+
     func testPreprocessArgumentsNormalizesKeyCase() {
         let input = ["", "--Help", "-VERSION", "-foo", "BaR"]
         let output = ["0": "", "help": "", "version": "", "foo": "BaR"]

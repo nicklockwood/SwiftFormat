@@ -2067,4 +2067,22 @@ final class RedundantReturnTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment],
                        options: FormatOptions(swiftVersion: "5.9"))
     }
+
+    func testNoRemoveReturnWithNestedThrowingIfElse() {
+        let input = """
+        func getValue(value: Int?, error: SampleError?) throws(SampleError) -> Int {
+            if let value {
+                return value
+            } else {
+                if let error {
+                    throw error
+                } else {
+                    throw .unavailable
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn,
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
 }

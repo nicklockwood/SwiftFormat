@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.64.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.4) (2026-10-27)
+
+- Fixed `redundantReturn` removing required returns when nested conditional branches all throw
+- Updated `nestedIf` to flatten nested `else { if ... }` branches into `else if` chains
+- Fixed command-line handling of paths after the `--` end-of-options separator
+- Fixed CLI warning tests hanging while waiting for stdin when run in isolation
+
 ## [0.64.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.3) (2026-10-26)
 
 - Fixed `andOperator` replacing `&&` with commas inside ternary expression branches

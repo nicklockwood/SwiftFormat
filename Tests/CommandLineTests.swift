@@ -1005,6 +1005,7 @@ final class CommandLineTests: XCTestCase {
     }
 
     func testWarnIfOptionsSpecifiedForDisabledRule() {
+        CLI.readLine = { nil }
         CLI.print = { message, type in
             if type == .warning {
                 XCTAssertEqual(
@@ -1017,6 +1018,7 @@ final class CommandLineTests: XCTestCase {
     }
 
     func testWarnIfEnableUsedForDefaultRule() {
+        CLI.readLine = { nil }
         var warnings = [String]()
         CLI.print = { message, type in
             if type == .warning {
@@ -1029,6 +1031,7 @@ final class CommandLineTests: XCTestCase {
     }
 
     func testNoWarnIfRulesUsedForDefaultRule() {
+        CLI.readLine = { nil }
         var warnings = [String]()
         CLI.print = { message, type in
             if type == .warning {
@@ -1040,6 +1043,7 @@ final class CommandLineTests: XCTestCase {
     }
 
     func testWarnIfDisableUsedForOptInRule() {
+        CLI.readLine = { nil }
         var warnings = [String]()
         CLI.print = { message, type in
             if type == .warning {

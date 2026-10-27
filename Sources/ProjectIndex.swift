@@ -148,6 +148,7 @@ struct SourceFileIndex: Codable, Equatable {
         var name: String
         var visibility: String
         var isGeneric: Bool = false
+        var isResultBuilder: Bool = false
     }
 
     struct ClassInheritance: Codable, Equatable {
@@ -164,6 +165,15 @@ struct SourceFileIndex: Codable, Equatable {
     struct ProtocolDeclaration: Codable, Equatable {
         var name: String
         var inheritedProtocols: [String]
+        var attributedRequirements: [AttributedRequirement] = []
+    }
+
+    struct AttributedRequirement: Codable, Equatable {
+        var name: String
+        var kind: String
+        var isStatic: Bool
+        var argumentLabels: [String?]
+        var attributes: [String]
     }
 
     struct FunctionDeclaration: Codable, Equatable {
@@ -259,7 +269,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isStatic: Bool = false
     }
 
-    static let cacheVersion = 8
+    static let cacheVersion = 9
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -364,6 +374,8 @@ struct ProjectIndex {
     private let typeVisibilities: [TypeKey: Set<String>]
     private let typesByModule: [TypeKey: [SourceFileIndex.TypeDeclaration]]
     private let protocolsByModule: Set<TypeKey>
+    private let protocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]]
+    private let conformancesByModule: [TypeKey: Set<String>]
     private let staticPropertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
     private let inheritedClassNamesByModule: [String: Set<String>]
     private let inheritedClassNames: Set<String>
@@ -390,11 +402,20 @@ struct ProjectIndex {
         // A generic parameter can shadow a nominal type with the same name.
         var typesByModule = [TypeKey: [SourceFileIndex.TypeDeclaration]]()
         var protocolsByModule = Set<TypeKey>()
+        var protocolDeclarationsByModule = [TypeKey: [SourceFileIndex.ProtocolDeclaration]]()
+        var conformancesByModule = [TypeKey: Set<String>]()
         var staticPropertiesByModule = [TypeKey: [SourceFileIndex.PropertyDeclaration]]()
         for file in files.values {
             for module in file.moduleIdentifiers {
                 for declaration in file.protocolDeclarations {
-                    protocolsByModule.insert(TypeKey(moduleIdentifier: module, name: declaration.name))
+                    let key = TypeKey(moduleIdentifier: module, name: declaration.name)
+                    protocolsByModule.insert(key)
+                    protocolDeclarationsByModule[key, default: []].append(declaration)
+                    conformancesByModule[key, default: []].formUnion(declaration.inheritedProtocols)
+                }
+                for conformance in file.typeConformances {
+                    let key = TypeKey(moduleIdentifier: module, name: conformance.typeName)
+                    conformancesByModule[key, default: []].formUnion(conformance.conformances)
                 }
                 for property in file.propertyDeclarations where property.isStatic {
                     let key = TypeKey(moduleIdentifier: module, name: "\(property.declaringType).\(property.name)")
@@ -480,6 +501,8 @@ struct ProjectIndex {
         }
         self.typesByModule = typesByModule
         self.protocolsByModule = protocolsByModule
+        self.protocolDeclarationsByModule = protocolDeclarationsByModule
+        self.conformancesByModule = conformancesByModule
         self.staticPropertiesByModule = staticPropertiesByModule
         self.typeVisibilities = typeVisibilities
         self.inheritedClassNamesByModule = inheritedClassNamesByModule
@@ -498,7 +521,7 @@ struct ProjectIndex {
         let descriptions = files.keys.sorted().compactMap { path -> (String, String, String)? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
-                .map { "\($0.name):\($0.visibility):\($0.isGeneric)" }
+                .map { "\($0.name):\($0.visibility):\($0.isGeneric):\($0.isResultBuilder)" }
                 .sorted()
                 .joined(separator: ",")
             let classInheritances = file.classInheritances
@@ -510,7 +533,12 @@ struct ProjectIndex {
                 .sorted()
                 .joined(separator: ",")
             let protocolDeclarations = file.protocolDeclarations
-                .map { "\($0.name):\($0.inheritedProtocols.joined(separator: ","))" }
+                .map { declaration in
+                    let requirements = declaration.attributedRequirements.map {
+                        "\($0.kind):\($0.name):\($0.isStatic):\($0.argumentLabels.map { $0 ?? "_" }.joined(separator: ",")):\($0.attributes.joined(separator: ","))"
+                    }.sorted().joined(separator: ";")
+                    return "\(declaration.name):\(declaration.inheritedProtocols.joined(separator: ",")):\(requirements)"
+                }
                 .sorted()
                 .joined(separator: ",")
             let functions = file.functionDeclarations
@@ -737,6 +765,74 @@ struct ProjectIndex {
             pendingNames.formUnion(inheritedNamesByTypeName[name] ?? [])
         }
         return status
+    }
+
+    /// Whether a matching protocol requirement can supply a result builder to this body.
+    /// Parameter types aren't used to disambiguate overloads: preserving a possible builder is safer.
+    func hasInheritedResultBuilder(at scope: Int, in formatter: Formatter, visibleFrom fileURL: URL) -> Bool {
+        let declarations = formatter.parseDeclarations(_useForEachToken: false)
+        guard let type = formatter.parseEnclosingType(containing: scope, declarations: declarations),
+              let owner = type.fullyQualifiedName,
+              let declaration = type.body.declaration(containing: scope),
+              let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers
+        else { return false }
+        let body: ClosedRange<Int>?
+        let labels: [String?]
+        switch declaration.keyword {
+        case "func", "subscript":
+            let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
+            body = function?.bodyRange
+            labels = function?.arguments.map(\.externalLabel) ?? []
+        case "var":
+            body = declaration.parsePropertyDeclaration()?.body?.scopeRange
+            labels = []
+        default:
+            return false
+        }
+        guard let body, formatter.getterScope(inBodyScope: body)?.lowerBound == scope else { return false }
+        let isStatic = declaration.modifiers.contains("static") || declaration.modifiers.contains("class")
+        let memberName = declaration.name ?? declaration.keyword
+        return modules.contains { module in
+            var pending = Set([owner])
+            var visited = Set<String>()
+            while let name = pending.popFirst() {
+                guard visited.insert(name).inserted else { continue }
+                let key = TypeKey(moduleIdentifier: module, name: name)
+                let protocols = protocolDeclarationsByModule[key] ?? []
+                if protocols.count == 1, let proto = protocols.first,
+                   proto.attributedRequirements.contains(where: { requirement in
+                       requirement.kind == declaration.keyword && requirement.name == memberName &&
+                           requirement.isStatic == isStatic && requirement.argumentLabels == labels &&
+                           requirement.attributes.contains(where: { attribute in
+                               let builderName = String(attribute.dropFirst())
+                               let builderKey = declarationTypeKey(named: builderName, relativeTo: name, in: module)
+                               return builderName.hasSuffix("Builder") ||
+                                   typesByModule[builderKey]?
+                                   .contains(where: \.isResultBuilder) == true
+                           })
+                   })
+                {
+                    return true
+                }
+                pending.formUnion((conformancesByModule[key] ?? []).map {
+                    declarationTypeKey(named: $0, relativeTo: name, in: module).name
+                })
+            }
+            return false
+        }
+    }
+
+    /// Resolve a name in its enclosing namespace before considering a top-level declaration.
+    private func declarationTypeKey(named name: String, relativeTo owner: String, in module: String) -> TypeKey {
+        var namespace = owner.split(separator: ".").dropLast()
+        while !namespace.isEmpty {
+            let key = TypeKey(moduleIdentifier: module, name: namespace.joined(separator: ".") + "." + name)
+            if typesByModule[key] != nil || protocolDeclarationsByModule[key] != nil {
+                return key
+            }
+            namespace = namespace.dropLast()
+        }
+        return TypeKey(moduleIdentifier: module, name: name)
     }
 
     /// Resolves a project-defined function call in every module containing the current file.
@@ -1182,7 +1278,24 @@ func makeSourceFileIndex(
                 if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }),
                    formatter.index(of: .keyword("where"), in: declaration.keywordIndex ..< typeDeclaration.openBraceIndex) == nil
                 {
-                    protocolDeclarations.append(.init(name: name, inheritedProtocols: inheritedTypes))
+                    var requirements = [SourceFileIndex.AttributedRequirement]()
+                    typeDeclaration.body.forEachRecursiveDeclaration { requirement in
+                        guard requirement.parentType?.fullyQualifiedName == name,
+                              ["func", "var", "subscript"].contains(requirement.keyword),
+                              !requirement.attributes.isEmpty else { return }
+                        let function = requirement.keyword == "var" ? nil :
+                            formatter.parseFunctionDeclaration(keywordIndex: requirement.keywordIndex)
+                        requirements.append(.init(
+                            name: requirement.name ?? requirement.keyword,
+                            kind: requirement.keyword,
+                            isStatic: requirement.modifiers.contains("static") || requirement.modifiers.contains("class"),
+                            argumentLabels: function?.arguments.map(\.externalLabel) ?? [],
+                            attributes: requirement.attributes
+                        ))
+                    }
+                    protocolDeclarations.append(.init(
+                        name: name, inheritedProtocols: inheritedTypes, attributedRequirements: requirements
+                    ))
                 }
             } else {
                 typeConformances.append(.init(typeName: name, conformances: inheritedTypes))
@@ -1198,7 +1311,8 @@ func makeSourceFileIndex(
                         isGeneric: typeDeclaration.genericParameters != nil ||
                             declaration.parentDeclarations.contains(where: {
                                 $0.asTypeDeclaration?.genericParameters != nil || $0.keyword == "extension"
-                            })
+                            }),
+                        isResultBuilder: declaration.attributes.contains("@resultBuilder")
                     ))
                 }
             }

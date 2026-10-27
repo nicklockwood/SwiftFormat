@@ -1479,12 +1479,21 @@ extension Formatter {
     }
 
     /// Detect whether code may be inside a result builder.
-    /// Uses indexed closure parameters when available, otherwise falls back to syntax heuristics.
+    /// Uses indexed closure parameters and protocol requirements, otherwise falls back to syntax heuristics.
     func isInResultBuilder(at i: Int) -> Bool {
         var i = i
         while let startIndex = index(before: i, where: {
             [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains($0)
         }) {
+            if tokens[startIndex] == .startOfScope("{"),
+               ["func", "var", "subscript"].contains(lastSignificantKeyword(at: startIndex, excluding: ["where", "throws", "rethrows"]) ?? "") ||
+               last(.nonSpaceOrCommentOrLinebreak, before: startIndex)?.string == "get",
+               let fileURL = currentFileURL,
+               let project = projectIndex(requiring: [.declarations]),
+               project.hasInheritedResultBuilder(at: startIndex, in: self, visibleFrom: fileURL)
+            {
+                return true
+            }
             if tokens[startIndex] == .startOfScope("{"), isStartOfClosure(at: startIndex),
                let fileURL = currentFileURL,
                let project = projectIndex(requiring: [.declarations]),
@@ -2484,14 +2493,15 @@ extension Formatter {
     ///
     /// The result is shared between rules until the tokens or a declaration's range change.
     /// Files containing directives are parsed per-rule, since disabled regions are excluded.
-    func parseDeclarations() -> [Declaration] {
+    /// Set `_useForEachToken` to false for read-only queries inside token iteration.
+    func parseDeclarations(_useForEachToken: Bool = true) -> [Declaration] {
         let cacheable = canCacheDeclarations
         if cacheable, !derivedCaches.declarationsAreStale,
            let cached = derivedCaches.declarations, cached.mutationCount == mutationCount
         {
             return cached.value
         }
-        let declarations = parseDeclarations(in: tokens.indices)
+        let declarations = parseDeclarations(in: tokens.indices, _useForEachToken: _useForEachToken)
         if cacheable {
             derivedCaches.declarations = (mutationCount, declarations)
             derivedCaches.declarationsAreStale = false

@@ -8,6 +8,7 @@
 * [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
 * [blankLineAfterImports](#blankLineAfterImports)
+* [blankLinesAfterAttributes](#blankLinesAfterAttributes)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -405,6 +406,26 @@ Option | Description
 -
   case .handleIncomingEnergyBlast:
       energyShields.engage()
+  }
+```
+
+</details>
+<br/>
+
+## blankLinesAfterAttributes
+
+Remove blank lines between attributes and the declaration they apply to.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  @MainActor
+-
+  struct Foo {
+      @State
+-
+      var bar = 0
   }
 ```
 

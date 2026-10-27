@@ -27,6 +27,192 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testResultBuilderClosureInference() throws {
+        let declarations = """
+        struct Ordinary {
+            init(value: Int = 0, body: () -> Void) {}
+        }
+        struct Builder {
+            init(@Custom body: () -> Void) {}
+        }
+        struct Ambiguous {
+            init(body: () -> Void) {}
+            init(@Custom body: () -> Int) {}
+        }
+        func perform(body: () -> Void, completion: () -> Void) {}
+        func build(@Custom body: () -> Void) {}
+        """
+        let input = """
+        Ordinary {
+            let _ = work()
+        }
+        Ordinary(value: 1, body: {
+            let _ = work()
+        })
+        Builder {
+            let _ = work()
+        }
+        Ambiguous {
+            let _ = work()
+        }
+        Unknown {
+            let _ = work()
+        }
+        perform {
+            let _ = work()
+        } completion: {
+            let _ = work()
+        }
+        build {
+            let _ = work()
+        }
+        """
+        let output = """
+        Ordinary {
+            _ = work()
+        }
+        Ordinary(value: 1, body: {
+            _ = work()
+        })
+        Builder {
+            let _ = work()
+        }
+        Ambiguous {
+            let _ = work()
+        }
+        Unknown {
+            let _ = work()
+        }
+        perform {
+            _ = work()
+        } completion: {
+            _ = work()
+        }
+        build {
+            let _ = work()
+        }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.redundantLet], to: tokenize(input), with: .default, trackChanges: false, range: nil,
+            context: FormattingContext(currentFileURL: fileURL, projectIndex: project)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output)
+    }
+
+    func testResultBuilderClosureInferencePreservesUncertainCalls() {
+        let declarations = """
+        struct Ordinary {
+            init(body: () -> Void) {}
+        }
+        struct Defaults {
+            init(first: () -> Void = {}, @Custom last: () -> Void = {}) {}
+        }
+        """
+        let input = """
+        func example(Ordinary: (() -> Void) -> Void) {
+            Ordinary { marker() }
+        }
+        Defaults { marker() }
+        Unknown { marker() }
+        private extension Ordinary {
+            init(@Custom body: () -> Int) {}
+        }
+        Ordinary { marker() }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let formatter = Formatter(tokenize(input), context: FormattingContext(currentFileURL: fileURL, projectIndex: project))
+        formatter.forEach(.identifier("marker")) { index, _ in
+            XCTAssertTrue(formatter.isInResultBuilder(at: index))
+        }
+    }
+
+    func testOrdinaryClosureInsideBuilderSupportsNestedIf() throws {
+        let declarations = """
+        struct Ordinary {
+            init(body: () -> Void) {}
+        }
+        """
+        let input = """
+        UnknownBuilder {
+            Ordinary {
+                if first {
+                    if second {
+                        work()
+                    }
+                }
+            }
+        }
+        """
+        let output = """
+        UnknownBuilder {
+            Ordinary {
+                if first, second {
+                    work()
+                }
+            }
+        }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.nestedIf], to: tokenize(input), with: .default, trackChanges: false, range: nil,
+            context: FormattingContext(currentFileURL: fileURL, projectIndex: project)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output)
+    }
+
+    func testResultBuilderClosureInferenceRequiresEveryModule() {
+        let declarations = """
+        struct Ordinary {
+            init(body: () -> Void) {}
+        }
+        """
+        let input = """
+        Ordinary { marker() }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App", "Other"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+        ])
+        for context in [FormattingContext.empty, FormattingContext(currentFileURL: fileURL, projectIndex: project)] {
+            let formatter = Formatter(tokenize(input), context: context)
+            formatter.forEach(.identifier("marker")) { index, _ in
+                XCTAssertTrue(formatter.isInResultBuilder(at: index))
+            }
+        }
+    }
+
+    func testParameterAttributesAffectDeclarationFingerprint() throws {
+        let ordinary = """
+        func perform<T>(body: () -> T) {}
+        """
+        let builder = """
+        func perform<T>(@Custom body: () -> T) {}
+        """
+        let first = makeSourceFileIndex(from: ordinary, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: builder, moduleIdentifiers: ["App"])
+        XCTAssertEqual(first.functionDeclarations.first?.attributedArgumentIndices, [])
+        XCTAssertEqual(second.functionDeclarations.first?.attributedArgumentIndices, [0])
+        XCTAssertEqual(try JSONDecoder().decode(SourceFileIndex.self, from: JSONEncoder().encode(second)), second)
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
     func testIndexesStaticPropertiesAndFailableInitializers() {
         let input = """
         struct Example {
@@ -420,7 +606,7 @@ final class ProjectIndexTests: XCTestCase {
             moduleIdentifiers: ["App"]
         )
 
-        XCTAssertEqual(SourceFileIndex.cacheVersion, 7)
+        XCTAssertEqual(SourceFileIndex.cacheVersion, 8)
         XCTAssertEqual(try JSONDecoder().decode(
             SourceFileIndex.self,
             from: JSONEncoder().encode(index)

@@ -3285,6 +3285,17 @@ extension Formatter {
         return importStack
     }
 
+    /// Removes the lines containing the given import group, plus the blank line
+    /// that preceded it, if any.
+    func removeImportGroupLines(_ group: [Formatter.ImportRange]) {
+        // An import's range starts at the linebreak that ends the previous line,
+        // so the group's lines start at the following token.
+        let startOfLine = group.first!.range.lowerBound
+        let endOfLastLine = min(group.last!.range.upperBound + 1, tokens.count)
+        let precededByBlankLine = last(.nonSpace, before: startOfLine)?.isLinebreak == true
+        removeTokens(in: (precededByBlankLine ? startOfLine : startOfLine + 1) ..< endOfLastLine)
+    }
+
     /// Whether or not the given module is imported in this file
     func hasImport(_ moduleName: String) -> Bool {
         parseImports().contains(where: { importGroup in

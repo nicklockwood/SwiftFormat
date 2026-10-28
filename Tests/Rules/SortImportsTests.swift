@@ -319,7 +319,13 @@ final class SortImportsTests: XCTestCase {
         import Bar
         """
         let options = FormatOptions(hoistImports: false)
-        testFormatting(for: input, output, rule: .sortImports,
+        let outputWithAllRules = """
+        import Bar
+        import Foo
+        foo = bar
+
+        """
+        testFormatting(for: input, [output, outputWithAllRules], rules: [.sortImports],
                        options: options, exclude: [.blankLineAfterImports])
     }
 

@@ -34,6 +34,7 @@ public extension FormatRule {
                 importRanges.append(range)
             }
         }
+        formatter.removeDuplicateImportsAcrossGroups()
     } examples: {
         """
         ```diff
@@ -50,5 +51,28 @@ public extension FormatRule {
           #endif
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Remove ordinary file-scope duplicates without combining conditional import groups.
+    func removeDuplicateImportsAcrossGroups() {
+        guard !options.fragment else { return }
+        let imports = parseImports().flatMap { $0 }.filter { range in
+            guard range.attributes.isEmpty, range.accessLevel == nil,
+                  let importIndex = index(of: .keyword("import"), in: range.range),
+                  startOfScope(at: importIndex) == nil,
+                  next(.nonSpaceOrCommentOrLinebreak, after: importIndex)?.isIdentifier == true
+            else { return false }
+            return true
+        }
+        for range in imports.reversed()
+            where imports.first(where: { $0.module == range.module })?.range != range.range
+        {
+            guard !tokens[range.range].contains(where: { $0.isComment || $0 == .delimiter(";") }) else {
+                continue
+            }
+            removeImportGroupLines([range])
+        }
     }
 }

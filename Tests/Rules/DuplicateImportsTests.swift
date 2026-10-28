@@ -10,6 +10,210 @@ import XCTest
 @testable import SwiftFormat
 
 final class DuplicateImportsTests: XCTestCase {
+    func testRemoveDuplicateImportsBelowCode() {
+        let input = """
+        import Foundation
+
+        struct Foo {}
+
+        import Foundation
+
+        struct Bar {}
+        """
+        let output = """
+        import Foundation
+
+        struct Foo {}
+
+        struct Bar {}
+        """
+        testFormatting(for: input, output, rule: .duplicateImports)
+        testFormatting(for: input, output, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testRemoveDuplicateImportsBetweenDeclarations() {
+        let input = """
+        import Foundation
+
+        struct Foo {}
+
+        import Foundation
+
+        struct Bar {}
+
+        import Foundation
+
+        struct Baz {}
+        """
+        let output = """
+        import Foundation
+
+        struct Foo {}
+
+        struct Bar {}
+
+        struct Baz {}
+        """
+        testFormatting(for: input, output, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepImportsInDifferentConditions() {
+        let input = """
+        #if os(iOS)
+            import Foundation
+        #endif
+
+        struct Foo {}
+
+        #if os(macOS)
+            import Foundation
+        #endif
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepConditionalAndUnconditionalImports() {
+        let input = """
+        import Foundation
+
+        struct Foo {}
+
+        #if canImport(Foundation)
+            import Foundation
+        #else
+            import Foundation
+        #endif
+
+        struct Bar {}
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepImportsSeparatedByCodeInsideCondition() {
+        let input = """
+        #if os(iOS)
+            import Foundation
+
+            struct Foo {}
+
+            import Foundation
+
+            struct Bar {}
+        #endif
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepAttributedImportsAcrossGroups() {
+        let input = """
+        @testable import Foundation
+
+        struct Foo {}
+
+        import Foundation
+
+        struct Bar {}
+
+        @_spi(Testing) import Foundation
+
+        struct Baz {}
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepImportAccessLevelsAcrossGroups() {
+        let input = """
+        public import Foundation
+
+        struct Foo {}
+
+        internal import Foundation
+
+        struct Bar {}
+
+        import Foundation
+
+        struct Baz {}
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepCommentsOnDuplicateImportsAcrossGroups() {
+        let input = """
+        import Foundation
+
+        struct Foo {}
+
+        // Keep this explanation.
+        import Foundation // Used below.
+
+        struct Bar {}
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepSelectiveImportsAcrossGroups() {
+        let input = """
+        import func Foo.bar
+
+        struct First {}
+
+        import var Foo.bar
+
+        struct Second {}
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testKeepImportsAcrossGroupsInFragment() {
+        let input = """
+        import Foundation
+
+        struct Foo {}
+
+        import Foundation
+
+        struct Bar {}
+        """
+        let options = FormatOptions(hoistImports: false, fragment: true)
+        testFormatting(for: input, rule: .duplicateImports, options: options)
+    }
+
+    func testKeepCodeOnDuplicateImportLine() {
+        let input = """
+        import Foundation
+
+        struct Foo {}
+
+        import Foundation; let value = 1
+
+        struct Bar {}
+        """
+        testFormatting(for: input, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
+    func testRemoveDuplicateImportAfterCommentedImport() {
+        let input = """
+        // Module dependencies.
+        import Foundation
+
+        struct Foo {}
+
+        import Foundation
+
+        struct Bar {}
+        """
+        let output = """
+        // Module dependencies.
+        import Foundation
+
+        struct Foo {}
+
+        struct Bar {}
+        """
+        testFormatting(for: input, output, rule: .duplicateImports, options: FormatOptions(hoistImports: false))
+    }
+
     func testRemoveDuplicateImport() {
         let input = """
         import Foundation

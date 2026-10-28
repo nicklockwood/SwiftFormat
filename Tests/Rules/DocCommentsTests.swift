@@ -966,4 +966,46 @@ final class DocCommentsTests: XCTestCase {
         let options = FormatOptions(excludedDeclarationTypes: ["import"])
         testFormatting(for: input, rule: .docComments, options: options)
     }
+
+    func testConvertMultilineDocBlockCommentToCommentWithoutTrailingSpace() {
+        let input = """
+        struct Foo {
+            /**
+             * Comment not associated with a declaration
+             */
+        }
+        """
+
+        let output = """
+        struct Foo {
+            /*
+             * Comment not associated with a declaration
+             */
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.docComments, .spaceInsideComments, .trailingSpace])
+    }
+
+    func testConvertEmptyTripleSlashLineToComment() {
+        let input = """
+        func foo() {
+            /// First line
+            ///
+            /// Second paragraph
+            print("foo")
+        }
+        """
+
+        let output = """
+        func foo() {
+            // First line
+            //
+            // Second paragraph
+            print("foo")
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.docComments, .spaceInsideComments, .trailingSpace])
+    }
 }

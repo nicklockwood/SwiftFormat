@@ -3250,6 +3250,16 @@ final class ParsingHelpersTests: XCTestCase {
             }
         }
         """, allowing: .conditionalExpressions))
+        XCTAssert(isSingleExpressionBody("""
+        func foo() throws -> Int {
+            if bar {
+                1
+            } else {
+                log { return message }
+                throw FooError()
+            }
+        }
+        """, allowing: .conditionalExpressions))
         XCTAssertFalse(isSingleExpressionBody("func foo() throws -> Int { throw FooError() }", allowing: .conditionalExpressions))
 
         XCTAssert(isSingleExpressionBody(

@@ -2000,6 +2000,23 @@ final class RedundantReturnTests: XCTestCase {
                        options: FormatOptions(swiftVersion: "5.9"))
     }
 
+    func testPreserveEarlyReturnInBranchEndingWithThrow() {
+        let input = """
+        func score(_ value: Int?, useDefault: Bool) throws -> Int {
+            if useDefault {
+                return 0
+            } else {
+                if let value {
+                    return value
+                }
+                throw ScoreError.missing
+            }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantReturn, .conditionalAssignment],
+                       options: FormatOptions(swiftVersion: "5.9"))
+    }
+
     func testRemoveRedundantReturnInSwitchWithIfdefAroundCase() {
         let input = """
         func foo(_ value: Value) -> Int {

@@ -99,10 +99,15 @@ public extension FormatRule {
                         return
                     }
 
-                    formatter.replaceToken(
-                        at: index + 1,
-                        with: .commentBody(String(commentBody.string.dropFirst()))
-                    )
+                    // If the doc comment marker was the whole body (e.g. `/**` followed by
+                    // a linebreak), remove the body rather than leaving it empty, so other
+                    // rules don't treat the comment as having inline content.
+                    let updatedCommentBody = String(commentBody.string.dropFirst())
+                    if updatedCommentBody.isEmpty {
+                        formatter.removeToken(at: index + 1)
+                    } else {
+                        formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
+                    }
                 }
 
             } else if useDocComment, !preserveRegularComments {

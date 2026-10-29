@@ -287,7 +287,7 @@ extension Formatter {
         // If this is a single-statement if or switch statement then we have to recursively
         // remove the return from each branch of the if statement
         else if let conditionalBranches = conditionalBranches(at: firstTokenInBody) {
-            for branch in conditionalBranches.reversed() {
+            for branch in conditionalBranches.reversed() where !isThrowingBranch(branch) {
                 // In Swift 5.9, there's a bug that prevents you from writing an
                 // if or switch expression using an `as?` on one of the branches:
                 // https://github.com/apple/swift/issues/68764

@@ -2450,20 +2450,24 @@ extension Formatter {
         let branchesAreExpressions = branches.allSatisfy { branch in
             let range = branch.startOfBranch + 1 ..< branch.endOfBranch
             return !conditionalBranchHasUnsupportedCastOperator(startOfScopeIndex: branch.startOfBranch)
-                && (isSingleExpression(in: range, allowing: branchAllowed) || endsWithThrowStatement(in: range))
+                && (isSingleExpression(in: range, allowing: branchAllowed) || isThrowingBranch(branch))
         }
         return branchesAreExpressions ? lastBranch.endOfBranch : nil
     }
 
-    /// Whether the code in the given range ends with a `throw`, like `log(error); throw error`
-    func endsWithThrowStatement(in range: Range<Int>) -> Bool {
-        guard let lastTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound),
-              lastTokenIndex >= range.lowerBound,
+    /// A throwing branch may have statements before its final `throw`, but none may return from the enclosing function.
+    func isThrowingBranch(_ branch: ConditionalBranch) -> Bool {
+        guard let lastTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: branch.endOfBranch),
+              lastTokenIndex > branch.startOfBranch,
               let errorRange = parseExpressionRange(endingAt: lastTokenIndex),
               let throwIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: errorRange.lowerBound),
-              throwIndex >= range.lowerBound
+              throwIndex > branch.startOfBranch,
+              tokens[throwIndex] == .keyword("throw")
         else { return false }
-        return tokens[throwIndex] == .keyword("throw")
+
+        return !(branch.startOfBranch + 1 ..< throwIndex).contains { i in
+            tokens[i] == .keyword("return") && !indexIsWithinNestedClosure(i, startOfScopeIndex: branch.startOfBranch)
+        }
     }
 
     /// Whether or not the conditional statement that starts at the given index

@@ -123,6 +123,15 @@ final class RedundantClosureTests: XCTestCase {
         testFormatting(for: input, rule: .redundantClosure)
     }
 
+    func testKeepsClosureFollowedByParenOnNewLine() {
+        let input = """
+        _ = promises.map { $0.succeed(()) }
+        () = try future.wait()
+        """
+
+        testFormatting(for: input, rule: .redundantClosure)
+    }
+
     func testKeepsEmptyClosures() {
         let input = """
         let foo = {}()

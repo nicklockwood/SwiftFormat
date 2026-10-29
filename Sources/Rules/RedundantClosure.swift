@@ -26,6 +26,8 @@ public extension FormatRule {
                var closureCallCloseParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureCallOpenParenIndex),
                formatter.token(at: closureCallOpenParenIndex) == .startOfScope("("),
                formatter.token(at: closureCallCloseParenIndex) == .endOfScope(")"),
+               // A paren that starts a line isn't a call of the closure before it
+               !formatter.tokens[closureEndIndex ..< closureCallOpenParenIndex].contains(where: \.isLinebreak),
                // Make sure to exclude closures that are completely empty,
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex

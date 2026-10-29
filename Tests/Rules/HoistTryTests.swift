@@ -10,6 +10,30 @@ import XCTest
 @testable import SwiftFormat
 
 final class HoistTryTests: XCTestCase {
+    func testHoistTryOverCommentBeforeOperator() {
+        let input = """
+        let x = a // comment
+            + foo(try b())
+        let y = foo(try c()) /* comment */ + bar(try d())
+        let z = a + // comment
+            foo(try e())
+        let w = a
+            // comment
+            + foo(try f())
+        """
+        let output = """
+        let x = try a // comment
+            + foo(b())
+        let y = try foo(c()) /* comment */ + bar(d())
+        let z = try a + // comment
+            foo(e())
+        let w = try a
+            // comment
+            + foo(f())
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
+
     func testHoistTry() {
         let input = """
         greet(try name(), try surname())

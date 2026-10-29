@@ -22,13 +22,13 @@ public extension FormatRule {
                let typeName = declaration.fullyQualifiedName,
                declaration.visibility() == .internal || declaration.visibility() == nil
             {
-                // Inside public extensions, types with no access control modifier are public.
-                // This case is handled by the extensionAccessControl rule.
-                let insidePublicExtension = declaration.parentDeclarations.contains(where: {
-                    $0.keyword == "extension" && $0.visibility() == .public
+                // Inside public or package extensions, types with no access control modifier
+                // inherit the extension's access level. This case is handled by the extensionAccessControl rule.
+                let insidePublicOrPackageExtension = declaration.parentDeclarations.contains(where: {
+                    $0.keyword == "extension" && ($0.visibility() ?? .internal) > .internal
                 })
 
-                if !insidePublicExtension {
+                if !insidePublicOrPackageExtension {
                     internalTypes.insert(typeName)
                 }
             }
@@ -40,13 +40,13 @@ public extension FormatRule {
                   let parentType = declaration.parentType
             else { return }
 
-            // Inside public extensions, types with no access control modifier are public.
-            // This case is handled by the extensionAccessControl rule.
-            let insidePublicExtension = declaration.parentDeclarations.contains(where: {
-                $0.keyword == "extension" && $0.visibility() == .public
+            // Inside public or package extensions, types with no access control modifier
+            // inherit the extension's access level. This case is handled by the extensionAccessControl rule.
+            let insidePublicOrPackageExtension = declaration.parentDeclarations.contains(where: {
+                $0.keyword == "extension" && ($0.visibility() ?? .internal) > .internal
             })
 
-            if insidePublicExtension {
+            if insidePublicOrPackageExtension {
                 return
             }
 

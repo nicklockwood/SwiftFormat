@@ -128,6 +128,20 @@ final class BracesTests: XCTestCase {
         testFormatting(for: input, rule: .braces)
     }
 
+    func testKnRNoMangleClosureStatementAfterClosingBrace() {
+        let input = """
+        lock.withLock { value in
+            value = 1
+        }
+
+        {
+            let foo = makeFoo()
+            weakFoo = foo
+        }()
+        """
+        testFormatting(for: input, rule: .braces)
+    }
+
     func testAllmanNoMangleClosureReturningClosure() {
         let input = """
         foo

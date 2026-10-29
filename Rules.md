@@ -8,7 +8,6 @@
 * [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
 * [blankLineAfterImports](#blankLineAfterImports)
-* [blankLinesAfterAttributes](#blankLinesAfterAttributes)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -54,6 +53,7 @@
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
+* [redundantBlankLines](#redundantBlankLines)
 * [redundantBreak](#redundantBreak)
 * [redundantClosure](#redundantClosure)
 * [redundantCompactMap](#redundantCompactMap)
@@ -406,26 +406,6 @@ Option | Description
 -
   case .handleIncomingEnergyBlast:
       energyShields.engage()
-  }
-```
-
-</details>
-<br/>
-
-## blankLinesAfterAttributes
-
-Remove blank lines between attributes and the declaration they apply to.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  @MainActor
--
-  struct Foo {
-      @State
--
-      var bar = 0
   }
 ```
 
@@ -2795,6 +2775,51 @@ Remove redundant backticks around identifiers.
 - func foo(with `default`: Int) {}
 + func foo(with default: Int) {}
 ```
+
+</details>
+<br/>
+
+## redundantBlankLines
+
+Remove redundant blank lines within declaration and control-flow headers, and between expression prefixes and their operands.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  @MainActor
+-
+  struct Foo {
+      @State
+-
+      var bar = 0
+  }
+```
+
+```diff
+  public
+-
+  final class Foo {}
+
+  let value = try
+-
+      await load()
+```
+
+```diff
+  let value:
+-
+      Int =
+-
+      0
+
+  func foo() -> some
+-
+      View { content }
+```
+
+Ordinary line wrapping is preserved. Blank lines between statements, arguments,
+collection elements, and at scope boundaries are left to other rules.
 
 </details>
 <br/>

@@ -57,6 +57,9 @@ public extension FormatRule {
                 guard let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i),
                       formatter.tokens[prevIndex ..< i].contains(where: \.isLinebreak),
                       !formatter.tokens[prevIndex].isComment,
+                      // A brace on the line after a closing brace starts a new statement,
+                      // such as an immediately-invoked closure
+                      formatter.tokens[prevIndex] != .endOfScope("}"),
                       // Don't move the brace onto a conditional compilation directive line
                       ![.startOfScope("#if"), .keyword("#elseif"), .keyword("#else"), .endOfScope("#endif")]
                           .contains(formatter.tokens[formatter.startOfLine(at: prevIndex, excludingIndent: true)])

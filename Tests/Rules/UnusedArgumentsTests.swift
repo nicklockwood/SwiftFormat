@@ -1649,6 +1649,43 @@ final class UnusedArgumentsTests: XCTestCase {
         testFormatting(for: input, rule: .unusedArguments)
     }
 
+    func testUsedForUnsafeLoopVariable() {
+        let input = """
+        for unsafe value in unsafe buffer {
+            print(value)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testUnusedForUnsafeLoopVariable() {
+        let input = """
+        for unsafe value in unsafe buffer {
+            print("hello")
+        }
+        """
+        let output = """
+        for unsafe _ in unsafe buffer {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUnusedForLoopVariableNamedUnsafe() {
+        let input = """
+        for unsafe in array {
+            print("hello")
+        }
+        """
+        let output = """
+        for _ in array {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
     func testUnusedForLoopTupleVariable() {
         let input = """
         for (key, value) in dictionary {

@@ -323,6 +323,29 @@ final class EnvironmentEntryTests: XCTestCase {
         )
     }
 
+    func testEntryMacroReplacementWhenPropertyHasAttributeOnPreviousLine() {
+        let input = """
+        struct ScreenNameEnvironmentKey: EnvironmentKey {
+            static var defaultValue: String { "home" }
+        }
+
+        extension EnvironmentValues {
+            @_spi(Internals)
+            public var screenName: String {
+                get { self[ScreenNameEnvironmentKey.self] }
+                set { self[ScreenNameEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry @_spi(Internals)
+            public var screenName: String = "home"
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
     func testEntryMacroReplacementWhenKeyDoesntHaveEnvironmentKeySuffix() {
         let input = """
         struct ScreenStyle: EnvironmentKey {

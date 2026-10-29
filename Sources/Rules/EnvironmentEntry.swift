@@ -187,7 +187,10 @@ extension Formatter {
             // Add `EnvironmentKey.defaultValue` to `EnvironmentValues property`
             if let defaultValueTokens = envProperty.associatedEnvironmentKey.defaultValueTokens {
                 let defaultValueTokens = [.space(" "), .operator("=", .infix), .space(" ")] + defaultValueTokens
-                insert(defaultValueTokens, at: endOfLine(at: propertyDeclaration.range.lowerBound))
+                // The type isn't necessarily on the first line of the declaration, e.g. after an attribute on its own line
+                let insertionIndex = propertyDeclaration.typeRange.map { $0.range.upperBound + 1 }
+                    ?? endOfLine(at: propertyDeclaration.range.lowerBound)
+                insert(defaultValueTokens, at: insertionIndex)
             }
             // Add @Entry Macro
             insert([.identifier("@Entry"), .space(" ")], at: propertyDeclaration.range.lowerBound)

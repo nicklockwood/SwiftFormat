@@ -395,6 +395,34 @@ final class RedundantPublicTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantPublic)
     }
 
+    func testTreatsTypeInPackageExtensionAsPackage() {
+        let input = """
+        package enum Foo {}
+
+        package extension Foo {
+            enum Bar {}
+        }
+
+        extension Foo.Bar: CustomStringConvertible {
+            public var description: String {
+                ""
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantPublic)
+    }
+
+    func testPreservesPublicInNestedTypeInsidePackageExtension() {
+        let input = """
+        package extension Foo {
+            struct Bar {
+                public var baaz: Baaz
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantPublic)
+    }
+
     func testRemovesPublicFromComplexPrivateStruct() {
         let input = """
         private struct Example {

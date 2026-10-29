@@ -269,7 +269,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isStatic: Bool = false
     }
 
-    static let cacheVersion = 9
+    static let cacheVersion = 10
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -1301,10 +1301,10 @@ func makeSourceFileIndex(
                 typeConformances.append(.init(typeName: name, conformances: inheritedTypes))
             }
             if typeDeclaration.keyword != "extension", typeDeclaration.keyword != "protocol" {
-                let insidePublicExtension = declaration.parentDeclarations.contains(where: {
-                    $0.keyword == "extension" && $0.visibility() == .public
+                let insidePublicOrPackageExtension = declaration.parentDeclarations.contains(where: {
+                    $0.keyword == "extension" && ($0.visibility() ?? .internal) > .internal
                 })
-                if !insidePublicExtension {
+                if !insidePublicOrPackageExtension {
                     typeDeclarations.append(.init(
                         name: name,
                         visibility: (declaration.visibility() ?? .internal).rawValue,

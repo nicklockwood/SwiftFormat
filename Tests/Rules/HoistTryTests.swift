@@ -46,6 +46,34 @@ final class HoistTryTests: XCTestCase {
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
+    func testHoistTryInMemberChainAfterClosure() {
+        let input = """
+        let channel = try ClientBootstrap(group: group)
+            .channelInitializer { channel in
+                channel.pipeline.addHandler(Handler())
+            }
+            .connect(to: try address())
+            .wait()
+        let bootstrap = makeBootstrap {
+            $0
+        }
+        .connect(to: try address())
+        """
+        let output = """
+        let channel = try ClientBootstrap(group: group)
+            .channelInitializer { channel in
+                channel.pipeline.addHandler(Handler())
+            }
+            .connect(to: address())
+            .wait()
+        let bootstrap = try makeBootstrap {
+            $0
+        }
+        .connect(to: address())
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
+
     func testHoistTryInsideStringInterpolation() {
         let input = """
         \"\\(replace(regex: try something()))\"

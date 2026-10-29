@@ -20,6 +20,22 @@ final class HoistTryTests: XCTestCase {
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
+    func testHoistTryInDeclarationWithValueOnNextLine() {
+        let input = """
+        let foo =
+            [try bar()]
+        let baz: [Quux] =
+            (condition ? [] : [try quux()])
+        """
+        let output = """
+        let foo =
+            try [bar()]
+        let baz: [Quux] =
+            try (condition ? [] : [quux()])
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
+
     func testHoistTryWithOptionalTry() {
         let input = """
         greet(try name(), try? surname())

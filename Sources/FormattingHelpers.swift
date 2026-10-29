@@ -1635,7 +1635,7 @@ extension Formatter {
         }
 
         var insertIndex = scopeStart
-        loop: while let i = index(of: .nonSpace, before: insertIndex) {
+        loop: while let i = index(of: .nonSpaceOrComment, before: insertIndex) {
             let prevToken = tokens[insertIndex]
             switch tokens[i] {
             case .identifier where [.startOfScope("("), .startOfScope("[")].contains(prevToken):
@@ -1699,7 +1699,10 @@ extension Formatter {
             case .linebreak:
                 if prevToken.isOperator(ofType: .infix) || prevToken.isStringBody {
                     break
-                } else if let i = index(of: .nonSpaceOrLinebreak, before: i, if: {
+                } else if next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator(ofType: .infix) == true {
+                    // The expression continues with an operator after a line containing only a comment
+                    break
+                } else if let i = index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                     // An `=` at the end of the previous line ends the expression, as it does on a single line
                     $0.isOperator(ofType: .infix) && !$0.isOperator("=")
                 }) {

@@ -1697,7 +1697,8 @@ extension Formatter {
                 if prevToken.isOperator(ofType: .infix) || prevToken.isStringBody {
                     break
                 } else if let i = index(of: .nonSpaceOrLinebreak, before: i, if: {
-                    $0.isOperator(ofType: .infix)
+                    // An `=` at the end of the previous line ends the expression, as it does on a single line
+                    $0.isOperator(ofType: .infix) && !$0.isOperator("=")
                 }) {
                     insertIndex = i
                     continue

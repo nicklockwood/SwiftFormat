@@ -78,6 +78,11 @@ public extension FormatRule {
                     continue
                 }
 
+                // A key path like `\.[id: 0]!` can't contain `try`, so its force unwraps can't be converted
+                if formatter.tokens[expressionRange.lowerBound] == .operator("\\", .prefix) {
+                    continue
+                }
+
                 // An operator's RHS cannot start with `try`, so insert it at the start of the full expression.
                 let fullExpressionRange = formatter.parseForceUnwrapExpressionRange(containing: expressionRange.lowerBound)
                 let tryInsertionIndex = (fullExpressionRange?.lowerBound ?? expressionRange.lowerBound).autoUpdating(in: formatter)

@@ -54,6 +54,32 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .preferNonfailableStringConversions])
     }
 
+    func testForceUnwrapInKeyPathNotConverted() {
+        let input = #"""
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_keyPaths() {
+                let elementStore = pathStore.scope(\.[id: 0]!, action: \.[id: 0])
+                let nickname = user[keyPath: \User.nickname!]
+                let first = users[keyPath: \.first]!
+            }
+        }
+        """#
+        let output = #"""
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_keyPaths() throws {
+                let elementStore = pathStore.scope(\.[id: 0]!, action: \.[id: 0])
+                let nickname = user[keyPath: \User.nickname!]
+                let first = try XCTUnwrap(users[keyPath: \.first])
+            }
+        }
+        """#
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
     func testForceUnwrapOfLiteralInAssignmentInSwiftTesting() {
         let input = """
         import Testing

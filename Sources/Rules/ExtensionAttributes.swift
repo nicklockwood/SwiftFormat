@@ -133,13 +133,9 @@ extension Formatter {
         if token(at: end)?.isLinebreak == true {
             end += 1
 
-            var nextTokenIndex = end
-            while token(at: nextTokenIndex)?.isSpace == true {
-                nextTokenIndex += 1
-            }
-
-            if token(at: nextTokenIndex)?.isComment != true {
-                end = nextTokenIndex
+            // Also remove the next line's indent, since the attribute's own indent is kept
+            while token(at: end)?.isSpace == true {
+                end += 1
             }
         }
 

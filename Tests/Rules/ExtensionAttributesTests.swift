@@ -257,4 +257,26 @@ final class ExtensionAttributesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .extensionAttributes)
     }
+
+    func testRemovesAttributeFollowedByCommentLine() {
+        let input = """
+        extension Foo {
+            /// Doc comment.
+            @available(*, deprecated)
+            // swift-format-ignore: AlwaysUseLowerCamelCase
+            func bar() {}
+        }
+        """
+
+        let output = """
+        @available(*, deprecated)
+        extension Foo {
+            /// Doc comment.
+            // swift-format-ignore: AlwaysUseLowerCamelCase
+            func bar() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .extensionAttributes)
+    }
 }

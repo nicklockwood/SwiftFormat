@@ -972,7 +972,7 @@ final class ProjectIndexTests: XCTestCase {
             moduleIdentifiers: ["App"]
         )
 
-        XCTAssertEqual(SourceFileIndex.cacheVersion, 9)
+        XCTAssertEqual(SourceFileIndex.cacheVersion, 10)
         XCTAssertEqual(try JSONDecoder().decode(
             SourceFileIndex.self,
             from: JSONEncoder().encode(index)
@@ -1628,6 +1628,32 @@ final class ProjectIndexTests: XCTestCase {
         let names = try XCTUnwrap(projectIndex.declarationNames(upTo: .internal, visibleFrom: callURL))
         XCTAssertTrue(names.eligible.contains("AppReciever"))
         XCTAssertFalse(names.declared.contains("LibraryReciever"))
+    }
+
+    func testTypesInPublicOrPackageExtensionsAreNotInternal() {
+        let callURL = URL(fileURLWithPath: "/Project/Call.swift")
+        let projectIndex = ProjectIndex(files: [
+            callURL.path: makeSourceFileIndex(from: "", moduleIdentifiers: ["App"]),
+            "/Project/Declarations.swift": makeSourceFileIndex(
+                from: """
+                package struct Outer {}
+                public extension Outer {
+                    struct PublicInner {}
+                }
+                package extension Outer {
+                    struct PackageInner {}
+                }
+                extension Outer {
+                    struct InternalInner {}
+                }
+                """,
+                moduleIdentifiers: ["App"]
+            ),
+        ])
+
+        XCTAssertFalse(projectIndex.isInternalType(named: "Outer.PublicInner", from: callURL))
+        XCTAssertFalse(projectIndex.isInternalType(named: "Outer.PackageInner", from: callURL))
+        XCTAssertTrue(projectIndex.isInternalType(named: "Outer.InternalInner", from: callURL))
     }
 
     func testProjectIndexRequiresFactsInEveryModuleForSharedFiles() {

@@ -489,4 +489,24 @@ final class PreferForLoopTests: XCTestCase {
         """
         testFormatting(for: input, rule: .preferForLoop)
     }
+
+    func testForEachUsedAsExpressionNotConverted() {
+        let input = """
+        func foo() -> Bool {
+            let result = strings.forEach { string in
+                print(string)
+            }
+            _ = !strings.forEach { string in
+                print(string)
+            }
+            bar(strings.forEach { string in
+                print(string)
+            })
+            return !strings.forEach { string in
+                print(string)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop, exclude: [.redundantProperty])
+    }
 }

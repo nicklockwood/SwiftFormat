@@ -10,6 +10,20 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantParensTests: XCTestCase {
+    func testUnsafeForLoop() {
+        let input = """
+        for unsafe (child) in unsafe (children) {
+            print(child)
+        }
+        """
+        let output = """
+        for unsafe child in unsafe children {
+            print(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantParens)
+    }
+
     // around expressions
 
     func testRedundantParensRemoved() {

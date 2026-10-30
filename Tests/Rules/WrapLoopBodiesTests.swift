@@ -10,6 +10,18 @@ import XCTest
 @testable import SwiftFormat
 
 final class WrapLoopBodiesTests: XCTestCase {
+    func testWrapUnsafeForLoop() {
+        let input = """
+        for unsafe child in unsafe $0.children { child.gatherStatistics(level.descend(), &stats) }
+        """
+        let output = """
+        for unsafe child in unsafe $0.children {
+            child.gatherStatistics(level.descend(), &stats)
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapLoopBodies)
+    }
+
     func testWrapForLoop() {
         let input = """
         for foo in bar { print(foo) }

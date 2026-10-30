@@ -10,6 +10,23 @@ import XCTest
 @testable import SwiftFormat
 
 final class ForWhereTests: XCTestCase {
+    func testUnsafeForWhere() {
+        let input = """
+        for unsafe child in unsafe children {
+            if unsafe child.isVisible {
+                render(child)
+            }
+        }
+        """
+        let output = """
+        for unsafe child in unsafe children where unsafe child.isVisible {
+            render(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere)
+        testFormatting(for: output, input, rule: .forWhere, options: FormatOptions(forWhere: .never))
+    }
+
     func testMovesSingleIfConditionIntoForWhereClause() {
         let input = """
         for child in visibleChildren {

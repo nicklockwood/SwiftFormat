@@ -151,7 +151,7 @@ extension Formatter {
                     names.formUnion(tokens[captures].filter(\.isIdentifier).map(\.string))
                 }
             } else if token == .keyword("for"),
-                      let patternStart = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                      let patternStart = startOfForLoopPattern(after: i),
                       let inIndex = index(of: .keyword("in"), in: patternStart ..< tokens.count)
             {
                 names.formUnion(tokens[patternStart ..< inIndex].filter(\.isIdentifier).map(\.string))

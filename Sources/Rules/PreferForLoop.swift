@@ -69,6 +69,16 @@ public extension FormatRule {
             }
 
             guard currentIndex != forEachIndex else { return }
+
+            let isUnsafe: Bool
+            if let unsafeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: currentIndex),
+               formatter.isUnsafeExpression(at: unsafeIndex)
+            {
+                isUnsafe = true
+                currentIndex = unsafeIndex
+            } else {
+                isUnsafe = false
+            }
             forLoopSubjectRange = currentIndex ... indexBeforeFunctionCallDot
 
             // If there is a `try` before the `forEach` we cannot know if the subject is async/throwing or the body,
@@ -217,6 +227,9 @@ public extension FormatRule {
                 .keyword("for"),
                 .space(" "),
             ]
+            if isUnsafe {
+                newTokens.append(contentsOf: [.identifier("unsafe"), .space(" ")])
+            }
 
             let forEachValueNameTokens: [Token]
             if forEachValueNames.count == 1 {
@@ -303,6 +316,10 @@ extension Formatter {
             guard let startOfScopeIndex = startOfScope(at: closingParenIndex),
                   let previousNonSpaceNonCommentIndex = self.index(of: .nonSpaceOrComment, before: startOfScopeIndex)
             else { return nil }
+
+            if isUnsafeExpression(at: previousNonSpaceNonCommentIndex) {
+                return startOfScopeIndex
+            }
 
             // When we find parens for a function call or braces for a subscript,
             // continue parsing at the previous non-space non-comment token.

@@ -1256,6 +1256,13 @@ extension Formatter {
     /// Determine if next line after this token should be indented
     func isEndOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = token(at: i) else { return true }
+        if token == .identifier("unsafe"),
+           let forIndex = index(of: .keyword("for"), before: i),
+           let patternStart = startOfForLoopPattern(after: forIndex),
+           i < patternStart
+        {
+            return false
+        }
         switch token {
         case .endOfScope("case"), .endOfScope("default"):
             return false
@@ -1951,6 +1958,31 @@ extension Formatter {
         return false
     }
 
+    /// Whether `unsafe` introduces an expression instead of naming a value.
+    func isUnsafeExpression(at index: Int) -> Bool {
+        guard token(at: index) == .identifier("unsafe"),
+              last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") != true,
+              let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+              onSameLine(index, nextIndex)
+        else { return false }
+        switch tokens[nextIndex] {
+        case .identifier, .number, .operator(_, .prefix),
+             .keyword("try"), .keyword("await"),
+             .keyword("if"), .keyword("switch"):
+            return true
+        case .startOfScope("{"):
+            return isStartOfClosure(at: nextIndex)
+        case .startOfScope("("), .startOfScope("["):
+            return nextIndex > index + 1
+        case .startOfScope where tokens[nextIndex].isStringDelimiter:
+            return true
+        case .keyword where tokens[nextIndex].string.isMacroOrCompilerDirective:
+            return true
+        default:
+            return false
+        }
+    }
+
     /// Parses the expression starting at the given index.
     ///
     /// A full list of expression types are available here:
@@ -1978,9 +2010,9 @@ extension Formatter {
         startingAt startIndex: Int,
         allowConditionalExpressions: Bool = false
     ) -> ClosedRange<Int>? {
-        // Any expression can start with a prefix operator, or `await`, `repeat`, `each`
+        // Any expression can start with a prefix operator or an effect keyword.
         let prefixKeywords = ["await", "repeat", "each"]
-        if tokens[startIndex].isOperator(ofType: .prefix) || prefixKeywords.contains(tokens[startIndex].string),
+        if tokens[startIndex].isOperator(ofType: .prefix) || prefixKeywords.contains(tokens[startIndex].string) || isUnsafeExpression(at: startIndex),
            let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
            let followingExpression = parseExpressionRange(startingAt: nextTokenIndex, allowConditionalExpressions: allowConditionalExpressions)
         {
@@ -2189,10 +2221,11 @@ extension Formatter {
                 return previousExpression.lowerBound ... endIndex
             }
 
-            // Check for prefix operators or keywords (!, try, await)
+            // Check for prefix operators or effect keywords.
             let prefixKeywords = ["await", "try", "repeat", "each"]
-            if prevToken.isOperator(ofType: .prefix) || prefixKeywords.contains(prevToken.string) {
-                return prevIndex ... endIndex
+            if prevToken.isOperator(ofType: .prefix) || prefixKeywords.contains(prevToken.string) || isUnsafeExpression(at: prevIndex) {
+                let startIndex = parseExpressionRange(endingAt: prevIndex)?.lowerBound ?? prevIndex
+                return startIndex ... endIndex
             }
 
             // Check for operators after prefix keywords (try!, try?, await!)
@@ -2200,7 +2233,8 @@ extension Formatter {
                let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
                prefixKeywords.contains(tokens[beforeOperatorIndex].string)
             {
-                return beforeOperatorIndex ... endIndex
+                let startIndex = parseExpressionRange(endingAt: beforeOperatorIndex)?.lowerBound ?? beforeOperatorIndex
+                return startIndex ... endIndex
             }
         }
 
@@ -5221,6 +5255,23 @@ extension Formatter {
 }
 
 extension Formatter {
+    /// Returns the first token of a for loop pattern, skipping iteration effects.
+    func startOfForLoopPattern(after index: Int) -> Int? {
+        guard let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) else {
+            return nil
+        }
+        switch tokens[nextIndex] {
+        case .keyword("try"), .keyword("await"):
+            return startOfForLoopPattern(after: nextIndex)
+        case .identifier("unsafe") where next(.nonSpaceOrCommentOrLinebreak, after: nextIndex).map {
+            $0.isIdentifier || $0 == .startOfScope("(") || $0 == .keyword("case")
+        } == true:
+            return startOfForLoopPattern(after: nextIndex)
+        default:
+            return nextIndex
+        }
+    }
+
     /// Returns the opening brace of the for loop body, skipping closures in the sequence expression.
     func startOfForLoopBody(after index: Int) -> Int? {
         guard let startOfBody = self.index(of: .startOfScope("{"), after: index) else {
@@ -5277,9 +5328,10 @@ extension Formatter {
                     }
                 }
             } else if token == .keyword("for"),
+                      let patternStart = startOfForLoopPattern(after: i),
                       let end = index(of: .keyword("in"), after: i)
             {
-                for token in tokens[i ... end] where token.isIdentifier {
+                for token in tokens[patternStart ..< end] where token.isIdentifier {
                     types[token.string, default: []].append(.init(type: ""))
                 }
             } else if token == .startOfScope("{"), isStartOfClosure(at: i),

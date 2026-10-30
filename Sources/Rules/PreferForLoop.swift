@@ -82,6 +82,25 @@ public extension FormatRule {
                 if [.keyword("try"), .keyword("await")].contains(prevToken) {
                     return
                 }
+
+                // A `for` loop is a statement, so we can only convert a `forEach` call
+                // that is used as a statement, not one whose result is used in an expression
+                // like `let result = foo.forEach { ... }` or `return !foo.forEach { ... }`.
+                switch prevToken {
+                case .operator(_, .infix), .operator(_, .prefix),
+                     .keyword("return"), .keyword("throw"), .identifier("yield"):
+                    return
+                default:
+                    break
+                }
+            }
+
+            // A `forEach` call inside parens or brackets is a function argument,
+            // collection element or tuple element, so it is also an expression.
+            if let scope = formatter.currentScope(at: currentIndex),
+               [.startOfScope("("), .startOfScope("[")].contains(scope)
+            {
+                return
             }
 
             // If the chain includes linebreaks, don't convert it to a for loop.

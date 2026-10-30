@@ -1695,4 +1695,16 @@ final class RedundantBlankLinesTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantBlankLines)
     }
+
+    func testPreservesBlankLineAfterImportOfType() {
+        let input = """
+        package import struct TSCBasic.ByteString
+        import class Foundation.NSObject
+
+        package extension ByteString {
+            func foo() {}
+        }
+        """
+        testFormatting(for: input, rule: .redundantBlankLines)
+    }
 }

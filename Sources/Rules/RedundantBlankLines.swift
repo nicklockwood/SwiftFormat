@@ -246,6 +246,8 @@ extension Formatter {
 
         // Type inheritance and where clauses, including generic constraints.
         if let keyword = index(before: next, where: { $0.isKeyword && Token.swiftTypeKeywords.contains($0.string) }),
+           // `import struct Foo.Bar` has no body, so it has no header to continue.
+           last(.nonSpaceOrCommentOrLinebreak, before: keyword) != .keyword("import"),
            let name = index(of: .nonSpaceOrCommentOrLinebreak, after: keyword),
            let type = parseType(at: name),
            let body = index(of: .startOfScope("{"), after: type.range.upperBound),

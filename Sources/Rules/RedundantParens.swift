@@ -35,6 +35,8 @@ public extension FormatRule {
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
             let prevToken = formatter.token(at: previousIndex) ?? .space("")
             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
+            let isUnsafeKeyword = formatter.isUnsafeExpression(at: previousIndex)
+                || (prevToken == .identifier("unsafe") && nextToken == .keyword("in"))
             switch nextToken {
             case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
                  .identifier("async"), .keyword("in"):
@@ -68,7 +70,7 @@ public extension FormatRule {
             switch prevToken {
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix), .operator("->", .infix):
                 return
-            case .identifier: // TODO: are trailing closures allowed in other cases?
+            case .identifier where !isUnsafeKeyword:
                 // Parens before closure
                 guard closingIndex == formatter.index(of: .nonSpace, after: i),
                       let openingIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: {
@@ -101,7 +103,7 @@ public extension FormatRule {
                     fallthrough
                 }
                 return // Probably a method invocation
-            case .delimiter(","), .endOfScope, .keyword:
+            case .delimiter(","), .endOfScope, .keyword, .identifier("unsafe"):
                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
                 guard formatter.index(of: .endOfScope("}"), before: closingIndex) == nil,
                       ![.endOfScope("}"), .endOfScope(">")].contains(prevToken) ||
@@ -111,7 +113,7 @@ public extension FormatRule {
                 }
                 let string = prevToken.string
                 if ![.startOfScope("{"), .delimiter(","), .startOfScope(":")].contains(nextToken),
-                   !(string == "for" && nextToken == .keyword("in")),
+                   !(["for", "unsafe"].contains(string) && nextToken == .keyword("in")),
                    !(string == "guard" && nextToken == .keyword("else"))
                 {
                     // TODO: this is confusing - refactor to move fallthrough to end of case

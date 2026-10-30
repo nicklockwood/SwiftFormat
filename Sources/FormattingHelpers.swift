@@ -2822,6 +2822,8 @@ extension Formatter {
                 switch token {
                 case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                     break
+                case .identifier("unsafe") where lastKeyword == "for" || isUnsafeExpression(at: index):
+                    break
                 case .keyword("init"), .keyword("subscript"),
                      .keyword("func") where lastKeyword != "import":
                     lastKeyword = ""
@@ -2978,11 +2980,12 @@ extension Formatter {
                     lastKeyword = ""
                     var localNames = localNames
                     guard let keywordIndex = self.index(of: .keyword("in"), before: index),
-                          let prevKeywordIndex = self.index(of: .keyword("for"), before: keywordIndex)
+                          let prevKeywordIndex = self.index(of: .keyword("for"), before: keywordIndex),
+                          let patternStart = startOfForLoopPattern(after: prevKeywordIndex)
                     else {
                         return fatalError("Expected for keyword", at: index)
                     }
-                    for token in tokens[prevKeywordIndex + 1 ..< keywordIndex] {
+                    for token in tokens[patternStart ..< keywordIndex] {
                         if case let .identifier(name) = token, name != "_" {
                             localNames.insert(token.unescaped())
                         }
@@ -3312,6 +3315,8 @@ extension Formatter {
                        let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: index)
                     {
                         switch prevToken {
+                        case .identifier("unsafe") where lastKeyword == "for":
+                            isAssignment = true
                         case .identifier, .number, .endOfScope,
                              .operator where ![
                                  .operator("=", .infix), .operator(".", .prefix),

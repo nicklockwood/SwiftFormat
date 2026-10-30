@@ -1658,6 +1658,66 @@ final class UnusedArgumentsTests: XCTestCase {
         testFormatting(for: input, rule: .unusedArguments)
     }
 
+    func testUnsafeForLoopTupleWithUnsafeIdentifier() {
+        let input = """
+        for unsafe (unused, unsafe) in unsafe entries {
+            print(unsafe)
+        }
+        """
+        let output = """
+        for unsafe (_, unsafe) in unsafe entries {
+            print(unsafe)
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUnusedMultilineUnsafeForLoopVariable() {
+        let input = """
+        for unsafe
+            value in unsafe buffer
+        {
+            print("hello")
+        }
+        """
+        let output = """
+        for unsafe
+            _ in unsafe buffer
+        {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUnusedAsyncUnsafeForLoopVariable() {
+        let input = """
+        for try await unsafe value in unsafe sequence {
+            print("hello")
+        }
+        """
+        let output = """
+        for try await unsafe _ in unsafe sequence {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUnusedForUnsafeLoopVariableNamedUnsafe() {
+        let input = """
+        for unsafe unsafe in unsafe buffer {
+            print("hello")
+        }
+        """
+        let output = """
+        for unsafe _ in unsafe buffer {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
     func testUnusedForUnsafeLoopVariable() {
         let input = """
         for unsafe value in unsafe buffer {

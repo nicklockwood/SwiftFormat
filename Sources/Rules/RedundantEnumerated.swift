@@ -31,7 +31,7 @@ public extension FormatRule {
 
 extension Formatter {
     func removeRedundantEnumerated(at forIndex: Int) {
-        guard let patternStart = index(of: .nonSpaceOrCommentOrLinebreak, after: forIndex),
+        guard let patternStart = startOfForLoopPattern(after: forIndex),
               tokens[patternStart] == .startOfScope("("),
               let patternEnd = endOfScope(at: patternStart),
               let inIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: patternEnd),
@@ -44,7 +44,11 @@ extension Formatter {
               let sequenceStart = index(of: .nonSpaceOrCommentOrLinebreak, after: inIndex),
               let sequence = parseExpressionRange(startingAt: sequenceStart),
               let enumerated = redundantEnumeratedCall(endingAt: sequence.upperBound),
-              startOfMemberCallReceiver(endingAt: enumerated.lowerBound) == sequenceStart,
+              let receiverStart = startOfMemberCallReceiver(endingAt: enumerated.lowerBound),
+              receiverStart == sequenceStart || (
+                  tokens[sequenceStart] == .identifier("unsafe")
+                      && index(of: .nonSpaceOrCommentOrLinebreak, after: sequenceStart) == receiverStart
+              ),
               let afterSequence = index(of: .nonSpaceOrCommentOrLinebreak, after: sequence.upperBound),
               [.keyword("where"), .startOfScope("{")].contains(tokens[afterSequence]),
               let bodyStart = startOfForLoopBody(after: sequence.upperBound),

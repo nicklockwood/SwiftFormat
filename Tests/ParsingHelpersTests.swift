@@ -3049,6 +3049,70 @@ final class ParsingHelpersTests: XCTestCase {
 
     // MARK: parseExpressionRange(endingAt:)
 
+    func testParseUnsafeExpressions() {
+        let input = """
+        unsafe buffer
+        unsafe buffer[index]
+        unsafe buffer.baseAddress!.pointee + 1
+        try await unsafe loadBuffer()
+        unsafe try? loadBuffer()
+        unsafe #require(buffer)
+        unsafe + 1
+        unsafe.foo()
+        unsafe
+        """
+        let expected = input.components(separatedBy: "\n")
+        XCTAssertEqual(parseExpressions(input), expected)
+        for expression in expected {
+            XCTAssert(isSingleExpressionParsedFromEnd(expression), expression)
+        }
+    }
+
+    func testParseUnsafeExpressionContaining() {
+        let input = """
+        let value = try await unsafe buffer[index]!.pointee
+        """
+        XCTAssertEqual(parseExpression(in: input, containing: "!"), """
+        try await unsafe buffer[index]!.pointee
+        """)
+    }
+
+    func testParseUnsafeIdentifierBeforeAnotherExpression() {
+        let input = """
+        unsafe
+        foo.unsafe
+        bar()
+        """
+        XCTAssertEqual(parseExpressions(input), input.components(separatedBy: "\n"))
+        XCTAssertEqual(parseExpression(in: input, containing: "bar"), """
+        bar()
+        """)
+    }
+
+    func testParseUnsafeLoopSequence() throws {
+        let input = """
+        for unsafe child in unsafe $0.children { print(child) }
+        """
+        let formatter = Formatter(tokenize(input))
+        let sequenceStart = try XCTUnwrap(formatter.tokens.firstIndex(of: .keyword("in"))) + 2
+        let range = formatter.parseExpressionRange(startingAt: sequenceStart)
+        XCTAssertEqual(range.map { formatter.tokens[$0].string }, """
+        unsafe $0.children
+        """)
+    }
+
+    func testParseForLoopSequenceNamedUnsafe() throws {
+        let input = """
+        for child in unsafe { print(child) }
+        """
+        let formatter = Formatter(tokenize(input))
+        let sequenceStart = try XCTUnwrap(formatter.tokens.firstIndex(of: .identifier("unsafe")))
+        let range = formatter.parseExpressionRange(startingAt: sequenceStart)
+        XCTAssertEqual(range.map { formatter.tokens[$0].string }, """
+        unsafe
+        """)
+    }
+
     func testParseExpressionEndingAt() {
         // Simple cases
         XCTAssert(isSingleExpressionParsedFromEnd("foo"))

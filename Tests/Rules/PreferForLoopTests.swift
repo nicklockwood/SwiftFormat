@@ -10,6 +10,128 @@ import XCTest
 @testable import SwiftFormat
 
 final class PreferForLoopTests: XCTestCase {
+    func testUnsafeForEach() {
+        let input = """
+        unsafe children.forEach { child in
+            unsafe child.gatherStatistics(level.descend(), &stats)
+        }
+        """
+        let output = """
+        for unsafe child in unsafe children {
+            unsafe child.gatherStatistics(level.descend(), &stats)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testUnsafeAnonymousForEach() {
+        let input = """
+        unsafe $0.children.forEach {
+            unsafe $0.gatherStatistics(level.descend(), &stats)
+        }
+        """
+        let output = """
+        for unsafe child in unsafe $0.children {
+            unsafe child.gatherStatistics(level.descend(), &stats)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testUnsafeParenthesizedForEachReceiver() {
+        let input = """
+        unsafe (children).forEach { child in
+            print(child)
+        }
+        """
+        let output = """
+        for unsafe child in unsafe (children) {
+            print(child)
+        }
+        """
+        let outputWithoutParens = """
+        for unsafe child in unsafe children {
+            print(child)
+        }
+        """
+        testFormatting(for: input, [output, outputWithoutParens], rules: [.preferForLoop])
+    }
+
+    func testUnsafeArrayLiteralForEachReceiver() {
+        let input = """
+        unsafe [1, 2].forEach { value in
+            print(value)
+        }
+        """
+        let output = """
+        for unsafe value in unsafe [1, 2] {
+            print(value)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testUnsafeForEachPreservesComments() {
+        let input = """
+        unsafe /* audited */ children.forEach { child in
+            print(child)
+        }
+        """
+        let output = """
+        for unsafe child in unsafe /* audited */ children {
+            print(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testUnsafeForEachUsedAsExpressionNotConverted() {
+        let input = """
+        let result = unsafe children.forEach { child in
+            print(child)
+        }
+
+        return unsafe children.forEach { child in
+            print(child)
+        }
+
+        try unsafe children.forEach { child in
+            print(child)
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop, exclude: [.redundantProperty])
+    }
+
+    func testForEachWithUnsafeIdentifier() {
+        let input = """
+        unsafe.forEach { unsafe in
+            print(unsafe)
+        }
+        """
+        let output = """
+        for unsafe in unsafe {
+            print(unsafe)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testForEachAfterUnsafeIdentifier() {
+        let input = """
+        unsafe
+        children.forEach { child in
+            print(child)
+        }
+        """
+        let output = """
+        unsafe
+        for child in children {
+            print(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
     func testConvertForEachWithExplicitReturnTypeToForLoop() {
         let input = """
         let placeholderStrings = ["foo", "bar", "baaz"]

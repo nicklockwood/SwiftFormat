@@ -10,6 +10,32 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantCompactMapTests: XCTestCase {
+    func testUnsafeLoopDoesNotShadowFunctionNamedUnsafe() {
+        let input = """
+        func unsafe (_: Int) -> String {
+            "value"
+        }
+
+        for unsafe element in elements {
+            print(element)
+        }
+
+        let result = values.compactMap(unsafe)
+        """
+        let output = """
+        func unsafe (_: Int) -> String {
+            "value"
+        }
+
+        for unsafe element in elements {
+            print(element)
+        }
+
+        let result = values.map(unsafe)
+        """
+        testFormatting(for: input, output, rule: .redundantCompactMap)
+    }
+
     func testLiteral() {
         let input = """
         let result = values.compactMap { _ in "value" }

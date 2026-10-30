@@ -85,7 +85,7 @@ public extension FormatRule {
                 // Collect binding names between "for" and "in"
                 var argNames = [String]()
                 var nameIndexes = [Int]()
-                var index = i + 1
+                guard var index = formatter.startOfForLoopPattern(after: i) else { return }
                 while index < inIndex {
                     switch formatter.tokens[index] {
                     case .keyword("case"):
@@ -93,11 +93,6 @@ public extension FormatRule {
                         return
                     case .identifier("await"), .keyword("await"):
                         // Skip `for await ...` async sequence iteration marker
-                        break
-                    case .identifier("unsafe") where formatter.next(.nonSpaceOrCommentOrLinebreak, after: index).map {
-                        $0.isIdentifier || $0 == .startOfScope("(")
-                    } == true:
-                        // Skip `for unsafe ...` strict memory safety marker
                         break
                     case .identifier:
                         let name = formatter.tokens[index].unescaped()

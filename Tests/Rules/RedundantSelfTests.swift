@@ -10,6 +10,72 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantSelfTests: XCTestCase {
+    func testInsertSelfInUnsafeForLoop() {
+        let input = """
+        struct Foo {
+            var unsafe = true
+            var child = 0
+            var children: [Int]
+
+            func run() {
+                for unsafe child in unsafe children {
+                    print(child, unsafe)
+                }
+
+                for child in children where unsafe {
+                    print(child)
+                }
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var unsafe = true
+            var child = 0
+            var children: [Int]
+
+            func run() {
+                for unsafe child in unsafe self.children {
+                    print(child, self.unsafe)
+                }
+
+                for child in self.children where self.unsafe {
+                    print(child)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf, options: FormatOptions(explicitSelf: .insert))
+    }
+
+    func testUnsafeForLoopDoesNotShadowUnsafeMember() {
+        let input = """
+        struct Foo {
+            var unsafe = true
+            var children: [Int]
+
+            func run() {
+                for unsafe child in unsafe children {
+                    print(child, self.unsafe)
+                }
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var unsafe = true
+            var children: [Int]
+
+            func run() {
+                for unsafe child in unsafe children {
+                    print(child, unsafe)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf)
+    }
+
     private func testProjectFormatting(
         for input: String,
         _ output: String,

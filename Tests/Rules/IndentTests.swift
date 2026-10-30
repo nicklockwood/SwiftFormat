@@ -10,6 +10,24 @@ import XCTest
 @testable import SwiftFormat
 
 final class IndentTests: XCTestCase {
+    func testWrappedUnsafeForLoopPattern() {
+        let input = """
+        for unsafe
+        child in unsafe children
+        {
+        print(child)
+        }
+        """
+        let output = """
+        for unsafe
+            child in unsafe children
+        {
+            print(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .indent)
+    }
+
     func testReduceIndentAtStartOfFile() {
         let input = """
             foo()

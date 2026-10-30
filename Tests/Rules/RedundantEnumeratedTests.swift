@@ -10,6 +10,48 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantEnumeratedTests: XCTestCase {
+    func testUnsafeIteration() {
+        let input = """
+        for unsafe (_, element) in elements.enumerated() {
+            print(element)
+        }
+        """
+        let output = """
+        for unsafe element in elements {
+            print(element)
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEnumerated)
+    }
+
+    func testUnsafeSequence() {
+        let input = """
+        for (_, element) in unsafe elements.enumerated() {
+            print(element)
+        }
+        """
+        let output = """
+        for element in unsafe elements {
+            print(element)
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEnumerated)
+    }
+
+    func testUnsafeIterationAndSequence() {
+        let input = """
+        for unsafe (index, element) in unsafe elements.enumerated().reversed() where element.isEnabled {
+            print(element)
+        }
+        """
+        let output = """
+        for unsafe element in unsafe elements.reversed() where element.isEnabled {
+            print(element)
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEnumerated)
+    }
+
     func testDiscardedIndex() {
         let input = """
         for (_, element) in elements.enumerated() {

@@ -88,7 +88,7 @@ public extension FormatRule {
                 // like `let result = foo.forEach { ... }` or `return !foo.forEach { ... }`.
                 switch prevToken {
                 case .operator(_, .infix), .operator(_, .prefix),
-                     .keyword("return"), .keyword("throw"), .keyword("yield"):
+                     .keyword("return"), .keyword("throw"), .identifier("yield"):
                     return
                 default:
                     break

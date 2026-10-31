@@ -787,6 +787,8 @@ final class CommandLineTests: XCTestCase {
             [
                 ".swiftformat": """
                 --rules redundantPublic
+
+                [Selected]
                 --filter **/Selected/*.swift
                 --enable redundantOverload
                 """,
@@ -3044,7 +3046,7 @@ final class CommandLineTests: XCTestCase {
             "Sources/Foo.swift": input,
             "Tests/FooTests.swift": input,
         ]) { directory in
-            _ = processArguments(["", directory.path], in: "")
+            _ = processArguments(["", directory.path, "--project-index", "disabled"], in: "")
 
             XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift"), encoding: .utf8), """
             func foo() {
@@ -3097,7 +3099,7 @@ final class CommandLineTests: XCTestCase {
             "Module/Sources/Bar.swift": input,
             "Module/Tests/BarTests.swift": input,
         ]) { directory in
-            _ = processArguments(["", directory.path], in: "")
+            _ = processArguments(["", directory.path, "--project-index", "disabled"], in: "")
 
             XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift"), encoding: .utf8), """
             func foo() {
@@ -3162,7 +3164,7 @@ final class CommandLineTests: XCTestCase {
             "Tests/FooTests.swift": input,
             "Tests/FeatureTests.swift": input,
         ]) { directory in
-            _ = processArguments(["", directory.path], in: "")
+            _ = processArguments(["", directory.path, "--project-index", "disabled"], in: "")
 
             XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift"), encoding: .utf8), """
             func foo() {
@@ -3214,7 +3216,7 @@ final class CommandLineTests: XCTestCase {
             "Tests/FooTests.swift": input,
         ]) { directory in
             _ = processArguments([
-                "", directory.path, "--rules", "trailingCommas,indent",
+                "", directory.path, "--rules", "trailingCommas,indent", "--project-index", "disabled",
             ], in: "")
 
             // The .swift-version applies to all files, not just those matching the filter

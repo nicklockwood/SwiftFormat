@@ -689,6 +689,73 @@ final class RedundantEquatableTests: XCTestCase {
         testFormatting(for: input, rule: .redundantEquatable)
     }
 
+    func testPreserveEquatableImplementationWithPropertyInConditionalCompilationBlock() {
+        let input = """
+        struct TypeIdentifier: Hashable {
+            let id: ObjectIdentifier
+            #if DEBUG
+                let base: Any.Type
+            #endif
+
+            static func == (lhs: TypeIdentifier, rhs: TypeIdentifier) -> Bool {
+                lhs.id == rhs.id
+            }
+
+            func hash(into hasher: inout Hasher) {
+                hasher.combine(id)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
+
+    func testPreserveEquatableImplementationWithPropertyInNestedConditionalCompilationBlock() {
+        let input = """
+        struct Foo: Equatable {
+            let bar: Int
+            #if os(macOS)
+                #if DEBUG
+                    let baz: Int
+                #endif
+            #endif
+
+            static func == (lhs: Foo, rhs: Foo) -> Bool {
+                lhs.bar == rhs.bar
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
+
+    func testRemoveEquatableImplementationWithOnlyMethodInConditionalCompilationBlock() {
+        let input = """
+        struct Foo: Equatable {
+            let bar: Int
+            #if DEBUG
+                func debugDescription() -> String {
+                    "\\(bar)"
+                }
+            #endif
+
+            static func == (lhs: Foo, rhs: Foo) -> Bool {
+                lhs.bar == rhs.bar
+            }
+        }
+        """
+        let output = """
+        struct Foo: Equatable {
+            let bar: Int
+            #if DEBUG
+                func debugDescription() -> String {
+                    "\\(bar)"
+                }
+            #endif
+
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEquatable, exclude: [.blankLinesAtEndOfScope])
+    }
+
     func testPreserveEquatableImplementationForStrideableTypeInExtension() {
         // `Strideable` provides a default `==` implementation via `distance(to:)`,
         // so a custom `==` on a Strideable type may be intentionally overriding that default.

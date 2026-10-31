@@ -33,6 +33,19 @@ public extension FormatRule {
             let storedInstanceProperties = typeBody.filter(\.isStoredInstanceProperty)
             let storedInstancePropertyNames = Set(storedInstanceProperties.map(\.name))
 
+            // A property in a conditional compilation block is only compared by the synthesized
+            // implementation in some build configurations, so we can't tell if `==` is redundant.
+            let hasConditionalStoredProperty = typeBody.contains { declaration in
+                guard case .conditionalCompilation = declaration.kind else { return false }
+                var hasStoredProperty = false
+                [declaration].forEachRecursiveDeclaration { hasStoredProperty = hasStoredProperty || $0.isStoredInstanceProperty }
+                return hasStoredProperty
+            }
+
+            guard !hasConditionalStoredProperty else {
+                continue
+            }
+
             // Find all of the properties compared using `lhs.{property} == rhs.{property}`
             let comparedProperties = formatter.parseComparedProperties(inEquatableImplementation: equatableType.equatableFunction)
 

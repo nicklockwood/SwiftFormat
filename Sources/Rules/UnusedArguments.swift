@@ -34,6 +34,21 @@ public extension FormatRule {
             var argNames = arguments.compactMap(\.internalLabel)
 
             formatter.removeUsed(from: &argNames, with: &arguments, in: bodyRange.lowerBound + 1 ..< bodyRange.upperBound)
+
+            // An argument named in a lifetime attribute is used, even if the body doesn't reference it
+            let startOfAttributes = formatter.startOfModifiers(at: i, includingAttributes: true)
+            for attributeIndex in startOfAttributes ..< i where ["@_lifetime", "@lifetime"].contains(formatter.tokens[attributeIndex].string) {
+                guard let endOfAttribute = formatter.endOfAttribute(at: attributeIndex) else { continue }
+                for index in attributeIndex + 1 ... endOfAttribute {
+                    if case .identifier = formatter.tokens[index],
+                       let nameIndex = argNames.firstIndex(of: formatter.tokens[index].unescaped())
+                    {
+                        argNames.remove(at: nameIndex)
+                        arguments.remove(at: nameIndex)
+                    }
+                }
+            }
+
             for argument in arguments.reversed() {
                 // In subscripts and operators, external function labels are unnecessary
                 if isOperator {

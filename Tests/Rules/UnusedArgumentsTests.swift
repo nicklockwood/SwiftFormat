@@ -2037,4 +2037,61 @@ final class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedArguments)
     }
+
+    // MARK: lifetime attributes
+
+    func testArgumentUsedInLifetimeAttributeNotRemoved() {
+        let input = """
+        @_lifetime(borrow source)
+        func overrideLifetime<T: ~Escapable>(_ dependent: consuming T, borrowing source: borrowing some ~Copyable) -> T {
+            dependent
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.noExplicitOwnership])
+    }
+
+    func testArgumentUsedInLifetimeAttributeWithTargetNotRemoved() {
+        let input = """
+        @_lifetime(self: copy source)
+        mutating func update(from source: Source) {
+            print("updated")
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.noExplicitOwnership])
+    }
+
+    func testArgumentUsedAsLifetimeAttributeTargetNotRemoved() {
+        let input = """
+        @_lifetime(dependent: borrow source)
+        func overrideLifetime<T: ~Escapable>(_ dependent: inout T, borrowing source: borrowing some ~Copyable) {}
+        """
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.noExplicitOwnership])
+    }
+
+    func testArgumentUsedInLifetimeAttributeAfterOtherAttributesNotRemoved() {
+        let input = """
+        @inlinable
+        @_lifetime(copy source)
+        public func foo<T: ~Escapable>(_ source: T, _ dependent: consuming T) -> T {
+            dependent
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.noExplicitOwnership])
+    }
+
+    func testUnusedArgumentNotInLifetimeAttributeStillRemoved() {
+        let input = """
+        @_lifetime(borrow source)
+        func foo<T: ~Escapable>(source: borrowing T, other: Int) -> T {
+            fatalError()
+        }
+        """
+        let output = """
+        @_lifetime(borrow source)
+        func foo<T: ~Escapable>(source: borrowing T, other _: Int) -> T {
+            fatalError()
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.noExplicitOwnership])
+    }
 }

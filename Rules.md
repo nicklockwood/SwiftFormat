@@ -158,6 +158,7 @@
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
 * [redundantSendable](#redundantSendable)
 * [redundantSwiftUIViewMainActor](#redundantSwiftUIViewMainActor)
+* [residualPrint](#residualPrint)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
 * [testSuiteAccessControl](#testSuiteAccessControl)
@@ -3813,6 +3814,27 @@ Merge consecutive guard statements that have identical bodies.
 - guard isEnabled else { return }
 + guard isValid, isEnabled else { return }
 ```
+
+</details>
+<br/>
+
+## residualPrint
+
+Remove `print(...)` and `debugPrint(...)` statements left over from debugging.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func loadUser(id: String) async throws -> User {
+      let user = try await api.user(id: id)
+-     print("loaded user:", user)
+      return user
+  }
+```
+
+A `print` that is the only statement in its scope, a `print` at the top level or inside
+an `#if` block, and a `print(_:to:)` call that writes to a stream are left alone.
 
 </details>
 <br/>

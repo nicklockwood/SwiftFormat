@@ -787,6 +787,8 @@ final class CommandLineTests: XCTestCase {
             [
                 ".swiftformat": """
                 --rules redundantPublic
+
+                [Selected]
                 --filter **/Selected/*.swift
                 --enable redundantOverload
                 """,
@@ -3014,6 +3016,223 @@ final class CommandLineTests: XCTestCase {
         let tempFiles = [configURL, nonTestFile, testFile, toolsFile]
         for tempFile in tempFiles {
             try FileManager.default.removeItem(at: tempFile)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
+    func testDirectoryConfigFileWithFilters() throws {
+        var errors = [String]()
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        let input = """
+        func foo() {
+        print("bar")
+        }
+        """
+
+        try withTmpDirectory([
+            ".swiftformat": """
+            --indent 1
+
+            [Tests]
+            --filter **/Tests/**
+            --indent 2
+            """,
+            "Sources/Foo.swift": input,
+            "Tests/FooTests.swift": input,
+        ]) { directory in
+            _ = processArguments(["", directory.path, "--project-index", "disabled"], in: "")
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift"), encoding: .utf8), """
+            func foo() {
+             print("bar")
+            }
+
+            """)
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Tests/FooTests.swift"), encoding: .utf8), """
+            func foo() {
+              print("bar")
+            }
+
+            """)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
+    func testNestedDirectoryConfigFilesWithFilters() throws {
+        var errors = [String]()
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        let input = """
+        func foo() {
+        print("bar")
+        }
+        """
+
+        // Relative filters match paths relative to the directory containing the config file
+        try withTmpDirectory([
+            ".swiftformat": """
+            --indent 1
+
+            [Tests]
+            --filter Tests/**
+            --indent 2
+            """,
+            "Module/.swiftformat": """
+            [Tests]
+            --filter Tests/**
+            --indent 3
+            """,
+            "Sources/Foo.swift": input,
+            "Tests/FooTests.swift": input,
+            "Module/Sources/Bar.swift": input,
+            "Module/Tests/BarTests.swift": input,
+        ]) { directory in
+            _ = processArguments(["", directory.path, "--project-index", "disabled"], in: "")
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift"), encoding: .utf8), """
+            func foo() {
+             print("bar")
+            }
+
+            """)
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Tests/FooTests.swift"), encoding: .utf8), """
+            func foo() {
+              print("bar")
+            }
+
+            """)
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Module/Sources/Bar.swift"), encoding: .utf8), """
+            func foo() {
+             print("bar")
+            }
+
+            """)
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Module/Tests/BarTests.swift"), encoding: .utf8), """
+            func foo() {
+               print("bar")
+            }
+
+            """)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
+    func testDirectoryConfigFileFiltersAreAppliedInOrder() throws {
+        var errors = [String]()
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        let input = """
+        func foo() {
+        print("bar")
+        }
+        """
+
+        try withTmpDirectory([
+            ".swiftformat": """
+            --indent 1
+
+            [Tests]
+            --filter **/Tests/**
+            --indent 2
+            --disable linebreakAtEndOfFile
+
+            [Feature tests]
+            --filter **/FeatureTests.swift
+            --indent 3
+            """,
+            "Sources/Foo.swift": input,
+            "Tests/FooTests.swift": input,
+            "Tests/FeatureTests.swift": input,
+        ]) { directory in
+            _ = processArguments(["", directory.path, "--project-index", "disabled"], in: "")
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift"), encoding: .utf8), """
+            func foo() {
+             print("bar")
+            }
+
+            """)
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Tests/FooTests.swift"), encoding: .utf8), """
+            func foo() {
+              print("bar")
+            }
+            """)
+
+            // Both sections match, so the later section's indent wins
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Tests/FeatureTests.swift"), encoding: .utf8), """
+            func foo() {
+               print("bar")
+            }
+            """)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
+    func testSwiftVersionFileWithOnlyFilteredConfigSections() throws {
+        var errors = [String]()
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        let input = """
+        func foo(
+            foo: Foo,
+            bar: Bar
+        ) {}
+        """
+
+        try withTmpDirectory([
+            ".swift-version": "6.1",
+            ".swiftformat": """
+            [Tests]
+            --filter **/Tests/**
+            --indent 2
+            """,
+            "Sources/Foo.swift": input,
+            "Tests/FooTests.swift": input,
+        ]) { directory in
+            _ = processArguments([
+                "", directory.path, "--rules", "trailingCommas,indent", "--project-index", "disabled",
+            ], in: "")
+
+            // The .swift-version applies to all files, not just those matching the filter
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Foo.swift"), encoding: .utf8), """
+            func foo(
+                foo: Foo,
+                bar: Bar,
+            ) {}
+            """)
+
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Tests/FooTests.swift"), encoding: .utf8), """
+            func foo(
+              foo: Foo,
+              bar: Bar,
+            ) {}
+            """)
         }
 
         XCTAssertEqual(errors, [])

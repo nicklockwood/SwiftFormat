@@ -294,7 +294,7 @@ private func serializeOptions(_ options: Options, to outputURL: URL?) throws {
 private func readConfigArg(
     _ name: String,
     with args: inout [String: String],
-    filterOptions: inout [[ConfigFilter]: [String: String]],
+    filterOptions: inout [(filters: [ConfigFilter], options: [String: String])],
     in directory: String,
     logger: Logger? = nil
 ) throws -> URL? {
@@ -308,20 +308,23 @@ private func readConfigArg(
     let (url, configs) = try processConfigFile(at: configPath, for: name, in: directory, logger: logger)
 
     var config = [String: String]()
+    var configFilterOptions = [(filters: [ConfigFilter], options: [String: String])]()
 
     for configArgs in configs {
         // If the config file has a `--filter` option, store it separately under those filters.
         if let filterValue = configArgs["filter"] {
             let filters = try ConfigFilter.parseList(filterValue, in: "/")
             if !filters.isEmpty {
-                filterOptions[filters] = configArgs
+                configFilterOptions.append((filters, configArgs))
             }
         } else {
             config = try mergeArguments(configArgs, into: config, logger: logger)
         }
     }
 
+    // These have lower precedence than the existing arguments, so are applied first
     args = try mergeArguments(args, into: config, logger: logger)
+    filterOptions.insert(contentsOf: configFilterOptions, at: 0)
     return url
 }
 
@@ -375,7 +378,7 @@ private func processConfigFile(at path: String, for argumentName: String, in dir
 private func readMultipleConfigArgs(
     _ name: String,
     with args: inout [String: String],
-    filterOptions: inout [[ConfigFilter]: [String: String]],
+    filterOptions: inout [(filters: [ConfigFilter], options: [String: String])],
     in directory: String,
     logger: Logger? = nil
 ) throws -> [URL] {
@@ -401,7 +404,7 @@ private func readMultipleConfigArgs(
             if let filterValue = config["filter"] {
                 let filters = try ConfigFilter.parseList(filterValue, in: "/")
                 if !filters.isEmpty {
-                    filterOptions[filters] = config
+                    filterOptions.append((filters, config))
                 }
             } else if index == 0 {
                 mergedConfig = config
@@ -553,7 +556,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         } ?? false
 
         // Config files (support multiple)
-        var filterOptions = [[ConfigFilter]: [String: String]]()
+        var filterOptions = [(filters: [ConfigFilter], options: [String: String])]()
         let configURLs = try readMultipleConfigArgs("config", with: &args, filterOptions: &filterOptions,
                                                     in: directory, logger: logger)
 

@@ -397,7 +397,19 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     }
 
     assert(options.formatOptions != nil)
-    try options.addArguments(args, in: inputURL.path, logger: logger)
+    var baseArgs = [[String: String]]()
+    for args in args {
+        // Sections with a `--filter` only apply to matching files, so store them separately
+        if let filterValue = args["filter"] {
+            let filters = try ConfigFilter.parseList(filterValue, in: inputURL.path)
+            if !filters.isEmpty {
+                options.filterOptions.append((filters, args))
+            }
+        } else {
+            baseArgs.append(args)
+        }
+    }
+    try options.addArguments(baseArgs, in: inputURL.path, logger: logger)
 }
 
 private func parseConfigArguments(in inputURL: URL, options: Options, logger: Logger?) throws -> [[String: String]] {
@@ -419,25 +431,18 @@ private func parseConfigArguments(in inputURL: URL, options: Options, logger: Lo
     let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
     if manager.fileExists(atPath: versionFile.path) {
         // Don't read .swift-version from directories that will be excluded (affects no files)
+        let baseArgs = args.filter { $0["filter"] == nil }
         var tempOptions = options
-        try tempOptions.addArguments(args, in: inputURL.standardizedFileURL.path, logger: logger)
+        try tempOptions.addArguments(baseArgs, in: inputURL.standardizedFileURL.path, logger: logger)
         if !tempOptions.shouldSkipFile(inputURL) {
             let versionString = try String(contentsOf: versionFile, encoding: .utf8)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            if args.contains(where: { $0["swift-version"] != nil }) {
+            if baseArgs.contains(where: { $0["swift-version"] != nil }) {
                 logger?.info("Ignoring swift-version file at \(versionFile.path)")
             } else if Version(rawValue: versionString) != nil {
                 logger?.info("Reading swift-version file at \(versionFile.path) (version \(versionString))")
-
-                if args.isEmpty {
-                    args = [["swift-version": versionString]]
-                } else {
-                    args = args.map {
-                        var args = $0
-                        args["swift-version"] = versionString
-                        return args
-                    }
-                }
+                // Add as a separate section so that it isn't limited to `--filter`ed files
+                args.insert(["swift-version": versionString], at: 0)
             } else {
                 // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
                 // TODO: find a better solution for logging warnings here

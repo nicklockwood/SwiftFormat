@@ -33,7 +33,8 @@ import Foundation
 import RegexBuilder
 
 extension Options {
-    init(_ args: [String: String], filterOptions: [[ConfigFilter]: [String: String]] = [:],
+    init(_ args: [String: String],
+         filterOptions: [(filters: [ConfigFilter], options: [String: String])] = [],
          in directory: String, logger: Logger? = nil) throws
     {
         fileOptions = try fileOptionsFor(args, in: directory, logger: logger)

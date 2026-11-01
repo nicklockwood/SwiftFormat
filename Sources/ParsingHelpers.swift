@@ -5141,7 +5141,9 @@ extension Formatter {
             if isStartOfStatement(at: i, treatingCollectionKeysAsStart: false),
                // Immediately following an `=` operator, if or switch keywords
                // are expressions rather than statements.
-               lastToken(before: i, where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("=") != true
+               lastToken(before: i, where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("=") != true,
+               // The operand of an `unsafe` expression isn't a new statement either.
+               index(of: .nonSpaceOrCommentOrLinebreak, before: i).map({ !isUnsafeExpression(at: $0) }) ?? true
             {
                 pushLocals()
                 wasDeclaration = false

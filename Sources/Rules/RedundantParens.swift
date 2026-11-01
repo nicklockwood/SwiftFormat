@@ -104,6 +104,10 @@ public extension FormatRule {
                 }
                 return // Probably a method invocation
             case .delimiter(","), .endOfScope, .keyword, .identifier("unsafe"):
+                // `unsafe` must be on the same line as its operand, unlike `try` and `await`
+                if prevToken == .identifier("unsafe"), formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
+                    return
+                }
                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
                 guard formatter.index(of: .endOfScope("}"), before: closingIndex) == nil,
                       ![.endOfScope("}"), .endOfScope(">")].contains(prevToken) ||

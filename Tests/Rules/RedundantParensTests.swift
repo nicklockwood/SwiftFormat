@@ -24,6 +24,35 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantParens)
     }
 
+    func testUnsafeExpressionParensRemoved() {
+        let input = """
+        let value = unsafe (pointer.pointee + 1)
+        """
+        let output = """
+        let value = unsafe pointer.pointee + 1
+        """
+        testFormatting(for: input, output, rule: .redundantParens)
+    }
+
+    func testMultilineUnsafeExpressionParensNotRemoved() {
+        // `unsafe` on a line of its own is parsed as an identifier, so this wouldn't compile.
+        let input = """
+        let value = unsafe (
+            pointer.pointee + 1
+        )
+        """
+        testFormatting(for: input, rule: .redundantParens)
+    }
+
+    func testMultilineTryUnsafeExpressionParensNotRemoved() {
+        let input = """
+        return try unsafe ( // comment
+            pointer.load()
+        )
+        """
+        testFormatting(for: input, rule: .redundantParens, exclude: [.redundantReturn])
+    }
+
     // around expressions
 
     func testRedundantParensRemoved() {

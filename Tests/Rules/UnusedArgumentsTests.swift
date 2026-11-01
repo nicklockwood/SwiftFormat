@@ -1649,6 +1649,34 @@ final class UnusedArgumentsTests: XCTestCase {
         testFormatting(for: input, rule: .unusedArguments)
     }
 
+    func testArgumentShadowedByUnsafeExpressionIsUsed() {
+        let input = """
+        func foo(bar: Int, baz: Int, quux: Int) {
+            let bar = unsafe convert(bar)
+            var baz = unsafe baz
+            let quux = try unsafe convert(quux)
+            print(bar, baz, quux)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testArgumentShadowedByUnsafeExpressionOfOtherValueIsUnused() {
+        let input = """
+        func foo(bar: Int, baz: Int) {
+            let bar = unsafe convert(baz)
+            print(bar)
+        }
+        """
+        let output = """
+        func foo(bar _: Int, baz: Int) {
+            let bar = unsafe convert(baz)
+            print(bar)
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
     func testUsedForUnsafeLoopVariable() {
         let input = """
         for unsafe value in unsafe buffer {

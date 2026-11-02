@@ -130,7 +130,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithAdditionalLogic() {
@@ -146,7 +146,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithDifferentParameterNames() {
@@ -161,7 +161,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
     }
 
     func testDontRemoveInitWithDifferentParameterTypes() {
@@ -176,7 +176,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemovePrivateInit() {
@@ -191,7 +191,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testRemoveInitWithComputedProperties() {
@@ -235,7 +235,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
     }
 
     func testRemoveInitWithStaticProperties() {
@@ -258,7 +258,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             static var defaultAge = 0
         }
         """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithPrivateProperties() {
@@ -273,7 +273,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithPartialParameterMatch() {
@@ -290,7 +290,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
     }
 
     func testDontAffectClass() {
@@ -305,7 +305,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontAffectEnum() {
@@ -319,7 +319,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.trailingSpace])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testHandleEmptyStruct() {
@@ -338,7 +338,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testRemoveRedundantInitWithComplexTypes() {
@@ -398,7 +398,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             func validate() {}
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
     }
 
     func testDontRemoveInitWithMethodCallBefore() {
@@ -416,7 +416,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             func setupDefaults() {}
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithPrintStatement() {
@@ -432,7 +432,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithMultipleStatements() {
@@ -449,7 +449,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithGuardStatement() {
@@ -465,7 +465,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .blankLinesAfterGuardStatements, .wrapConditionalBodies])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.blankLinesAfterGuardStatements, .wrapConditionalBodies])
     }
 
     func testDontRemoveInitWithComments() {
@@ -482,7 +482,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithConditionalLogic() {
@@ -501,7 +501,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithDefaultArguments() {
@@ -516,7 +516,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithMultipleDefaultArguments() {
@@ -533,7 +533,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithDifferentExternalLabels() {
@@ -548,7 +548,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithMixedExternalLabels() {
@@ -563,7 +563,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithUnderscoreExternalLabel() {
@@ -578,7 +578,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testRemoveInternalInitFromPublicStruct() {
@@ -599,7 +599,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             var age: Int
         }
         """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemovePublicInitFromPublicStruct() {
@@ -614,7 +614,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemovePackageInitFromPublicStruct() {
@@ -629,7 +629,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWhenMultipleInitsExist() {
@@ -649,7 +649,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
     }
 
     func testDontRemoveInitWhenThreeInitsExist() {
@@ -674,7 +674,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
     }
 
     func testPreserveInitWithConditionalAttributes() {
@@ -725,7 +725,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithFileprivateStoredProperty() {
@@ -742,7 +742,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testRemovePrivateInitWithPrivateStoredProperty() {
@@ -783,7 +783,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWhenPrivatePropertiesWithDefaultValues() {
@@ -797,7 +797,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .propertyTypes])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.propertyTypes])
     }
 
     func testDontRemoveInitWhenPropertyHasDefaultValueButInitTakesBothRequiredAndOptional() {
@@ -812,7 +812,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testRemoveInitWhenPropertyHasDefaultValueAndInitMatchesCompilerGenerated() {
@@ -847,7 +847,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWhenAllPropertiesInitialized() {
@@ -863,7 +863,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWhenPrivatePropertiesWithDefaultsMakesSynthesizedInitPrivate() {
@@ -879,7 +879,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithDocumentationComments() {
@@ -895,7 +895,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.trailingSpace])
     }
 
     func testDontRemoveInitWithMultiLineDocumentationComments() {
@@ -915,7 +915,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveRedundantPublicMemberwiseInitWithProperFormattingOfFirstProperty() {
@@ -933,7 +933,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             public let backgroundColor: UIColor?
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .wrapArguments])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.indent, .wrapArguments])
     }
 
     func testRemoveRedundantMemberwiseInitWithComplexStruct() {
@@ -1236,7 +1236,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
           let message: String
         }
         """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.indent, .blankLinesAtStartOfScope])
     }
 
     func testRemoveInternalInitFromPublicStructWithInternalProperties() {
@@ -1257,7 +1257,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let b: Bool
         }
         """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemovePrivateInitFromInternalStruct() {
@@ -1272,7 +1272,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let b: Bool
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveFileprivateInitFromInternalStructWithInternalProperties() {
@@ -1288,7 +1288,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let b: Bool
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveFileprivateInitFromInternalStructWithPrivateProperties() {
@@ -1304,7 +1304,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private let b: Bool
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveFailableInit() {
@@ -1319,7 +1319,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveImplicitlyUnwrappedFailableInit() {
@@ -1334,7 +1334,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveFailableInitWithValidation() {
@@ -1350,7 +1350,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .wrapConditionalBodies, .blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
     }
 
     func testDontRemoveFailableInitWithSpacing() {
@@ -1365,7 +1365,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     // MARK: - preferSynthesizedInitForInternalTypes option
@@ -1469,7 +1469,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             var body: some View {}
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemovePrivateACLForPublicStruct() {
@@ -1483,7 +1483,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
-        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testDontRemovePrivateACLForPackageStruct() {
@@ -1497,7 +1497,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
-        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testRemovePrivateACLFromMultipleProperties() {
@@ -1593,7 +1593,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
-        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testRemovePrivateACLForPrivateStruct() {
@@ -2197,7 +2197,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "6.4")
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.docComments])
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testViewBuilderInitWithOrganizeDeclarationsPreservesPropertyOrder() {

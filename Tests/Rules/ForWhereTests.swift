@@ -237,8 +237,7 @@ final class ForWhereTests: XCTestCase {
         testFormatting(
             for: input,
             rule: .forWhere,
-            options: .init(forWhere: .never),
-            exclude: [.braces, .indent, .wrapMultilineStatementBraces]
+            options: .init(forWhere: .never)
         )
     }
 

@@ -211,7 +211,7 @@ final class ResidualPrintTests: XCTestCase {
             redraw()
         }
         """
-        testFormatting(for: input, rule: .residualPrint, exclude: [.semicolons])
+        testFormatting(for: input, rule: .residualPrint)
     }
 
     func testPrintArgumentOfAnotherCallNotRemoved() {

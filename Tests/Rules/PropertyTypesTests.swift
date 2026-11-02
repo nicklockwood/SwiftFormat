@@ -668,7 +668,7 @@ final class PropertyTypesTests: XCTestCase {
         """
 
         let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .inferred)
-        testFormatting(for: input, rules: [.propertyTypes, .implicitMemberExpressions], options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rules: [.propertyTypes, .implicitMemberExpressions], options: options, exclude: [.wrapPropertyBodies])
     }
 
     func testPreservesTypeWithSomeKeyword() {
@@ -977,7 +977,7 @@ final class PropertyTypesTests: XCTestCase {
         let dict = [String: Int]()
         """
         let options = FormatOptions(initTypeMinLength: 0, propertyTypes: .inferred)
-        testFormatting(for: input, [output], rules: [.propertyTypes, .implicitMemberExpressions], options: options, exclude: [.spaceInsideBrackets, .spaceAroundOperators])
+        testFormatting(for: input, [output], rules: [.propertyTypes, .implicitMemberExpressions], options: options)
     }
 
     func testRemovesRedundantDictionaryTypeAndInfersEmptyCollectionType() {

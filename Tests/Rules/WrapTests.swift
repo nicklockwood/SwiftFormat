@@ -143,7 +143,7 @@ final class WrapTests: XCTestCase {
         }
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: [.wrapMultilineStatementBraces])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapClosure() {
@@ -260,7 +260,7 @@ final class WrapTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 25)
-        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: [.wrapMultilineStatementBraces])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2() {
@@ -298,7 +298,7 @@ final class WrapTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: [.wrapMultilineStatementBraces])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2WithXcodeIndentation2() {
@@ -320,7 +320,7 @@ final class WrapTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: [.wrapMultilineStatementBraces])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth3() {
@@ -358,7 +358,7 @@ final class WrapTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: [.wrapMultilineStatementBraces])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth4() {
@@ -396,7 +396,7 @@ final class WrapTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: [.wrapMultilineStatementBraces])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapChainedFunctionAfterSubscriptCollection() {
@@ -579,8 +579,7 @@ final class WrapTests: XCTestCase {
         }
         """
         let options = FormatOptions(wrapParameters: .preserve, maxWidth: 80)
-        testFormatting(for: input, output, rule: .wrap, options: options,
-                       exclude: [.indent, .wrapArguments])
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapColorLiteral() {

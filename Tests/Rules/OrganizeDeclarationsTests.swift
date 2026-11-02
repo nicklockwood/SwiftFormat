@@ -312,8 +312,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         testFormatting(
-            for: input, rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapPropertyBodies]
+            for: input, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -373,8 +372,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapPropertyBodies]
+            options: FormatOptions(organizationMode: .type), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -398,8 +396,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         testFormatting(
-            for: input, rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports]
+            for: input, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -695,8 +692,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             options: FormatOptions(
                 visibilityOrder: ["private", "internal", "public"],
                 typeOrder: DeclarationType.allCases.map(\.rawValue)
-            ),
-            exclude: [.blankLinesAtStartOfScope, .privateSwiftUIDynamicProperties]
+            ), exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -1077,8 +1073,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
-            rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .enumNamespaces]
+            rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -2095,7 +2090,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         Foo(foo: 1, bar: 2, baaz: 3, quux: 4)
         """
 
-        testFormatting(for: input, [output], rules: [.organizeDeclarations, .consecutiveBlankLines], exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties])
+        testFormatting(for: input, [output], rules: [.organizeDeclarations, .consecutiveBlankLines], exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     func testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer() {
@@ -2324,7 +2319,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.redundantClosure, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.redundantClosure])
     }
 
     func testFuncWithNestedInitNotTreatedAsLifecycle() {
@@ -2380,8 +2375,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .organizeDeclarations,
-                       exclude: [.blankLinesAtStartOfScope, .blankLinesAroundMark])
+        testFormatting(for: input, output, rule: .organizeDeclarations)
     }
 
     func testOrganizeClassDeclarationsIntoCategoriesWithNoBlankLineAfterMark() {
@@ -2514,7 +2508,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: [.blankLinesAtStartOfScope])
     }
 
     func testOrganizeConditionalPublicFunction() {
@@ -2537,7 +2531,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: [.blankLinesAtStartOfScope])
     }
 
     func testDoesntConflictWithOrganizeDeclarations() {
@@ -2729,8 +2723,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(for: input,
                        rules: [.organizeDeclarations, .blankLinesBetweenScopes],
-                       options: .init(alphabeticallySortedDeclarationPatterns: ["Comment"]),
-                       exclude: [.blankLinesAtEndOfScope])
+                       options: .init(alphabeticallySortedDeclarationPatterns: ["Comment"]))
     }
 
     func testOrganizeDeclarationsSortUsesLocalizedCompare() {
@@ -2807,8 +2800,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(organizeTypes: ["extension"])
-        testFormatting(for: input, output, rule: .organizeDeclarations, options: options,
-                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope])
     }
 
     func testOrganizeDeclarationsContainingNonisolated() {
@@ -2885,7 +2877,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
         let options = FormatOptions(indent: "  ", organizeTypes: ["struct"])
         testFormatting(for: input, output, rule: .organizeDeclarations,
-                       options: options, exclude: [.blankLinesAtStartOfScope, .privateSwiftUIDynamicProperties])
+                       options: options, exclude: [.blankLinesAtStartOfScope])
     }
 
     func testSortSingleSwiftUIPropertyWrapper() {
@@ -2951,8 +2943,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .contentBuilder]
         )
     }
 
@@ -3089,8 +3080,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .contentBuilder]
         )
     }
 
@@ -3206,8 +3196,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
-            rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .consecutiveBlankLines, .trailingSpace, .consecutiveSpaces, .indent]
+            rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .trailingSpace]
         )
     }
 
@@ -3259,8 +3248,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 organizationMode: .visibility,
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
-            ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
+            ), exclude: [.blankLinesAtStartOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3316,8 +3304,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 organizationMode: .visibility,
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
-            ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
+            ), exclude: [.blankLinesAtStartOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3367,8 +3354,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 organizationMode: .visibility,
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
-            ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
+            ), exclude: [.blankLinesAtStartOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3424,8 +3410,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 organizationMode: .visibility,
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
-            ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
+            ), exclude: [.blankLinesAtStartOfScope, .privateSwiftUIDynamicProperties, .contentBuilder]
         )
     }
 
@@ -3907,7 +3892,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(organizeStructThreshold: 0)
-        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtEndOfScope])
     }
 
     func testSortsMultipleLayersOfNestedTypes() {
@@ -4089,7 +4074,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(indent: "  ")
-        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapFunctionBodies])
+        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .wrapFunctionBodies])
     }
 
     func testOrganizesProtocol() {
@@ -4188,8 +4173,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(markStructThreshold: 20),
-            exclude: [.blankLinesAtStartOfScope]
+            options: FormatOptions(markStructThreshold: 20)
         )
     }
 
@@ -4326,8 +4310,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(typeBodyMarks: .preserve),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesAroundMark]
+            options: FormatOptions(typeBodyMarks: .preserve), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -4532,8 +4515,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(organizeTypes: ["protocol"]),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            options: FormatOptions(organizeTypes: ["protocol"])
         )
     }
 
@@ -4571,8 +4553,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input,
             rule: .organizeDeclarations,
-            options: FormatOptions(organizeTypes: ["extension"]),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            options: FormatOptions(organizeTypes: ["extension"])
         )
     }
 
@@ -4649,8 +4630,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
-            rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyTypes]
+            rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .propertyTypes]
         )
     }
 
@@ -4682,8 +4662,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
-            rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyTypes]
+            rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .propertyTypes]
         )
     }
 
@@ -4717,8 +4696,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: options,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            options: options
         )
     }
 
@@ -4758,8 +4736,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(organizationMode: .type, typeBodyMarks: .remove),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            options: FormatOptions(organizationMode: .type, typeBodyMarks: .remove), exclude: [.blankLinesAtEndOfScope]
         )
     }
 
@@ -4801,8 +4778,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            options: FormatOptions(organizationMode: .type), exclude: [.blankLinesAtEndOfScope]
         )
     }
 
@@ -4829,8 +4805,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             """
             testFormatting(
                 for: input, output,
-                rule: .organizeDeclarations,
-                exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantType, .propertyTypes]
+                rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .redundantType]
             )
             if directive == "disable:next" {
                 XCTAssertEqual(try format(output, rules: [.redundantType], options: FormatOptions(propertyTypes: .inferred)).output, output)
@@ -4902,8 +4877,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             """
             testFormatting(
                 for: input, output,
-                rule: .organizeDeclarations,
-                exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+                rule: .organizeDeclarations
             )
         }
     }
@@ -4933,8 +4907,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            options: FormatOptions(markCategories: false, organizationMode: .type, typeBodyMarks: .remove),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            options: FormatOptions(markCategories: false, organizationMode: .type, typeBodyMarks: .remove), exclude: [.blankLinesAtEndOfScope]
         )
     }
 
@@ -4980,8 +4953,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input,
-            rule: .organizeDeclarations,
-            exclude: [.semicolons]
+            rule: .organizeDeclarations
         )
     }
 

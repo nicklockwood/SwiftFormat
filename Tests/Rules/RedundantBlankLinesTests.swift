@@ -476,7 +476,7 @@ final class RedundantBlankLinesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantBlankLines, exclude: [.braces, .elseOnSameLine])
+        testFormatting(for: input, rule: .redundantBlankLines, exclude: [.braces])
     }
 
     func testPreservesBlankLineAfterBodylessAsyncFunction() {
@@ -1663,7 +1663,7 @@ final class RedundantBlankLinesTests: XCTestCase {
             return
         }
         """
-        testFormatting(for: input, rule: .redundantBlankLines, exclude: [.elseOnSameLine])
+        testFormatting(for: input, rule: .redundantBlankLines)
     }
 
     func testPreservesBlankLineBeforePropertyBody() {

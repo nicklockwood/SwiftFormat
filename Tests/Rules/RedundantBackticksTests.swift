@@ -95,7 +95,7 @@ final class RedundantBackticksTests: XCTestCase {
         let output = """
         func foo(get value: Int) { print(value) }
         """
-        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.wrapFunctionBodies])
     }
 
     func testRemoveBackticksAroundTypeAtRootLevel() {
@@ -253,7 +253,7 @@ final class RedundantBackticksTests: XCTestCase {
         let foo: Foo = .`init`
         """
         let options = FormatOptions(swiftVersion: "5")
-        testFormatting(for: input, rule: .redundantBackticks, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .redundantBackticks, options: options)
     }
 
     func testNoRemoveBackticksAroundAnyProperty() {
@@ -346,7 +346,7 @@ final class RedundantBackticksTests: XCTestCase {
         let output = """
         let x = NASA::default
         """
-        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.propertyTypes, .spaceAroundOperators])
+        testFormatting(for: input, output, rule: .redundantBackticks)
     }
 
     func testRemoveBackticksAfterModuleSelectorForKeyword() {
@@ -356,28 +356,28 @@ final class RedundantBackticksTests: XCTestCase {
         let output = """
         let x = NASA::let
         """
-        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.propertyTypes, .spaceAroundOperators])
+        testFormatting(for: input, output, rule: .redundantBackticks)
     }
 
     func testNoRemoveBackticksAfterModuleSelectorForInit() {
         let input = """
         let x = NASA::`init`
         """
-        testFormatting(for: input, rule: .redundantBackticks, exclude: [.propertyTypes, .spaceAroundOperators])
+        testFormatting(for: input, rule: .redundantBackticks)
     }
 
     func testNoRemoveBackticksAfterModuleSelectorForDeinit() {
         let input = """
         let x = NASA::`deinit`
         """
-        testFormatting(for: input, rule: .redundantBackticks, exclude: [.propertyTypes, .spaceAroundOperators])
+        testFormatting(for: input, rule: .redundantBackticks)
     }
 
     func testNoRemoveBackticksAfterModuleSelectorForSubscript() {
         let input = """
         let x = NASA::`subscript`
         """
-        testFormatting(for: input, rule: .redundantBackticks, exclude: [.propertyTypes, .spaceAroundOperators])
+        testFormatting(for: input, rule: .redundantBackticks)
     }
 
     func testNoRemoveBackticksAroundRawIdentifier() {

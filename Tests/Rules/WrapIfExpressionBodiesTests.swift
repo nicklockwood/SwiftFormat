@@ -132,8 +132,7 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options,
-                       exclude: [.wrapMultilineConditionalAssignment])
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options)
     }
 
     func testIfExpressionAlreadyWrappedUnchanged() {
@@ -191,8 +190,7 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .wrapIfExpressionBodies, options: options,
-                       exclude: [.wrapIfStatementBodies, .elseOnSameLine])
+        testFormatting(for: input, rule: .wrapIfExpressionBodies, options: options, exclude: [.wrapIfStatementBodies])
     }
 
     func testDoesNotWrapIfWithoutElseBranch() {

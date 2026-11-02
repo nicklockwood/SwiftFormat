@@ -48,7 +48,7 @@ final class URLMacroTests: XCTestCase {
         }
         """
         let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
-        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, output, rule: .urlMacro, options: options)
     }
 
     func testURLStringForceUnwrapInAssignment() {
@@ -63,7 +63,7 @@ final class URLMacroTests: XCTestCase {
         baseURL = #URL("https://api.service.com")
         """
         let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
-        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, output, rule: .urlMacro, options: options)
     }
 
     func testURLStringForceUnwrapWithComplexString() {
@@ -120,7 +120,7 @@ final class URLMacroTests: XCTestCase {
         let url = URL(string: "https://example.com") ?? URL(fileURLWithPath: "/")
         """
         let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
-        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .urlMacro, options: options)
     }
 
     func testURLFileURLWithPathNotConverted() {
@@ -233,7 +233,7 @@ final class URLMacroTests: XCTestCase {
         let url = #URL("https://example.com")
         """
         let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
-        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, output, rule: .urlMacro, options: options)
     }
 
     func testTryRequireURLWithComplexString() {
@@ -246,7 +246,7 @@ final class URLMacroTests: XCTestCase {
         let url = #URL("https://a0.muscache.com/profile.jpg?quality=original")
         """
         let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
-        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, output, rule: .urlMacro, options: options)
     }
 
     func testTryRequireURLWithInterpolationNotConverted() {
@@ -254,7 +254,7 @@ final class URLMacroTests: XCTestCase {
         let url = try #require(URL(string: "https://\\(domain)/path"))
         """
         let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
-        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .urlMacro, options: options)
     }
 
     func testStringConcatenationNotConverted() {

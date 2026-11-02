@@ -300,7 +300,7 @@ final class TrailingClosuresTests: XCTestCase {
         let output = """
         foo.map { $0.path }.joined()
         """
-        testFormatting(for: input, output, rule: .trailingClosures, exclude: [.preferLazyMap])
+        testFormatting(for: input, output, rule: .trailingClosures)
     }
 
     func testSpaceNotInsertedAfterClosureBeforeUnwrap() {
@@ -490,7 +490,7 @@ final class TrailingClosuresTests: XCTestCase {
         })
         """
 
-        testFormatting(for: input, rule: .trailingClosures, exclude: [.redundantParens])
+        testFormatting(for: input, rule: .trailingClosures)
     }
 
     func testClosureReturnTupleNotConfusedForFunctionCall() {
@@ -503,7 +503,7 @@ final class TrailingClosuresTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .trailingClosures, exclude: [.redundantParens])
+        testFormatting(for: input, rule: .trailingClosures)
     }
 
     // multiple closures

@@ -17,7 +17,7 @@ final class RedundantStaticSelfTests: XCTestCase {
         let output = """
         enum E { static var x: Int { y } }
         """
-        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapPropertyBodies])
     }
 
     func testRedundantStaticSelfInStaticMethod() {
@@ -27,7 +27,7 @@ final class RedundantStaticSelfTests: XCTestCase {
         let output = """
         enum E { static func foo() { bar() } }
         """
-        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapFunctionBodies])
     }
 
     func testRedundantStaticSelfOnNextLine() {

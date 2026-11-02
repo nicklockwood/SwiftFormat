@@ -25,7 +25,7 @@ final class BracesTests: XCTestCase {
             unsafe foo()
         }()
         """
-        testFormatting(for: input, rule: .braces, options: FormatOptions(allmanBraces: true), exclude: [.redundantClosure])
+        testFormatting(for: input, rule: .braces, options: FormatOptions(allmanBraces: true))
     }
 
     func testAllmanWrapsPropertyNamedUnsafe() {

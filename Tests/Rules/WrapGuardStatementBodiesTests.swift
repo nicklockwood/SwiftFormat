@@ -34,8 +34,7 @@ final class WrapGuardStatementBodiesTests: XCTestCase {
         let input = """
         guard let foo = bar else {}
         """
-        testFormatting(for: input, rule: .wrapGuardStatementBodies,
-                       exclude: [.emptyBraces])
+        testFormatting(for: input, rule: .wrapGuardStatementBodies)
     }
 
     func testGuardReturnWithValueWraps() {
@@ -153,7 +152,7 @@ final class WrapGuardStatementBodiesTests: XCTestCase {
             return true
         }
         """
-        testFormatting(for: input, output, rule: .wrapGuardStatementBodies, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .wrapGuardStatementBodies)
     }
 
     func testGuardElseBraceStartingOnDifferentLine() {

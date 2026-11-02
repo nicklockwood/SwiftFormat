@@ -61,8 +61,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
             print("function body")
         }
         """
-        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
-                       exclude: [.wrapArguments, .unusedArguments])
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces, exclude: [.unusedArguments])
     }
 
     func testMultilineForLoopBraceOnNextLine() {
@@ -125,8 +124,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
             print("statement body")
         }
         """
-        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
-                       exclude: [.braces, .elseOnSameLine])
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces, exclude: [.elseOnSameLine])
     }
 
     func testInnerMultilineIfBraceOnNextLine() {
@@ -159,7 +157,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
             print("statement body")
         }
         """
-        testFormatting(for: input, rule: .wrapMultilineStatementBraces, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
     func testSingleLineIfBraceOnSameLine() {
@@ -263,7 +261,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
-                       options: options, exclude: [.indent])
+                       options: options)
     }
 
     func testMultilineBraceAppliedToTrailingClosure2_wrapBeforeFirst() {
@@ -321,7 +319,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
         testFormatting(for: input, [output], rules: [
             .wrapMultilineStatementBraces,
             .indent,
-        ], options: options, exclude: [.propertyTypes, .wrapPropertyBodies])
+        ], options: options, exclude: [.propertyTypes])
     }
 
     func testMultilineBraceAppliedToTrailingClosure_wrapAfterFirst() {
@@ -345,7 +343,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
-                       options: options, exclude: [.indent])
+                       options: options)
     }
 
     func testMultilineBraceAppliedToGetterBody_wrapAfterFirst() {
@@ -364,7 +362,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
         testFormatting(for: input, [], rules: [
             .wrapMultilineStatementBraces,
             .wrapArguments,
-        ], options: options, exclude: [.propertyTypes, .wrapPropertyBodies])
+        ], options: options, exclude: [.propertyTypes])
     }
 
     func testMultilineBraceAppliedToSubscriptBody() {
@@ -382,7 +380,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, rule: .wrapMultilineStatementBraces,
-                       options: options, exclude: [.trailingClosures])
+                       options: options)
     }
 
     func testWrapsMultilineStatementConsistently() {
@@ -708,7 +706,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, rules: [.wrapMultilineStatementBraces, .wrap],
-                       options: options, exclude: [.indent, .redundantClosure, .wrapConditionalBodies])
+                       options: options, exclude: [.redundantClosure, .wrapConditionalBodies])
     }
 
     func testWrapMultilineStatementBraceAfterWhereClauseWithTuple() {

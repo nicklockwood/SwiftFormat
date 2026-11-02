@@ -232,7 +232,7 @@ final class UnusedArgumentsTests: XCTestCase {
             return parser
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable, .propertyTypes])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable])
     }
 
     func testShadowedClosureArgument2() {
@@ -1072,8 +1072,7 @@ final class UnusedArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .unusedArguments,
-                       exclude: [.braces, .wrapArguments])
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapArguments])
     }
 
     func testContentBuilderAnnotationDoesntBreakUnusedArgDetection() {
@@ -1101,8 +1100,7 @@ final class UnusedArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .unusedArguments,
-                       exclude: [.braces, .wrapArguments])
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapArguments])
     }
 
     func testArgumentUsedInDictionaryLiteral() {
@@ -2130,7 +2128,7 @@ final class UnusedArgumentsTests: XCTestCase {
             print("updated")
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.noExplicitOwnership])
+        testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testArgumentUsedAsLifetimeAttributeTargetNotRemoved() {
@@ -2138,7 +2136,7 @@ final class UnusedArgumentsTests: XCTestCase {
         @_lifetime(dependent: borrow source)
         func overrideLifetime<T: ~Escapable>(_ dependent: inout T, borrowing source: borrowing some ~Copyable) {}
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.noExplicitOwnership])
+        testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testArgumentUsedInLifetimeAttributeAfterOtherAttributesNotRemoved() {

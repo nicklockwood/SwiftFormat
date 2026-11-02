@@ -103,7 +103,6 @@ final class BlankLinesBetweenImportsTests: XCTestCase {
 
         // swiftformat:enable indent
         """
-        testFormatting(for: input, output, rule: .blankLinesBetweenImports,
-                       exclude: [.indent])
+        testFormatting(for: input, output, rule: .blankLinesBetweenImports)
     }
 }

@@ -106,7 +106,7 @@ final class WrapSingleLineCommentsTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .wrapSingleLineComments,
-                       options: FormatOptions(maxWidth: 14), exclude: [.docComments])
+                       options: FormatOptions(maxWidth: 14))
     }
 
     func testWrapSingleLineCommentAfterCode() {
@@ -133,7 +133,7 @@ final class WrapSingleLineCommentsTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .wrapSingleLineComments,
-                       options: FormatOptions(maxWidth: 100), exclude: [.docComments])
+                       options: FormatOptions(maxWidth: 100))
     }
 
     func testWrapDocCommentWithLongURL2() {

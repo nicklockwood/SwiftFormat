@@ -48,7 +48,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options, exclude: [.elseOnSameLine])
+        testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 
     func testRemovesMultipleOptionalBindings() {

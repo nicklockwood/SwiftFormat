@@ -70,7 +70,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapOfLiteralInAssignment() {
@@ -98,7 +98,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """#
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .preferNonfailableStringConversions])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.preferNonfailableStringConversions])
     }
 
     func testForceUnwrapInKeyPathNotConverted() {
@@ -144,7 +144,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             let sum = try #require([1, 2, 3].first) + #require(other)
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .preferNonfailableStringConversions])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.preferNonfailableStringConversions])
     }
 
     func testSimpleForceCast() {
@@ -188,7 +188,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapInAssignment() {
@@ -212,7 +212,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapInFunctionCallArguments() {
@@ -268,7 +268,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapInIfStatementWithMultipleOperators() {
@@ -294,7 +294,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
     }
 
     func testForceUnwrapInGuardStatement() {
@@ -326,7 +326,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapInArraySubscript() {
@@ -370,7 +370,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testMultipleForceUnwrapsInExpression() {
@@ -392,7 +392,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapOnOperatorRHS() {
@@ -444,7 +444,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             let commented = try 1 + /* value */ #require(value)
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapWithPropertyAccess() {
@@ -466,7 +466,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testNonTestFunctionIsNotModified() {
@@ -479,7 +479,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .testSuiteAccessControl, .validateTestCases])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.testSuiteAccessControl, .validateTestCases])
     }
 
     func testForceUnwrapInClosureIsNotModified() {
@@ -496,7 +496,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .testSuiteAccessControl, .validateTestCases])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.testSuiteAccessControl, .validateTestCases])
     }
 
     func testForceUnwrapInStringInterpolationIsNotModified() {
@@ -511,7 +511,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapInNestedFunctionIsNotModified() {
@@ -526,7 +526,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, rule: .noForceUnwrapInTests)
     }
 
     func testAlreadyThrowingFunction() {
@@ -548,7 +548,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testAsyncThrowingFunction() {
@@ -572,7 +572,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testComplexExpression() {
@@ -626,7 +626,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testImplicitlyUnwrappedOptionalTypesAreNotModified() {
@@ -652,7 +652,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceCastExpressions() {
@@ -694,7 +694,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceTryExpressions() {
@@ -718,7 +718,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noForceTryInTests])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.noForceTryInTests])
     }
 
     func testForceUnwrapInAssignmentLHS() {
@@ -803,7 +803,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .testSuiteAccessControl])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.testSuiteAccessControl])
     }
 
     func testDisableRule() {
@@ -986,7 +986,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             #expect(try #require(baaz) + 1 == 2)
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapOnBothSidesOfOperator() {
@@ -1100,7 +1100,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 
     func testForceUnwrapOnRightOfOperatorInUnsupportedExpressionUnchanged() {

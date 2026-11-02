@@ -27,7 +27,9 @@ public extension FormatRule {
                 return
             }
 
-            if formatter.currentScope(at: notIndex) == .startOfScope("#if") {
+            if formatter.currentScope(at: notIndex) == .startOfScope("#if") ||
+                formatter.isInConditionalCompilationCondition(at: notIndex)
+            {
                 return
             }
 
@@ -79,6 +81,19 @@ public extension FormatRule {
 // MARK: - Helpers
 
 extension Formatter {
+    /// Whether the token at `index` is inside parentheses in the condition of a
+    /// `#if` or `#elseif`, where the compiler doesn't accept `== false`.
+    func isInConditionalCompilationCondition(at index: Int) -> Bool {
+        var outermostIndex = index
+        while let scopeIndex = startOfScope(at: outermostIndex),
+              tokens[scopeIndex] == .startOfScope("(")
+        {
+            outermostIndex = scopeIndex
+        }
+        let lineStart = startOfLine(at: outermostIndex, excludingIndent: true)
+        return [.startOfScope("#if"), .keyword("#elseif")].contains(tokens[lineStart])
+    }
+
     static let comparisonOperators: Set<String> = [
         "==", "!=", "===", "!==", "~=", "<", ">", "<=", ">=",
     ]

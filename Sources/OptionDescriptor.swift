@@ -1414,6 +1414,12 @@ struct _Descriptors {
         help: "Comma-delimited list of typos to ignore",
         keyPath: \.ignoredTypos
     )
+    let preferUSSpelling = OptionDescriptor(
+        argumentName: "prefer-us-spelling",
+        displayName: "Prefer US Spelling",
+        help: "Prefer US spellings:",
+        keyPath: \.preferUSSpelling
+    )
     let indentBlankLines = OptionDescriptor(
         argumentName: "indent-blank-lines",
         displayName: "Indent Blank Lines",

@@ -10,6 +10,54 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantClosureTests: XCTestCase {
+    func testKeepsUnsafeDiscardableResultClosure() {
+        let input = """
+        let value: Void = unsafe {
+            unsafe foo()
+        }()
+        """
+        testFormatting(for: input, rule: .redundantClosure)
+    }
+
+    func testKeepsUnsafeDiscardableResultClosureWithOtherEffects() {
+        let input = """
+        let value: Void = try await unsafe {
+            try await unsafe foo()
+        }()
+        """
+        testFormatting(for: input, rule: .redundantClosure)
+    }
+
+    func testRemovesUnsafeClosureWithoutDuplicateEffect() {
+        let input = """
+        let value = unsafe {
+            unsafe foo()
+        }()
+        """
+        let output = """
+        let value = unsafe foo()
+        """
+        testFormatting(for: input, output, rule: .redundantClosure)
+    }
+
+    func testPreservesCommentAfterUnsafe() {
+        let input = """
+        let value = unsafe /* keep */ {
+            unsafe foo()
+        }()
+        """
+        testFormatting(for: input, rule: .redundantClosure)
+    }
+
+    func testPreservesFunctionNamedUnsafeWithTrailingClosure() {
+        let input = """
+        let value = unsafe {
+            foo()
+        }
+        """
+        testFormatting(for: input, rule: .redundantClosure)
+    }
+
     func testClosureAroundConditionalAssignmentNotRedundantForExplicitReturn() {
         let input = """
         let myEnum = MyEnum.a

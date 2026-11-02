@@ -80,15 +80,14 @@ public extension FormatRule {
                     }
                 }
 
-                // If closure is preceded by try and/or await then remove those too
-                if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                    $0 == .keyword("await")
-                }) {
-                    startIndex = prevIndex
-                }
-                if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                    $0 == .keyword("try")
-                }) {
+                // Include effects on the closure call when checking its context and removing it.
+                while let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
+                      [.keyword("try"), .keyword("await")].contains(formatter.tokens[prevIndex])
+                      || formatter.isUnsafeExpression(at: prevIndex)
+                {
+                    guard !formatter.tokens[prevIndex ..< startIndex].contains(where: \.isComment) else {
+                        return
+                    }
                     startIndex = prevIndex
                 }
 

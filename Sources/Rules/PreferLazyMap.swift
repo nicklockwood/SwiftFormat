@@ -47,8 +47,9 @@ public extension FormatRule {
             // closure eager `map` takes — into "requires explicit use of 'self'", so the rewrite
             // would not compile. A bare name can't be resolved to a member of `self` from the tokens
             // alone, so unless implicit capture is permitted here, bail on any of them.
-            guard formatter.implicitSelfCaptureIsPermittedInEscapingClosure(at: openBraceIndex)
-                || formatter.closureBodyOnlyReferencesItsArguments(atStartOfScope: openBraceIndex)
+            guard formatter.closureBodyOnlyReferencesItsArguments(atStartOfScope: openBraceIndex)
+                || (formatter.implicitSelfCaptureIsPermittedInEscapingClosure(at: openBraceIndex)
+                    && !formatter.closureCapturesNonEscapingValue(atStartOfScope: openBraceIndex))
             else { return }
 
             // The mapped sequence must be consumed directly by one of the operations that walks it
@@ -122,6 +123,52 @@ extension Formatter {
         }
         // Not inside any type, so there is no `self`.
         return true
+    }
+
+    /// Whether the closure starting at `startOfScopeIndex` refers to something an escaping closure
+    /// can't capture: `self` in a `mutating` function or `init`, where `self` is `inout`, or an `inout`
+    /// or non-escaping closure parameter of an enclosing function.
+    ///
+    /// A bare name may be a member of `self`, so any bare name in a `mutating` function or `init`
+    /// counts. Callers only need this once the body refers to more than its own arguments.
+    func closureCapturesNonEscapingValue(atStartOfScope startOfScopeIndex: Int) -> Bool {
+        assert(tokens[startOfScopeIndex] == .startOfScope("{"))
+        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return true }
+
+        var nonEscapingNames = Set<String>()
+        var scopeIndex = startOfScopeIndex
+        while let startIndex = startOfScope(at: scopeIndex) {
+            scopeIndex = startIndex
+            guard let keywordIndex = indexOfLastSignificantKeyword(at: startIndex, excluding: ["where"]),
+                  tokens[keywordIndex].isFunctionDeclarationKeyword,
+                  let function = parseFunctionDeclaration(keywordIndex: keywordIndex),
+                  function.bodyRange?.lowerBound == startIndex
+            else { continue }
+
+            if tokens[keywordIndex] == .keyword("init")
+                || modifiersForDeclaration(at: keywordIndex, contains: "mutating")
+            {
+                return true
+            }
+
+            for argument in function.arguments {
+                let isInout = argument.type.tokens.contains(.keyword("inout"))
+                let isNonEscapingClosure = argument.type.isClosure
+                    && !argument.attributes.contains("@escaping")
+                    && !argument.type.tokens.contains(.keyword("@escaping"))
+                if isInout || isNonEscapingClosure, let name = argument.internalLabel {
+                    nonEscapingNames.insert(name)
+                }
+            }
+        }
+
+        return (startOfScopeIndex + 1 ..< endOfScopeIndex).contains { index in
+            guard case let .identifier(name) = tokens[index], nonEscapingNames.contains(name) else {
+                return false
+            }
+            return last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") != true
+                && !isLabel(at: index)
+        }
     }
 
     /// Whether the body of the closure starting at `startOfScopeIndex` refers to nothing but its own

@@ -10,6 +10,39 @@ import XCTest
 @testable import SwiftFormat
 
 final class BracesTests: XCTestCase {
+    func testAllmanPreservesUnsafeClosure() {
+        let input = """
+        let value = unsafe {
+            unsafe foo()
+        }()
+        """
+        testFormatting(for: input, rule: .braces, options: FormatOptions(allmanBraces: true), exclude: [.redundantClosure])
+    }
+
+    func testAllmanPreservesUnsafeClosureAfterComment() {
+        let input = """
+        let value = unsafe /* keep */ {
+            unsafe foo()
+        }()
+        """
+        testFormatting(for: input, rule: .braces, options: FormatOptions(allmanBraces: true), exclude: [.redundantClosure])
+    }
+
+    func testAllmanWrapsPropertyNamedUnsafe() {
+        let input = """
+        var unsafe: Int {
+            1
+        }
+        """
+        let output = """
+        var unsafe: Int
+        {
+            1
+        }
+        """
+        testFormatting(for: input, output, rule: .braces, options: FormatOptions(allmanBraces: true))
+    }
+
     func testAllmanBracesAreConverted() {
         let input = """
         func foo()

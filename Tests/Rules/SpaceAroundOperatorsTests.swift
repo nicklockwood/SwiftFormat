@@ -524,8 +524,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         let output = """
         a/* */ + /* */b
         """
-        testFormatting(for: input, output, rule: .spaceAroundOperators,
-                       exclude: [.spaceAroundComments])
+        testFormatting(for: input, output, rule: .spaceAroundOperators)
     }
 
     func testSpaceAroundCommentInPrefixExpression() {
@@ -646,7 +645,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         let input = """
         (!=)
         """
-        testFormatting(for: input, rule: .spaceAroundOperators, exclude: [.redundantParens])
+        testFormatting(for: input, rule: .spaceAroundOperators)
     }
 
     func testSpaceAroundPlusBeforeHash() {

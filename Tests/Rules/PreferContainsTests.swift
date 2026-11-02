@@ -668,7 +668,7 @@ final class PreferContainsTests: XCTestCase {
         // Exclude `spaceAroundComments`, which would otherwise reformat the comment
         // spacing; the point here is that `preferContains` leaves the
         // commented call untouched.
-        testFormatting(for: input, rule: .preferContains, exclude: [.spaceAroundComments])
+        testFormatting(for: input, rule: .preferContains)
     }
 
     func testConvertTrailingClosureReceiverEqualNilNegatedRange() {
@@ -683,7 +683,7 @@ final class PreferContainsTests: XCTestCase {
         let missing = !items.map { $0.name }.joined().contains("x")
         """
 
-        testFormatting(for: input, output, rule: .preferContains, exclude: [.preferLazyMap])
+        testFormatting(for: input, output, rule: .preferContains)
     }
 
     func testRangeNegationInsertedAtOwnStatementNotPriorStatementEndingInScope() {

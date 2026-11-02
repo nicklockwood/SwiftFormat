@@ -335,6 +335,6 @@ final class WrapMultilineFunctionChainsTests: XCTestCase {
         (invoke() as Value).method()
         """
 
-        testFormatting(for: input, [], rules: [.wrapMultilineFunctionChains, .indent], exclude: [.hoistTry])
+        testFormatting(for: input, [], rules: [.wrapMultilineFunctionChains, .indent])
     }
 }

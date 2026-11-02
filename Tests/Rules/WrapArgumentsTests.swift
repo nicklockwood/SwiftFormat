@@ -997,8 +997,7 @@ final class WrapArgumentsTests: XCTestCase {
         ]
         """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 100)
-        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas], options: options,
-                       exclude: [.wrap])
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas], options: options)
     }
 
     func testWrapDictionaryWithSingleElementIfOverMaxWidth() {
@@ -1020,8 +1019,7 @@ final class WrapArgumentsTests: XCTestCase {
         if let image = #imageLiteral(resourceName: \"abc.png\") {}
         """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, rule: .wrapArguments, options: options,
-                       exclude: [.wrap])
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapColorLiteral() {
@@ -1029,8 +1027,7 @@ final class WrapArgumentsTests: XCTestCase {
         if let color = #colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1) {}
         """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, rule: .wrapArguments, options: options,
-                       exclude: [.wrap])
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapArgumentsNoIndentBlankLines() {
@@ -1042,8 +1039,7 @@ final class WrapArgumentsTests: XCTestCase {
         ]
         """
         let options = FormatOptions(wrapCollections: .beforeFirst)
-        testFormatting(for: input, rule: .wrapArguments, options: options,
-                       exclude: [.wrap, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     // MARK: closingParenPosition = true
@@ -1263,8 +1259,7 @@ final class WrapArgumentsTests: XCTestCase {
             quux: Bool)
         """
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: .wrapArguments, options: options,
-                       exclude: [.unusedArguments, .wrap])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     // MARK: beforeFirst
@@ -2588,8 +2583,7 @@ final class WrapArgumentsTests: XCTestCase {
 
         let options = FormatOptions(closingParenPosition: .sameLine, wrapEffects: .never)
         testFormatting(
-            for: input, output, rule: .wrapArguments, options: options,
-            exclude: [.indent]
+            for: input, output, rule: .wrapArguments, options: options
         )
     }
 
@@ -2868,8 +2862,7 @@ final class WrapArgumentsTests: XCTestCase {
         """
         testFormatting(
             for: input, rules: [.wrapArguments, .indent],
-            options: FormatOptions(closingParenPosition: .sameLine, wrapConditions: .beforeFirst),
-            exclude: [.propertyTypes, .preferContains]
+            options: FormatOptions(closingParenPosition: .sameLine, wrapConditions: .beforeFirst), exclude: [.preferContains]
         )
     }
 

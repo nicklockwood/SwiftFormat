@@ -189,7 +189,7 @@ final class HoistTryTests: XCTestCase {
         let output = """
         try array.append(contentsOf: await asyncFunction(param1: param1))
         """
-        testFormatting(for: input, output, rule: .hoistTry, exclude: [.hoistAwait])
+        testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testNoHoistTryInsideXCTAssert() {
@@ -286,8 +286,7 @@ final class HoistTryTests: XCTestCase {
         let output = """
         return try .enumCase(await service.greet())
         """
-        testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: [.hoistAwait])
+        testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistDeeplyNestedTrys() {
@@ -337,8 +336,7 @@ final class HoistTryTests: XCTestCase {
         let output = """
         let variable = try String(await asyncFunction())
         """
-        testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: [.hoistAwait])
+        testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryWithAssignment() {
@@ -348,8 +346,7 @@ final class HoistTryTests: XCTestCase {
         let output = """
         let variable = try (await asyncFunction())
         """
-        testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: [.hoistAwait])
+        testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryOnlyOne() {

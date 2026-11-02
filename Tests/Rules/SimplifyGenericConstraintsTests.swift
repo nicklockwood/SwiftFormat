@@ -430,7 +430,7 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
             func bar<T: Codable>(_ value: T) async throws -> T
         }
         """
-        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
     }
 
     func testMultilineConstraintWithQualifiedTypeName() {
@@ -465,7 +465,7 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         {
         }
         """
-        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent, .emptyBraces, .braces])
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.emptyBraces, .braces])
     }
 
     func testPreserveProtocolMethodWithWhereClauseButNoGenericParameters() {

@@ -166,8 +166,7 @@ final class RepeatedGuardTests: XCTestCase {
         """
         testFormatting(
             for: input,
-            rule: .repeatedGuard,
-            exclude: [.blankLinesAfterGuardStatements, .blankLinesBetweenScopes]
+            rule: .repeatedGuard, exclude: [.blankLinesAfterGuardStatements]
         )
     }
 

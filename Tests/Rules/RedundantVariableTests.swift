@@ -24,7 +24,7 @@ final class RedundantVariableTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable)
     }
 
     func testRemovesRedundantVariableWithIfExpression() {
@@ -99,7 +99,7 @@ final class RedundantVariableTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantVariable, .redundantInit], exclude: [.redundantReturn])
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantVariable, .redundantInit])
     }
 
     func testRemovesRedundantVariableWithComments() {
@@ -120,7 +120,7 @@ final class RedundantVariableTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable)
     }
 
     func testRemovesRedundantVariableFollowingOtherVariable() {
@@ -167,7 +167,7 @@ final class RedundantVariableTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable)
     }
 
     func testPreservesVariableWithExplicitTypeDifferentFromComputedPropertyType() {
@@ -195,7 +195,7 @@ final class RedundantVariableTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable)
     }
 
     func testPreservesVariableWhereReturnIsNotRedundant() {

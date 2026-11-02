@@ -45,7 +45,7 @@ final class NoExplicitOwnershipTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .noExplicitOwnership, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .noExplicitOwnership)
     }
 
     func testRemovesOwnershipKeywordsFromType() {

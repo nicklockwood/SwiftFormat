@@ -52,7 +52,7 @@ final class SinglePropertyPerLineTests: XCTestCase {
         @objc var f = true
         @objc var g: Bool
         """
-        testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.propertyTypes])
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
 
     func testSeparatePrivateStaticDeclarations() {
@@ -774,7 +774,7 @@ final class SinglePropertyPerLineTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet, .wrapSwitchCases])
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet])
     }
 
     func testSwitchCaseWithMixedPatterns() {
@@ -794,7 +794,7 @@ final class SinglePropertyPerLineTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet])
+        testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testEnumWithProtocolConformanceListFollowingProperty() {

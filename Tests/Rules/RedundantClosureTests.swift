@@ -1036,8 +1036,7 @@ final class RedundantClosureTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .redundantClosure, options: options,
-                       exclude: [.redundantReturn, .blankLinesBetweenScopes, .propertyTypes])
+        testFormatting(for: input, output, rule: .redundantClosure, options: options, exclude: [.blankLinesBetweenScopes, .propertyTypes])
     }
 
     func testRedundantClosureWithSwitchExpressionDoesntBreakBuildWithRedundantReturnRuleDisabled() {

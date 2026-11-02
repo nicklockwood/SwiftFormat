@@ -231,7 +231,7 @@ final class SortDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .sortDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .sortDeclarations)
     }
 
     func testSortClassWithMixedDeclarationTypes() {

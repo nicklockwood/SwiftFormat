@@ -91,7 +91,7 @@ final class TrailingSpaceTests: XCTestCase {
             2,
         ]
         """
-        testFormatting(for: input, output, rule: .trailingSpace, exclude: [.redundantSelf])
+        testFormatting(for: input, output, rule: .trailingSpace)
     }
 
     func testMultilineStringWithTrailingSpaces() {

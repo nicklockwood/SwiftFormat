@@ -28,7 +28,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testXCTestDoesNotAddPrefixToReferencedMethods() {
@@ -47,7 +47,7 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // No change expected - referenced methods don't get test prefix
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testXCTestPreservesOverrideMethods() {
@@ -69,7 +69,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testXCTestPreservesObjcMethods() {
@@ -87,7 +87,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testXCTestPreservesOpenTestClass() {
@@ -101,7 +101,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testXCTestPreservesStaticProperties() {
@@ -117,7 +117,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testXCTestPreservesStaticFunctions() {
@@ -139,7 +139,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.redundantPublic])
     }
 
     // MARK: Swift Testing
@@ -165,7 +165,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testSwiftTestingPreservesOpenTestClass() {
@@ -179,7 +179,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingPreservesStaticProperties() {
@@ -195,7 +195,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingPreservesStaticFunctions() {
@@ -217,7 +217,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.redundantPublic])
     }
 
     func testSwiftTestingPreservesObjcMethods() {
@@ -235,7 +235,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     // MARK: Edge Cases
@@ -254,7 +254,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     // testAddsXCTestCaseConformanceToClassWithTestSuffix removed - XCTestCase conformance feature removed
@@ -274,7 +274,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testDoesNotValidateTestsWithOtherConformances() {
@@ -296,7 +296,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.redundantPublic])
     }
 
     func testDoesNotAddXCTestCaseWhenBaseClassExists() {
@@ -310,7 +310,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testDoesNotAddXCTestCaseToStructs() {
@@ -324,7 +324,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testXCTestCaseSubclass() {
@@ -348,7 +348,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testSwiftTestingOnlyAppliesToTypesWithTestSuffixes() {
@@ -363,7 +363,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingStructWithTestsSuffix() {
@@ -387,7 +387,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testSwiftTestingStructWithTestCaseSuffix() {
@@ -411,7 +411,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testSwiftTestingStructWithSuiteSuffix() {
@@ -435,7 +435,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testDoesNotApplyToNonTestClasses() {
@@ -451,7 +451,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testDoesNotApplyToHelperTypesWithTestInName() {
@@ -522,7 +522,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testDoesNotApplyWhenBothTestingFrameworksAreImported() {
@@ -541,7 +541,7 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // Should not make any changes when both frameworks are imported
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.redundantPublic])
     }
 
     func testDoesNotApplyToBaseTestClasses() {
@@ -562,7 +562,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testDoesNotApplyToSwiftTestingBaseClasses() {
@@ -583,7 +583,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testDoesNotApplyToTestClassWithBaseInDocComment() {
@@ -605,7 +605,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testDoesNotApplyToTestClassWithSubclassInDocComment() {
@@ -628,7 +628,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testDoesNotApplyToSwiftTestingClassWithBaseInDocComment() {
@@ -650,7 +650,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantPublic])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.redundantPublic])
     }
 
     func testXCTestPreservesDisabledTestMethods() {
@@ -686,7 +686,7 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // No changes expected - disabled test methods don't get test prefix
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingPreservesDisabledTestMethods() {
@@ -751,7 +751,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testSwiftTestingPreservesParameterizedTests() {
@@ -774,7 +774,7 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // Should not modify parameterized tests - they already have @Test
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantThrows])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.redundantThrows])
     }
 
     func testXCTestPreservesCapitalizedDisabledTestMethods() {
@@ -802,7 +802,7 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // No changes expected - disabled test methods don't get test prefix
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingPreservesCapitalizedDisabledTestMethods() {
@@ -851,7 +851,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testSwiftTestingAddsTestAttributeWhenNameMatchesIdentifier() {
@@ -887,7 +887,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testXCTestPreservesPrivateFunctions() {
@@ -906,7 +906,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingPreservesPrivateFunctions() {
@@ -925,7 +925,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testXCTestPreservesUnderscorePrefixedFunctions() {
@@ -945,7 +945,7 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // No changes expected - underscore prefix means disabled
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingPreservesUnderscorePrefixedFunctions() {
@@ -978,7 +978,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.testSuiteAccessControl])
     }
 
     func testXCTestIgnoresTypesWithParameterizedInit() {
@@ -1000,7 +1000,7 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // No changes expected - has parameterized init
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+        testFormatting(for: input, rule: .validateTestCases)
     }
 
     func testSwiftTestingIgnoresTypesWithParameterizedInit() {
@@ -1022,6 +1022,6 @@ final class ValidateTestCasesTests: XCTestCase {
         """
 
         // No changes expected - has parameterized init
-        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl, .redundantMemberwiseInit])
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.redundantMemberwiseInit])
     }
 }

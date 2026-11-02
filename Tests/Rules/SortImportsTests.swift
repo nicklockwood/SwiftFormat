@@ -999,7 +999,7 @@ final class SortImportsTests: XCTestCase {
 
         """
         let options = FormatOptions(importGrouping: [.testableLast, .alpha])
-        testFormatting(for: input, output, rule: .sortImports, options: options, exclude: [.blankLinesBetweenImports])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
     func testPreservesCodeBelowImportsWithParameterizedAttribute() {

@@ -567,7 +567,7 @@ final class RedundantNilInitTests: XCTestCase {
         """
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, rule: .redundantNilInit,
-                       options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+                       options: options, exclude: [.wrapPropertyBodies])
     }
 
     func testNoInsertNilInitInMultilineComputedProperty() {
@@ -612,7 +612,7 @@ final class RedundantNilInitTests: XCTestCase {
         """
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, output, rule: .redundantNilInit,
-                       options: options, exclude: [.wrapPropertyBodies])
+                       options: options)
     }
 
     func testNoInsertNilInitInAs() {

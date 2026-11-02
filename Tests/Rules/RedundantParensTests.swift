@@ -50,7 +50,7 @@ final class RedundantParensTests: XCTestCase {
             pointer.load()
         )
         """
-        testFormatting(for: input, rule: .redundantParens, exclude: [.redundantReturn])
+        testFormatting(for: input, rule: .redundantParens)
     }
 
     // around expressions
@@ -241,8 +241,7 @@ final class RedundantParensTests: XCTestCase {
         let input = """
         let foo: (Int) -> Int = ( -)
         """
-        testFormatting(for: input, rule: .redundantParens,
-                       exclude: [.spaceAroundOperators, .spaceInsideParens])
+        testFormatting(for: input, rule: .redundantParens, exclude: [.spaceInsideParens])
     }
 
     func testMeaningfulParensAroundPrefixExpressionFollowedByDotNotRemoved() {
@@ -960,7 +959,7 @@ final class RedundantParensTests: XCTestCase {
         let output = """
         { @MainActor foo in }
         """
-        testFormatting(for: input, output, rule: .redundantParens, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .redundantParens)
     }
 
     func testSingleClosureArgumentWithReturnValueUnwrapped() {
@@ -987,7 +986,7 @@ final class RedundantParensTests: XCTestCase {
         let input = """
         { (_ foo) in }
         """
-        testFormatting(for: input, rule: .redundantParens, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .redundantParens)
     }
 
     func testTypedClosureArgumentNotUnwrapped() {
@@ -1175,7 +1174,7 @@ final class RedundantParensTests: XCTestCase {
         let input = """
         if try foo as Bar && baz() { /* some code */ }
         """
-        testFormatting(for: input, rule: .redundantParens, exclude: [.andOperator])
+        testFormatting(for: input, rule: .redundantParens)
     }
 
     func testParensNotRemovedBeforeIfBody3() {

@@ -120,7 +120,7 @@ final class PreferFinalClassesTests: XCTestCase {
             class var bar: String { "bar" }
         }
         """
-        testFormatting(for: input, rule: .preferFinalClasses, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .preferFinalClasses, exclude: [.wrapPropertyBodies])
     }
 
     func testNestedClass() {
@@ -458,7 +458,7 @@ final class PreferFinalClassesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferFinalClasses, exclude: [.enumNamespaces])
+        testFormatting(for: input, output, rule: .preferFinalClasses)
     }
 
     func testMixedScenarioWithBaseAndOpen() {

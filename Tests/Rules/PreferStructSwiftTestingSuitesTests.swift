@@ -28,8 +28,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         testFormatting(
             for: input,
             output,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames]
         )
     }
 
@@ -53,8 +52,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         testFormatting(
             for: input,
             output,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl]
         )
     }
 
@@ -69,8 +67,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         """
         testFormatting(
             for: input,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl]
         )
     }
 
@@ -86,8 +83,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         """
         testFormatting(
             for: input,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames]
         )
     }
 
@@ -105,8 +101,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         """
         testFormatting(
             for: input,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames]
         )
     }
 
@@ -122,8 +117,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         """
         testFormatting(
             for: input,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames]
         )
     }
 
@@ -145,8 +139,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         testFormatting(
             for: input,
             output,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames, .redundantSwiftTestingSuite]
         )
     }
 
@@ -162,8 +155,7 @@ final class PreferStructSwiftTestingSuitesTests: XCTestCase {
         """
         testFormatting(
             for: input,
-            rule: .preferStructSwiftTestingSuites,
-            exclude: [.swiftTestingTestCaseNames, .testSuiteAccessControl, .redundantSwiftTestingSuite]
+            rule: .preferStructSwiftTestingSuites, exclude: [.swiftTestingTestCaseNames, .redundantSwiftTestingSuite]
         )
     }
 

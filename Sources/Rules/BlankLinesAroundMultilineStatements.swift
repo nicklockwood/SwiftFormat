@@ -9,11 +9,11 @@
 import Foundation
 
 public extension FormatRule {
-    /// Separate multiline statements, keeping variable declarations with statements that use them.
+    /// Separate multiline statements, keeping single-line variable declarations with statements that use them.
     static let blankLinesAroundMultilineStatements = FormatRule(
         help: """
         Insert blank lines before and after multiline statements, except between a
-        variable declaration and an uncommented multiline statement that uses that variable.
+        single-line variable declaration and an uncommented multiline statement that uses that variable.
         Attached leading comments count as part of a statement.
         """,
         disabledByDefault: true,
@@ -32,18 +32,25 @@ public extension FormatRule {
                   from: warehouse,
                   limit: 100
               )
+        +
               guard !orders.isEmpty else {
                   return
               }
         +
-              print("Preparing orders")
-        +
               for order in orders {
                   order.prepare()
               }
-        +
-              print("Orders ready")
           }
+        ```
+
+        ```diff
+          let bar = foo.bar
+        +
+          // every bar also has a quux
+          let quux = bar.quux
+        +
+          // Finally, frobnicate them both
+          frobnicate(bar, quux)
         ```
         """
     }
@@ -194,14 +201,16 @@ extension Formatter {
         return startOfModifiers(at: index, includingAttributes: true) ... range.upperBound
     }
 
-    /// Whether an uncommented statement uses a variable declared immediately before it.
+    /// Whether an uncommented statement uses a variable declared on a single line immediately before it.
     func precedingVariableIsReferenced(in statement: ClosedRange<Int>) -> Bool {
         guard !tokens[statement.lowerBound].isComment,
               let previous = index(of: .nonSpaceOrCommentOrLinebreak, before: statement.lowerBound),
               let introducer = index(before: statement.lowerBound, where: {
                   $0 == .keyword("let") || $0 == .keyword("var")
               }),
-              variableDeclarationRange(at: introducer)?.upperBound == previous,
+              let declaration = variableDeclarationRange(at: introducer),
+              declaration.upperBound == previous,
+              onSameLine(startOfStatementIncludingComments(at: declaration.lowerBound), declaration.upperBound),
               let names = namesInDeclaration(at: introducer)
         else { return false }
         return tokens[statement].contains { $0.isIdentifier && names.contains($0.unescaped()) }

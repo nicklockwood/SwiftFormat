@@ -13,39 +13,31 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
     func testPrepareOrders() {
         let input = """
         func prepareOrders() {
-            guard let orders = pendingOrders else {
+            let orders = loadOrders(
+                from: warehouse,
+                limit: 100
+            )
+            guard !orders.isEmpty else {
                 return
             }
-            print("Preparing orders")
             for order in orders {
                 order.prepare()
-            }
-            print("Orders ready")
-            if orders.isEmpty {
-                print("No orders")
-            } else {
-                print("Finished")
             }
         }
         """
         let output = """
         func prepareOrders() {
-            guard let orders = pendingOrders else {
+            let orders = loadOrders(
+                from: warehouse,
+                limit: 100
+            )
+
+            guard !orders.isEmpty else {
                 return
             }
 
-            print("Preparing orders")
-
             for order in orders {
                 order.prepare()
-            }
-
-            print("Orders ready")
-
-            if orders.isEmpty {
-                print("No orders")
-            } else {
-                print("Finished")
             }
         }
         """
@@ -379,6 +371,7 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
             from: database,
             limit: 10
         )
+
         process(
             orders,
             immediately: true
@@ -621,6 +614,7 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
             "Ready",
             "Waiting",
         ]
+
         let (first, second) = loadStatuses(
             from: statuses,
             count: 2
@@ -873,6 +867,29 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .blankLinesAroundMultilineStatements)
+    }
+
+    func testCommentedVariableDeclarationStillSeparated() {
+        let input = """
+        func prepareOrders() {
+            // Load the pending orders.
+            let orders = loadOrders()
+            for order in orders {
+                order.prepare()
+            }
+        }
+        """
+        let output = """
+        func prepareOrders() {
+            // Load the pending orders.
+            let orders = loadOrders()
+
+            for order in orders {
+                order.prepare()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAroundMultilineStatements)
     }
 
     func testAttachedCommentsCountAsPartOfStatements() {

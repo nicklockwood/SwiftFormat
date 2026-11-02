@@ -477,7 +477,7 @@ Option | Description
 ## blankLinesAroundMultilineStatements
 
 Insert blank lines before and after multiline statements, except between a
-variable declaration and an uncommented multiline statement that uses that variable.
+single-line variable declaration and an uncommented multiline statement that uses that variable.
 Attached leading comments count as part of a statement.
 
 <details>
@@ -489,18 +489,25 @@ Attached leading comments count as part of a statement.
           from: warehouse,
           limit: 100
       )
++
       guard !orders.isEmpty else {
           return
       }
 +
-      print("Preparing orders")
-+
       for order in orders {
           order.prepare()
       }
-+
-      print("Orders ready")
   }
+```
+
+```diff
+  let bar = foo.bar
++
+  // every bar also has a quux
+  let quux = bar.quux
++
+  // Finally, frobnicate them both
+  frobnicate(bar, quux)
 ```
 
 </details>

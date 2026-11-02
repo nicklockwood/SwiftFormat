@@ -445,7 +445,7 @@ final class PreferExplicitFalseTests: XCTestCase {
         #error("Not supported")
         #endif
         """
-        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent])
+        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent, .redundantParens])
     }
 
     func testNoChangeForPreprocessorCanImport() {
@@ -454,7 +454,7 @@ final class PreferExplicitFalseTests: XCTestCase {
         #error("UIKit required")
         #endif
         """
-        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent])
+        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent, .redundantParens])
     }
 
     func testNoChangeForNegationBeforeIs() {
@@ -483,5 +483,60 @@ final class PreferExplicitFalseTests: XCTestCase {
         print(a == !!b)
         """
         testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
+    func testNoChangeInParenthesizedIfCondition() {
+        let input = """
+        #if (canImport(RegexBuilder) || !os(macOS) && !targetEnvironment(macCatalyst))
+            import RegexBuilder
+        #endif
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.redundantParens])
+    }
+
+    func testNoChangeInNestedParensInIfCondition() {
+        let input = """
+        #if FOO && (BAR || (!BAZ && QUX))
+            import Foo
+        #endif
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
+    func testNoChangeInElseifCondition() {
+        let input = """
+        #if FOO
+            import Foo
+        #elseif !BAR
+            import Bar
+        #elseif (BAZ || !QUX)
+            import Baz
+        #endif
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.redundantParens])
+    }
+
+    func testNoChangeInMultilineIfCondition() {
+        let input = """
+        #if (FOO ||
+            !BAR)
+            import Foo
+        #endif
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent, .redundantParens])
+    }
+
+    func testParenthesizedNegationInsideIfBodyIsConverted() {
+        let input = """
+        #if FOO
+            print(!bar)
+        #endif
+        """
+        let output = """
+        #if FOO
+            print(bar == false)
+        #endif
+        """
+        testFormatting(for: input, output, rule: .preferExplicitFalse)
     }
 }

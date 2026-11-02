@@ -10,6 +10,101 @@ import XCTest
 @testable import SwiftFormat
 
 final class CommonTyposTests: XCTestCase {
+    func testPrefersUSSpellingWhenEnabled() {
+        let input = """
+        // Colour COLOUR favourite behaviour centre theatre
+        // Initialise serialised optimising normalisation labelled travelling
+        // Retreive the colours and organise the catalogue.
+        """
+        let output = """
+        // Color COLOR favorite behavior center theater
+        // Initialize serialized optimizing normalization labeled traveling
+        // Retrieve the colors and organize the catalog.
+        """
+        testFormatting(for: input, output, rule: .commonTypos, options: FormatOptions(preferUSSpelling: true))
+    }
+
+    func testPreservesBritishSpellingByDefault() {
+        let input = """
+        /// The favourite colour is in the centre.
+        private let favouriteColour = "colour"
+        print(favouriteColour)
+        """
+        testFormatting(for: input, rule: .commonTypos)
+    }
+
+    func testPreservesBritishSpellingWhenDisabled() {
+        let input = """
+        /// Retreive the favourite colour from the centre.
+        private let favouriteColour = "colour"
+        print(favouriteColour)
+        """
+        let output = """
+        /// Retrieve the favourite colour from the centre.
+        private let favouriteColour = "colour"
+        print(favouriteColour)
+        """
+        testFormatting(for: input, output, rule: .commonTypos, options: FormatOptions(preferUSSpelling: false))
+    }
+
+    func testUSSpellingRenamesIdentifiersAndUsesButNotStrings() {
+        let input = """
+        private let favouriteColour = "colour"
+
+        public func render() {
+            let centre = favouriteColour
+            print(centre)
+        }
+        """
+        let output = """
+        private let favoriteColor = "colour"
+
+        public func render() {
+            let center = favoriteColor
+            print(center)
+        }
+        """
+        testFormatting(for: input, output, rule: .commonTypos, options: FormatOptions(preferUSSpelling: true))
+    }
+
+    func testUSSpellingPreservesPublicNamesAndExternalReferences() {
+        let input = """
+        public let colour = "blue"
+        let centre = external.colour
+        print(colour, centre)
+        """
+        testFormatting(for: input, rule: .commonTypos, options: FormatOptions(preferUSSpelling: true))
+    }
+
+    func testUSSpellingPreservesCollidingIdentifiers() {
+        let input = """
+        private let colour = 1
+        private let color = 2
+        print(colour, color)
+        """
+        testFormatting(for: input, rule: .commonTypos, options: FormatOptions(preferUSSpelling: true))
+    }
+
+    func testUSSpellingRespectsIgnoredWordsAndCustomCorrections() {
+        let input = """
+        private let favouriteColour = "" // Favourite colour behaviour
+        """
+        let output = """
+        private let favouriteHue = "" // Favourite hue behavior
+        """
+        testFormatting(for: input, output, rule: .commonTypos, options: FormatOptions(
+            typos: ["colour": "hue"], ignoredTypos: ["FAVOURITE"], preferUSSpelling: true
+        ))
+    }
+
+    func testUSSpellingPreservesAmbiguousWordsAndUnmatchedSuffixes() {
+        let input = """
+        // These analyses exercise the surprise of the enterprise.
+        // The size of the prize is wise.
+        """
+        testFormatting(for: input, rule: .commonTypos, options: FormatOptions(preferUSSpelling: true))
+    }
+
     private func testProjectFormatting(
         for input: String,
         _ output: String,

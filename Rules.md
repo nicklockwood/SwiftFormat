@@ -748,6 +748,7 @@ Option | Description
 `--typo-visibility` | Correct typos at or below this visibility threshold: "public", "package", "internal" or "file" (default)
 `--typos` | Comma-delimited list of typo=correction mappings
 `--ignore-typos` | Comma-delimited list of typos to ignore
+`--prefer-us-spelling` | Prefer US spellings: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
@@ -758,6 +759,18 @@ Option | Description
 + // Retrieve the cached value if it exists
 + private func retrieveCachedValue() -> Value? { ... }
 ```
+
+With `--prefer-us-spelling true`:
+
+```diff
+- // Initialise the favourite colour
+- private let favouriteColour = "blue"
++ // Initialize the favorite color
++ private let favoriteColor = "blue"
+```
+
+US spelling corrections respect `--typo-visibility` and `--ignore-typos`.
+Explicit `--typos` mappings take precedence over US spelling preferences.
 
 </details>
 <br/>

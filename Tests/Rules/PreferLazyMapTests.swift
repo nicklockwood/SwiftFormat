@@ -528,4 +528,120 @@ final class PreferLazyMapTests: XCTestCase {
 
         testFormatting(for: input, rule: .preferLazyMap)
     }
+
+    func testNoLazyWhenClosureCapturesInoutParameter() {
+        let input = """
+        struct Foo {
+            func merge(_ specs: [Spec], into paths: inout Set<Path>) -> Int {
+                specs.map { $0.merge(into: &paths) }.reduce(0, +)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testNoLazyWhenClosureReadsInoutParameterOutsideType() {
+        let input = """
+        func largest(_ values: [Int], offset: inout Int) -> Int? {
+            values.map { $0 + offset }.max()
+        }
+        """
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testNoLazyWhenClosureCallsNonEscapingClosureParameter() {
+        let input = """
+        func largest(_ values: [Int], transform: (Int) -> Int) -> Int? {
+            values.map { transform($0) }.max()
+        }
+        """
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testNoLazyWhenClosureRefersToMemberInMutatingFunction() {
+        let input = """
+        struct Foo {
+            var offset = 1
+
+            mutating func largest(_ values: [Int]) -> Int? {
+                values.map { $0 + offset }.max()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testNoLazyWhenClosureRefersToMemberInStructInit() {
+        let input = """
+        struct Foo {
+            var offset = 1
+            var largest: Int?
+
+            init(values: [Int]) {
+                largest = values.map { $0 + offset }.max()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferLazyMap)
+    }
+
+    func testInsertsLazyInMutatingFunctionWhenClosureOnlyUsesItsArguments() {
+        let input = """
+        struct Foo {
+            mutating func largest(_ values: [Int]) -> Int? {
+                values.map { $0 * 2 }.max()
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            mutating func largest(_ values: [Int]) -> Int? {
+                values.lazy.map { $0 * 2 }.max()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
+    func testInsertsLazyWhenClosureCallsEscapingClosureParameter() {
+        let input = """
+        func largest(_ values: [Int], transform: @escaping (Int) -> Int) -> Int? {
+            values.map { transform($0) }.max()
+        }
+        """
+        let output = """
+        func largest(_ values: [Int], transform: @escaping (Int) -> Int) -> Int? {
+            values.lazy.map { transform($0) }.max()
+        }
+        """
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
+    func testInsertsLazyWhenClosureCallsOptionalClosureParameter() {
+        let input = """
+        func largest(_ values: [Int], transform: ((Int) -> Int)?) -> Int? {
+            values.map { transform?($0) ?? $0 }.max()
+        }
+        """
+        let output = """
+        func largest(_ values: [Int], transform: ((Int) -> Int)?) -> Int? {
+            values.lazy.map { transform?($0) ?? $0 }.max()
+        }
+        """
+        testFormatting(for: input, output, rule: .preferLazyMap)
+    }
+
+    func testInsertsLazyWhenInoutParameterNameIsOnlyAMember() {
+        let input = """
+        func largest(_ values: [Foo], offset: inout Int) -> Int? {
+            values.map { $0.offset }.max()
+        }
+        """
+        let output = """
+        func largest(_ values: [Foo], offset: inout Int) -> Int? {
+            values.lazy.map { $0.offset }.max()
+        }
+        """
+        testFormatting(for: input, output, rule: .preferLazyMap, exclude: [.unusedArguments])
+    }
 }

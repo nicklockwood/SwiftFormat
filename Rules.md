@@ -131,6 +131,7 @@
 * [alignAssignments](#alignAssignments)
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
+* [blankLinesAroundMultilineStatements](#blankLinesAroundMultilineStatements)
 * [blockComments](#blockComments)
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
@@ -467,6 +468,38 @@ Option | Description
 +
   func bar() {
     // bar
+  }
+```
+
+</details>
+<br/>
+
+## blankLinesAroundMultilineStatements
+
+Insert blank lines before and after multiline statements, except between a
+variable declaration and an uncommented multiline statement that uses that variable.
+Attached leading comments count as part of a statement.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func prepareOrders() {
+      let orders = loadOrders(
+          from: warehouse,
+          limit: 100
+      )
+      guard !orders.isEmpty else {
+          return
+      }
++
+      print("Preparing orders")
++
+      for order in orders {
+          order.prepare()
+      }
++
+      print("Orders ready")
   }
 ```
 

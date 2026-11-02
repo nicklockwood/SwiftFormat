@@ -35,6 +35,12 @@ public extension FormatRule {
                 }
             }
             if formatter.options.allmanBraces {
+                // An unsafe expression must keep its operand on the same line.
+                if let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                   formatter.isUnsafeExpression(at: previousIndex)
+                {
+                    return
+                }
                 // Implement Allman-style braces, where opening brace appears on the next line
                 switch formatter.last(.nonSpace, before: i) ?? .space("") {
                 case .identifier, .keyword, .endOfScope, .number,

@@ -262,7 +262,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testPreserveFailMessage() {
@@ -292,7 +292,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
     }
 
     func testPreserveFailMessageWithInterpolations() {
@@ -317,7 +317,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
     }
 
     func testNoMangleNontrivialGuardBody() {
@@ -334,7 +334,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testReplaceGuardWithMultipleConditionsXCTest() {
@@ -504,7 +504,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testHandlesTenConditions() {
@@ -549,7 +549,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .acronyms])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testHandlesMixedComplexConditions() {
@@ -594,7 +594,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert))
     }
 
     // MARK: - Swift Testing tests
@@ -700,7 +700,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.elseOnSameLine])
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testSwiftTestingPreservesExistingThrows() {
@@ -726,7 +726,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.elseOnSameLine])
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testSwiftTestingAsyncFunction() {
@@ -784,7 +784,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testReplaceGuardWithMultipleConditionsSwiftTesting() {
@@ -1174,7 +1174,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: FormatOptions(booleanGuardsInTests: .convert), exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testConvertsBooleanConditionsToRequire() {
@@ -1253,7 +1253,7 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         let options = FormatOptions(booleanGuardsInTests: .preserve)
-        testFormatting(for: input, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .noGuardInTests, options: options)
     }
 
     func testPreservesBooleanGuardWithOptionDisabledSwiftTesting() {
@@ -1272,7 +1272,7 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         let options = FormatOptions(booleanGuardsInTests: .preserve)
-        testFormatting(for: input, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .noGuardInTests, options: options)
     }
 
     func testPreservesGuardWithMixedConditionsWithOptionDisabled() {
@@ -1291,7 +1291,7 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         let options = FormatOptions(booleanGuardsInTests: .preserve)
-        testFormatting(for: input, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements, .unusedArguments, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements, .wrapMultilineStatementBraces])
     }
 
     func testStillConvertsOptionalBindingGuardWithOptionDisabled() {
@@ -1319,7 +1319,7 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         let options = FormatOptions(booleanGuardsInTests: .preserve)
-        testFormatting(for: input, output, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, options: options, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testStillConvertsTrailingIfWithOptionDisabled() {
@@ -1364,7 +1364,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .wrapMultilineStatementBraces])
     }
 
     func testPreservesGuardWithAnyShadowing() {
@@ -1385,7 +1385,7 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         // Since bar is shadowed, we preserve the entire guard
-        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .wrapMultilineStatementBraces])
     }
 
     func testPreservesGuardWithMixedCasePattern() {
@@ -1403,7 +1403,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .hoistPatternLet, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .hoistPatternLet, .wrapMultilineStatementBraces])
     }
 
     // MARK: - Await tests
@@ -1457,7 +1457,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .wrapMultilineStatementBraces])
     }
 
     func testPreservesGuardWithAvailableCondition() {
@@ -1523,7 +1523,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .wrapMultilineStatementBraces])
     }
 
     // MARK: - No import tests

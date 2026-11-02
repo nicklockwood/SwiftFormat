@@ -341,7 +341,7 @@ final class BlankLinesBetweenScopesTests: XCTestCase {
             #endif
         }
         """
-        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.emptyBraces])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoInsertBlankLineAfterBraceBeforeSourceryComment() {
@@ -356,7 +356,7 @@ final class BlankLinesBetweenScopesTests: XCTestCase {
             // sourcery:end
         }
         """
-        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.redundantPublic, .redundantMemberwiseInit])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.redundantPublic])
     }
 
     func testNoBlankLineBetweenChainedClosures() {

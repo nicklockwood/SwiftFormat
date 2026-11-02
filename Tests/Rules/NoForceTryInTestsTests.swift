@@ -179,7 +179,7 @@ final class NoForceTryInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceTryInTests, exclude: [.noGuardInTests])
+        testFormatting(for: input, output, rule: .noForceTryInTests)
     }
 
     func testCaseIsNotUpdated_for_try_exclamationMark_in_closure_inside_if_statement() {

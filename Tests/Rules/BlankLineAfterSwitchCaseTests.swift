@@ -280,7 +280,7 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
             energyShields.engage()
         }
         """
-        testFormatting(for: input, output, rule: .blankLineAfterSwitchCase, exclude: [.consistentSwitchCaseSpacing])
+        testFormatting(for: input, output, rule: .blankLineAfterSwitchCase)
     }
 
     func testAddsBlankLineAfterMultilineSwitchCaseInsideIfdefBlock() {

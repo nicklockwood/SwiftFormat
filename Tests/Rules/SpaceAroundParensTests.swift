@@ -101,7 +101,7 @@ final class SpaceAroundParensTests: XCTestCase {
         let input = """
         (foo.bar) as? String
         """
-        testFormatting(for: input, rule: .spaceAroundParens, exclude: [.redundantParens])
+        testFormatting(for: input, rule: .spaceAroundParens)
     }
 
     func testNoSpaceAfterParenAtEndOfFile() {
@@ -359,8 +359,7 @@ final class SpaceAroundParensTests: XCTestCase {
         let input = """
         a = (b + c)
         """
-        testFormatting(for: input, rule: .spaceAroundParens,
-                       exclude: [.redundantParens])
+        testFormatting(for: input, rule: .spaceAroundParens)
     }
 
     func testKeywordAsIdentifierParensSpacing() {

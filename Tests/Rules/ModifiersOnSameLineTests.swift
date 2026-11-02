@@ -108,7 +108,7 @@ final class ModifiersOnSameLineTests: XCTestCase {
         private(set)
         var foo: Foo
         """
-        testFormatting(for: input, rule: .modifiersOnSameLine, exclude: [.docComments, .docCommentsBeforeModifiers])
+        testFormatting(for: input, rule: .modifiersOnSameLine, exclude: [.docComments])
     }
 
     func testDeclarationWithoutModifiersIsNotChanged() {

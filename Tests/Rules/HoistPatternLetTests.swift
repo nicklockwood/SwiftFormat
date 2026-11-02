@@ -157,8 +157,7 @@ final class HoistPatternLetTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .hoistPatternLet,
-                       exclude: [.wrapSwitchCases, .sortSwitchCases])
+        testFormatting(for: input, output, rule: .hoistPatternLet, exclude: [.sortSwitchCases])
     }
 
     func testHoistCatchLet() {
@@ -524,7 +523,7 @@ final class HoistPatternLetTests: XCTestCase {
 
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: .hoistPatternLet,
-                       options: options, exclude: [.wrapSwitchCases, .sortSwitchCases])
+                       options: options)
     }
 
     func testMultilineGuardLet() {

@@ -90,7 +90,7 @@ final class RedundantThrowsTests: XCTestCase {
         }
         """
         let options = FormatOptions(redundantThrows: .testsOnly)
-        testFormatting(for: input, output, rule: .redundantThrows, options: options, exclude: [.testSuiteAccessControl, .validateTestCases])
+        testFormatting(for: input, output, rule: .redundantThrows, options: options, exclude: [.testSuiteAccessControl])
     }
 
     func testRemovesThrowsFromAnyFunctionInAlwaysMode() {

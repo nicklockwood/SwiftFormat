@@ -304,7 +304,7 @@ final class RedundantCompactMapTests: XCTestCase {
             let parenthesized = values.compactMap { value -> (Value) in value }
         }
         """
-        testFormatting(for: input, rule: .redundantCompactMap, exclude: [.redundantParens])
+        testFormatting(for: input, rule: .redundantCompactMap)
     }
 
     func testInheritedMemberMayShadowGlobalFunction() {

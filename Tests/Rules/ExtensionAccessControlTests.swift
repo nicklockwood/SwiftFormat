@@ -109,8 +109,7 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations),
-            exclude: [.wrapPropertyBodies]
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
         )
     }
 
@@ -186,8 +185,7 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations, swiftVersion: "4"),
-            exclude: [.propertyTypes]
+            options: FormatOptions(extensionACLPlacement: .onDeclarations, swiftVersion: "4")
         )
     }
 

@@ -172,8 +172,7 @@ final class ElseOnSameLineTests: XCTestCase {
         }
         """
         let options = FormatOptions(elsePosition: .sameLine)
-        testFormatting(for: input, rule: .elseOnSameLine, options: options,
-                       exclude: [.braces])
+        testFormatting(for: input, rule: .elseOnSameLine, options: options)
     }
 
     // guardelse = auto
@@ -365,7 +364,7 @@ final class ElseOnSameLineTests: XCTestCase {
         """
         let options = FormatOptions(guardElsePosition: .nextLine)
         testFormatting(for: input, output, rule: .elseOnSameLine,
-                       options: options, exclude: [.wrapMultilineStatementBraces])
+                       options: options)
     }
 
     // guardelse = sameLine

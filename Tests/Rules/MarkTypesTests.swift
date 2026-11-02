@@ -36,7 +36,7 @@ final class MarkTypesTests: XCTestCase {
         protocol Quux {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
+        testFormatting(for: input, output, rule: .markTypes)
     }
 
     func testDoesntAddMarkBeforeStructWithExistingMark() {
@@ -540,8 +540,7 @@ final class MarkTypesTests: XCTestCase {
 
         let options = FormatOptions(markTypes: .ifNotEmpty)
         testFormatting(
-            for: input, output, rule: .markTypes, options: options,
-            exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesBetweenScopes]
+            for: input, output, rule: .markTypes, options: options, exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -592,8 +591,7 @@ final class MarkTypesTests: XCTestCase {
 
         let options = FormatOptions(markExtensions: .ifNotEmpty)
         testFormatting(
-            for: input, output, rule: .markTypes, options: options,
-            exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesBetweenScopes]
+            for: input, output, rule: .markTypes, options: options, exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -958,7 +956,7 @@ final class MarkTypesTests: XCTestCase {
         ]: Hashable {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.wrapMultilineFunctionChains])
+        testFormatting(for: input, output, rule: .markTypes)
     }
 
     func testSupportsUncheckedSendable() {

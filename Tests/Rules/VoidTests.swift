@@ -174,7 +174,7 @@ final class VoidTests: XCTestCase {
         let input = """
         { (_: Void) in }
         """
-        testFormatting(for: input, rule: .void, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .void)
     }
 
     func testVoidLiteralConvertedToParens() {

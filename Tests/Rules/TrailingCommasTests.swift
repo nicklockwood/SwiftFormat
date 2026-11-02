@@ -208,7 +208,7 @@ final class TrailingCommasTests: XCTestCase {
             Int
         ]).self
         """
-        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
@@ -730,7 +730,7 @@ final class TrailingCommasTests: XCTestCase {
         )
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommasAddedToTupleInGenericInitCall() {
@@ -750,7 +750,7 @@ final class TrailingCommasTests: XCTestCase {
         )
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn, .propertyTypes])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.propertyTypes])
     }
 
     func testTrailingCommasAddedToParensAroundSingleValue() {
@@ -2366,7 +2366,7 @@ final class TrailingCommasTests: XCTestCase {
         )
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommasAddedToTupleInGenericInitCallSwift6_2() {
@@ -2386,7 +2386,7 @@ final class TrailingCommasTests: XCTestCase {
         )
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn, .propertyTypes])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.propertyTypes])
     }
 
     func testTrailingCommasAddedToParensAroundSingleValueSwift6_2() {
@@ -2500,7 +2500,7 @@ final class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
-        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar])
     }
 
     func testTrailingCommasAddedToTupleTypeInGenericBracketsInSwift6_3() {
@@ -2519,7 +2519,7 @@ final class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.3")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar])
     }
 
     func testTrailingCommasNotAddedToClosureTupleReturnType() {
@@ -2557,7 +2557,7 @@ final class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommaInClosureArgsButNotReturnType() {
@@ -2595,7 +2595,7 @@ final class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommaNotAddedToClosureReturnTypeWithArgs() {
@@ -2622,7 +2622,7 @@ final class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommaNotAddedToClosureReturnTypeWithBareArgs() {
@@ -2636,7 +2636,7 @@ final class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
-        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+        testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommasAddedToClosureTupleReturnTypeSwift6_3() {
@@ -2673,7 +2673,7 @@ final class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.3")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommasAddedToTupleFunctionArgumentInSwift6_2() {

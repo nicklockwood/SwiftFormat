@@ -33,8 +33,7 @@ final class RedundantRawValuesTests: XCTestCase {
         let output = """
         enum Foo: String { case bar, baz }
         """
-        testFormatting(for: input, output, rule: .redundantRawValues,
-                       exclude: [.wrapEnumCases])
+        testFormatting(for: input, output, rule: .redundantRawValues)
     }
 
     func testRemoveBacktickCaseRawStringCases() {
@@ -44,8 +43,7 @@ final class RedundantRawValuesTests: XCTestCase {
         let output = """
         enum Foo: String { case `as`, `let` }
         """
-        testFormatting(for: input, output, rule: .redundantRawValues,
-                       exclude: [.wrapEnumCases])
+        testFormatting(for: input, output, rule: .redundantRawValues)
     }
 
     func testNoRemoveRawStringIfNameDoesntMatch() {

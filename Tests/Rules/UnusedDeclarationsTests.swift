@@ -55,8 +55,7 @@ final class UnusedDeclarationsTests: XCTestCase {
             """
             """,
             rule: .unusedDeclarations,
-            options: FormatOptions(unusedVisibility: .file),
-            exclude: [.redundantFileprivate]
+            options: FormatOptions(unusedVisibility: .file)
         )
     }
 
@@ -792,7 +791,7 @@ final class UnusedDeclarationsTests: XCTestCase {
             @State private var showButton: Bool
         }
         """
-        testFormatting(for: input, rule: .unusedDeclarations, exclude: [.privateSwiftUIDynamicProperties])
+        testFormatting(for: input, rule: .unusedDeclarations)
     }
 
     func testDoesNotRemoveUnderscoredDeclarationIfUsed() {

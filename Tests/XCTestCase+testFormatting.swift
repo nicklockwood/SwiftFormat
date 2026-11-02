@@ -96,6 +96,7 @@ extension XCTestCase {
             .wrapIfExpressionBodies,
             .wrapSingleLineStrings,
         ]
+        let explicitExclusions = exclude.filter { !defaultExclusions.contains($0) }
         let exclude = exclude + defaultExclusions.filter { !rules.contains($0) }
         let formatResult: (output: String, changes: [SwiftFormat.Formatter.Change])
         do {
@@ -115,8 +116,28 @@ extension XCTestCase {
             """, file: file, line: line)
         }
 
-        XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude), options: options).output,
-                       output2, file: file, line: line)
+        let allRulesOutput: String
+        do {
+            allRulesOutput = try format(input, rules: FormatRules.all(except: exclude), options: options).output
+        } catch {
+            XCTFail("Failed to format input with all rules, threw error \(error)", file: file, line: line)
+            return
+        }
+        XCTAssertEqual(allRulesOutput, output2, file: file, line: line)
+        if allRulesOutput == output2 {
+            for excludedRule in Set(explicitExclusions).sorted() {
+                let restoredRules = FormatRules.all(except: exclude.filter { $0 != excludedRule })
+                // An exclusion is necessary if restoring the rule changes the result or throws.
+                guard let restoredOutput = try? format(input, rules: restoredRules, options: options).output,
+                      restoredOutput == output2
+                else { continue }
+                // The exclusion may also protect the expected output from lint-only changes.
+                guard let changes = try? lint(output2, rules: restoredRules, options: options),
+                      changes.isEmpty
+                else { continue }
+                XCTFail("Unnecessary exclusion: \(excludedRule.name) has no effect on formatting or linting", file: file, line: line)
+            }
+        }
         if input != output {
             XCTAssertEqual(try format(output, rules: rules, options: options).output,
                            output, file: file, line: line)

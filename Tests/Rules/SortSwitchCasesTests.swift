@@ -66,7 +66,7 @@ final class SortSwitchCasesTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .sortSwitchCases, exclude: [.indent])
+        testFormatting(for: input, output, rule: .sortSwitchCases)
     }
 
     func testSortedSwitchCaseMultilineWithCommentsAndMoreThanOneCasePerLine() {

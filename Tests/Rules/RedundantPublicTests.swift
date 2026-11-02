@@ -152,7 +152,7 @@ final class RedundantPublicTests: XCTestCase {
             public var isNotEmpty: Bool { !isEmpty }
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic], exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rules: [.redundantPublic], exclude: [.wrapPropertyBodies])
     }
 
     func testPreservesPublicInTypeInPublicExtension() {
@@ -307,7 +307,7 @@ final class RedundantPublicTests: XCTestCase {
             #endif
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic], exclude: [.indent, .wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rules: [.redundantPublic], exclude: [.indent, .wrapPropertyBodies])
     }
 
     func testPreservesPublicInNestedTypeInsidePublicExtension() {

@@ -36,7 +36,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     func testXCTestHelperMethodsArePrivate() {
@@ -76,7 +76,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments])
     }
 
     func testXCTestPropertiesArePrivate() {
@@ -106,7 +106,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     func testXCTestClassIsInternal() {
@@ -130,7 +130,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     func testXCTestWithParameterlessInitializerIsProcessed() {
@@ -166,7 +166,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases, .redundantType])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.redundantType])
     }
 
     func testXCTestPreservesOpenTestClass() {
@@ -180,7 +180,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testXCTestPreservesStaticFunctions() {
@@ -198,7 +198,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testXCTestPreservesStaticProperties() {
@@ -214,7 +214,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testXCTestPreservesOverrideMethods() {
@@ -238,7 +238,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testXCTestPreservesObjcMethods() {
@@ -256,7 +256,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testXCTestHelperMethodWithTestPrefixAndParameters() {
@@ -296,7 +296,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     // MARK: Swift Testing
@@ -328,7 +328,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     func testSwiftTestingHelperMethodsArePrivate() {
@@ -368,7 +368,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     func testSwiftTestingClassIsInternal() {
@@ -392,7 +392,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     func testSwiftTestingPrivateTestFunctionsAreMadeInternal() {
@@ -424,7 +424,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl)
     }
 
     // MARK: Base Classes
@@ -442,7 +442,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testDoesNotApplyToSwiftTestingBaseClasses() {
@@ -458,7 +458,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testDoesNotApplyToTestClassWithBaseInDocComment() {
@@ -475,7 +475,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testDoesNotApplyToTestClassWithSubclassInDocComment() {
@@ -492,7 +492,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testDoesNotApplyToSwiftTestingClassWithBaseInDocComment() {
@@ -507,7 +507,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     // MARK: Disabled Tests
@@ -527,7 +527,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testSwiftTestingPreservesDisabledTestMethods() {
@@ -545,7 +545,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testXCTestPreservesCapitalizedDisabledTestMethods() {
@@ -563,7 +563,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testSwiftTestingPreservesCapitalizedDisabledTestMethods() {
@@ -581,7 +581,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     // MARK: Mixed Frameworks
@@ -604,7 +604,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases, .sortImports])
+        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.sortImports])
     }
 
     func testXCTestIgnoresTypesWithParameterizedInit() {
@@ -625,7 +625,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         // No changes should be made - types with parameterized init are not test suites
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl)
     }
 
     func testSwiftTestingIgnoresTypesWithParameterizedInit() {
@@ -646,7 +646,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         // No changes should be made - types with parameterized init are not test suites
-        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases, .redundantMemberwiseInit])
+        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.redundantMemberwiseInit])
     }
 
     func testSwiftTestingPrivateVisibilityOption() {
@@ -679,7 +679,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testCaseAccessControl: .private)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options)
     }
 
     func testSwiftTestingPublicVisibilityOption() {
@@ -712,7 +712,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testCaseAccessControl: .public)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options)
     }
 
     func testXCTestPrivateVisibilityFallsBackToInternal() {
@@ -746,7 +746,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
 
         // XCTest doesn't support private tests, so private/fileprivate falls back to internal
         let options = FormatOptions(testCaseAccessControl: .private)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options)
     }
 
     func testXCTestFileprivateVisibilityFallsBackToInternal() {
@@ -772,7 +772,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
 
         // XCTest doesn't support fileprivate tests, so fileprivate falls back to internal
         let options = FormatOptions(testCaseAccessControl: .fileprivate)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options)
     }
 
     func testSwiftTestingFileprivateVisibilityOption() {
@@ -797,7 +797,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testCaseAccessControl: .fileprivate)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options)
     }
 
     func testSwiftTestingPrivateVisibilityPreservesExistingPrivate() {
@@ -812,6 +812,6 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testCaseAccessControl: .private)
-        testFormatting(for: input, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .testSuiteAccessControl, options: options)
     }
 }

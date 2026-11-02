@@ -1397,8 +1397,7 @@ final class ContentBuilderTests: XCTestCase {
         }
         """
         let options = FormatOptions(contentBuilder: .explicit, preferContentBuilder: true, swiftVersion: "6.4")
-        testFormatting(for: input, rule: .contentBuilder, options: options,
-                       exclude: [.wrapLoopBodies])
+        testFormatting(for: input, rule: .contentBuilder, options: options)
     }
 
     func testDoesntAddContentBuilderWhenAlreadyPresent() {
@@ -1478,8 +1477,7 @@ final class ContentBuilderTests: XCTestCase {
         }
         """
         let options = FormatOptions(contentBuilder: .explicit, preferContentBuilder: true, swiftVersion: "6.4")
-        testFormatting(for: input, rule: .contentBuilder, options: options,
-                       exclude: [.propertyTypes, .redundantType])
+        testFormatting(for: input, rule: .contentBuilder, options: options, exclude: [.redundantType])
     }
 
     func testDoesntAddContentBuilderToProtocolRequirement() {

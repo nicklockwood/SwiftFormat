@@ -125,7 +125,7 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent], exclude: [.spaceInsideBraces])
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
     }
 
     func testKeepGroupWithMultipleViewsAndModifiers() {
@@ -467,8 +467,7 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         testFormatting(
             for: input, [output],
             rules: [.redundantSwiftUIGroup, .organizeDeclarations, .indent],
-            options: options,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            options: options
         )
     }
 

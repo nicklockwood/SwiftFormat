@@ -17,8 +17,7 @@ final class SpaceAroundCommentsTests: XCTestCase {
         let output = """
         ( /* foo */ )
         """
-        testFormatting(for: input, output, rule: .spaceAroundComments,
-                       exclude: [.redundantParens])
+        testFormatting(for: input, output, rule: .spaceAroundComments)
     }
 
     func testNoSpaceAroundCommentAtStartAndEndOfFile() {

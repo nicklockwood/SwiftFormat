@@ -463,7 +463,7 @@ final class EnumNamespacesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .enumNamespaces, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .enumNamespaces)
     }
 
     func testEnumNamespacesNotAppliedToSwiftTestingSuiteWithTestMethod() {

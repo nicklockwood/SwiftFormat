@@ -63,7 +63,7 @@ final class BlankLinesAtStartOfScopeTests: XCTestCase {
 
          bar]
         """
-        testFormatting(for: input, rule: .blankLinesAtStartOfScope, exclude: [.wrapArguments])
+        testFormatting(for: input, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLineRemovedFromStartOfTypeByDefault() {
@@ -166,7 +166,7 @@ final class BlankLinesAtStartOfScopeTests: XCTestCase {
             func bar() {}
         }
         """
-        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .startOnly), exclude: [.blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .startOnly))
     }
 
     func testEndOnlyBlankLineRemovedFromStartOfType() {
@@ -219,7 +219,7 @@ final class BlankLinesAtStartOfScopeTests: XCTestCase {
             func bar() {}
         }
         """
-        testFormatting(for: input, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .consistent), exclude: [.blankLinesAtEndOfScope])
+        testFormatting(for: input, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .consistent))
     }
 
     func testConsistentBlankLinesStillRemovesLeadingBlankLineFromNonTypeScope() {
@@ -238,7 +238,7 @@ final class BlankLinesAtStartOfScopeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .consistent), exclude: [.blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .consistent))
     }
 
     func testScopeBlankLinesPreserveKeepsBlankLineAtStartOfNonTypeScopes() {

@@ -117,7 +117,7 @@ final class RedundantFileprivateTests: XCTestCase {
         let kFoo = Foo().foo
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options)
     }
 
     func testFileprivateVarNotChangedToPrivateIfAccessedFromAVar() {
@@ -129,7 +129,7 @@ final class RedundantFileprivateTests: XCTestCase {
         var kFoo: String { return Foo().foo }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.wrapPropertyBodies])
     }
 
     func testFileprivateVarNotChangedToPrivateIfAccessedFromCode() {
@@ -422,7 +422,7 @@ final class RedundantFileprivateTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options)
     }
 
     func testFileprivateInitNotChangedToPrivateWhenUsingTrailingClosureInit() {

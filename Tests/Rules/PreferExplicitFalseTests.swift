@@ -316,7 +316,7 @@ final class PreferExplicitFalseTests: XCTestCase {
             return true
         }
         """
-        testFormatting(for: input, output, rule: .preferExplicitFalse, exclude: [.wrapFunctionBodies])
+        testFormatting(for: input, output, rule: .preferExplicitFalse)
     }
 
     func testNegationInSwitchCase() {
@@ -445,7 +445,7 @@ final class PreferExplicitFalseTests: XCTestCase {
         #error("Not supported")
         #endif
         """
-        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent, .redundantParens])
+        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent])
     }
 
     func testNoChangeForPreprocessorCanImport() {
@@ -454,7 +454,7 @@ final class PreferExplicitFalseTests: XCTestCase {
         #error("UIKit required")
         #endif
         """
-        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent, .redundantParens])
+        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent])
     }
 
     func testNoChangeForNegationBeforeIs() {
@@ -513,7 +513,7 @@ final class PreferExplicitFalseTests: XCTestCase {
             import Baz
         #endif
         """
-        testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.redundantParens])
+        testFormatting(for: input, rule: .preferExplicitFalse)
     }
 
     func testNoChangeInMultilineIfCondition() {

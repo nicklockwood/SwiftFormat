@@ -77,8 +77,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(
             for: input,
             output,
-            rule: .blankLinesAfterGuardStatements,
-            exclude: [.blankLinesBetweenScopes, .wrapConditionalBodies]
+            rule: .blankLinesAfterGuardStatements, exclude: [.wrapConditionalBodies]
         )
     }
 
@@ -172,8 +171,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: true),
-            exclude: [.blankLinesBetweenScopes]
+            options: FormatOptions(lineBetweenConsecutiveGuards: true)
         )
     }
 
@@ -208,8 +206,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: true),
-            exclude: [.blankLinesBetweenScopes, .wrapConditionalBodies]
+            options: FormatOptions(lineBetweenConsecutiveGuards: true), exclude: [.wrapConditionalBodies]
         )
     }
 
@@ -252,8 +249,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: true),
-            exclude: [.blankLinesBetweenScopes, .wrapConditionalBodies]
+            options: FormatOptions(lineBetweenConsecutiveGuards: true), exclude: [.wrapConditionalBodies]
         )
     }
 
@@ -427,8 +423,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: true),
-            exclude: [.blankLinesBetweenScopes]
+            options: FormatOptions(lineBetweenConsecutiveGuards: true)
         )
     }
 
@@ -459,8 +454,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: true),
-            exclude: [.blankLinesBetweenScopes, .wrapConditionalBodies]
+            options: FormatOptions(lineBetweenConsecutiveGuards: true), exclude: [.wrapConditionalBodies]
         )
     }
 

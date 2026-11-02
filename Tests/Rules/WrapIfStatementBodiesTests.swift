@@ -70,8 +70,7 @@ final class WrapIfStatementBodiesTests: XCTestCase {
         let input = """
         if foo {} else if baz {} else {}
         """
-        testFormatting(for: input, rule: .wrapIfStatementBodies,
-                       exclude: [.emptyBraces])
+        testFormatting(for: input, rule: .wrapIfStatementBodies)
     }
 
     func testIfElseBracesStartingOnDifferentLines() {

@@ -24,7 +24,7 @@ final class SpaceInsideBracesTests: XCTestCase {
         let input = """
         { foo }
         """
-        testFormatting(for: input, rule: .spaceInsideBraces, exclude: [.trailingClosures])
+        testFormatting(for: input, rule: .spaceInsideBraces)
     }
 
     func testNoSpaceAddedInsideEmptybraces() {

@@ -81,7 +81,7 @@ final class RedundantSwiftTestingSuiteTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSwiftTestingSuite, exclude: [.swiftTestingTestCaseNames])
+        testFormatting(for: input, rule: .redundantSwiftTestingSuite)
     }
 
     func testRemoveMultipleRedundantSuites() {
@@ -217,7 +217,7 @@ final class RedundantSwiftTestingSuiteTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSwiftTestingSuite, exclude: [.swiftTestingTestCaseNames])
+        testFormatting(for: input, rule: .redundantSwiftTestingSuite)
     }
 
     func testRemovesTestSuiteWithOnlyStringArgument() {

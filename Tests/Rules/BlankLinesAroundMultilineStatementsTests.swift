@@ -869,7 +869,7 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
         testFormatting(for: input, rule: .blankLinesAroundMultilineStatements)
     }
 
-    func testCommentedVariableDeclarationStillSeparated() {
+    func testCommentBeforeSingleLineVariableStaysAttached() {
         let input = """
         func prepareOrders() {
             // Load the pending orders.
@@ -877,19 +877,15 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
             for order in orders {
                 order.prepare()
             }
-        }
-        """
-        let output = """
-        func prepareOrders() {
-            // Load the pending orders.
-            let orders = loadOrders()
 
-            for order in orders {
-                order.prepare()
+            // Find the smallest value in the array.
+            var smallest = Int.max
+            for value in list where value < smallest {
+                smallest = value
             }
         }
         """
-        testFormatting(for: input, output, rule: .blankLinesAroundMultilineStatements)
+        testFormatting(for: input, rule: .blankLinesAroundMultilineStatements)
     }
 
     func testAttachedCommentsCountAsPartOfStatements() {

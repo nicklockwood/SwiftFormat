@@ -210,7 +210,7 @@ extension Formatter {
               }),
               let declaration = variableDeclarationRange(at: introducer),
               declaration.upperBound == previous,
-              onSameLine(startOfStatementIncludingComments(at: declaration.lowerBound), declaration.upperBound),
+              onSameLine(declaration.lowerBound, declaration.upperBound),
               let names = namesInDeclaration(at: introducer)
         else { return false }
         return tokens[statement].contains { $0.isIdentifier && names.contains($0.unescaped()) }

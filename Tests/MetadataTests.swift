@@ -268,6 +268,7 @@ final class MetadataTests: XCTestCase {
                     case .identifier("isInStringLiteralWithWrappingDisabled"):
                         referencedOptions.append(Descriptors.wrapStringInterpolation)
                     case .identifier("insertLinebreak"), .identifier("linebreakToken"),
+                         .identifier("insertBlankLineBeforeStatement"),
                          .identifier("insertResultBuilderAttribute"):
                         referencedOptions.append(Descriptors.linebreak)
                     case .identifier("wrapCollectionsAndArguments"):

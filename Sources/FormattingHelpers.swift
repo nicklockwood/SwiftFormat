@@ -3584,6 +3584,20 @@ extension Formatter {
                     isTypeRoot: false, isInit: false)
     }
 
+    /// Insert a blank line before a statement or its leading comments, preserving scope boundaries.
+    func insertBlankLineBeforeStatement(at start: Int) {
+        guard index(of: .nonSpaceOrCommentOrLinebreak, in: startOfLine(at: start) ..< start) == nil,
+              let previous = index(of: .nonSpaceOrCommentOrLinebreak, before: start),
+              !tokens[previous].isStartOfScope,
+              ![.keyword("in"), .keyword("#else"), .keyword("#elseif")].contains(tokens[previous]),
+              ![.startOfScope("#if"), .keyword("#elseif")].contains(tokens[startOfLine(at: previous, excludingIndent: true)]),
+              isEndOfStatement(at: previous),
+              let linebreak = index(of: .linebreak, in: previous + 1 ..< start),
+              index(of: .linebreak, in: linebreak + 1 ..< start) == nil
+        else { return }
+        insertLinebreak(at: startOfLine(at: start))
+    }
+
     /// Ensures that the given range ends with at least one trailing blank line,
     /// by adding a blank line to the end of this declaration if not already present.
     func addTrailingBlankLineIfNeeded(in range: ClosedRange<Int>) {

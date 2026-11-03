@@ -132,6 +132,7 @@
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blankLinesAroundMultilineStatements](#blankLinesAroundMultilineStatements)
+* [blankLinesBeforeComments](#blankLinesBeforeComments)
 * [blockComments](#blockComments)
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
@@ -499,16 +500,6 @@ Insert blank lines before and after multiline statements.
   }
 ```
 
-```diff
-  let bar = foo.bar
-+
-  // every bar also has a quux
-  let quux = bar.quux
-+
-  // Finally, frobnicate them both
-  frobnicate(bar, quux)
-```
-
 </details>
 <br/>
 
@@ -641,6 +632,24 @@ With `--type-blank-lines start-only` and `--scope-blank-lines preserve`:
           baz()
       }
   }
+```
+
+</details>
+<br/>
+
+## blankLinesBeforeComments
+
+Insert blank lines before standalone comments that introduce statements.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  let destination = solarSystem.planets[0]
++
+  // Refuel before departing for the next planet.
+  spacecraft.refuel()
+  spacecraft.launch(toward: destination)
 ```
 
 </details>

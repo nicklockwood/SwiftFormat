@@ -97,6 +97,7 @@ extension XCTestCase {
             .wrapIfExpressionBodies,
             .wrapSingleLineStrings,
             .blankLinesAroundMultilineStatements,
+            .blankLinesBeforeComments,
         ]
         let explicitExclusions = exclude.filter { !defaultExclusions.contains($0) }
         let exclude = exclude + defaultExclusions.filter { !rules.contains($0) }

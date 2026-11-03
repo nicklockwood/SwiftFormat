@@ -311,6 +311,36 @@ final class DuplicateImportsTests: XCTestCase {
         testFormatting(for: input, rule: .duplicateImports)
     }
 
+    func testNoRemoveImportsWithDifferentSPINames() {
+        let input = """
+        @_spi(Testing) import Foo
+        @_spi(Internal) import Foo
+        """
+        testFormatting(for: input, rule: .duplicateImports)
+    }
+
+    func testRemoveImportWithSameSPIName() {
+        let input = """
+        @_spi(Testing) import Foo
+        @_spi(Testing) import Foo
+        """
+        let output = """
+        @_spi(Testing) import Foo
+        """
+        testFormatting(for: input, output, rule: .duplicateImports)
+    }
+
+    func testRemoveImportRedundantWithSPIImport() {
+        let input = """
+        @_spi(Testing) import Foo
+        import Foo
+        """
+        let output = """
+        @_spi(Testing) import Foo
+        """
+        testFormatting(for: input, output, rule: .duplicateImports)
+    }
+
     func testNoRemoveExportedDuplicateImport() {
         let input = """
         import Foo

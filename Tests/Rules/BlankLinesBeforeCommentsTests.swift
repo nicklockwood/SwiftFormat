@@ -330,7 +330,33 @@ final class BlankLinesBeforeCommentsTests: XCTestCase {
         // Continue until all orders have been processed.
         while hasMoreWork
         """
-        testFormatting(for: input, rule: .blankLinesBeforeComments)
+        let output = """
+        if isReady {
+            run()
+        }
+
+        // Otherwise, wait for the next order.
+        else {
+            wait()
+        }
+
+        do {
+            try process()
+        }
+
+        // Report any errors.
+        catch {
+            report(error)
+        }
+
+        repeat {
+            processNext()
+        }
+
+        // Continue until all orders have been processed.
+        while hasMoreWork
+        """
+        testFormatting(for: input, output, rule: .blankLinesBeforeComments)
     }
 
     func testCRLFLinebreaks() {

@@ -55,16 +55,9 @@ extension Formatter {
               currentScope(at: index).map({ ["{", ":", "#if"].contains($0.string) }) ?? true,
               !isInClosureArguments(at: statement),
               isStartOfStatement(at: statement),
-              ![.keyword("else"), .keyword("catch")].contains(tokens[statement]),
               let previous = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
               !blankLineSeparatesConnectedSyntax(previous, statement)
         else { return false }
-        if tokens[statement] == .keyword("while"), tokens[previous] == .endOfScope("}"),
-           let body = startOfScope(at: previous),
-           last(.nonSpaceOrCommentOrLinebreak, before: body) == .keyword("repeat")
-        {
-            return false
-        }
         return true
     }
 }

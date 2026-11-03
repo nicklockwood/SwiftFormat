@@ -150,6 +150,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isGeneric: Bool = false
         var isResultBuilder: Bool = false
         var isDynamicMemberLookup: Bool = false
+        var isNoncopyable: Bool = false
     }
 
     struct ClassInheritance: Codable, Equatable {
@@ -270,7 +271,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isStatic: Bool = false
     }
 
-    static let cacheVersion = 11
+    static let cacheVersion = 12
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -386,6 +387,7 @@ struct ProjectIndex {
     private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
     private let memberNamesByModule: [String: MemberNamesByType]
     private let dynamicMemberLookupTypesByModule: [String: Set<String>]
+    private let noncopyableTypesByModule: [String: Set<String>]
     private let symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]]
     private let symbolDeclarationCountsByName: [String: Int]
     private let typeDeclarationCountsByShortName: [String: Int]
@@ -400,6 +402,7 @@ struct ProjectIndex {
         var functionReferencesByModule = [String: [String: [SourceFileIndex.FunctionReference]]]()
         var memberNamesByModule = [String: MemberNamesByType]()
         var dynamicMemberLookupTypesByModule = [String: Set<String>]()
+        var noncopyableTypesByModule = [String: Set<String>]()
         var symbolDeclarationsByModule = [String: [SourceFileIndex.SymbolDeclaration]]()
         // Resolve extension targets across files before trusting their return types.
         // A generic parameter can shadow a nominal type with the same name.
@@ -428,6 +431,9 @@ struct ProjectIndex {
                     typesByModule[TypeKey(moduleIdentifier: module, name: type.name), default: []].append(type)
                     if type.isDynamicMemberLookup {
                         dynamicMemberLookupTypesByModule[module, default: []].insert(type.name)
+                    }
+                    if type.isNoncopyable {
+                        noncopyableTypesByModule[module, default: []].insert(type.name.unqualifiedTypeName)
                     }
                 }
             }
@@ -521,6 +527,7 @@ struct ProjectIndex {
         self.functionReferencesByModule = functionReferencesByModule
         self.memberNamesByModule = memberNamesByModule
         self.dynamicMemberLookupTypesByModule = dynamicMemberLookupTypesByModule
+        self.noncopyableTypesByModule = noncopyableTypesByModule
         self.symbolDeclarationsByModule = symbolDeclarationsByModule
         self.symbolDeclarationCountsByName = symbolDeclarationCountsByName
         self.typeDeclarationCountsByShortName = typeDeclarationCountsByShortName
@@ -528,7 +535,9 @@ struct ProjectIndex {
         let descriptions = files.keys.sorted().compactMap { path -> (String, String, String)? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
-                .map { "\($0.name):\($0.visibility):\($0.isGeneric):\($0.isResultBuilder):\($0.isDynamicMemberLookup)" }
+                .map {
+                    "\($0.name):\($0.visibility):\($0.isGeneric):\($0.isResultBuilder):\($0.isDynamicMemberLookup):\($0.isNoncopyable)"
+                }
                 .sorted()
                 .joined(separator: ",")
             let classInheritances = file.classInheritances
@@ -1150,6 +1159,13 @@ struct ProjectIndex {
         return moduleIdentifiers.contains { dynamicMemberLookupTypesByModule[$0]?.contains(name) == true }
     }
 
+    /// Whether a project-defined type with the given unqualified name is declared `~Copyable`
+    /// in any module containing the current file.
+    func isNoncopyableType(named name: String, visibleFrom fileURL: URL) -> Bool {
+        let moduleIdentifiers = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers ?? []
+        return moduleIdentifiers.contains { noncopyableTypesByModule[$0]?.contains(name) == true }
+    }
+
     /// Project declaration names that can participate in coordinated renaming.
     func declarationNames(upTo visibility: VisibilityThreshold, visibleFrom fileURL: URL) -> DeclarationNames? {
         let path = fileURL.standardizedFileURL.path
@@ -1327,7 +1343,8 @@ func makeSourceFileIndex(
                                 $0.asTypeDeclaration?.genericParameters != nil || $0.keyword == "extension"
                             }),
                         isResultBuilder: declaration.attributes.contains("@resultBuilder"),
-                        isDynamicMemberLookup: declaration.attributes.contains("@dynamicMemberLookup")
+                        isDynamicMemberLookup: declaration.attributes.contains("@dynamicMemberLookup"),
+                        isNoncopyable: typeDeclaration.conformances.contains { $0.conformance.string == "~Copyable" }
                     ))
                 }
             }
@@ -1464,7 +1481,7 @@ func makeSourceFileIndex(
     )
 }
 
-private extension String {
+extension String {
     /// The last component of a qualified type name, ignoring generic arguments.
     var unqualifiedTypeName: String {
         prefix { $0 != "<" }.split(separator: ".").last.map(String.init) ?? self

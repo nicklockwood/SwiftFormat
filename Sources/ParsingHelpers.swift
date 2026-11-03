@@ -212,7 +212,7 @@ public extension Formatter {
                 if self.token(at: i + 1)?.isUnwrapOperator == true {
                     i += 1
                 }
-            case .number, .identifier:
+            case .keyword where token.isMacro, .number, .identifier:
                 guard wasOperator else {
                     return lastIndex
                 }
@@ -220,7 +220,8 @@ public extension Formatter {
             case .startOfScope("<"),
                  .startOfScope where wasOperator,
                  .startOfScope("{") where isStartOfClosure(at: i),
-                 .startOfScope("(") where isSubscriptOrFunctionCall(at: i),
+                 .startOfScope("(") where isSubscriptOrFunctionCall(at: i) ||
+                     last(.nonSpaceOrComment, before: i)?.isMacro == true,
                  .startOfScope("[") where isSubscriptOrFunctionCall(at: i):
                 wasOperator = false
                 guard let endIndex = endOfScope(at: i) else {

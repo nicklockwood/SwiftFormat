@@ -230,6 +230,16 @@ final class YodaConditionsTests: XCTestCase {
         testFormatting(for: input, output, rule: .yodaConditions)
     }
 
+    func testMacroCallOnRhsNotMangledInYodaCondition() {
+        let input = """
+        #expect(try "A" == #require(foo))
+        """
+        let output = """
+        #expect(try #require(foo) == "A")
+        """
+        testFormatting(for: input, output, rule: .yodaConditions)
+    }
+
     func testYodaConditionInIfStatement() {
         let input = """
         if 5 != foo {}

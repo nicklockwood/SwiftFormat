@@ -476,9 +476,7 @@ Option | Description
 
 ## blankLinesAroundMultilineStatements
 
-Insert blank lines before and after multiline statements, except between a
-single-line variable declaration and an uncommented multiline statement that uses that variable.
-Attached leading comments count as part of a statement.
+Insert blank lines before and after multiline statements.
 
 <details>
 <summary>Examples</summary>

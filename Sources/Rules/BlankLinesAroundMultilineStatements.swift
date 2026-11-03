@@ -9,13 +9,9 @@
 import Foundation
 
 public extension FormatRule {
-    /// Separate multiline statements, keeping single-line variable declarations with statements that use them.
+    /// Insert blank lines before and after multiline statements.
     static let blankLinesAroundMultilineStatements = FormatRule(
-        help: """
-        Insert blank lines before and after multiline statements, except between a
-        single-line variable declaration and an uncommented multiline statement that uses that variable.
-        Attached leading comments count as part of a statement.
-        """,
+        help: "Insert blank lines before and after multiline statements.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in

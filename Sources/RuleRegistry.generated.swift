@@ -19,6 +19,7 @@ let ruleRegistry: [String: FormatRule] = [
     "blankLineAfterSwitchCase": .blankLineAfterSwitchCase,
     "blankLinesAfterGuardStatements": .blankLinesAfterGuardStatements,
     "blankLinesAroundMark": .blankLinesAroundMark,
+    "blankLinesAroundMultilineStatements": .blankLinesAroundMultilineStatements,
     "blankLinesAtEndOfScope": .blankLinesAtEndOfScope,
     "blankLinesAtStartOfScope": .blankLinesAtStartOfScope,
     "blankLinesBetweenChainedFunctions": .blankLinesBetweenChainedFunctions,

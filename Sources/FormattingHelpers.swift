@@ -104,7 +104,9 @@ extension Formatter {
                     return
                 }
                 guard transformedName != name else { return }
-                replaceToken(at: index, with: .identifier(transformedName))
+                let escapedName = !transformedName.hasPrefix("`") && backticksRequired(forName: transformedName, at: index)
+                    ? "`\(transformedName)`" : transformedName
+                replaceToken(at: index, with: .identifier(escapedName))
             case let .commentBody(comment):
                 let transformedComment = transform(comment)
                 guard transformedComment != comment else { return }

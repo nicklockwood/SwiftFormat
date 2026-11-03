@@ -10,6 +10,66 @@ import XCTest
 @testable import SwiftFormat
 
 final class CommonTyposTests: XCTestCase {
+    func testPreservesIffByDefault() {
+        let input = """
+        /// True iff both conditions hold. Iff and IFF are also preserved.
+        private let enabledIffReady = true
+        print(enabledIffReady)
+        """
+        testFormatting(for: input, rule: .commonTypos)
+    }
+
+    func testCorrectsIffWhenPreservationDisabled() {
+        let input = """
+        /// True iff both conditions hold. Iff and IFF.
+        private let enabledIffReady = "iff"
+        print(enabledIffReady)
+        """
+        let output = """
+        /// True if both conditions hold. If and IF.
+        private let enabledIfReady = "iff"
+        print(enabledIfReady)
+        """
+        testFormatting(for: input, output, rule: .commonTypos, options: FormatOptions(preserveIff: false))
+    }
+
+    func testCorrectingIffEscapesKeywordIdentifiers() {
+        let input = """
+        private let iff = true
+        print(iff)
+        """
+        let output = """
+        private let `if` = true
+        print(`if`)
+        """
+        testFormatting(for: input, output, rule: .commonTypos, options: FormatOptions(preserveIff: false))
+    }
+
+    func testIgnoredIffOverridesPreservationOption() {
+        let input = """
+        /// True iff both conditions hold.
+        private let enabledIffReady = true
+        print(enabledIffReady)
+        """
+        testFormatting(for: input, rule: .commonTypos, options: FormatOptions(
+            ignoredTypos: ["IFF"], preserveIff: false
+        ))
+    }
+
+    func testCustomIffCorrectionOverridesPreservationOption() {
+        let input = """
+        // True iff both conditions hold.
+        """
+        let output = """
+        // True when both conditions hold.
+        """
+        for preserveIff in [true, false] {
+            testFormatting(for: input, output, rule: .commonTypos, options: FormatOptions(
+                typos: ["iff": "when"], preserveIff: preserveIff
+            ))
+        }
+    }
+
     func testPrefersUSSpellingWhenEnabled() {
         let input = """
         // Colour COLOUR favourite behaviour centre theatre

@@ -810,6 +810,7 @@ Option | Description
 `--typos` | Comma-delimited list of typo=correction mappings
 `--ignore-typos` | Comma-delimited list of typos to ignore
 `--prefer-us-spelling` | Prefer US spellings: "true" or "false" (default)
+`--preserve-iff` | Preserve 'iff' ('if and only if') instead of correcting to 'if': "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>
@@ -832,6 +833,10 @@ With `--prefer-us-spelling true`:
 
 US spelling corrections respect `--typo-visibility` and `--ignore-typos`.
 Explicit `--typos` mappings take precedence over US spelling preferences.
+
+By default, `iff` is preserved as shorthand for "if and only if".
+Use `--preserve-iff false` to correct it to `if` instead.
+Explicit `--typos` mappings and `--ignore-typos` take precedence over this preference.
 
 </details>
 <br/>

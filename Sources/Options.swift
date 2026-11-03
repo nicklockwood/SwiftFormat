@@ -1063,6 +1063,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var typos: [String: String]
     public var ignoredTypos: Set<String>
     public var preferUSSpelling: Bool
+    public var preserveIff: Bool
     public var indentBlankLines: Bool
     public var indentStrings: Bool
     public var closureVoidReturn: ClosureVoidReturn
@@ -1245,6 +1246,7 @@ public struct FormatOptions: CustomStringConvertible {
                 typos: [String: String] = [:],
                 ignoredTypos: Set<String> = [],
                 preferUSSpelling: Bool = false,
+                preserveIff: Bool = true,
                 indentBlankLines: Bool = false,
                 indentStrings: Bool = false,
                 closureVoidReturn: ClosureVoidReturn = .remove,
@@ -1409,6 +1411,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.typos = typos
         self.ignoredTypos = ignoredTypos
         self.preferUSSpelling = preferUSSpelling
+        self.preserveIff = preserveIff
         self.indentBlankLines = indentBlankLines
         self.indentStrings = indentStrings
         self.closureVoidReturn = closureVoidReturn

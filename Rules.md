@@ -131,6 +131,7 @@
 * [alignAssignments](#alignAssignments)
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
+* [blankLinesAroundMultilineStatements](#blankLinesAroundMultilineStatements)
 * [blockComments](#blockComments)
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
@@ -468,6 +469,43 @@ Option | Description
   func bar() {
     // bar
   }
+```
+
+</details>
+<br/>
+
+## blankLinesAroundMultilineStatements
+
+Insert blank lines before and after multiline statements.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func prepareOrders() {
+      let orders = loadOrders(
+          from: warehouse,
+          limit: 100
+      )
++
+      guard !orders.isEmpty else {
+          return
+      }
++
+      for order in orders {
+          order.prepare()
+      }
+  }
+```
+
+```diff
+  let bar = foo.bar
++
+  // every bar also has a quux
+  let quux = bar.quux
++
+  // Finally, frobnicate them both
+  frobnicate(bar, quux)
 ```
 
 </details>

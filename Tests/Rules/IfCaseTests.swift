@@ -537,7 +537,7 @@ final class IfCaseTests: XCTestCase {
             hideSpinner()
         }
         """
-        testFormatting(for: input, rule: .ifCase, exclude: [.elseOnSameLine])
+        testFormatting(for: input, rule: .ifCase)
     }
 
     func testDoesNotConvertNonexhaustiveResultBuilder() {

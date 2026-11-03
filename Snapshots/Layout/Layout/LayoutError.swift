@@ -134,10 +134,8 @@ public enum LayoutError: Error, Hashable, CustomStringConvertible {
             return message
         case let .generic(error, className):
             var description = stringify(error)
-            if let className = className {
-                if !description.contains(className) {
-                    description = "\(description) in \(className)"
-                }
+            if let className = className, !description.contains(className) {
+                description = "\(description) in \(className)"
             }
             return description
         case let .unknownExpression(error, _),

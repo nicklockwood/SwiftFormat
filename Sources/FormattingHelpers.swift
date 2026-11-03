@@ -2675,6 +2675,7 @@ extension Formatter {
         static staticSelf: Bool,
         additionalMembersByType: [String: Set<String>] = [:],
         additionalClassMembersByType: [String: Set<String>] = [:],
+        isAdditionalDynamicMemberType: (String) -> Bool = { _ in false },
         isAdditionalSelfRequired: (Int) -> Bool = { _ in false }
     ) {
         let selfKeyword = staticSelf ? "Self" : "self"
@@ -2907,7 +2908,8 @@ extension Formatter {
                     if usingDynamicLookup {
                         scopeStack[scopeStack.count - 1].dynamicMemberTypes.insert(name)
                     } else if [token.string, lastKeyword].contains("extension"),
-                              scopeStack.last!.dynamicMemberTypes.contains(name)
+                              scopeStack.last!.dynamicMemberTypes.contains(name) ||
+                              isAdditionalDynamicMemberType(name)
                     {
                         usingDynamicLookup = true
                     }

@@ -2118,6 +2118,54 @@ final class RedundantSelfTests: XCTestCase {
                        options: options)
     }
 
+    func testProjectSelfNotRemovedInExtensionOfTypeWithDynamicMemberLookupInAnotherFile() throws {
+        let declarations = """
+        @dynamicMemberLookup
+        struct Foo {
+            subscript(dynamicMember foo: String) -> String {
+                foo + "bar"
+            }
+        }
+        """
+        let input = """
+        extension Foo {
+            func bar() {
+                if self.foo == "foobar" {
+                    return
+                }
+            }
+        }
+        """
+        try testProjectFormatting(for: input, input, declarations: declarations)
+    }
+
+    func testProjectSelfRemovedInExtensionOfTypeWithoutDynamicMemberLookupInAnotherFile() throws {
+        let declarations = """
+        struct Foo {
+            var foo: String
+        }
+        """
+        let input = """
+        extension Foo {
+            func bar() {
+                if self.foo == "foobar" {
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        extension Foo {
+            func bar() {
+                if foo == "foobar" {
+                    return
+                }
+            }
+        }
+        """
+        try testProjectFormatting(for: input, output, declarations: declarations)
+    }
+
     func testNoRemoveSelfAfterGuardCaseLetWithExplicitNamespace() {
         let input = """
         class Foo {

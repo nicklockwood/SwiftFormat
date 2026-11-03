@@ -971,4 +971,67 @@ final class PreferSwiftTestingTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "6.0")
         testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
+
+    func testPreservesTestCaseReferencingSwiftTestingTypeName() {
+        // `import Testing` would make SwiftSyntax's `SourceLocation` ambiguous
+        let input = """
+        import SwiftSyntax
+        import XCTest
+
+        final class RuleMaskTests: XCTestCase {
+            private var converter: SourceLocationConverter!
+
+            func testLocation() {
+                XCTAssertEqual(location(ofLine: 1).line, 1)
+            }
+
+            private func location(ofLine line: Int) -> SourceLocation {
+                converter.location(for: converter.position(ofLine: line, column: 0))
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
+    }
+
+    func testConvertsTestCaseWithQualifiedOrLocalSwiftTestingTypeName() {
+        let input = """
+        import SwiftSyntax
+        import XCTest
+
+        struct Tag {
+            let name: String
+        }
+
+        final class TagTests: XCTestCase {
+            func testTag() {
+                let location: SwiftSyntax.SourceLocation? = nil
+                XCTAssertNil(location)
+                XCTAssertEqual(Tag(name: "a").name, "a")
+            }
+        }
+        """
+
+        let output = """
+        import Foundation
+        import SwiftSyntax
+        import Testing
+
+        struct Tag {
+            let name: String
+        }
+
+        final class TagTests {
+            @Test func tag() {
+                let location: SwiftSyntax.SourceLocation? = nil
+                #expect(location == nil)
+                #expect(Tag(name: "a").name == "a")
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
+    }
 }

@@ -69,20 +69,17 @@ public extension FormatRule {
                       memberVisibility > .private
                 else { return }
 
-                if memberVisibility > extensionVisibility ?? .internal {
-                    // Check the type being extended does not have lower visibility.
+                if memberVisibility != extensionVisibility,
+                   !(memberVisibility == .internal && visibilityKeyword == nil)
+                {
+                    // Cannot make extension with greater visibility than type being extended,
+                    // e.g. a `fileprivate extension` of a `private` type doesn't compile
                     if let extendedTypeName = extensionDeclaration.name,
                        let typeVisibility = typeVisibilityByName[extendedTypeName],
                        typeVisibility < memberVisibility
                     {
-                        // Cannot make extension with greater visibility than type being extended
                         return
                     }
-                }
-
-                if memberVisibility != extensionVisibility,
-                   !(memberVisibility == .internal && visibilityKeyword == nil)
-                {
                     extensionDeclaration.addVisibility(memberVisibility)
                 }
 

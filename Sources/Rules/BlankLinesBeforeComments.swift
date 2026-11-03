@@ -9,9 +9,9 @@
 import Foundation
 
 public extension FormatRule {
-    /// Insert blank lines before standalone comments that appear before statements or declarations.
+    /// Insert blank lines before comments that appear before statements or declarations.
     static let blankLinesBeforeComments = FormatRule(
-        help: "Insert blank lines before standalone comments that appear before statements or declarations.",
+        help: "Insert blank lines before comments that appear before statements or declarations.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in

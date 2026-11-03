@@ -639,7 +639,7 @@ With `--type-blank-lines start-only` and `--scope-blank-lines preserve`:
 
 ## blankLinesBeforeComments
 
-Insert blank lines before standalone comments that appear before statements or declarations.
+Insert blank lines before comments that appear before statements or declarations.
 
 <details>
 <summary>Examples</summary>

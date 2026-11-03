@@ -25,6 +25,13 @@ public extension FormatRule {
             static: false,
             additionalMembersByType: projectMembers.instance,
             additionalClassMembersByType: projectMembers.staticOrClass,
+            isAdditionalDynamicMemberType: { name in
+                guard let fileURL = formatter.currentFileURL else { return false }
+                return formatter.projectIndex(requiring: [.declarations])?.isDynamicMemberLookupType(
+                    named: name,
+                    visibleFrom: fileURL
+                ) ?? false
+            },
             isAdditionalSelfRequired: { index in
                 guard let fileURL = formatter.currentFileURL else { return false }
                 return formatter.projectIndex(requiring: [.declarations])?.isAutoclosureArgument(

@@ -972,7 +972,7 @@ final class ProjectIndexTests: XCTestCase {
             moduleIdentifiers: ["App"]
         )
 
-        XCTAssertEqual(SourceFileIndex.cacheVersion, 10)
+        XCTAssertEqual(SourceFileIndex.cacheVersion, 11)
         XCTAssertEqual(try JSONDecoder().decode(
             SourceFileIndex.self,
             from: JSONEncoder().encode(index)

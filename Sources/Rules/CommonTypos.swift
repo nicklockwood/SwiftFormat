@@ -13,12 +13,15 @@ public extension FormatRule {
     static let commonTypos = FormatRule(
         help: "Correct common spelling mistakes in comments and identifiers.",
         disabledByDefault: true,
-        options: ["typo-visibility", "typos", "ignore-typos", "prefer-us-spelling"]
+        options: ["typo-visibility", "typos", "ignore-typos", "prefer-us-spelling", "preserve-iff"]
     ) { formatter in
         let ignoredTypos = Set(formatter.options.ignoredTypos.map { $0.lowercased() })
         var typoCorrections = commonTypoCorrections
         for (typo, correction) in formatter.options.typos where typoCorrections[typo.lowercased()] == nil {
             typoCorrections[typo.lowercased()] = correction
+        }
+        if !formatter.options.preserveIff, typoCorrections["iff"] == nil {
+            typoCorrections["iff"] = "if"
         }
         if formatter.options.preferUSSpelling {
             for (spelling, correction) in usSpellingCorrections where typoCorrections[spelling] == nil {
@@ -113,7 +116,9 @@ public extension FormatRule {
                     return
                 }
                 guard correctedName != name else { return }
-                formatter.replaceToken(at: index, with: .identifier(correctedName))
+                let escapedName = !correctedName.hasPrefix("`") && formatter.backticksRequired(forName: correctedName, at: index)
+                    ? "`\(correctedName)`" : correctedName
+                formatter.replaceToken(at: index, with: .identifier(escapedName))
             case let .commentBody(comment):
                 let correctedComment = formatter.correctingCommonTypos(
                     in: comment,
@@ -146,6 +151,10 @@ public extension FormatRule {
 
         US spelling corrections respect `--typo-visibility` and `--ignore-typos`.
         Explicit `--typos` mappings take precedence over US spelling preferences.
+
+        By default, `iff` is preserved as shorthand for "if and only if".
+        Use `--preserve-iff false` to correct it to `if` instead.
+        Explicit `--typos` mappings and `--ignore-typos` take precedence over this preference.
         """
     }
 }

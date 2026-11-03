@@ -469,6 +469,24 @@ final class ExtensionAccessControlTests: XCTestCase {
         testFormatting(for: input, rule: .extensionAccessControl, exclude: [.redundantPublic])
     }
 
+    func testFileprivateAccessNotHoistedIfTypeIsPrivate() {
+        // `fileprivate extension` of a `private` type doesn't compile
+        let input = """
+        private enum Foo {
+            case bar
+        }
+
+        extension Foo {
+            fileprivate var baz: Int {
+                0
+            }
+
+            fileprivate func quux() {}
+        }
+        """
+        testFormatting(for: input, rule: .extensionAccessControl)
+    }
+
     func testAccessHoistedForPublicNestedType() {
         // Extension of a dot-separated nested type that IS public should still allow hoisting.
         let input = """

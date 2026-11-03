@@ -656,6 +656,21 @@ final class OpaqueGenericParametersTests: XCTestCase {
         testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
     }
 
+    func testKeepsParensAroundOptionalOpaqueProtocolCompositionInSwift64() {
+        let input = """
+        func foo<Foo: Fooable & Barable>(_: Foo?) {}
+        func bar<Bar: Fooable & Barable>(_: Bar!) {}
+        """
+
+        let output = """
+        func foo(_: (some Fooable & Barable)?) {}
+        func bar(_: (some Fooable & Barable)!) {}
+        """
+
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+    }
+
     func testHandlesSingleExactTypeGenericConstraint() {
         let input = """
         func foo<T>(with _: T) -> Foo where T == Dependencies {}

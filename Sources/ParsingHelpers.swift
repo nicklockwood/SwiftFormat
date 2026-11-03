@@ -1434,6 +1434,21 @@ extension Formatter {
         }
     }
 
+    /// Include contiguous standalone leading comments in the following statement.
+    func startOfStatementIncludingComments(at index: Int) -> Int {
+        guard self.index(of: .nonSpaceOrCommentOrLinebreak, in: startOfLine(at: index) ..< index) == nil else { return index }
+        var start = index
+        while let linebreak = self.index(of: .linebreak, before: startOfLine(at: start)),
+              let commentEnd = self.index(of: .nonSpace, before: linebreak),
+              tokens[commentEnd].isComment,
+              let commentStart = tokens[commentEnd].isStartOfScope ? commentEnd : startOfScope(at: commentEnd),
+              startOfLine(at: commentStart, excludingIndent: true) == commentStart
+        {
+            start = commentStart
+        }
+        return start
+    }
+
     /// Whether the given index is a `startOfScope("{")` that represents the start of a type body
     func isStartOfTypeBody(at scopeIndex: Int) -> Bool {
         guard tokens[scopeIndex] == .startOfScope("{"),

@@ -639,7 +639,7 @@ With `--type-blank-lines start-only` and `--scope-blank-lines preserve`:
 
 ## blankLinesBeforeComments
 
-Insert blank lines before standalone comments that introduce statements.
+Insert blank lines before standalone comments that appear before statements or declarations.
 
 <details>
 <summary>Examples</summary>
@@ -650,6 +650,19 @@ Insert blank lines before standalone comments that introduce statements.
   // Refuel before departing for the next planet.
   spacecraft.refuel()
   spacecraft.launch(toward: destination)
+```
+
+```diff
+  struct SolarSystem {
+      /// The inner terrestrial planets
+      let innerPlanets = [mercury, venus, earth, mars]
++
+      /// The outer gas giants
+      let outerPlanets = [jupiter, saturn, uranus, neptune]
++
+      /// Minor dwarf planets in the asteroid belt and kuiper belt
+      let dwarfPlanets = [ceres, pluto, eris]
+  }
 ```
 
 </details>

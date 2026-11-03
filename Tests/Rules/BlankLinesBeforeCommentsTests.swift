@@ -92,6 +92,90 @@ final class BlankLinesBeforeCommentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesBeforeComments)
     }
 
+    func testDocCommentsBeforeDeclarations() {
+        let input = """
+        struct SolarSystem {
+            /// The inner terrestrial planets
+            let innerPlanets = [mercury, venus, earth, mars]
+            /// The outer gas giants
+            let outerPlanets = [jupiter, saturn, uranus, neptune]
+            /// Minor dwarf planets in the asteroid belt and kuiper belt
+            let dwarfPlanets = [ceres, pluto, eris]
+        }
+        """
+        let output = """
+        struct SolarSystem {
+            /// The inner terrestrial planets
+            let innerPlanets = [mercury, venus, earth, mars]
+
+            /// The outer gas giants
+            let outerPlanets = [jupiter, saturn, uranus, neptune]
+
+            /// Minor dwarf planets in the asteroid belt and kuiper belt
+            let dwarfPlanets = [ceres, pluto, eris]
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesBeforeComments)
+    }
+
+    func testMultilineBlockComment() {
+        let input = """
+        let destination = solarSystem.planets[0]
+        /*
+         Refuel before departing for the next planet.
+         Leave enough fuel for the return trip.
+         */
+        spacecraft.refuel()
+        spacecraft.launch(toward: destination)
+        """
+        let output = """
+        let destination = solarSystem.planets[0]
+
+        /*
+         Refuel before departing for the next planet.
+         Leave enough fuel for the return trip.
+         */
+        spacecraft.refuel()
+        spacecraft.launch(toward: destination)
+        """
+        testFormatting(for: input, output, rule: .blankLinesBeforeComments)
+    }
+
+    func testMultilineBlockDocCommentsBeforeDeclarations() {
+        let input = """
+        struct SolarSystem {
+            /**
+             The inner terrestrial planets.
+             Ordered by distance from the sun.
+             */
+            let innerPlanets = [mercury, venus, earth, mars]
+            /**
+             The outer gas giants.
+             Ordered by distance from the sun.
+             */
+            let outerPlanets = [jupiter, saturn, uranus, neptune]
+            let dwarfPlanets = [ceres, pluto, eris]
+        }
+        """
+        let output = """
+        struct SolarSystem {
+            /**
+             The inner terrestrial planets.
+             Ordered by distance from the sun.
+             */
+            let innerPlanets = [mercury, venus, earth, mars]
+
+            /**
+             The outer gas giants.
+             Ordered by distance from the sun.
+             */
+            let outerPlanets = [jupiter, saturn, uranus, neptune]
+            let dwarfPlanets = [ceres, pluto, eris]
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesBeforeComments)
+    }
+
     func testMultilineBlockCommentAndLineCommentStayTogether() {
         let input = """
         prepare()

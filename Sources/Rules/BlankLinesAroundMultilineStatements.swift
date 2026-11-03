@@ -18,7 +18,9 @@ public extension FormatRule {
         formatter.forEachToken(where: { !$0.isSpaceOrCommentOrLinebreak }) { i, _ in
             guard let statement = formatter.multilineStatementRange(at: i) else { return }
             formatter.insertBlankLineAfterStatement(at: statement.upperBound)
-            formatter.insertBlankLineBeforeStatement(in: statement)
+            if !formatter.precedingVariableIsReferenced(in: statement) {
+                formatter.insertBlankLineBeforeStatement(at: statement.lowerBound)
+            }
         }
     } examples: {
         """
@@ -37,16 +39,6 @@ public extension FormatRule {
                   order.prepare()
               }
           }
-        ```
-
-        ```diff
-          let bar = foo.bar
-        +
-          // every bar also has a quux
-          let quux = bar.quux
-        +
-          // Finally, frobnicate them both
-          frobnicate(bar, quux)
         ```
         """
     }
@@ -117,8 +109,8 @@ extension Formatter {
                   !blankLineSeparatesConnectedSyntax(previous, range.lowerBound)
             else { return nil }
         }
-        let start = startOfStatementIncludingComments(at: range.lowerBound)
-        return onSameLine(start, range.upperBound) ? nil : start ... range.upperBound
+        guard !onSameLine(range.lowerBound, range.upperBound) else { return nil }
+        return startOfStatementIncludingComments(at: range.lowerBound) ... range.upperBound
     }
 
     /// The complete range of a control flow statement, including any branches or label.
@@ -210,37 +202,6 @@ extension Formatter {
               let names = namesInDeclaration(at: introducer)
         else { return false }
         return tokens[statement].contains { $0.isIdentifier && names.contains($0.unescaped()) }
-    }
-
-    /// Include contiguous standalone leading comments in the following statement.
-    func startOfStatementIncludingComments(at index: Int) -> Int {
-        guard self.index(of: .nonSpaceOrCommentOrLinebreak, in: startOfLine(at: index) ..< index) == nil else { return index }
-        var start = index
-        while let linebreak = self.index(of: .linebreak, before: startOfLine(at: start)),
-              let commentEnd = self.index(of: .nonSpace, before: linebreak),
-              tokens[commentEnd].isComment,
-              let commentStart = tokens[commentEnd].isStartOfScope ? commentEnd : startOfScope(at: commentEnd),
-              startOfLine(at: commentStart, excludingIndent: true) == commentStart
-        {
-            start = commentStart
-        }
-        return start
-    }
-
-    /// Keep standalone leading comments attached to the statement they describe.
-    func insertBlankLineBeforeStatement(in statement: ClosedRange<Int>) {
-        let start = statement.lowerBound
-        guard !precedingVariableIsReferenced(in: statement),
-              index(of: .nonSpaceOrCommentOrLinebreak, in: startOfLine(at: start) ..< start) == nil,
-              let previous = index(of: .nonSpaceOrCommentOrLinebreak, before: start),
-              !tokens[previous].isStartOfScope,
-              ![.keyword("in"), .keyword("#else"), .keyword("#elseif")].contains(tokens[previous]),
-              ![.startOfScope("#if"), .keyword("#elseif")].contains(tokens[startOfLine(at: previous, excludingIndent: true)]),
-              isEndOfStatement(at: previous),
-              let linebreak = index(of: .linebreak, in: previous + 1 ..< start),
-              index(of: .linebreak, in: linebreak + 1 ..< start) == nil
-        else { return }
-        insertLinebreak(at: startOfLine(at: start))
     }
 
     /// Insert after any trailing comment, and only when another statement follows on a later line.

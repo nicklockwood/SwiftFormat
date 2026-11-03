@@ -132,6 +132,7 @@
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blankLinesAroundMultilineStatements](#blankLinesAroundMultilineStatements)
+* [blankLinesBeforeComments](#blankLinesBeforeComments)
 * [blockComments](#blockComments)
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
@@ -499,16 +500,6 @@ Insert blank lines before and after multiline statements.
   }
 ```
 
-```diff
-  let bar = foo.bar
-+
-  // every bar also has a quux
-  let quux = bar.quux
-+
-  // Finally, frobnicate them both
-  frobnicate(bar, quux)
-```
-
 </details>
 <br/>
 
@@ -640,6 +631,37 @@ With `--type-blank-lines start-only` and `--scope-blank-lines preserve`:
 
           baz()
       }
+  }
+```
+
+</details>
+<br/>
+
+## blankLinesBeforeComments
+
+Insert blank lines before comments that appear before statements or declarations.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  let destination = solarSystem.planets[0]
++
+  // Refuel before departing for the next planet.
+  spacecraft.refuel()
+  spacecraft.launch(toward: destination)
+```
+
+```diff
+  struct SolarSystem {
+      /// The inner terrestrial planets
+      let innerPlanets = [mercury, venus, earth, mars]
++
+      /// The outer gas giants
+      let outerPlanets = [jupiter, saturn, uranus, neptune]
++
+      /// Minor dwarf planets in the asteroid belt and kuiper belt
+      let dwarfPlanets = [ceres, pluto, eris]
   }
 ```
 

@@ -888,50 +888,19 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
         testFormatting(for: input, rule: .blankLinesAroundMultilineStatements)
     }
 
-    func testAttachedCommentsCountAsPartOfStatements() {
-        let input = """
-        func frobnicateFoo() {
-            let bar = foo.bar
-            // every bar also has a quux
-            let quux = bar.quux
-            // Finally, frobnicate them both
-            frobnicate(bar, quux)
-        }
-        """
-        let output = """
-        func frobnicateFoo() {
-            let bar = foo.bar
-
-            // every bar also has a quux
-            let quux = bar.quux
-
-            // Finally, frobnicate them both
-            frobnicate(bar, quux)
-        }
-        """
-        testFormatting(for: input, output, rule: .blankLinesAroundMultilineStatements)
-    }
-
-    func testAttachedBlockCommentCountsAsPartOfStatement() {
+    func testLeadingCommentsDoNotMakeStatementsMultiline() {
         let input = """
         func prepareOrders() {
-            prepare()
-            /* Load the pending orders. */
-            let orders = loadOrders()
-            process(orders)
+            let destination = solarSystem.planets[0]
+            // Refuel before departing for the next planet.
+            spacecraft.refuel()
+            spacecraft.launch(toward: destination)
+            /* Report the remaining fuel. */
+            spacecraft.reportFuel()
+            finish()
         }
         """
-        let output = """
-        func prepareOrders() {
-            prepare()
-
-            /* Load the pending orders. */
-            let orders = loadOrders()
-
-            process(orders)
-        }
-        """
-        testFormatting(for: input, output, rule: .blankLinesAroundMultilineStatements)
+        testFormatting(for: input, rule: .blankLinesAroundMultilineStatements)
     }
 
     func testLeadingCommentOverridesReferencedVariableException() {

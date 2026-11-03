@@ -23,11 +23,14 @@ public extension FormatRule {
                 // Only remove an import that is redundant with the other one. For example
                 // `import Foo` is redundant with `@testable import Foo`, but neither
                 // `@testable import Foo` nor `@_spi(Foo) import Foo` is redundant.
-                if Set(range.attributes).isSubset(of: range2.attributes) {
+                // Attribute arguments count, since `@_spi(A)` and `@_spi(B)` expose different SPIs.
+                let attributes = formatter.importAttributesWithArguments(in: range.range)
+                let attributes2 = formatter.importAttributesWithArguments(in: range2.range)
+                if attributes.isSubset(of: attributes2) {
                     formatter.removeTokens(in: range.range)
                     continue
                 }
-                if j >= i, Set(range2.attributes).isSubset(of: range.attributes) {
+                if j >= i, attributes2.isSubset(of: attributes) {
                     formatter.removeTokens(in: range2.range)
                     importRanges.remove(at: j)
                 }
@@ -55,6 +58,26 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// The attributes of the import in the given range, including any arguments,
+    /// e.g. `@_spi(Internal)` rather than just `@_spi`.
+    func importAttributesWithArguments(in range: Range<Int>) -> Set<String> {
+        var attributes = Set<String>()
+        for i in range where tokens[i].isAttribute {
+            var attribute = tokens[i].string
+            if let openParen = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+               tokens[openParen] == .startOfScope("("),
+               let closeParen = endOfScope(at: openParen)
+            {
+                attribute += tokens[openParen ... closeParen]
+                    .filter { !$0.isSpaceOrCommentOrLinebreak }
+                    .map(\.string)
+                    .joined()
+            }
+            attributes.insert(attribute)
+        }
+        return attributes
+    }
+
     /// Remove ordinary file-scope duplicates without combining conditional import groups.
     func removeDuplicateImportsAcrossGroups() {
         guard !options.fragment else { return }

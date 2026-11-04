@@ -3851,6 +3851,43 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
+    func testNoTrailingCommaAddedToDiagnosticDirectives() {
+        let input = """
+        #warning(
+            "Remove this workaround once the fix is released"
+        )
+        #error(
+            "This platform isn't supported"
+        )
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testNoTrailingCommaAddedToSourceLocationAndKeyPath() {
+        let input = """
+        #sourceLocation(
+            file: "Generated.swift",
+            line: 1
+        )
+        let key = #keyPath(
+            Foo.bar
+        )
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testNoTrailingCommaAddedToHasSymbolCheck() {
+        let input = """
+        if #_hasSymbol(
+            Foo.bar
+        ) {}
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
     func testNoTrailingCommaAddedToAvailableCheckWithMultiplePlatforms() {
         let input = """
         if #available(

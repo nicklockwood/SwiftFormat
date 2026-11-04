@@ -61,8 +61,12 @@ public extension FormatRule {
                         trailingCommaSupported = false
                     }
 
-                    // Built-in condition-checking macros like `#available`, `#unavailable` don't support trailing commas.
-                    else if [.keyword("#available"), .keyword("#unavailable")].contains(identifierToken) {
+                    // Built-in conditions like `#available`, directives like `#warning`,
+                    // and `#keyPath` don't support trailing commas.
+                    else if [
+                        .keyword("#available"), .keyword("#unavailable"), .keyword("#_hasSymbol"),
+                        .keyword("#warning"), .keyword("#error"), .keyword("#sourceLocation"), .keyword("#keyPath"),
+                    ].contains(identifierToken) {
                         trailingCommaSupported = false
                     }
 

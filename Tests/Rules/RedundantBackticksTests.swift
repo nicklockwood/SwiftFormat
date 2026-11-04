@@ -117,6 +117,30 @@ final class RedundantBackticksTests: XCTestCase {
         testFormatting(for: input, rule: .redundantBackticks, exclude: [.enumNamespaces])
     }
 
+    func testNoRemoveBackticksAroundProtocolInsideType() {
+        let input = """
+        enum Keyword {
+            case `Protocol`
+            case `protocol`
+        }
+
+        struct Foo {
+            var `Protocol`: Int
+        }
+        """
+        testFormatting(for: input, rule: .redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundProtocolAtRootLevel() {
+        let input = """
+        let `Protocol` = 1
+        """
+        let output = """
+        let Protocol = 1
+        """
+        testFormatting(for: input, output, rule: .redundantBackticks)
+    }
+
     func testNoRemoveBackticksAroundLetArgument() {
         let input = """
         func foo(`let`: Foo) { print(`let`) }

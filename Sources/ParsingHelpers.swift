@@ -1574,7 +1574,9 @@ extension Formatter {
                     // TODO: check for other cases where it's safe to use unescaped
                     return false
                 }
-            case "Type":
+            case "Type", "Protocol":
+                // A type member can't be named `Type` or `Protocol` without backticks,
+                // since `Foo.Type` and `Foo.Protocol` are metatype expressions
                 if currentScope(at: i) == .startOfScope("{") {
                     // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
                     return true

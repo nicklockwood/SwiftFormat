@@ -2786,6 +2786,21 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.string, "Module::Type.Module::Subtype")
     }
 
+    func testWrappedTypeStringKeepsSpacesAroundAmpersandAndArrow() throws {
+        let formatter = Formatter(tokenize("""
+        let a: Foo &
+            Bar
+        let b: (Foo) ->
+            Bar
+        """))
+        let firstColon = try XCTUnwrap(formatter.index(of: .delimiter(":"), after: 0))
+        let secondColon = try XCTUnwrap(formatter.index(of: .delimiter(":"), after: firstColon))
+        let firstType = try XCTUnwrap(formatter.index(of: .nonSpace, after: firstColon))
+        let secondType = try XCTUnwrap(formatter.index(of: .nonSpace, after: secondColon))
+        XCTAssertEqual(formatter.parseType(at: firstType)?.string, "Foo & Bar")
+        XCTAssertEqual(formatter.parseType(at: secondType)?.string, "(Foo) -> Bar")
+    }
+
     func testParseModuleQualifiedTypeWithNewlineBeforeDoubleColon() {
         let formatter = Formatter(tokenize("""
         let foo: NationalAeronauticsAndSpaceAdministration

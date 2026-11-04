@@ -682,6 +682,14 @@ extension Collection<Token> where Index == Int {
                 while self[index].isSpace, index < indices.endIndex {
                     index += 1
                 }
+
+                // Keep the space around `&` and `->` in a wrapped type, like `Foo &` + `Bar`
+                let spacedOperators: [Token] = [.operator("&", .infix), .operator("->", .infix)]
+                if let lastToken = tokens.last, !lastToken.isSpace, index < indices.endIndex,
+                   spacedOperators.contains(lastToken) || spacedOperators.contains(self[index])
+                {
+                    tokens.append(.space(" "))
+                }
             }
 
             if index < indices.endIndex {

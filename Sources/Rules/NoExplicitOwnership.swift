@@ -40,6 +40,14 @@ public extension FormatRule {
                   let nextTokenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: keywordIndex)
             else { return }
 
+            // `consuming(...)` and `.consuming` are a declaration, a call or a member named `consuming`,
+            // like `case consuming(Int)` or `.consuming(value)`, rather than an ownership modifier
+            if formatter.token(at: keywordIndex + 1) == .startOfScope("(")
+                || formatter.last(.nonSpaceOrCommentOrLinebreak, before: keywordIndex)?.isOperator(".") == true
+            {
+                return
+            }
+
             // Use of `borrowing` and `consuming` as ownership modifiers
             // immediately precede a valid type, or the `func` keyword.
             // You could also simply use these names as a property,

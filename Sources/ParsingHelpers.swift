@@ -3562,6 +3562,11 @@ extension Formatter {
     func isLikelyToBeSubclassed(_ typeDecl: TypeDeclaration) -> Bool {
         guard let name = typeDecl.name else { return false }
 
+        // An `open` class exists to be subclassed, often from other files or modules
+        if typeDecl.modifiers.contains("open") {
+            return true
+        }
+
         // Check if name contains "Base" (common convention for base classes)
         if name.contains("Base") {
             return true

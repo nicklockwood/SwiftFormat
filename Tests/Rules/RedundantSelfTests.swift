@@ -5130,4 +5130,26 @@ final class RedundantSelfTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.blankLinesAfterGuardStatements, .wrapConditionalBodies, .wrapMultilineConditionalAssignment])
     }
+
+    func testParameterPackExpansionInReturnTypeIsNotRepeatLoop() {
+        let input = """
+        extension Store {
+            static func values<each Value>() -> (repeat each Value) {
+                self.makeValues()
+            }
+
+            static func other() {}
+        }
+        """
+        let output = """
+        extension Store {
+            static func values<each Value>() -> (repeat each Value) {
+                makeValues()
+            }
+
+            static func other() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf)
+    }
 }

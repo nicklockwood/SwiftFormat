@@ -1926,8 +1926,10 @@ extension Formatter {
 
             // If we find an expression-only keyword (like `as`, `is`, `try`) then this is
             // an expression, not a type. But we allow function-type keywords like `throws`,
-            // `rethrows`, `async` that can appear in nested closure types like `(() throws -> Void)`
-            let expressionKeywords = Set(["as", "is", "try", "await", "if", "switch", "for", "while", "repeat", "guard", "in", "return", "throw"])
+            // `rethrows`, `async` that can appear in nested closure types like `(() throws -> Void)`.
+            // `repeat` isn't included, since it can be a parameter pack expansion like `(repeat each T)`,
+            // and a `repeat` loop always includes `while`.
+            let expressionKeywords = Set(["as", "is", "try", "await", "if", "switch", "for", "while", "guard", "in", "return", "throw"])
             if tokens[startOfTypeIndex ... endOfScope].contains(where: {
                 $0.isKeyword && expressionKeywords.contains($0.string)
             }) {

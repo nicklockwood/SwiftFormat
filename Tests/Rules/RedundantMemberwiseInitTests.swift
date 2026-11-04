@@ -677,6 +677,22 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
+    func testPreserveInitWithConditionalAttributes() {
+        let input = """
+        struct Job {
+            let id: Int
+
+            #if compiler(>=5.9)
+                @usableFromInline
+            #endif
+            init(id: Int) {
+                self.id = id
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
     func testPreserveInitWithAttributes() {
         // Inits with attributes like @inlinable can't be removed because
         // synthesized memberwise inits don't support these attributes

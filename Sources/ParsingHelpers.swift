@@ -2332,6 +2332,57 @@ extension Formatter {
         return branches
     }
 
+    /// The index of the `#endif` of the `#if` block at the given index, if the block
+    /// only contains attributes of the declaration that directly follows it, like:
+    ///
+    ///     #if hasAttribute(nonexhaustive)
+    ///         @nonexhaustive
+    ///     #endif
+    ///     public enum Kind { ... }
+    ///
+    func endOfConditionalAttributeBlock(at ifIndex: Int) -> Int? {
+        guard tokens[ifIndex] == .startOfScope("#if"),
+              let firstTokenInBlock = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfLine(at: ifIndex)),
+              tokens[firstTokenInBlock].isAttribute || [.keyword("#else"), .keyword("#elseif")].contains(tokens[firstTokenInBlock]),
+              let branches = conditionalCompilationBranches(at: ifIndex),
+              let endifIndex = branches.last?.endOfBranch,
+              let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endifIndex),
+              let declarationIndex = indexOfNextDeclarationStart(after: endifIndex),
+              startOfModifiers(at: declarationIndex, includingAttributes: true) == nextIndex,
+              // Another block of conditional attributes can follow, but not other conditional code
+              tokens[declarationIndex] != .startOfScope("#if") || endOfConditionalAttributeBlock(at: declarationIndex) != nil
+        else { return nil }
+
+        var containsAttribute = false
+        for branch in branches {
+            var index = branch.startOfBranch
+            while let attributeIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                  attributeIndex < branch.endOfBranch
+            {
+                guard tokens[attributeIndex].isAttribute,
+                      let endOfAttribute = endOfAttribute(at: attributeIndex)
+                else { return nil }
+                containsAttribute = true
+                index = endOfAttribute
+            }
+        }
+        return containsAttribute ? endifIndex : nil
+    }
+
+    /// The start of any conditional attribute blocks directly before the given index,
+    /// or the index itself if there are none
+    func startOfConditionalAttributeBlocks(before index: Int) -> Int {
+        var startIndex = index
+        while let endifIndex = self.index(of: .nonSpaceOrLinebreak, before: startIndex),
+              tokens[endifIndex] == .endOfScope("#endif"),
+              let ifIndex = self.index(of: .startOfScope("#if"), before: endifIndex),
+              endOfConditionalAttributeBlock(at: ifIndex) == endifIndex
+        {
+            startIndex = ifIndex
+        }
+        return startIndex
+    }
+
     /// Constructs a single expression body can contain besides a plain expression
     struct SingleExpressionOptions: OptionSet {
         let rawValue: Int
@@ -2510,7 +2561,10 @@ extension Formatter {
 
         let isDeclarationStart = { [self] (index: Int, token: Token) in
             token.isDeclarationTypeKeyword
-                || token == .startOfScope("#if")
+                // Conditional attributes are part of the declaration that follows them.
+                // `indexOfNextDeclarationStart` still treats them as a declaration start,
+                // so the previous declaration ends before the `#if`.
+                || (token == .startOfScope("#if") && endOfConditionalAttributeBlock(at: index) == nil)
                 || isFreestandingMacroExpansion(at: index, in: range)
         }
 
@@ -4020,7 +4074,7 @@ extension Formatter {
     func parseDocCommentRange(forDeclarationAt keywordIndex: Int) -> ClosedRange<Int>? {
         let startOfModifiers = startOfModifiers(at: keywordIndex, includingAttributes: true)
 
-        var parseIndex = startOfModifiers
+        var parseIndex = startOfConditionalAttributeBlocks(before: startOfModifiers)
         var endOfComment: Int?
 
         while let endOfPreviousLine = index(of: .linebreak, before: parseIndex),

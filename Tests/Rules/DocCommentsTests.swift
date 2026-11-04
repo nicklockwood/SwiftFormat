@@ -1008,4 +1008,36 @@ final class DocCommentsTests: XCTestCase {
 
         testFormatting(for: input, [output], rules: [.docComments, .spaceInsideComments, .trailingSpace])
     }
+
+    func testDocCommentBeforeConditionalAttributes() {
+        let input = """
+        public struct Job {
+            let id: Int
+
+            // The kind of work a job performs.
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #endif
+            public enum Kind {
+                case loadImage
+            }
+        }
+        """
+
+        let output = """
+        public struct Job {
+            let id: Int
+
+            /// The kind of work a job performs.
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #endif
+            public enum Kind {
+                case loadImage
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .docComments)
+    }
 }

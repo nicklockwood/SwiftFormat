@@ -783,6 +783,38 @@ struct ProjectIndex {
         return status
     }
 
+    /// Standard library and Foundation protocols that inherit from `Sendable`
+    private static let sendableProtocols: Set<String> = [
+        "Sendable", "Error", "LocalizedError", "CustomNSError", "RecoverableError", "CodingKey",
+    ]
+
+    /// Whether another file conforms the type to a protocol that inherits from `Sendable`.
+    /// The type's `Sendable` conformance then can't be implicit, since the compiler requires it
+    /// to "occur in the same source file" as the type.
+    func requiresExplicitSendable(forType typeName: String, visibleFrom fileURL: URL) -> Bool {
+        let path = fileURL.standardizedFileURL.path
+        guard let file = files[path], !file.moduleIdentifiers.isEmpty else { return false }
+        let sameFileConformances = file.typeConformances.filter { $0.typeName == typeName }
+            .flatMap(\.conformances.inheritedNamesToResolve)
+        return file.moduleIdentifiers.contains { module in
+            var pending = (conformancesByModule[TypeKey(moduleIdentifier: module, name: typeName)] ?? [])
+                .subtracting(sameFileConformances)
+                .map { (name: $0, owner: typeName) }
+            var visited = Set<String>()
+            while let next = pending.popLast() {
+                if Self.sendableProtocols.contains(next.name) {
+                    return true
+                }
+                let key = declarationTypeKey(named: next.name, relativeTo: next.owner, in: module)
+                guard visited.insert(key.name).inserted else { continue }
+                for declaration in protocolDeclarationsByModule[key] ?? [] {
+                    pending += declaration.inheritedProtocols.map { (name: $0, owner: key.name) }
+                }
+            }
+            return false
+        }
+    }
+
     /// Whether a matching protocol requirement can supply a result builder to this body.
     /// Parameter types aren't used to disambiguate overloads: preserving a possible builder is safer.
     func hasInheritedResultBuilder(at scope: Int, in formatter: Formatter, visibleFrom fileURL: URL) -> Bool {

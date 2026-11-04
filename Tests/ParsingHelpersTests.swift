@@ -2000,6 +2000,78 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[0].tokens.map(\.string).joined(), input)
     }
 
+    func testParseConditionalAttributesAsPartOfFollowingDeclaration() {
+        let input = """
+        struct Foo {
+            let bar = 1
+
+            /// The kind of work.
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #elseif DEBUG
+                @available(macOS 13, *)
+            #endif
+            public enum Kind {}
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()[0].body ?? []
+        XCTAssertEqual(declarations.map(\.keyword), ["let", "enum"])
+        XCTAssertEqual(declarations[1].tokens.string, """
+            /// The kind of work.
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #elseif DEBUG
+                @available(macOS 13, *)
+            #endif
+            public enum Kind {}
+
+        """)
+    }
+
+    func testParseConditionalAttributesWithoutFollowingDeclaration() {
+        let input = """
+        struct Foo {
+            let bar = 1
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #endif
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()[0].body ?? []
+        XCTAssertEqual(declarations.map(\.keyword), ["let", "#if"])
+        XCTAssertEqual(declarations[1].tokens.string, """
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #endif
+
+        """)
+    }
+
+    func testParseStackedConditionalAttributesAsPartOfFollowingDeclaration() {
+        let input = """
+        struct Foo {
+            let bar = 1
+
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #endif
+            #if DEBUG
+                @available(*, deprecated)
+            #endif
+            public enum Kind {}
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()[0].body ?? []
+        XCTAssertEqual(declarations.map(\.keyword), ["let", "enum"])
+        XCTAssertEqual(declarations[1].attributes, ["@nonexhaustive", "@available"])
+    }
+
     func testParseIfExpressionDeclaration() {
         let input = """
         private lazy var x: [Any] =

@@ -61,4 +61,151 @@ final class NoExplicitOwnershipTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .noExplicitOwnership)
     }
+
+    func testDoesntRemoveOwnershipKeywordsFromNoncopyableType() {
+        let input = """
+        struct Foo: Sendable, ~Copyable {
+            var bar: Bar?
+
+            consuming func take() -> Bar? {
+                bar.take()
+            }
+
+            borrowing func peek() -> Bar? {
+                bar
+            }
+        }
+
+        func baz(_ foo: consuming Foo, quux: borrowing Foo?) {}
+        """
+
+        let output = """
+        struct Foo: Sendable, ~Copyable {
+            var bar: Bar?
+
+            consuming func take() -> Bar? {
+                bar.take()
+            }
+
+            func peek() -> Bar? {
+                bar
+            }
+        }
+
+        func baz(_ foo: consuming Foo, quux: borrowing Foo?) {}
+        """
+
+        testFormatting(for: input, output, rule: .noExplicitOwnership,
+                       exclude: [.unusedArguments, .redundantSendable])
+    }
+
+    func testDoesntRemoveOwnershipKeywordsFromNoncopyableGenericParameter() {
+        let input = """
+        struct Box<Value: ~Copyable>: ~Copyable {
+            var value: Value
+
+            init(value: consuming Value) {
+                self.value = value
+            }
+        }
+
+        func foo<T: ~Copyable>(_ value: consuming T) -> T {
+            value
+        }
+
+        func bar<U>(_ value: borrowing U) -> Int where U: ~Copyable {
+            0
+        }
+
+        protocol Baz {
+            associatedtype Element: ~Copyable
+            func quux(_ element: consuming Element)
+        }
+        """
+
+        testFormatting(for: input, rule: .noExplicitOwnership,
+                       exclude: [.unusedArguments, .simplifyGenericConstraints])
+    }
+
+    func testDoesntRemoveConsumingFromMethodWithNoncopyableSelf() {
+        let input = """
+        extension Foo where Self: ~Copyable {
+            consuming func bar() -> Self {
+                self
+            }
+
+            borrowing func baz() {}
+        }
+        """
+
+        let output = """
+        extension Foo where Self: ~Copyable {
+            consuming func bar() -> Self {
+                self
+            }
+
+            func baz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .noExplicitOwnership)
+    }
+
+    func testProjectDoesntRemoveOwnershipKeywordsFromNoncopyableTypeInAnotherFile() throws {
+        let declarations = """
+        struct Foo: ~Copyable {}
+        struct Bar {}
+        """
+
+        let input = """
+        extension Foo {
+            consuming func take() -> Foo { self }
+        }
+
+        extension Bar {
+            consuming func take() -> Bar { self }
+        }
+
+        func baz(_ foo: consuming Foo, _ bar: consuming Bar) {}
+        """
+
+        let output = """
+        extension Foo {
+            consuming func take() -> Foo { self }
+        }
+
+        extension Bar {
+            func take() -> Bar { self }
+        }
+
+        func baz(_ foo: consuming Foo, _ bar: Bar) {}
+        """
+
+        try testProjectFormatting(for: input, output, declarations: declarations)
+    }
+
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String,
+        declarations: String,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let declarationsURL = URL(fileURLWithPath: "/Project/Sources/App/Declarations.swift")
+        let inputURL = URL(fileURLWithPath: "/Project/Sources/App/Input.swift")
+        let projectIndex = ProjectIndex(files: [
+            declarationsURL.path: makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            inputURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.noExplicitOwnership],
+            to: tokenize(input),
+            with: .default,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: inputURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output, file: file, line: line)
+    }
 }

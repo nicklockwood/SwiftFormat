@@ -677,4 +677,18 @@ final class HoistTryTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .hoistTry)
     }
+
+    func testHoistTryAfterKeywordWithoutSpace() {
+        let input = """
+        repeat {
+            print(1)
+        } while(try check())
+        """
+        let output = """
+        repeat {
+            print(1)
+        } while try (check())
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
 }

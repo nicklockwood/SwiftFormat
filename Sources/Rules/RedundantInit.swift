@@ -72,6 +72,14 @@ public extension FormatRule {
                 }
             }
 
+            // A function parameter can shadow the type with a metatype value,
+            // like `func make<T>(for T: T.Type) -> T { T.init() }`
+            if prevToken.isIdentifier, startOfTypeIndex == prevIndex,
+               formatter.isFunctionParameter(named: prevToken.string, at: dotIndex)
+            {
+                return
+            }
+
             if formatter.tokens[openParenOrOpenBraceIndex] == .startOfScope("(") {
                 formatter.removeTokens(in: initIndex + 1 ..< openParenOrOpenBraceIndex)
             }
@@ -89,5 +97,26 @@ public extension FormatRule {
         + String("text")
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Whether a parameter of a function enclosing the given index has the given internal name
+    func isFunctionParameter(named name: String, at index: Int) -> Bool {
+        var scopeIndex = index
+        while let scopeStart = startOfScope(at: scopeIndex) {
+            scopeIndex = scopeStart
+            guard tokens[scopeStart] == .startOfScope("{"),
+                  let keywordIndex = indexOfLastSignificantKeyword(at: scopeStart, excluding: ["where"]),
+                  tokens[keywordIndex].isFunctionDeclarationKeyword,
+                  let function = parseFunctionDeclaration(keywordIndex: keywordIndex),
+                  function.bodyRange?.lowerBound == scopeStart
+            else { continue }
+
+            if function.arguments.contains(where: { $0.internalLabel == name }) {
+                return true
+            }
+        }
+        return false
     }
 }

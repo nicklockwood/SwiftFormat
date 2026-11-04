@@ -150,6 +150,29 @@ final class RedundantInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantInit)
     }
 
+    func testNoRemoveInitForParameterShadowingType() {
+        let input = """
+        func make<T: Decodable>(for T: T.Type, x: Int) -> T {
+            return T.init(x: x)
+        }
+        """
+        testFormatting(for: input, rule: .redundantInit)
+    }
+
+    func testRemoveInitWithUnrelatedParameter() {
+        let input = """
+        func make(for type: Foo.Type) -> Foo {
+            return Foo.init()
+        }
+        """
+        let output = """
+        func make(for type: Foo.Type) -> Foo {
+            return Foo()
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantInit, exclude: [.unusedArguments])
+    }
+
     func testNoRemoveInitInsideIfdef() {
         let input = """
         func myFunc() async throws -> String {

@@ -10,6 +10,17 @@ import XCTest
 @testable import SwiftFormat
 
 final class HoistTryTests: XCTestCase {
+    func testHoistTryOutOfDeeplyNestedCalls() {
+        // More nested scopes than the formatter's maximum number of iterations
+        let input = """
+        let foo = a(a(a(a(a(a(a(a(a(a(a(try bar())))))))))))
+        """
+        let output = """
+        let foo = try a(a(a(a(a(a(a(a(a(a(a(bar())))))))))))
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
+
     func testHoistTryOverCommentBeforeOperator() {
         let input = """
         let x = a // comment

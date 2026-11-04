@@ -21,6 +21,18 @@ final class HoistAwaitTests: XCTestCase {
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
+    func testHoistAwaitOutOfDeeplyNestedCalls() {
+        // More nested scopes than the formatter's maximum number of iterations
+        let input = """
+        let foo = a(a(a(a(a(a(a(a(a(a(a(await bar())))))))))))
+        """
+        let output = """
+        let foo = await a(a(a(a(a(a(a(a(a(a(a(bar())))))))))))
+        """
+        testFormatting(for: input, output, rule: .hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
     func testHoistAwaitInsideIf() {
         let input = """
         if !(await isSomething()) {}

@@ -30,12 +30,8 @@ public extension FormatRule {
             asyncCapturing.insert(name)
         }
 
-        formatter.forEachToken(where: {
-            $0 == .startOfScope("(") || $0 == .startOfScope("[")
-        }) { i, _ in
-            formatter.hoistEffectKeyword("await", inScopeAt: i) { prevIndex in
-                formatter.isSymbol(at: prevIndex, in: asyncCapturing)
-            }
+        formatter.hoistEffectKeyword("await") { prevIndex in
+            formatter.isSymbol(at: prevIndex, in: asyncCapturing)
         }
     } examples: {
         """

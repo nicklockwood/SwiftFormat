@@ -18,6 +18,8 @@ public extension FormatRule {
         """,
         options: ["some-any"]
     ) { formatter in
+        let closureTypealiasNames = formatter.closureTypealiasNames()
+
         formatter.forEach(.keyword) { keywordIndex, keyword in
             guard // Opaque generic parameter syntax is only supported in Swift 5.7+
                 formatter.options.swiftVersion >= "5.7",
@@ -145,6 +147,16 @@ public extension FormatRule {
                        [.operator("->", .infix), .keyword("throws"), .identifier("async")].contains(tokenAfterParen),
                        // Check if the closure type parameters contains this generic type
                        formatter.tokens[tokenIndex ... endOfScope].contains(where: { $0.string == genericType.name })
+                    {
+                        genericType.eligibleToRemove = false
+                    }
+                }
+
+                // The same applies to a generic argument of a typealias for a closure type,
+                // e.g. `Handler<some Fooable>` where `typealias Handler<T> = (T) -> Void`
+                for argument in declaration.arguments {
+                    if argument.type.tokens.contains(where: { $0.isIdentifier && closureTypealiasNames.contains($0.string) }),
+                       argument.type.tokens.contains(where: { $0.string == genericType.name })
                     {
                         genericType.eligibleToRemove = false
                     }
@@ -287,5 +299,24 @@ public extension FormatRule {
           }
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// The names of the typealiases in this file that refer to a closure type,
+    /// e.g. `Handler` in `typealias Handler<T> = (T) -> Void`
+    func closureTypealiasNames() -> Set<String> {
+        var names = Set<String>()
+        forEach(.keyword("typealias")) { typealiasIndex, _ in
+            guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: typealiasIndex),
+                  tokens[nameIndex].isIdentifier,
+                  let equalsIndex = index(of: .operator("=", .infix), after: nameIndex),
+                  let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                  let type = parseType(at: typeIndex),
+                  type.isClosure
+            else { return }
+            names.insert(tokens[nameIndex].string)
+        }
+        return names
     }
 }

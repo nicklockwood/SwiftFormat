@@ -607,6 +607,25 @@ final class OpaqueGenericParametersTests: XCTestCase {
         testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
     }
 
+    func testDoesntConvertGenericArgumentOfClosureTypealias() {
+        let input = """
+        typealias Handler<Success, Failure: Error> = @Sendable (Result<Success, Failure>) throws -> Void
+
+        func foo<Success: Sendable>(_: @escaping Handler<Success, Never>) {}
+        func bar<Value: Sendable>(_: Box<Value>) {}
+        """
+
+        let output = """
+        typealias Handler<Success, Failure: Error> = @Sendable (Result<Success, Failure>) throws -> Void
+
+        func foo<Success: Sendable>(_: @escaping Handler<Success, Never>) {}
+        func bar(_: Box<some Sendable>) {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+    }
+
     func testFinalGenericParamRemovedProperlyWithoutHangingComma() {
         let input = """
         func foo<Bar, Baaz>(

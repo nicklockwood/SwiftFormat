@@ -18,11 +18,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        macos:
-          - 15
-        xcode:
-          - 16.3
-    runs-on: macos-${{ matrix.macos }}
+        include:
+          - runner: macos-15
+            xcode: '16.3'
+            coverage: false
+          # Xcode 16.3 can emit invalid coverage counts even with atomic counters.
+          - runner: xcode-27
+            xcode: '27.0'
+            coverage: true
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Select Xcode version
         uses: maxim-lobanov/setup-xcode@v1
@@ -36,7 +40,10 @@ jobs:
           git config user.name "test user"
           git config user.email "test.user@noreply.com"
 
-          xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test -enableCodeCoverage YES -derivedDataPath Build/ 'OTHER_SWIFT_FLAGS=$(inherited) -Xllvm -instrprof-atomic-counter-update-all'
+          xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test -enableCodeCoverage ${{ matrix.coverage && 'YES' || 'NO' }} -derivedDataPath Build/ 'OTHER_SWIFT_FLAGS=$(inherited) -Xllvm -instrprof-atomic-counter-update-all'
+      - name: Export and validate coverage
+        if: matrix.coverage
+        run: |
           cd Build/Build/ProfileData
           cd $(ls -d */|head -n 1)
           directory=${PWD##*/}
@@ -44,14 +51,21 @@ jobs:
           cd ../../../../
           xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug/SwiftFormat.framework/SwiftFormat > info.lcov
           python3 - <<'PY'
+          source = "<unknown>"
+          invalid_counts = []
           with open("info.lcov") as report:
               for line in report:
-                  if line.startswith("DA:"):
-                      count = int(line.split(",")[1])
-                      if not 0 <= count < 2**63:
-                          raise SystemExit(f"Invalid coverage count: {line.strip()}")
+                  if line.startswith("SF:"):
+                      source = line[3:].strip()
+                  elif line.startswith("DA:"):
+                      line_number, count, *_ = line[3:].strip().split(",")
+                      if not 0 <= int(count) < 2**63:
+                          invalid_counts.append(f"{source}:{line_number}: invalid coverage count {count}")
+          if invalid_counts:
+              raise SystemExit("\n".join(invalid_counts))
           PY
       - name: Codecov
+        if: matrix.coverage
         uses: codecov/codecov-action@v7
         with:
           # the token is optional for a public repo, but including it anyway

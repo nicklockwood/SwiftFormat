@@ -3779,6 +3779,18 @@ final class ParsingHelpersTests: XCTestCase {
         """)
     }
 
+    func testParseFunctionDeclarationWithPackExpansionReturnType() {
+        let input = """
+        func values<each Value>() -> (repeat each Value) {
+            makeValues()
+        }
+        """
+        let formatter = Formatter(tokenize(input))
+        let function = formatter.parseFunctionDeclaration(keywordIndex: 0)
+        XCTAssertEqual(function?.returnType?.string, "(repeat each Value)")
+        XCTAssertNotNil(function?.bodyRange)
+    }
+
     func testParseFunctionDeclarationWithGeneric() throws {
         let input = """
         public func genericFoo<Bar: Baaz>(bar: Bar) rethrows where Baaz.Quux == Foo {

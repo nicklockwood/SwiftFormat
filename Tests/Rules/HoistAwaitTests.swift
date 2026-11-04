@@ -332,4 +332,30 @@ final class HoistAwaitTests: XCTestCase {
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.spaceAroundParens])
     }
+
+    func testHoistAwaitAfterKeywordWithoutSpace() {
+        let input = """
+        repeat {
+            print(1)
+        } while(await waiting())
+        """
+        let output = """
+        repeat {
+            print(1)
+        } while await (waiting())
+        """
+        testFormatting(for: input, output, rule: .hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testHoistAwaitAfterTryWithoutSpace() {
+        let input = """
+        let value = try(await foo())
+        """
+        let output = """
+        let value = try await (foo())
+        """
+        testFormatting(for: input, output, rule: .hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
 }

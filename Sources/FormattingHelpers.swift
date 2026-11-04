@@ -1613,6 +1613,11 @@ extension Formatter {
             } else {
                 insertSpace(" ", at: index)
             }
+
+            // Separate the keyword from a preceding keyword, like `while(await foo())`
+            if token(at: index - 1)?.isKeyword == true {
+                insertSpace(" ", at: index)
+            }
         }
 
         func removeKeyword(at index: Int) {

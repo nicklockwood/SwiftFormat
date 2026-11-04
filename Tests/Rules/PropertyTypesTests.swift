@@ -737,6 +737,22 @@ final class PropertyTypesTests: XCTestCase {
         testFormatting(for: input, rules: [.propertyTypes, .implicitMemberExpressions], options: options)
     }
 
+    func testCustomPreservedPropertyTypesPreservePackageDefault() throws {
+        let input = """
+        let package = Package(name: "Example")
+        let custom = CustomType()
+        let other = OtherType()
+        """
+        let output = """
+        let package = Package(name: "Example")
+        let custom = CustomType()
+        let other: OtherType = .init()
+        """
+        var options = FormatOptions(propertyTypes: .explicit)
+        try Descriptors.preservedPropertyTypes.toOptions("CustomType", &options)
+        testFormatting(for: input, [output], rules: [.propertyTypes, .implicitMemberExpressions], options: options)
+    }
+
     func testPreservesUserProvidedSymbolTypes() {
         let input = """
         class Foo {

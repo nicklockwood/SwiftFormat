@@ -909,7 +909,7 @@ private struct Inference {
                     formatter.updateEnablement(at: index)
                 case .startOfScope("("):
                     if case let .identifier(fn)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                       selfRequired.contains(fn) || fn == "expect"
+                       selfRequired.contains(fn)
                     {
                         index = formatter.index(of: .endOfScope(")"), after: index) ?? index
                         break

@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Move inline `try` keyword(s) to start of expression.",
         options: ["throw-capturing"]
     ) { formatter in
-        var names = formatter.options.throwCapturing.union(["expect", "XCTUnwrap"])
+        var names = formatter.options.throwCapturing
         formatter.forEach(.keyword("func")) { i, _ in
             guard let function = formatter.parseFunctionDeclaration(keywordIndex: i),
                   let name = function.name,

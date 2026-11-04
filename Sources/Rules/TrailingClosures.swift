@@ -14,15 +14,6 @@ public extension FormatRule {
         help: "Use trailing closure syntax where applicable.",
         options: ["trailing-closures", "never-trailing"]
     ) { formatter in
-        let useTrailing = Set([
-            "async", "asyncAfter", "sync", "autoreleasepool",
-        ] + formatter.options.trailingClosures)
-
-        let nonTrailing = Set([
-            "performBatchUpdates",
-            "expect", // Special case to support autoclosure arguments in the Nimble framework
-        ] + formatter.options.neverTrailing)
-
         // Declaration ranges track edits, so receiver resolution can reuse this tree throughout the rule.
         let declarations = formatter.parseDeclarations()
         formatter.forEach(.startOfScope("(")) { functionOpenParen, _ in
@@ -32,7 +23,7 @@ public extension FormatRule {
             else { return }
             let name = formatter.tokens[identifierIndex].string
 
-            guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: functionOpenParen),
+            guard !formatter.options.neverTrailing.contains(name), !formatter.isConditionalStatement(at: functionOpenParen),
                   !formatter.isAttribute(at: identifierIndex)
             else {
                 return
@@ -79,7 +70,7 @@ public extension FormatRule {
 
             // Handle a single trailing closure
             if trailingClosures.count == 1 {
-                guard trailingClosures[0].label == nil || useTrailing.contains(name) ||
+                guard trailingClosures[0].label == nil || formatter.options.trailingClosures.contains(name) ||
                     projectSupportsTrailingClosure()
                 else { return }
 

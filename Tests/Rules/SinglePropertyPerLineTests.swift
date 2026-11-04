@@ -930,6 +930,20 @@ final class SinglePropertyPerLineTests: XCTestCase {
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
+    func testPreserveTupleDestructuringWithParenthesizedConditionalValue() {
+        let input = """
+        let (lesser, greater) = (start <= end ? (start, end) : (end, start))
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithMismatchedTupleType() {
+        let input = """
+        let (a, b): ((Int, Int))
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.redundantParens])
+    }
+
     func testPreserveTupleDestructuringWithMethodCall() {
         let input = """
         let (x, y) = point.coordinates()

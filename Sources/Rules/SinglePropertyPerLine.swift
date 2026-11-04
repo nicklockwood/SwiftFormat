@@ -119,6 +119,16 @@ public extension FormatRule {
                     return
                 }
 
+                // Each name needs its own value and type. A parenthesized expression
+                // like `(flag ? (a, b) : (b, a))` parses as a single value.
+                if let values = tupleDecl.value?.tupleValueRanges, values.count != tupleDecl.identifiers.count {
+                    return
+                }
+
+                if let types = tupleDecl.type?.tupleTypes, types.count != tupleDecl.identifiers.count {
+                    return
+                }
+
                 // Build replacement tokens for all declarations
                 var allReplacementTokens: [Token] = []
 

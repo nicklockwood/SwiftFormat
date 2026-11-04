@@ -20,7 +20,7 @@ public extension FormatRule {
                   let prevIndex = formatter.index(of: .nonSpace, before: i),
                   formatter.isConstant(at: prevIndex), let startIndex = formatter.startOfValue(at: prevIndex),
                   !formatter.isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)),
-                  let nextIndex = formatter.index(of: .nonSpace, after: i), !formatter.isConstant(at: nextIndex) ||
+                  let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i), !formatter.isConstant(at: nextIndex) ||
                   formatter.isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex)),
                   let endIndex = formatter.endOfExpression(at: nextIndex, upTo: [
                       .operator("&&", .infix), .operator("||", .infix),

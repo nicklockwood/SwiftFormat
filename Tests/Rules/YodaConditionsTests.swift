@@ -469,6 +469,38 @@ final class YodaConditionsTests: XCTestCase {
         testFormatting(for: input, rule: .yodaConditions)
     }
 
+    func testYodaConditionWithLinebreakAfterOperator() {
+        let input = """
+        let isDefault = 5 ==
+            value
+        """
+        let output = """
+        let isDefault = value ==
+            5
+        """
+        testFormatting(for: input, output, rule: .yodaConditions)
+    }
+
+    func testYodaConditionWithCommentAfterOperator() {
+        let input = """
+        let isDefault = 5 == /* value */ foo
+        """
+        let output = """
+        let isDefault = foo == /* value */ 5
+        """
+        testFormatting(for: input, output, rule: .yodaConditions)
+    }
+
+    func testNoSwapMultilineComparisonOfLiterals() {
+        let input = """
+        #expect(
+            "\\(error)" ==
+                "Server error"
+        )
+        """
+        testFormatting(for: input, rule: .yodaConditions)
+    }
+
     // yodaSwap = literalsOnly
 
     func testNoSwapYodaDotMember() {

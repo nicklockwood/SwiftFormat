@@ -20,6 +20,7 @@ public extension FormatRule {
         options: ["decimal-grouping", "binary-grouping", "octal-grouping", "hex-grouping",
                   "fraction-grouping", "exponent-grouping", "hex-literal-case", "exponent-case"]
     ) { formatter in
+        let availabilityRanges = formatter.availabilityArgumentRanges()
         formatter.forEachToken { i, token in
             guard case let .number(number, type) = token else {
                 return
@@ -76,7 +77,10 @@ public extension FormatRule {
             if !exponent.isEmpty {
                 result += exponentSeparator + exponent
             }
-            formatter.replaceToken(at: i, with: .number(result, type))
+            // Versions in availability attributes, like `@available(iOS, deprecated: 100000)`, can't contain `_`
+            let updatedToken = Token.number(result, type)
+            guard updatedToken != token, !availabilityRanges.contains(where: { $0.contains(i) }) else { return }
+            formatter.replaceToken(at: i, with: updatedToken)
         }
     } examples: {
         """
@@ -116,5 +120,23 @@ extension Formatter {
             output.insert(number[index], at: output.startIndex)
         } while index != number.startIndex
         number = String(output)
+    }
+
+    /// The ranges of the arguments of availability attributes and conditions, like `@available(...)`
+    func availabilityArgumentRanges() -> [ClosedRange<Int>] {
+        let availabilityKeywords: [Token] = [
+            .keyword("@available"), .keyword("@backDeployed"), .keyword("@_backDeploy"),
+            .keyword("@_originallyDefinedIn"), .keyword("@_spi_available"), .keyword("@_specialize"),
+            .keyword("#available"), .keyword("#unavailable"),
+        ]
+        var ranges = [ClosedRange<Int>]()
+        forEach(.startOfScope("(")) { i, _ in
+            guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                  availabilityKeywords.contains(tokens[prevIndex]),
+                  let endOfScope = endOfScope(at: i)
+            else { return }
+            ranges.append(i ... endOfScope)
+        }
+        return ranges
     }
 }

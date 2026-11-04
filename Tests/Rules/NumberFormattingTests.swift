@@ -300,4 +300,36 @@ final class NumberFormattingTests: XCTestCase {
         let options = FormatOptions(hexGrouping: .group(4, 4), fractionGrouping: true)
         testFormatting(for: input, output, rule: .numberFormatting, options: options)
     }
+
+    func testNoGroupingInAvailabilityVersions() {
+        let input = """
+        @available(iOS, introduced: 13, deprecated: 100000, renamed: "NewType")
+        @available(
+            macOS,
+            introduced: 10.15,
+            deprecated: 100000,
+            message: "Use NewType instead"
+        )
+        @backDeployed(before: macOS 100000)
+        @_backDeploy(before: macOS 100000)
+        @_originallyDefinedIn(module: "Old", macOS 100000)
+        @_spi_available(macOS 100000, *)
+        @_specialize(exported: true, availability: macOS 100000, *; where T == Int)
+        public func foo<T>(_: T) {
+            if #available(iOS 100000, *) {}
+            if #unavailable(iOS 100000) {}
+        }
+        """
+        testFormatting(for: input, rule: .numberFormatting)
+    }
+
+    func testGroupingInPropertyWrapperArguments() {
+        let input = """
+        @Clamped(0 ... 1000000) var value = 1
+        """
+        let output = """
+        @Clamped(0 ... 1_000_000) var value = 1
+        """
+        testFormatting(for: input, output, rule: .numberFormatting)
+    }
 }

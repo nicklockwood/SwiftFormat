@@ -133,9 +133,14 @@ extension Declaration {
         return allModifiers
     }
 
-    /// The attributes before this declaration's keyword.
+    /// The attributes before this declaration's keyword, including attributes
+    /// in `#if` blocks before its modifiers (see `endOfConditionalAttributeBlock`).
     var attributes: [String] {
-        modifiers.filter(\.isAttribute)
+        let startOfModifiers = startOfModifiersIndex(includingAttributes: true)
+        let startOfAttributes = formatter.startOfConditionalAttributeBlocks(before: startOfModifiers)
+        let conditionalAttributes = formatter.tokens[startOfAttributes ..< startOfModifiers]
+            .filter(\.isAttribute).map(\.string)
+        return conditionalAttributes + modifiers.filter(\.isAttribute)
     }
 
     /// Whether or not this declaration has the given modifier

@@ -4940,4 +4940,54 @@ final class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testOrganizeDeclarationsKeepsConditionalAttributesWithDeclaration() {
+        let input = """
+        public struct Job {
+            let id: Int
+
+            public init(id: Int) {
+                self.id = id
+            }
+
+            /// The kind of work a job performs.
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #endif
+            public enum Kind: String {
+                case loadImage
+            }
+        }
+        """
+        let output = """
+        public struct Job {
+
+            // MARK: Lifecycle
+
+            public init(id: Int) {
+                self.id = id
+            }
+
+            // MARK: Public
+
+            /// The kind of work a job performs.
+            #if hasAttribute(nonexhaustive)
+                @nonexhaustive
+            #endif
+            public enum Kind: String {
+                case loadImage
+            }
+
+            // MARK: Internal
+
+            let id: Int
+
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

@@ -233,10 +233,12 @@ public extension FormatRule {
                 {
                     // If this instance of the type is followed by a `.` then we have to wrap the new type in parens
                     // (e.g. changing `Foo.Type` to `some Any.Type` breaks the build, it needs to be `(some Any).Type`).
-                    // Optional opaque and existential types support `some Foo?` and `any Foo?` in Swift 6.4+.
+                    // Optional opaque and existential types support `some Foo?` and `any Foo?` in Swift 6.4+,
+                    // but an optional protocol composition still needs parens, e.g. `(some Foo & Bar)?`.
                     if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
                        nextToken == .operator(".", .infix) ||
-                       (nextToken == .operator("?", .postfix) && formatter.options.swiftVersion < "6.4")
+                       (nextToken == .operator("?", .postfix) && formatter.options.swiftVersion < "6.4") ||
+                       (nextToken.isUnwrapOperator && opaqueParameter.contains(.operator("&", .infix)))
                     {
                         opaqueParameter.insert(.startOfScope("("), at: 0)
                         opaqueParameter.append(.endOfScope(")"))

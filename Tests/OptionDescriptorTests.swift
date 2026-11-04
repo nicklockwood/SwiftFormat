@@ -393,6 +393,18 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try descriptor.toOptions(argument, &options))
     }
 
+    func testSelfRequiredArgumentExtendsDefaults() throws {
+        var options = FormatOptions()
+        try Descriptors.selfRequired.toOptions("customLog,notice", &options)
+        XCTAssertEqual(options.selfRequired, FormatOptions.default.selfRequired.union(["customLog"]))
+    }
+
+    func testEmptySelfRequiredArgumentPreservesDefaults() throws {
+        var options = FormatOptions(selfRequired: ["customLog"])
+        try Descriptors.selfRequired.toOptions("", &options)
+        XCTAssertEqual(options.selfRequired, FormatOptions.default.selfRequired)
+    }
+
     func testFormatOptionsDescriptionConsistency() {
         let options1 = FormatOptions(selfRequired: ["foo", "bar", "baz"])
         let options2 = FormatOptions(selfRequired: ["baz", "bar", "foo"])

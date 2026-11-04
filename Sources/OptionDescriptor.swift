@@ -850,7 +850,10 @@ struct _Descriptors {
         argumentName: "self-required",
         displayName: "Self Required",
         help: "Comma-delimited list of functions / types with @autoclosure arguments",
-        keyPath: \FormatOptions.selfRequired
+        keyPath: \FormatOptions.selfRequired,
+        type: .set,
+        fromArgument: { FormatOptions.default.selfRequired.union(parseCommaDelimitedList($0)) },
+        toArgument: { $0.sorted().joined(separator: ",") }
     )
     let throwCapturing = OptionDescriptor(
         argumentName: "throw-capturing",

@@ -40,6 +40,11 @@ public extension FormatRule {
         testing framework (https://github.com/Quick/Nimble), which is common enough that
         SwiftFormat excludes it by default.
 
+        The default `--self-required` list includes the `Logger` methods `notice`,
+        `info`, `debug`, `error`, `warning`, `fault`, `log`, `trace`, and `critical`,
+        preserving `self` in their string interpolations. Names passed to
+        `--self-required` extend this list without replacing the defaults.
+
         There is also an option to always use explicit `self` but *only* inside `init`,
         by using `--self init-only`:
 

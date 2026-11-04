@@ -1122,7 +1122,10 @@ public struct FormatOptions: CustomStringConvertible {
                 elsePosition: ElsePosition = .sameLine,
                 guardElsePosition: GuardElsePosition = .auto,
                 explicitSelf: SelfMode = .remove,
-                selfRequired: Set<String> = [],
+                selfRequired: Set<String> = [
+                    "notice", "info", "debug", "error", "warning",
+                    "fault", "log", "trace", "critical",
+                ],
                 throwCapturing: Set<String> = [],
                 asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,

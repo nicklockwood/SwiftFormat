@@ -1246,4 +1246,51 @@ final class RedundantClosureTests: XCTestCase {
         """
         testFormatting(for: input, [output], rules: [.redundantClosure, .indent])
     }
+
+    func testTrailingClosureArgumentFollowedByCallNotRemoved() {
+        let input = """
+        struct Container {
+            func callAsFunction(_ make: @escaping () -> Int) -> () -> Int {
+                make
+            }
+
+            func value() -> Int {
+                self { 1 }()
+            }
+
+            func otherValue() -> Int {
+                makeFactory { 2 }()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantClosure)
+    }
+
+    func testLabeledTrailingClosureArgumentFollowedByCallNotRemoved() {
+        let input = """
+        let value = makePair { 1 } second: { 2 }()
+        """
+        testFormatting(for: input, rule: .redundantClosure)
+    }
+
+    func testTrailingClosureArgumentOnNextLineFollowedByCallNotRemoved() {
+        let input = """
+        let value = makeFactory
+        {
+            2
+        }()
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: .redundantClosure, options: options)
+    }
+
+    func testRedundantClosureAfterTryQuestionMarkRemoved() {
+        let input = """
+        let value = try? { try foo() }()
+        """
+        let output = """
+        let value = try? try foo()
+        """
+        testFormatting(for: input, output, rule: .redundantClosure)
+    }
 }

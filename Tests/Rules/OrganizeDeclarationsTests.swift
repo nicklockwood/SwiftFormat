@@ -1200,7 +1200,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: [.blankLinesAtEndOfScope, .redundantType, .redundantClosure]
+            exclude: [.blankLinesAtEndOfScope, .redundantType]
         )
     }
 
@@ -1329,7 +1329,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtEndOfScope, .blankLinesAtStartOfScope, .redundantType, .redundantClosure]
+            exclude: [.blankLinesAtEndOfScope, .blankLinesAtStartOfScope, .redundantType]
         )
     }
 

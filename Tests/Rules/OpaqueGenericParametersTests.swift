@@ -860,4 +860,36 @@ final class OpaqueGenericParametersTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
     }
+
+    func testWrappedProtocolCompositionInWhereClause() {
+        let input = """
+        func foo<T>(_ value: T) where T: Hashable &
+            Sendable {
+            print(value)
+        }
+        """
+        let output = """
+        func foo(_ value: some Hashable & Sendable) {
+            print(value)
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+    }
+
+    func testProtocolCompositionWrappedBeforeAmpersand() {
+        let input = """
+        func foo<T>(_ value: T) where T: Hashable
+            & Sendable {
+            print(value)
+        }
+        """
+        let output = """
+        func foo(_ value: some Hashable & Sendable) {
+            print(value)
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+    }
 }

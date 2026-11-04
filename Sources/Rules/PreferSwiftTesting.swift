@@ -251,14 +251,10 @@ extension Formatter {
     /// Whether or not the file contains an XCTest helper function that
     /// isn't supported by the preferSwiftTesting rule.
     func hasUnsupportedXCTestHelper() -> Bool {
-        // https://developer.apple.com/documentation/xctest/xctestcase
-        let xcTestCaseInstanceMethods = Set(["expectation", "wait", "measure", "measureMetrics", "addTeardownBlock", "runsForEachTargetApplicationUIConfiguration", "continueAfterFailure", "executionTimeAllowance", "startMeasuring", "stopMeasuring", "defaultPerformanceMetrics", "defaultMetrics", "defaultMeasureOptions", "fulfillment", "addUIInterruptionMonitor", "keyValueObservingExpectation", "removeUIInterruptionMonitor"])
-            .union(options.additionalXCTestSymbols)
-
         for index in tokens.indices where tokens[index].isIdentifier {
             let identifier = tokens[index].string
 
-            if xcTestCaseInstanceMethods.contains(identifier) {
+            if options.additionalXCTestSymbols.contains(identifier) {
                 return true
             }
 

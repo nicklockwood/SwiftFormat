@@ -404,6 +404,57 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try descriptor.toOptions(argument, &options))
     }
 
+    func testPreservedPropertyTypesArgumentsExtendDefaults() throws {
+        for descriptor in [Descriptors.preservedPropertyTypes, Descriptors.preservedSymbols] {
+            var options = FormatOptions()
+            try descriptor.toOptions("Foo,Package,Foo", &options)
+            XCTAssertEqual(options.preservedPropertyTypes, ["Package", "Foo"])
+            XCTAssertEqual(descriptor.fromOptions(options), "Foo,Package")
+
+            try descriptor.toOptions("Bar", &options)
+            XCTAssertEqual(options.preservedPropertyTypes, ["Package", "Bar"])
+
+            try descriptor.toOptions("", &options)
+            XCTAssertEqual(options.preservedPropertyTypes, ["Package"])
+        }
+    }
+
+    func testBuiltInNamesArePreservedByCustomArguments() throws {
+        let descriptors = [
+            Descriptors.selfRequired, Descriptors.throwCapturing, Descriptors.trailingClosures,
+            Descriptors.neverTrailing, Descriptors.additionalXCTestSymbols,
+        ]
+        for descriptor in descriptors {
+            let defaults = Set(parseCommaDelimitedList(descriptor.defaultArgument))
+            XCTAssertFalse(defaults.isEmpty)
+            var options = FormatOptions()
+            try descriptor.toOptions("customFunction", &options)
+            XCTAssertEqual(Set(parseCommaDelimitedList(descriptor.fromOptions(options))), defaults.union(["customFunction"]))
+            try descriptor.toOptions("", &options)
+            XCTAssertEqual(Set(parseCommaDelimitedList(descriptor.fromOptions(options))), defaults)
+        }
+    }
+
+    func testProgrammaticOptionsReplaceDefaults() {
+        var options = FormatOptions(
+            selfRequired: ["customFunction"],
+            throwCapturing: ["customFunction"],
+            trailingClosures: ["customFunction"],
+            neverTrailing: ["customFunction"],
+            additionalXCTestSymbols: ["customFunction"]
+        )
+        let keyPaths: [WritableKeyPath<FormatOptions, Set<String>>] = [
+            \.selfRequired, \.throwCapturing, \.trailingClosures, \.neverTrailing, \.additionalXCTestSymbols,
+        ]
+        for keyPath in keyPaths {
+            XCTAssertEqual(options[keyPath: keyPath], ["customFunction"])
+            options[keyPath: keyPath] = ["otherFunction"]
+            XCTAssertEqual(options[keyPath: keyPath], ["otherFunction"])
+            options[keyPath: keyPath].removeAll()
+            XCTAssertTrue(options[keyPath: keyPath].isEmpty)
+        }
+    }
+
     func testSelfRequiredArgumentExtendsDefaults() throws {
         var options = FormatOptions()
         try Descriptors.selfRequired.toOptions("customLog,notice", &options)

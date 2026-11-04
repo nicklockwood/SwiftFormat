@@ -494,6 +494,7 @@ extension OptionDescriptor {
         help: String,
         deprecationMessage: String? = nil,
         keyPath: WritableKeyPath<FormatOptions, Set<String>>,
+        mergeWithDefaults: Bool = false,
         validate: @escaping (String) throws -> Void = { _ in }
     ) {
         self.init(
@@ -506,7 +507,7 @@ extension OptionDescriptor {
             fromArgument: {
                 let values = parseCommaDelimitedList($0)
                 try values.forEach(validate)
-                return Set(values)
+                return Set(values).union(mergeWithDefaults ? FormatOptions.default[keyPath: keyPath] : [])
             },
             toArgument: { $0.sorted().joined(separator: ",") }
         )
@@ -871,15 +872,14 @@ struct _Descriptors {
         displayName: "Self Required",
         help: "Comma-delimited list of functions / types with @autoclosure arguments",
         keyPath: \FormatOptions.selfRequired,
-        type: .set,
-        fromArgument: { FormatOptions.default.selfRequired.union(parseCommaDelimitedList($0)) },
-        toArgument: { $0.sorted().joined(separator: ",") }
+        mergeWithDefaults: true
     )
     let throwCapturing = OptionDescriptor(
         argumentName: "throw-capturing",
         displayName: "Throw Capturing",
         help: "List of functions with throwing @autoclosure arguments",
-        keyPath: \FormatOptions.throwCapturing
+        keyPath: \FormatOptions.throwCapturing,
+        mergeWithDefaults: true
     )
     let asyncCapturing = OptionDescriptor(
         argumentName: "async-capturing",
@@ -912,13 +912,15 @@ struct _Descriptors {
         argumentName: "trailing-closures",
         displayName: "Trailing Closure Functions",
         help: "Comma-delimited list of functions that use trailing closures",
-        keyPath: \FormatOptions.trailingClosures
+        keyPath: \FormatOptions.trailingClosures,
+        mergeWithDefaults: true
     )
     let neverTrailing = OptionDescriptor(
         argumentName: "never-trailing",
         displayName: "Never Trailing Functions",
         help: "List of functions that should never use trailing closures",
-        keyPath: \FormatOptions.neverTrailing
+        keyPath: \FormatOptions.neverTrailing,
+        mergeWithDefaults: true
     )
     let wrapClosureBodies = OptionDescriptor(
         argumentName: "wrap-closure-bodies",
@@ -1568,13 +1570,15 @@ struct _Descriptors {
         argumentName: "preserved-property-types",
         displayName: "Preserved Property Types",
         help: "Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule",
-        keyPath: \.preservedPropertyTypes
+        keyPath: \.preservedPropertyTypes,
+        mergeWithDefaults: true
     )
     let additionalXCTestSymbols = OptionDescriptor(
         argumentName: "xctest-symbols",
         displayName: "Additional XCTest symbols",
         help: "Comma-delimited list of symbols that depend on XCTest",
-        keyPath: \.additionalXCTestSymbols
+        keyPath: \.additionalXCTestSymbols,
+        mergeWithDefaults: true
     )
     let defaultTestSuiteAttributes = OptionDescriptor(
         argumentName: "default-test-suite-attributes",
@@ -1939,7 +1943,8 @@ struct _Descriptors {
         argumentName: "preserved-symbols",
         displayName: "Preserved Symbols",
         help: "deprecated",
-        keyPath: \.preservedPropertyTypes
+        keyPath: \.preservedPropertyTypes,
+        mergeWithDefaults: true
     ).renamed(to: "preserved-property-types")
 
     let swiftUIPropsSortMode = OptionDescriptor(

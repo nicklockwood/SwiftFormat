@@ -19,6 +19,9 @@ public extension FormatRule {
         formatter.formatPropertyTypes()
     } examples: {
         """
+        `--preserved-property-types` adds symbols to preserve as-is, in addition to
+        the default `Package` exclusion. An empty value keeps the default exclusion.
+
         ```diff
           // --property-types inferred
         - let view: CustomView = CustomView()

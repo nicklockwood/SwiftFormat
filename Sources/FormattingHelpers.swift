@@ -292,10 +292,7 @@ extension Formatter {
                 break
             case .startOfScope("("):
                 if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeStart),
-                   isSymbol(at: prevIndex, in: staticSelf ? [] : selfRequired.union([
-                       "expect", // Special case to support autoclosure arguments in the Nimble framework
-                       "os_log", // Special case to support string interpolation inside os_log
-                   ])) || isAttribute(at: prevIndex)
+                   isSymbol(at: prevIndex, in: staticSelf ? [] : selfRequired) || isAttribute(at: prevIndex)
                 {
                     return false
                 }

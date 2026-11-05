@@ -30,6 +30,11 @@ public extension FormatRule {
                 }
             }
 
+            // `@usableFromInline` types are treated like public types, so they aren't implicitly Sendable
+            if typeDeclaration.hasModifier("@usableFromInline") {
+                return
+            }
+
             switch typeDeclaration.visibility() {
             case .public, .open:
                 return

@@ -142,6 +142,20 @@ extension TypeDeclaration {
     /// Whether or not this declaration uses XCTest functionality that is
     /// not supported by the preferSwiftTesting rule.
     func hasUnsupportedXCTestFunctionality() -> Bool {
+        // Overrides inside `#if` blocks (like `invokeTest` under `#if os(macOS)`)
+        // aren't converted, so they would be left without a superclass.
+        var hasOverrideInConditionalCompilation = false
+        for case let .conditionalCompilation(conditionalCompilation) in body.map(\.kind) {
+            conditionalCompilation.body.forEachRecursiveDeclaration { declaration in
+                if declaration.modifiers.contains("override") {
+                    hasOverrideInConditionalCompilation = true
+                }
+            }
+        }
+        if hasOverrideInConditionalCompilation {
+            return true
+        }
+
         let overriddenMethods = body.filter {
             $0.modifiers.contains("override")
         }

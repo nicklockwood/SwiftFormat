@@ -437,6 +437,27 @@ final class PreferSwiftTestingTests: XCTestCase {
         testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
+    func testPreservesUnsupportedMethodOverrideInConditionalCompilation() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            #if os(macOS)
+                override func invokeTest() {
+                    super.invokeTest()
+                }
+            #endif
+
+            func testMyFeatureWorks() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
+    }
+
     func testConvertsHelpersInHelperMethods() {
         let input = """
         @testable import MyFeatureLib

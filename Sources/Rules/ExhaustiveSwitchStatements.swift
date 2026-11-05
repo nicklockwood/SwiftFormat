@@ -34,9 +34,11 @@ public extension FormatRule {
           enum State { case idle, loading, loaded, failed }
           func render(_ state: State) {
               switch state {
-              case .loaded: showContent()
-        -     default: showPlaceholder()
-        +     case .idle, .loading, .failed: showPlaceholder()
+              case .loaded:
+                  showContent()
+        -     default:
+        +     case .idle, .loading, .failed:
+                  showPlaceholder()
               }
           }
         ```

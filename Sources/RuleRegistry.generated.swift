@@ -42,6 +42,7 @@ let ruleRegistry: [String: FormatRule] = [
     "emptyExtensions": .emptyExtensions,
     "enumNamespaces": .enumNamespaces,
     "environmentEntry": .environmentEntry,
+    "exhaustiveSwitchStatements": .exhaustiveSwitchStatements,
     "extensionAccessControl": .extensionAccessControl,
     "extensionAttributes": .extensionAttributes,
     "fileHeader": .fileHeader,

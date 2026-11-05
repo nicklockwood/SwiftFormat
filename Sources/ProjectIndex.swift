@@ -151,6 +151,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isResultBuilder: Bool = false
         var isDynamicMemberLookup: Bool = false
         var isNoncopyable: Bool = false
+        var enumCases: [String]? = nil
     }
 
     struct ClassInheritance: Codable, Equatable {
@@ -271,7 +272,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isStatic: Bool = false
     }
 
-    static let cacheVersion = 12
+    static let cacheVersion = 13
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -536,7 +537,7 @@ struct ProjectIndex {
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
                 .map {
-                    "\($0.name):\($0.visibility):\($0.isGeneric):\($0.isResultBuilder):\($0.isDynamicMemberLookup):\($0.isNoncopyable)"
+                    "\($0.name):\($0.visibility):\($0.isGeneric):\($0.isResultBuilder):\($0.isDynamicMemberLookup):\($0.isNoncopyable):\($0.enumCases?.joined(separator: ",") ?? "?")"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -707,6 +708,42 @@ struct ProjectIndex {
         else { return false }
         return moduleIdentifiers.allSatisfy { moduleIdentifier in
             typeVisibilities[TypeKey(moduleIdentifier: moduleIdentifier, name: name)] != nil
+        }
+    }
+
+    /// Only trust a unique declaration with the same cases in every containing module.
+    func enumCases(named name: String, visibleFrom fileURL: URL) -> [String]? {
+        guard let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers,
+              !modules.isEmpty, declarationCountsAreUnambiguous(for: name.unqualifiedTypeName) else { return nil }
+        var result: [String]?
+        let declaredInCurrentFile = files[fileURL.standardizedFileURL.path]?.typeDeclarations.contains { $0.name == name } == true
+        for module in modules {
+            if !declaredInCurrentFile {
+                var components = name.split(separator: ".")
+                while !components.isEmpty {
+                    let key = TypeKey(moduleIdentifier: module, name: components.joined(separator: "."))
+                    let visibility = typeVisibilities[key] ?? []
+                    if !visibility.isDisjoint(with: [Visibility.private.rawValue, Visibility.fileprivate.rawValue]) {
+                        return nil
+                    }
+                    components.removeLast()
+                }
+            }
+            let declarations = typesByModule[TypeKey(moduleIdentifier: module, name: name)] ?? []
+            guard declarations.count == 1, let cases = declarations.first?.enumCases,
+                  !cases.isEmpty, result == nil || result == cases else { return nil }
+            result = cases
+        }
+        return result
+    }
+
+    /// Inherited nested types and associated types require compiler name lookup.
+    func isTypeWithoutInheritance(named name: String, visibleFrom fileURL: URL) -> Bool {
+        guard let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers,
+              !modules.isEmpty else { return false }
+        return modules.allSatisfy { module in
+            let key = TypeKey(moduleIdentifier: module, name: name)
+            return typesByModule[key]?.count == 1 && (conformancesByModule[key] ?? []).isEmpty
         }
     }
 
@@ -1376,7 +1413,8 @@ func makeSourceFileIndex(
                             }),
                         isResultBuilder: declaration.attributes.contains("@resultBuilder"),
                         isDynamicMemberLookup: declaration.attributes.contains("@dynamicMemberLookup"),
-                        isNoncopyable: typeDeclaration.conformances.contains { $0.conformance.string == "~Copyable" }
+                        isNoncopyable: typeDeclaration.conformances.contains { $0.conformance.string == "~Copyable" },
+                        enumCases: formatter.indexedEnumCases(in: typeDeclaration)
                     ))
                 }
             }
@@ -1511,6 +1549,30 @@ func makeSourceFileIndex(
         includesFunctionReferences: includeFunctionReferences,
         includesSymbolReferences: includeSymbolReferences
     )
+}
+
+extension Formatter {
+    /// Conditional and availability-dependent cases cannot safely replace a default.
+    func indexedEnumCases(in declaration: TypeDeclaration) -> [String]? {
+        guard declaration.keyword == "enum",
+              !([declaration] + declaration.parentDeclarations).contains(where: {
+                  $0.attributes.contains(where: { $0.hasPrefix("@available") })
+              }),
+              !declaration.parentDeclarations.contains(where: {
+                  $0.keyword == "#if" || ($0.keyword == "extension" && ($0.visibility() ?? .internal) <= .fileprivate)
+              }),
+              !declaration.body.contains(where: { $0.keyword == "#if" })
+        else { return nil }
+        var names = [String]()
+        for member in declaration.body where member.keyword == "case" {
+            guard member.attributes.isEmpty else { return nil }
+            for range in enumCaseRanges(at: member.keywordIndex) {
+                guard let name = token(at: range.lowerBound), name.isIdentifier else { return nil }
+                names.append(name.string)
+            }
+        }
+        return Set(names).count == names.count ? names : nil
+    }
 }
 
 extension String {

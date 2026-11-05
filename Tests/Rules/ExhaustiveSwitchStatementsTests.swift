@@ -240,7 +240,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
-    func testOptionalUnknownAndShadowedBindingsArePreserved() throws {
+    func testOptionalEnumIsExpandedWhileUnknownAndShadowedBindingsArePreserved() throws {
         let input = """
         func render(_ state: State?) {
             switch state {
@@ -260,7 +260,26 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
             }
         }
         """
-        try check(input)
+        let output = """
+        func render(_ state: State?) {
+            switch state {
+            case .idle?: first()
+            case .some(.loaded), .some(.failed), .none: second()
+            }
+        }
+        func other(_ value: Unknown) {
+            switch value {
+            default: fallback()
+            }
+        }
+        func shadowed(_ item: State) {
+            let item = somethingElse()
+            switch item {
+            default: fallback()
+            }
+        }
+        """
+        try check(input, output)
     }
 
     func testAlreadyExhaustiveSwitchPreservesUnreachableDefault() throws {
@@ -525,7 +544,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
-    func testInheritedNestedTypeDoesNotResolveToGlobalEnum() throws {
+    func testInheritedNestedTypeResolvesToItsDeclaration() throws {
         let input = """
         enum State { case idle, loaded }
         class Base {
@@ -540,7 +559,21 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
             }
         }
         """
-        try check(input, declarations: "")
+        let output = """
+        enum State { case idle, loaded }
+        class Base {
+            enum State { case idle, failed }
+        }
+        class Child: Base {
+            func render(_ state: State) {
+                switch state {
+                case .idle: first()
+                case .failed: fallback()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: "")
     }
 
     func testRepeatedParameterNamesUseTheirOwnScopes() throws {
@@ -704,7 +737,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         try check(input, output)
     }
 
-    func testOptionalCrossFilePropertyAndCallsRemainUnchanged() throws {
+    func testOptionalCrossFilePropertiesAndCalls() throws {
         let input = """
         func render(_ model: Model) {
             switch model.state {
@@ -715,12 +748,31 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
             case .idle?: first()
             default: fallback()
             }
+        }
+        func optional(_ model: Model?) {
             switch model?.state {
             default: fallback()
             }
         }
         """
-        try check(input, declarations: """
+        let output = """
+        func render(_ model: Model) {
+            switch model.state {
+            case .idle?: first()
+            case .some(.loaded), .none: fallback()
+            }
+            switch loadState() {
+            case .idle?: first()
+            case .some(.loaded), .none: fallback()
+            }
+        }
+        func optional(_ model: Model?) {
+            switch model?.state {
+            case .some(.idle), .some(.loaded), .none: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
         enum State { case idle, loaded }
         struct Model { let state: State? }
         func loadState() -> State? { nil }
@@ -750,7 +802,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
                 }
             }
             switch model.state {
-            default: fallback()
+            case .some(.idle), .some(.loaded), .none: fallback()
             }
         }
         """
@@ -1147,6 +1199,154 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         }
         struct State { static let idle = State() }
         func ~= (_ pattern: State, _ value: Model.State) -> Bool { false }
+        """)
+    }
+
+    func testOptionalPatternsAndNilOnlySubtractTheCasesTheyCover() throws {
+        let input = """
+        func render(_ state: State?) {
+            switch state {
+            case .some(.idle), .loaded?: first()
+            case nil: second()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State?) {
+            switch state {
+            case .some(.idle), .loaded?: first()
+            case nil: second()
+            case .some(.failed): fallback()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testWholeOptionalPayloadLeavesOnlyNil() throws {
+        let input = """
+        func render(_ state: State?) {
+            switch state {
+            case .some(let value): print(value)
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State?) {
+            switch state {
+            case .some(let value): print(value)
+            case .none: fallback()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testOptionalEnumCaseNamedNoneDoesNotCollideWithOptionalNone() throws {
+        let input = """
+        func render(_ state: State?) {
+            switch state {
+            case .none: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State?) {
+            switch state {
+            case .none: first()
+            case .some(.none), .some(.some), .some(.loaded): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case none, some, loaded }")
+    }
+
+    func testForceUnwrapWithinAndOutsideOptionalChain() throws {
+        let input = """
+        func render(_ model: Model?) {
+            switch model?.state! {
+            default: fallback()
+            }
+            switch (model?.state)! {
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model?) {
+            switch model?.state! {
+            case .some(.idle), .some(.loaded), .none: fallback()
+            }
+            switch (model?.state)! {
+            case .idle, .loaded: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State? }
+        """)
+    }
+
+    func testExplicitOptionalBindingAnnotationsRetainNilCoverage() throws {
+        for keyword in ["if", "while", "guard"] {
+            let binding = keyword == "guard" ? "guard let state: State? = source else { return }" : "\(keyword) let state: State? = source {"
+            let closing = keyword == "guard" ? "" : "}"
+            let input = """
+            func render(_ source: State??) {
+                \(binding)
+                switch state {
+                case .idle: first()
+                default: fallback()
+                }
+                \(closing)
+            }
+            """
+            let output = """
+            func render(_ source: State??) {
+                \(binding)
+                switch state {
+                case .idle: first()
+                case .some(.loaded), .none: fallback()
+                }
+                \(closing)
+            }
+            """
+            try check(input, output, declarations: "enum State { case idle, loaded }")
+        }
+    }
+
+    func testNestedSwitchResolvesGenericEnumPayloadFromAnotherFile() throws {
+        let input = """
+        func render(_ event: Event<State>) {
+            switch event {
+            case .value(let state):
+                switch state {
+                case .idle: first()
+                default: fallback()
+                }
+            case .finished: break
+            }
+        }
+        """
+        let output = """
+        func render(_ event: Event<State>) {
+            switch event {
+            case .value(let state):
+                switch state {
+                case .idle: first()
+                case .loaded: fallback()
+                }
+            case .finished: break
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        enum Event<Value> { case value(Value), finished }
         """)
     }
 

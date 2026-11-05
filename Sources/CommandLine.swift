@@ -230,6 +230,7 @@ func printHelp(as type: CLI.OutputType) {
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --project-index    Project symbol indexing: "auto" (default) or "disabled"
+    --project-index-manifest  JSON module membership supplied by a build tool
     --snapshot         Path to snapshot file (defaults to .swiftformat-snapshot)
     --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
@@ -828,6 +829,20 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             projectIndexMode = .auto
         }
 
+        var projectIndexMembership: ProjectModuleMembership?
+        if let path = args["project-index-manifest"] {
+            guard !path.isEmpty else {
+                throw FormatError.options("--project-index-manifest option expects a file path")
+            }
+            let url = expandPath(path, in: directory)
+            do {
+                let manifest = try JSONDecoder().decode(ProjectIndexManifest.self, from: Data(contentsOf: url))
+                projectIndexMembership = try manifest.membership(relativeTo: url.deletingLastPathComponent())
+            } catch {
+                throw FormatError.options("Failed to load project index manifest \(url.path): \(error)")
+            }
+        }
+
         func printRunningMessage() {
             print("Running SwiftFormat...", as: .info)
             if lint {
@@ -978,6 +993,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   lenient: lenient,
                                                   cacheLocation: cacheLocation,
                                                   projectIndexMode: projectIndexMode,
+                                                  projectIndexMembership: projectIndexMembership,
                                                   snapshotMode: snapshotMode,
                                                   reporter: reporter,
                                                   logger: logger)
@@ -1266,6 +1282,7 @@ func processInput(_ inputURLs: [URL],
                   lenient _: Bool,
                   cacheLocation: CacheLocation,
                   projectIndexMode: ProjectIndexMode,
+                  projectIndexMembership: ProjectModuleMembership? = nil,
                   snapshotMode: SnapshotMode,
                   reporter: Reporter?,
                   logger: Logger? = nil) -> (OutputFlags, [Error])
@@ -1441,7 +1458,7 @@ func processInput(_ inputURLs: [URL],
 
     let projectIndexCacheUpdates = ProjectIndexCacheUpdates()
     var discoveredProjectFiles: [(URL, ProjectRoot)]?
-    var moduleIdentifiersByRoot: [ProjectRoot: [String: Set<String>]]?
+    var moduleIdentifiersByRoot: [ProjectRoot: ProjectModuleMembership]?
     let projectIndexProvider: ProjectIndexProvider? = projectIndexMode == .auto ? ProjectIndexProvider { features in
         let requiresFunctionReferences = features.contains(.functionReferences)
         let requiresSymbolReferences = features.contains(.symbolReferences)
@@ -1461,16 +1478,33 @@ func processInput(_ inputURLs: [URL],
                     discoveredFilesByPath[path] = (fileURL, root)
                 }
             }
+            if let membership = projectIndexMembership {
+                for path in membership.files.keys where discoveredFilesByPath[path] == nil {
+                    let url = URL(fileURLWithPath: path)
+                    discoveredFilesByPath[path] = (url, projectRoot(for: url))
+                }
+            }
             discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
             discoveredProjectFiles = discoveredFiles
         }
-        let modulesByRoot: [ProjectRoot: [String: Set<String>]]
+        let modulesByRoot: [ProjectRoot: ProjectModuleMembership]
         if let cached = moduleIdentifiersByRoot {
             modulesByRoot = cached
         } else {
             let filesByRoot = Dictionary(grouping: discoveredFiles, by: \.1)
             modulesByRoot = filesByRoot.mapValues { files in
-                moduleIdentifiers(for: files.map(\.0), in: files[0].1)
+                var membership = projectModuleMembership(for: files.map(\.0), in: files[0].1)
+                if let supplied = projectIndexMembership {
+                    for (url, _) in files {
+                        if let modules = supplied.files[url.path] {
+                            membership.files[url.path] = modules
+                            for module in modules {
+                                membership.names[module] = supplied.names[module]
+                            }
+                        }
+                    }
+                }
+                return membership
             }
             moduleIdentifiersByRoot = modulesByRoot
         }
@@ -1483,7 +1517,8 @@ func processInput(_ inputURLs: [URL],
             let sourceHash = computeHash(source)
             let rootCacheURL = cacheURL(for: root)
             let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
-            let modules = modulesByRoot[root]?[fileURL.path] ?? []
+            let modules = modulesByRoot[root]?.files[fileURL.path] ?? []
+            let moduleNames = modulesByRoot[root]?.names.filter { modules.contains($0.key) } ?? [:]
             let includeFunctionReferences = requiresFunctionReferences || localFunctionReferencePaths.contains(path)
             let sourceIndex: SourceFileIndex
             if let rootCacheURL,
@@ -1492,6 +1527,7 @@ func processInput(_ inputURLs: [URL],
                caches[rootCacheURL]?.sourceIndexes[key],
                cached.contentHash == sourceHash,
                cached.moduleIdentifiers == modules.sorted(),
+               cached.moduleNames == moduleNames,
                !includeFunctionReferences || cached.includesFunctionReferences,
                !requiresSymbolReferences || cached.includesSymbolReferences
             {
@@ -1500,8 +1536,10 @@ func processInput(_ inputURLs: [URL],
                 sourceIndex = makeSourceFileIndex(
                     from: source,
                     moduleIdentifiers: modules,
+                    moduleNames: moduleNames,
                     includeFunctionReferences: includeFunctionReferences,
-                    includeSymbolReferences: requiresSymbolReferences
+                    includeSymbolReferences: requiresSymbolReferences,
+                    isSwiftInterface: fileURL.pathExtension == "swiftinterface"
                 )
             }
             indexLock.lock()

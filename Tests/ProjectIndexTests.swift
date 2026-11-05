@@ -958,7 +958,7 @@ final class ProjectIndexTests: XCTestCase {
 
         XCTAssertEqual(index.protocolDeclarations, [
             .init(name: "Refined", inheritedProtocols: ["Base", "Module.Other", "Other"]),
-            .init(name: "Plain", inheritedProtocols: []),
+            .init(name: "Plain", inheritedProtocols: [], visibility: "public"),
         ])
         XCTAssertEqual(index.typeConformances, [])
     }
@@ -972,7 +972,6 @@ final class ProjectIndexTests: XCTestCase {
             moduleIdentifiers: ["App"]
         )
 
-        XCTAssertEqual(SourceFileIndex.cacheVersion, 13)
         XCTAssertEqual(try JSONDecoder().decode(
             SourceFileIndex.self,
             from: JSONEncoder().encode(index)

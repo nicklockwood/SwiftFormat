@@ -1176,6 +1176,7 @@ let commandLineArguments = [
     "output",
     "cache",
     "project-index",
+    "project-index-manifest",
     "snapshot",
     "dry-run",
     "lint",

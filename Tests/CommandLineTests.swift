@@ -870,6 +870,146 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexManifestResolvesSourcesOutsideGeneratedProjectAndInvalidatesCache() throws {
+        let input = """
+        import Domain
+        func render(_ state: State) {
+            switch state {
+            default: print(state)
+            }
+        }
+        """
+        let output = """
+        import Domain
+        func render(_ state: State) {
+            switch state {
+            case .idle, .loaded: print(state)
+            }
+        }
+        """
+        for domainPath in ["Domain/State.swift", "App/Domain/State.swift"] {
+            try withTmpDirectory([
+                "App/Package.swift": "// Package marker",
+                "App/Input.swift": input,
+                domainPath: "public enum State { case idle, loaded }",
+                "modules.json": """
+                {"modules":[
+                    {"id":"app", "name":"App", "sources":["App/Input.swift"]},
+                    {"id":"domain", "name":"Domain", "sources":["\(domainPath)"]}
+                ]}
+                """,
+            ]) { directory in
+                CLI.print = { _, _ in }
+                let arguments = "App/Input.swift --rules exhaustiveSwitchStatements --project-index-manifest modules.json --cache cache.json --quiet"
+                let inputURL = directory.appendingPathComponent("App/Input.swift")
+                XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+                XCTAssertEqual(try String(contentsOf: inputURL), output)
+
+                try input.write(to: inputURL, atomically: true, encoding: .utf8)
+                let manifestURL = directory.appendingPathComponent("modules.json")
+                let manifest = try String(contentsOf: manifestURL).replacingOccurrences(of: "\"name\":\"Domain\"", with: "\"name\":\"Other\"")
+                try manifest.write(to: manifestURL, atomically: true, encoding: .utf8)
+                XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+                XCTAssertEqual(try String(contentsOf: inputURL), input)
+            }
+        }
+    }
+
+    func testProjectIndexManifestIndexesSDKInterfacesForInheritedNamesAndModuleQualifiedProperties() throws {
+        let input = """
+        import Domain
+        struct Renderer: View {
+            func render(_ model: Model) {
+                switch model.state {
+                default: print(model.state)
+                }
+            }
+        }
+        """
+        let output = """
+        import Domain
+        struct Renderer: View {
+            func render(_ model: Model) {
+                switch model.state {
+                case .idle, .loaded: print(model.state)
+                }
+            }
+        }
+        """
+        try withTmpDirectory([
+            "App/Input.swift": input,
+            "SDK/Domain.swiftinterface": """
+            public protocol View { associatedtype Body }
+            public enum State { case idle, loaded }
+            public struct Model { public let state: Domain::State }
+            """,
+            "modules.json": """
+            {"modules":[
+                {"id":"app", "name":"App", "sources":["App/Input.swift"]},
+                {"id":"sdk:Domain", "name":"Domain", "sources":["SDK/Domain.swiftinterface"]}
+            ]}
+            """,
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "App/Input.swift --rules exhaustiveSwitchStatements --project-index-manifest modules.json --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("App/Input.swift")), output)
+        }
+    }
+
+    func testProjectIndexManifestRequiresAgreementAcrossSharedSourceTargets() throws {
+        let input = """
+        func render(_ state: State) {
+            switch state {
+            default: print(state)
+            }
+        }
+        """
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Input.swift": input,
+            "First.swift": "enum State { case first }",
+            "Second.swift": "enum State { case second }",
+            "modules.json": """
+            {"modules":[
+                {"id":"first", "name":"First", "sources":["Input.swift","First.swift"]},
+                {"id":"second", "name":"Second", "sources":["Input.swift","Second.swift"]}
+            ]}
+            """,
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "Input.swift --rules exhaustiveSwitchStatements --project-index-manifest modules.json --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Input.swift")), input)
+        }
+    }
+
+    func testInvalidProjectIndexManifestDoesNotModifyInput() throws {
+        let input = "let value=1"
+        for manifest in [
+            "not JSON",
+            """
+            {"modules":[{"id":"", "name":"App", "sources":["Input.swift"]}]}
+            """,
+            """
+            {"modules":[{"id":"app", "name":"", "sources":["Input.swift"]}]}
+            """,
+            """
+            {"modules":[{"id":"app", "name":"App", "sources":["Input.txt"]}]}
+            """,
+            """
+            {"modules":[
+                {"id":"same", "name":"First", "sources":["Input.swift"]},
+                {"id":"same", "name":"Second", "sources":["Input.swift"]}
+            ]}
+            """,
+        ] {
+            try withTmpDirectory(["Input.swift": input, "modules.json": manifest]) { directory in
+                CLI.print = { _, _ in }
+                XCTAssertEqual(CLI.run(in: directory.path, with: "Input.swift --rules spaceAroundOperators --project-index-manifest modules.json --cache ignore --quiet"), .error)
+                XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Input.swift")), input)
+            }
+        }
+    }
+
     func testProjectIndexIsNotBuiltUntilAProjectAwareRuleNeedsIt() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

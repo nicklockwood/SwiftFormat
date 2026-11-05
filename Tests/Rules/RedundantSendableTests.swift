@@ -79,6 +79,23 @@ final class RedundantSendableTests: XCTestCase {
         testFormatting(for: input, rules: [.redundantSendable])
     }
 
+    func testDoesNotRemoveSendableFromUsableFromInlineTypes() {
+        // `@usableFromInline` types aren't implicitly `Sendable`
+        let input = """
+        @usableFromInline
+        enum Strategy: Sendable {
+            case watermark(Int)
+        }
+
+        @usableFromInline
+        struct Watermark: Sendable {
+            let low: Int
+        }
+        """
+
+        testFormatting(for: input, rules: [.redundantSendable])
+    }
+
     func testIgnoresCommentsAndStrings() {
         let input = """
         func demo() {

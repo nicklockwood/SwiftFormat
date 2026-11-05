@@ -543,6 +543,535 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         try check(input, declarations: "")
     }
 
+    func testRepeatedParameterNamesUseTheirOwnScopes() throws {
+        let input = """
+        func first(_ state: State) {
+            switch state {
+            case .idle: first()
+            default: fallback()
+            }
+        }
+        func second(_ state: Other) {
+            switch state {
+            case .one: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func first(_ state: State) {
+            switch state {
+            case .idle: first()
+            case .loaded, .failed: fallback()
+            }
+        }
+        func second(_ state: Other) {
+            switch state {
+            case .one: first()
+            case .two: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case one, two }
+        """)
+    }
+
+    func testCrossFilePropertyChainAndInferredLocal() throws {
+        let input = """
+        func render(_ model: Model) {
+            switch model.snapshot.state {
+            case .idle: first()
+            default: fallback()
+            }
+            let selected = model.snapshot.state
+            switch selected {
+            case .failed: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            switch model.snapshot.state {
+            case .idle: first()
+            case .loaded, .failed: fallback()
+            }
+            let selected = model.snapshot.state
+            switch selected {
+            case .failed: first()
+            case .idle, .loaded: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Snapshot { let state: State }
+        struct Model { let snapshot: Snapshot }
+        """)
+    }
+
+    func testCrossFileFunctionAndMethodReturnTypes() throws {
+        let input = """
+        func render(_ model: Model) {
+            switch loadState() {
+            case .idle: first()
+            default: fallback()
+            }
+            let selected = model.readState()
+            switch selected {
+            case .failed: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            switch loadState() {
+            case .idle: first()
+            case .loaded, .failed: fallback()
+            }
+            let selected = model.readState()
+            switch selected {
+            case .failed: first()
+            case .idle, .loaded: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        func loadState() -> State { .idle }
+        struct Model { func readState() -> State { .loaded } }
+        """)
+    }
+
+    func testPropertyTypeUsesDeclaringNamespaceAcrossFiles() throws {
+        let input = """
+        func render(_ model: Model) {
+            switch model.state {
+            case .idle: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            switch model.state {
+            case .idle: first()
+            case .loaded: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, failed }
+        struct Model {
+            enum State { case idle, loaded }
+            let state: State
+        }
+        """)
+    }
+
+    func testUnknownInnerBindingDoesNotHideOuterBindingAfterScope() throws {
+        let input = """
+        func render(_ state: State) {
+            do {
+                let state = unknown()
+                switch state {
+                default: fallback()
+                }
+            }
+            switch state {
+            case .idle: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State) {
+            do {
+                let state = unknown()
+                switch state {
+                default: fallback()
+                }
+            }
+            switch state {
+            case .idle: first()
+            case .loaded, .failed: fallback()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testOptionalCrossFilePropertyAndCallsRemainUnchanged() throws {
+        let input = """
+        func render(_ model: Model) {
+            switch model.state {
+            case .idle?: first()
+            default: fallback()
+            }
+            switch loadState() {
+            case .idle?: first()
+            default: fallback()
+            }
+            switch model?.state {
+            default: fallback()
+            }
+        }
+        """
+        try check(input, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State? }
+        func loadState() -> State? { nil }
+        """)
+    }
+
+    func testOptionalBindingUnwrapsIndexedPropertyInItsScope() throws {
+        let input = """
+        func render(_ model: Model) {
+            if let state = model.state {
+                switch state {
+                case .idle: first()
+                default: fallback()
+                }
+            }
+            switch model.state {
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            if let state = model.state {
+                switch state {
+                case .idle: first()
+                case .loaded: fallback()
+                }
+            }
+            switch model.state {
+            default: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State? }
+        """)
+    }
+
+    func testRepeatedSelfSwitchesWithMultiplePayloads() throws {
+        let input = """
+        enum State {
+            case stays(Int)
+            case activity(Int, Int)
+            var first: Int? {
+                switch self {
+                case .stays(let value): value
+                default: nil
+                }
+            }
+            var second: Int? {
+                switch self {
+                case .activity(let value, _): value
+                default: nil
+                }
+            }
+        }
+        """
+        let output = """
+        enum State {
+            case stays(Int)
+            case activity(Int, Int)
+            var first: Int? {
+                switch self {
+                case .stays(let value): value
+                case .activity: nil
+                }
+            }
+            var second: Int? {
+                switch self {
+                case .activity(let value, _): value
+                case .stays: nil
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: "")
+    }
+
+    func testUnknownClosureArgumentOnlyShadowsInsideClosure() throws {
+        let input = """
+        func render(_ state: State) {
+            items.forEach { state in
+                switch state {
+                default: fallback()
+                }
+            }
+            switch state {
+            case .idle: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State) {
+            items.forEach { state in
+                switch state {
+                default: fallback()
+                }
+            }
+            switch state {
+            case .idle: first()
+            case .loaded, .failed: fallback()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testShadowedCallsPreserveDefaults() throws {
+        let input = """
+        func first() {
+            let loadState = { Other.one }
+            switch loadState() {
+            case .one: break
+            default: break
+            }
+        }
+        func second() {
+            func loadState() -> Other { .one }
+            switch loadState() {
+            case .one: break
+            default: break
+            }
+        }
+        """
+        try check(input, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case one, two }
+        func loadState() -> State { .idle }
+        """)
+    }
+
+    func testStaticAndInstanceMembersResolveSeparately() throws {
+        let input = """
+        func render(_ model: Model) {
+            switch Model.state {
+            case .one: break
+            default: break
+            }
+            switch model.readState() {
+            case .idle: break
+            default: break
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            switch Model.state {
+            case .one: break
+            case .two: break
+            }
+            switch model.readState() {
+            case .idle: break
+            case .loaded, .failed: break
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case one, two }
+        struct Model {
+            static let state: Other = .one
+            func readState() -> State { .idle }
+            static func readState() -> Other { .one }
+        }
+        """)
+    }
+
+    func testPatternBindingDoesNotInferTheContainerType() throws {
+        let input = """
+        func render(_ container: Container) {
+            if case let .value(state) = container {
+                switch state {
+                case .one: break
+                default: break
+                }
+            }
+        }
+        """
+        try check(input, declarations: """
+        enum Other { case one, two }
+        enum Container { case value(Other), empty }
+        """)
+    }
+
+    func testLocalTypeShadowDoesNotResolveToIndexedEnum() throws {
+        let input = """
+        func render() {
+            enum State { case one, two }
+            let state: State = .one
+            switch state {
+            case .one: break
+            default: break
+            }
+        }
+        """
+        try check(input)
+    }
+
+    func testAssociatedPatternAndCatchBindingsShadowOuterVariables() throws {
+        let input = """
+        func render(_ state: State, _ error: State, _ value: Wrapped) {
+            switch value {
+            case .item(let state):
+                switch state {
+                default: break
+                }
+            default: break
+            }
+            do { try perform() } catch {
+                switch error {
+                default: break
+                }
+            }
+            switch state {
+            default: break
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State, _ error: State, _ value: Wrapped) {
+            switch value {
+            case .item(let state):
+                switch state {
+                default: break
+                }
+            case .other: break
+            }
+            do { try perform() } catch {
+                switch error {
+                default: break
+                }
+            }
+            switch state {
+            case .idle, .loaded: break
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        enum Wrapped { case item(Int), other }
+        """)
+    }
+
+    func testLocalBindingShadowsParameterInTheSameScope() throws {
+        let input = """
+        func render(_ state: State) {
+            let state: Other = .one
+            switch state {
+            case .one: break
+            default: break
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State) {
+            let state: Other = .one
+            switch state {
+            case .one: break
+            case .two: break
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case one, two }
+        """)
+    }
+
+    func testIndexedMemberTakesPrecedenceOverFileGlobalBinding() throws {
+        let input = """
+        let state: State = .idle
+        extension Model {
+            func render() {
+                switch state {
+                case .one: break
+                default: break
+                }
+            }
+        }
+        """
+        let output = """
+        let state: State = .idle
+        extension Model {
+            func render() {
+                switch state {
+                case .one: break
+                case .two: break
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case one, two }
+        struct Model { let state: Other }
+        """)
+    }
+
+    func testIndexedFunctionValuedMemberShadowsGlobalFunction() throws {
+        let input = """
+        extension Model {
+            func render() {
+                switch loadState() {
+                case .one: break
+                default: break
+                }
+            }
+        }
+        """
+        try check(input, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case one, two }
+        struct Model { let loadState: () -> Other }
+        func loadState() -> State { .idle }
+        """)
+    }
+
+    func testMemberInAnyContainingModuleBlocksGlobalCallResolution() throws {
+        let input = """
+        extension Model {
+            func render() {
+                switch loadState() {
+                default: break
+                }
+            }
+        }
+        """
+        let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
+        let project = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App", "Other"]),
+            "/Project/Shared.swift": makeSourceFileIndex(from: """
+            enum State { case idle, loaded }
+            func loadState() -> State { .idle }
+            """, moduleIdentifiers: ["App", "Other"]),
+            "/Project/App.swift": makeSourceFileIndex(from: """
+            struct Model { let loadState: () -> Int }
+            """, moduleIdentifiers: ["App"]),
+            "/Project/Other.swift": makeSourceFileIndex(from: """
+            struct Model {}
+            """, moduleIdentifiers: ["Other"]),
+        ])
+        let result = try applyRules(
+            [.exhaustiveSwitchStatements], to: tokenize(input), with: .default,
+            trackChanges: false, range: nil,
+            context: FormattingContext(currentFileURL: fileURL, projectIndex: project)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), input)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

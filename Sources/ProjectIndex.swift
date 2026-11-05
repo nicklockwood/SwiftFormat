@@ -379,6 +379,7 @@ struct ProjectIndex {
     private let protocolsByModule: Set<TypeKey>
     private let protocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]]
     private let conformancesByModule: [TypeKey: Set<String>]
+    private let propertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
     private let staticPropertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
     private let inheritedClassNamesByModule: [String: Set<String>]
     private let inheritedClassNames: Set<String>
@@ -411,6 +412,7 @@ struct ProjectIndex {
         var protocolsByModule = Set<TypeKey>()
         var protocolDeclarationsByModule = [TypeKey: [SourceFileIndex.ProtocolDeclaration]]()
         var conformancesByModule = [TypeKey: Set<String>]()
+        var propertiesByModule = [TypeKey: [SourceFileIndex.PropertyDeclaration]]()
         var staticPropertiesByModule = [TypeKey: [SourceFileIndex.PropertyDeclaration]]()
         for file in files.values {
             for module in file.moduleIdentifiers {
@@ -424,9 +426,12 @@ struct ProjectIndex {
                     let key = TypeKey(moduleIdentifier: module, name: conformance.typeName)
                     conformancesByModule[key, default: []].formUnion(conformance.conformances)
                 }
-                for property in file.propertyDeclarations where property.isStatic {
+                for property in file.propertyDeclarations {
                     let key = TypeKey(moduleIdentifier: module, name: "\(property.declaringType).\(property.name)")
-                    staticPropertiesByModule[key, default: []].append(property)
+                    propertiesByModule[key, default: []].append(property)
+                    if property.isStatic {
+                        staticPropertiesByModule[key, default: []].append(property)
+                    }
                 }
                 for type in file.typeDeclarations {
                     typesByModule[TypeKey(moduleIdentifier: module, name: type.name), default: []].append(type)
@@ -516,6 +521,7 @@ struct ProjectIndex {
         self.protocolsByModule = protocolsByModule
         self.protocolDeclarationsByModule = protocolDeclarationsByModule
         self.conformancesByModule = conformancesByModule
+        self.propertiesByModule = propertiesByModule
         self.staticPropertiesByModule = staticPropertiesByModule
         self.typeVisibilities = typeVisibilities
         self.inheritedClassNamesByModule = inheritedClassNamesByModule
@@ -733,6 +739,31 @@ struct ProjectIndex {
             guard declarations.count == 1, let cases = declarations.first?.enumCases,
                   !cases.isEmpty, result == nil || result == cases else { return nil }
             result = cases
+        }
+        return result
+    }
+
+    /// A property in any containing module can shadow a global value or function.
+    func exhaustiveSwitchHasProperty(owner: String, member: String, visibleFrom fileURL: URL) -> Bool {
+        let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers ?? []
+        return modules.contains { module in
+            propertiesByModule[TypeKey(moduleIdentifier: module, name: "\(owner).\(member)")] != nil
+        }
+    }
+
+    /// Resolve a uniquely declared property in every indexed module containing the caller.
+    func exhaustiveSwitchPropertyType(owner: String, member: String, isStatic: Bool, visibleFrom fileURL: URL) -> String? {
+        guard let modules = files[fileURL.standardizedFileURL.path]?.moduleIdentifiers, !modules.isEmpty else { return nil }
+        var result: String?
+        for module in modules {
+            let ownerKey = TypeKey(moduleIdentifier: module, name: owner)
+            guard typesByModule[ownerKey]?.count == 1,
+                  typesByModule[ownerKey]?.first?.isGeneric == false,
+                  !dynamicMemberLookupTypesByModule[module, default: []].contains(owner) else { return nil }
+            let matches = propertiesByModule[TypeKey(moduleIdentifier: module, name: "\(owner).\(member)")] ?? []
+            guard matches.count == 1, matches.first?.isStatic == isStatic, let type = matches.first?.type,
+                  result == nil || result == type else { return nil }
+            result = type
         }
         return result
     }

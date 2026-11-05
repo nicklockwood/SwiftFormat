@@ -13,6 +13,13 @@ public extension FormatRule {
         help: "Convert functional `forEach` calls to for loops.",
         options: ["anonymous-for-each", "single-line-for-each"]
     ) { formatter in
+        // Project types with their own `forEach` method, which may not conform to `Sequence`
+        let project = formatter.tokens.contains(.identifier("forEach")) ? formatter.projectIndexOrCurrentFile() : nil
+        let customForEachTypes = project.map(formatter.typesDeclaringForEach) ?? []
+        let bindings = customForEachTypes.isEmpty ? [:] : formatter.explicitBindingTypes()
+        let customForEachProperties = project.map {
+            formatter.properties(ofTypeIn: customForEachTypes, in: $0)
+        } ?? []
         formatter.forEach(.identifier("forEach")) { forEachIndex, _ in
             // Make sure this is a function call preceded by a `.`
             guard let functionCallDotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: forEachIndex),
@@ -130,6 +137,13 @@ public extension FormatRule {
             //
             // would be a pretty obvious downgrade.
             if formatter.tokens[forLoopSubjectRange].contains(where: \.isLinebreak) {
+                return
+            }
+
+            if formatter.isForEachCall(
+                on: forLoopSubjectRange, ofTypeIn: customForEachTypes,
+                bindings: bindings, properties: customForEachProperties
+            ) {
                 return
             }
 
@@ -292,6 +306,69 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// The project index, or an index of the current file if there is none
+    func projectIndexOrCurrentFile() -> ProjectIndex {
+        let path = (currentFileURL ?? URL(fileURLWithPath: "/SwiftFormat/Input.swift")).standardizedFileURL.path
+        return projectIndex(requiring: [.declarations]).flatMap {
+            $0.files[path]?.moduleIdentifiers.isEmpty == false ? $0 : nil
+        } ?? ProjectIndex(files: [path: makeSourceFileIndex(
+            from: sourceCode(for: tokens), moduleIdentifiers: ["SwiftFormat.CurrentFile"],
+            includeFunctionReferences: false, includeSymbolReferences: false
+        )])
+    }
+
+    /// The types in the project with an instance member named `forEach`
+    func typesDeclaringForEach(in project: ProjectIndex) -> Set<String> {
+        let fileURL = currentFileURL ?? URL(fileURLWithPath: "/SwiftFormat/Input.swift")
+        return Set(project.memberNamesByType(visibleFrom: fileURL).instance.compactMap { type, members in
+            members.contains("forEach") ? type : nil
+        })
+    }
+
+    /// The instance properties in the project declared with one of the given types
+    func properties(
+        ofTypeIn types: Set<String>,
+        in project: ProjectIndex
+    ) -> [SourceFileIndex.PropertyDeclaration] {
+        guard !types.isEmpty else { return [] }
+        return project.files.values.flatMap(\.propertyDeclarations).filter { property in
+            !property.isStatic && property.type.map { types.contains(baseTypeName(of: $0)) } == true
+        }
+    }
+
+    /// Whether `forEach` is called on a single identifier declared with one of the given types.
+    /// Leaving a call unchanged is always safe, so any matching declaration in scope is enough.
+    func isForEachCall(
+        on subjectRange: ClosedRange<Int>,
+        ofTypeIn types: Set<String>,
+        bindings: [String: [ExplicitBindingType]],
+        properties: [SourceFileIndex.PropertyDeclaration]
+    ) -> Bool {
+        guard !types.isEmpty, subjectRange.count == 1,
+              case let .identifier(name) = tokens[subjectRange.lowerBound]
+        else { return false }
+        // A local, parameter or property in scope
+        if bindings[name, default: []].contains(where: {
+            $0.scope?.range.contains(subjectRange.lowerBound) != false && types.contains(baseTypeName(of: $0.type))
+        }) {
+            return true
+        }
+        // A property of the enclosing type, which can be declared in another extension or file
+        guard properties.contains(where: { $0.name == name }),
+              let enclosingType = parseEnclosingType(containing: subjectRange.lowerBound)?.fullyQualifiedName
+        else { return false }
+        return properties.contains { $0.name == name && $0.declaringType == enclosingType }
+    }
+
+    /// The type name without ownership modifiers, generic arguments and optionality,
+    /// like `Pool` for `inout Pool<Int>?`
+    func baseTypeName(of type: String) -> String {
+        tokenize(type)
+            .drop(while: { $0.isSpace || ["inout", "borrowing", "consuming", "sending", "any", "some"].contains($0.string) })
+            .prefix(while: { $0.isIdentifier || $0.isOperator(".") })
+            .string
+    }
+
     /// Returns the start index of the chain component ending at the given index
     func startOfChainComponent(at index: Int, forLoopSubjectIdentifier: inout String?) -> Int? {
         // The previous item in a dot chain can either be:

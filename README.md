@@ -1189,7 +1189,7 @@ Known issues
 
 * The `isEmpty` rule will convert `count == 0` to `isEmpty` even for types that do not have an `isEmpty` method, such as `NSArray`/`NSDictionary`/etc. Use of Foundation collections in Swift code is pretty rare, but just in case, the rule is disabled by default.
 
-* The `preferForLoop` rule will convert `foo.forEach` to `for item in foo` even for types that do not conform to the `Sequence` protocol and cannot be used with a `for ... in` loop. There are no such types built in, but custom types may have this issue.
+* The `preferForLoop` rule will convert `foo.forEach` to `for item in foo` even for types that do not conform to the `Sequence` protocol and cannot be used with a `for ... in` loop. There are no such types built in, but custom types may have this issue. If `foo` is a local variable, parameter or property declared with an explicit type, and that type declares its own `forEach` method in the project (or in the same file when project indexing is not available), the call is usually left unchanged, but not in every case (for example, not for a type nested in another type). Otherwise you can use `// swiftformat:disable:next preferForLoop` to exclude a specific call.
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if it is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 

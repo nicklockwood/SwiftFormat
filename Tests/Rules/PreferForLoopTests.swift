@@ -730,4 +730,159 @@ final class PreferForLoopTests: XCTestCase {
         """
         testFormatting(for: input, rule: .preferForLoop, exclude: [.redundantProperty])
     }
+
+    func testCustomForEachMethodNotConverted() {
+        let input = """
+        struct Origin {
+            private var elements: Set<Int> = []
+
+            func forEach(_ body: (Int) -> Void) {
+                elements.forEach(body)
+            }
+        }
+
+        func printAll(in origin: Origin) {
+            origin.forEach {
+                print($0)
+            }
+        }
+
+        func printAll(in origin: [Int]) {
+            origin.forEach {
+                print($0)
+            }
+        }
+        """
+        let output = """
+        struct Origin {
+            private var elements: Set<Int> = []
+
+            func forEach(_ body: (Int) -> Void) {
+                elements.forEach(body)
+            }
+        }
+
+        func printAll(in origin: Origin) {
+            origin.forEach {
+                print($0)
+            }
+        }
+
+        func printAll(in origin: [Int]) {
+            for item in origin {
+                print(item)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testCustomForEachMethodOnGenericInoutParameterNotConverted() {
+        let input = """
+        struct Stack<Element> {
+            private var elements: [Element] = []
+
+            func forEach(do body: (Element) -> Void) {
+                elements.forEach(body)
+            }
+        }
+
+        func printAll(in stack: inout Stack<Int>) {
+            stack.forEach {
+                print($0)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop)
+    }
+
+    func testCustomForEachMethodOnPropertyUsedInExtensionNotConverted() {
+        let input = """
+        final class Pool<T> {
+            private var items: [T] = []
+
+            func forEach(_ body: (T) -> Void) {
+                items.forEach(body)
+            }
+        }
+
+        final class DatabasePool {
+            private var readerPool: Pool<Int>?
+        }
+
+        extension DatabasePool {
+            func printReaders() {
+                guard let readerPool else { return }
+
+                readerPool.forEach { reader in
+                    print(reader)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop)
+    }
+
+    func testForEachOnArrayConvertedWhenCustomForEachMethodExists() {
+        let input = """
+        struct Origin {
+            func forEach(_ body: (Int) -> Void) {
+                body(0)
+            }
+        }
+
+        func printAll(in origins: [Origin]) {
+            origins.forEach { origin in
+                print(origin)
+            }
+        }
+        """
+        let output = """
+        struct Origin {
+            func forEach(_ body: (Int) -> Void) {
+                body(0)
+            }
+        }
+
+        func printAll(in origins: [Origin]) {
+            for origin in origins {
+                print(origin)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testCustomForEachMethodInOtherFileNotConverted() throws {
+        let declarations = """
+        struct Origin {
+            private var elements: Set<Int> = []
+        }
+
+        extension Origin {
+            func forEach(_ body: (Int) -> Void) {
+                elements.forEach(body)
+            }
+        }
+        """
+        let input = """
+        func printAll(in origin: Origin) {
+            origin.forEach {
+                print($0)
+            }
+        }
+        """
+        _ = FormatRules.all
+        let fileURL = URL(fileURLWithPath: "/Project/Call.swift")
+        let project = ProjectIndex(files: [
+            "/Project/Origin.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
+            fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.preferForLoop], to: tokenize(input), with: .default,
+            trackChanges: false, range: nil,
+            context: FormattingContext(currentFileURL: fileURL, projectIndex: project)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), input)
+    }
 }

@@ -1048,4 +1048,33 @@ final class MarkTypesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .markTypes, exclude: [.wrapPropertyBodies])
     }
+
+    func testMarksExtensionsUnwrappedByRedundantSwiftVersionCheck() {
+        let input = """
+        struct Foo {}
+
+        #if compiler(>=6.0)
+            extension Foo: Equatable {}
+
+            extension Foo: Hashable {}
+        #endif
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: Equatable
+
+        extension Foo: Equatable {}
+
+        // MARK: Hashable
+
+        extension Foo: Hashable {}
+        """
+
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, [output], rules: [.markTypes, .redundantSwiftVersionCheck, .indent], options: options)
+    }
 }

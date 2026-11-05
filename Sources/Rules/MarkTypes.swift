@@ -13,6 +13,9 @@ public extension FormatRule {
         help: "Add a MARK comment before top-level types and extensions.",
         runOnceOnly: true,
         disabledByDefault: true,
+        // Runs after `redundantSwiftVersionCheck`, which can unwrap declarations from an `#if`
+        // block, because a rule that only runs once wouldn't see them in a later pass
+        orderAfter: [.redundantSwiftVersionCheck],
         options: ["mark-types", "type-mark", "mark-extensions", "extension-mark", "grouped-extension"],
         sharedOptions: ["line-after-marks", "linebreaks"]
     ) { formatter in

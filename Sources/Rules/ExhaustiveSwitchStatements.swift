@@ -68,7 +68,7 @@ extension Formatter {
             var start = keyword + 1
             while start < branch.startOfBranch {
                 let end = index(of: .delimiter(","), in: start ..< branch.startOfBranch) ?? branch.startOfBranch
-                if let name = exhaustiveSwitchCoveredCase(in: start ..< end, type: type.name, cases: cases) {
+                if let name = exhaustiveSwitchCoveredCase(in: start ..< end, type: type, resolver: resolver, cases: cases) {
                     covered.insert(name)
                 }
                 start = end + 1
@@ -84,12 +84,26 @@ extension Formatter {
     }
 
     /// Only subtract patterns that cover the entire case, including all of its payloads.
-    func exhaustiveSwitchCoveredCase(in range: Range<Int>, type: String, cases: [String]) -> String? {
+    func exhaustiveSwitchCoveredCase(in range: Range<Int>, type: ExhaustiveSwitchTypeResolver.ResolvedType,
+                                     resolver: ExhaustiveSwitchTypeResolver, cases: [String]) -> String?
+    {
         let payload = index(of: .startOfScope("("), in: range)
         let head = tokens[range.lowerBound ..< (payload ?? range.upperBound)]
             .filter { !$0.isSpaceOrCommentOrLinebreak && $0 != .keyword("let") && $0 != .keyword("var") }
-            .string
-        guard let name = cases.first(where: { head == ".\($0)" || head == "\(type).\($0)" }) else { return nil }
+            .string.replacingOccurrences(of: "`", with: "")
+        guard let name = cases.first(where: { name in
+            let unescaped = name.replacingOccurrences(of: "`", with: "")
+            if head == ".\(unescaped)" {
+                return true
+            }
+            guard head.hasSuffix(".\(unescaped)"),
+                  let end = index(of: .nonSpaceOrCommentOrLinebreak, before: payload ?? range.upperBound),
+                  let dot = index(of: .nonSpaceOrCommentOrLinebreak, before: end), tokens[dot].isOperator("."),
+                  let start = index(in: range, where: { !$0.isSpaceOrCommentOrLinebreak && $0 != .keyword("let") && $0 != .keyword("var") }),
+                  start < dot, let prefix = resolver.expressionType(in: start ... dot - 1), prefix.isMetatype
+            else { return false }
+            return resolver.qualifiedName(for: prefix) == resolver.qualifiedName(for: type)
+        }) else { return nil }
         guard let payload else { return name }
         guard let end = endOfScope(at: payload),
               index(of: .nonSpaceOrCommentOrLinebreak, in: end + 1 ..< range.upperBound) == nil else { return nil }
@@ -438,6 +452,9 @@ final class ExhaustiveSwitchTypeResolver {
                 cursor = close
             } else {
                 current = memberType(owner: owner, name: memberName)
+                if current == nil, owner.isMetatype, project.containsType(named: "\(ownerName).\(memberName)", visibleFrom: fileURL) {
+                    current = ResolvedType(name: "\(ownerName).\(memberName)", namespace: nil, isMetatype: true)
+                }
                 if current == nil, owner.isMetatype,
                    enumCases(for: ResolvedType(name: ownerName, namespace: nil))?.contains(memberName) == true
                 {

@@ -1072,6 +1072,84 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         XCTAssertEqual(sourceCode(for: result.tokens), input)
     }
 
+    func testEscapedCaseDeclarationsMatchUnescapedPatterns() throws {
+        let input = """
+        func render(_ state: State) {
+            switch state {
+            case .switch: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State) {
+            switch state {
+            case .switch: first()
+            case .`default`, .loaded: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case `switch`, `default`, loaded }
+        """)
+    }
+
+    func testQualifiedCasePatternsOnInferredPropertyTypes() throws {
+        let input = """
+        func render(_ model: Model) {
+            let state = model.state
+            switch state {
+            case Model.State.idle: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            let state = model.state
+            switch state {
+            case Model.State.idle: first()
+            case .loaded: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        struct Model {
+            enum State { case idle, loaded }
+            let state: State
+        }
+        """)
+    }
+
+    func testQualifiedExpressionPatternDoesNotCoverAnUnrelatedEnumCase() throws {
+        let input = """
+        func render(_ model: Model) {
+            let state = model.state
+            switch state {
+            case State.idle: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            let state = model.state
+            switch state {
+            case State.idle: first()
+            case .idle, .loaded: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        struct Model {
+            enum State { case idle, loaded }
+            let state: State
+        }
+        struct State { static let idle = State() }
+        func ~= (_ pattern: State, _ value: Model.State) -> Bool { false }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

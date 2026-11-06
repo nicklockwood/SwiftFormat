@@ -632,6 +632,41 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testChangingOneFilesConfigurationPrunesItsOldCacheEntryAndPreservesOtherFiles() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/First/Input.swift": "func first() {\nprint(1)\n}\n",
+            "Sources/Second/Input.swift": "func second() {\nprint(2)\n}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources --rules indent --indent 2 --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/First/Input.swift --rules indent --indent 4 --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/First/Input.swift")), """
+            func first() {
+                print(1)
+            }
+
+            """)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Second/Input.swift")), """
+            func second() {
+              print(2)
+            }
+
+            """)
+            let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any])
+            let formatting = try XCTUnwrap(cache["formatting"] as? [String: [String: String]])
+            XCTAssertEqual(formatting.count, 2)
+            XCTAssertEqual(formatting.values.flatMap(\.keys).sorted(), ["/Sources/First/Input.swift", "/Sources/Second/Input.swift"])
+        }
+    }
+
     func testProjectIndexReusesCachedSourceSummaryForUnchangedFile() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",
@@ -940,7 +975,7 @@ final class CommandLineTests: XCTestCase {
             "App/Input.swift": input,
             "SDK/Domain.swiftinterface": """
             public protocol View { associatedtype Body }
-            public enum State { case idle, loaded }
+            @frozen public enum State { case idle, loaded }
             public struct Model { public let state: Domain::State }
             """,
             "modules.json": """

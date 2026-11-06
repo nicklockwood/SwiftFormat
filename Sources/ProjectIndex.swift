@@ -152,6 +152,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isDynamicMemberLookup: Bool = false
         var isNoncopyable: Bool = false
         var enumCases: [String]? = nil
+        var hasUnknownEnumCases: Bool? = nil
         var enumCasePayloads: [String: [String]]? = nil
         var genericParameters: [String] = []
     }
@@ -298,7 +299,7 @@ struct SourceFileIndex: Codable, Equatable {
         var hasUnresolvedConstraints: Bool? = nil
     }
 
-    static let cacheVersion = 21
+    static let cacheVersion = 23
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -416,6 +417,7 @@ struct ProjectIndex {
     private let functionReferencesFingerprint: String
     private let symbolReferencesFingerprint: String
     private let typeSourceFilesByModule: [TypeKey: Set<String>]
+    private let typeVisibilitiesByModule: [TypeKey: [(source: String, visibility: String)]]
     private let propertySourceFilesByModule: [TypeKey: Set<String>]
     private let symbolFunctionsByModule: [String: [String: [FunctionSymbol]]]
     private let exportsByModuleName: [String: Set<String>]
@@ -470,6 +472,7 @@ struct ProjectIndex {
         // Resolve extension targets across files before trusting their return types.
         // A generic parameter can shadow a nominal type with the same name.
         var typeSourceFilesByModule = [TypeKey: Set<String>]()
+        var typeVisibilitiesByModule = [TypeKey: [(source: String, visibility: String)]]()
         var propertySourceFilesByModule = [TypeKey: Set<String>]()
         var symbolFunctionsByModule = [String: [String: [FunctionSymbol]]]()
         var aliasesByModule = [TypeKey: [SourceFileIndex.TypeAliasDeclaration]]()
@@ -486,8 +489,12 @@ struct ProjectIndex {
                         FunctionSymbol(declaration: function, fileURL: URL(fileURLWithPath: path))
                     )
                 }
-                for name in file.typeDeclarations.map(\.name) + file.protocolDeclarations.map(\.name) + file.typeAliasDeclarations.map(\.name) {
-                    typeSourceFilesByModule[TypeKey(moduleIdentifier: module, name: name), default: []].insert(path)
+                let typeVisibilities = file.typeDeclarations.map { ($0.name, $0.visibility) } +
+                    file.protocolDeclarations.map { ($0.name, $0.visibility) } + file.typeAliasDeclarations.map { ($0.name, $0.visibility) }
+                for (name, visibility) in typeVisibilities {
+                    let key = TypeKey(moduleIdentifier: module, name: name)
+                    typeSourceFilesByModule[key, default: []].insert(path)
+                    typeVisibilitiesByModule[key, default: []].append((path, visibility))
                 }
                 for property in file.propertyDeclarations {
                     propertySourceFilesByModule[TypeKey(moduleIdentifier: module, name: "\(property.declaringType).\(property.name)"), default: []].insert(path)
@@ -598,6 +605,7 @@ struct ProjectIndex {
         }
         self.symbolFunctionsByModule = symbolFunctionsByModule
         self.typeSourceFilesByModule = typeSourceFilesByModule
+        self.typeVisibilitiesByModule = typeVisibilitiesByModule
         self.propertySourceFilesByModule = propertySourceFilesByModule
         self.typesByModule = typesByModule
         self.aliasesByModule = aliasesByModule
@@ -629,7 +637,7 @@ struct ProjectIndex {
                     let payloads = declaration.enumCasePayloads.map { payloads in
                         payloads.keys.sorted().map { $0 + ":" + payloads[$0]!.joined(separator: ",") }.joined(separator: ";")
                     } ?? "?"
-                    return "\(declaration.name):\(declaration.visibility):\(declaration.isGeneric):\(declaration.isResultBuilder):\(declaration.isDynamicMemberLookup):\(declaration.isNoncopyable):\(declaration.enumCases?.joined(separator: ",") ?? "?"):\(declaration.genericParameters.joined(separator: ",")):\(payloads)"
+                    return "\(declaration.name):\(declaration.visibility):\(declaration.isGeneric):\(declaration.isResultBuilder):\(declaration.isDynamicMemberLookup):\(declaration.isNoncopyable):\(declaration.enumCases?.joined(separator: ",") ?? "?"):\(declaration.hasUnknownEnumCases == true):\(declaration.genericParameters.joined(separator: ",")):\(payloads)"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -808,7 +816,7 @@ struct ProjectIndex {
     }
 
     /// Only trust one accessible declaration with the same cases in every compilation context.
-    func enumCases(named name: String, visibleFrom fileURL: URL) -> [String]? {
+    func enumCases(named name: String, visibleFrom fileURL: URL, requiringExhaustive: Bool = false) -> [String]? {
         guard let keys = symbolTypeKeys(named: name, visibleFrom: fileURL), !keys.isEmpty else { return nil }
         var result: [String]?
         for key in keys {
@@ -816,6 +824,7 @@ struct ProjectIndex {
             guard declarations.count == 1, let declaration = declarations.first,
                   declaration.visibility != Visibility.private.rawValue && declaration.visibility != Visibility.fileprivate.rawValue ||
                   typeSourceFilesByModule[key] == [fileURL.standardizedFileURL.path],
+                  !requiringExhaustive || declaration.hasUnknownEnumCases != true,
                   let cases = declaration.enumCases, !cases.isEmpty,
                   result == nil || result == cases else { return nil }
             result = cases
@@ -840,8 +849,7 @@ struct ProjectIndex {
         guard let keys = symbolTypeKeys(named: owner, visibleFrom: fileURL), !keys.isEmpty else { return nil }
         var result: SymbolType?
         for key in keys {
-            guard typesByModule[key]?.count == 1,
-                  !dynamicMemberLookupTypesByModule[key.moduleIdentifier, default: []].contains(key.name) else { return nil }
+            guard typesByModule[key]?.count == 1 else { return nil }
             let memberKey = TypeKey(moduleIdentifier: key.moduleIdentifier, name: "\(key.name).\(member)")
             let matches = propertiesByModule[memberKey] ?? []
             guard matches.count == 1, let declaration = matches.first, declaration.isStatic == isStatic,
@@ -1527,10 +1535,13 @@ func makeSourceFileIndex(
                 classInheritances.append(.init(className: name, inheritedTypes: inheritedTypes))
             }
             if typeDeclaration.keyword == "protocol" {
-                // Requirements of a private protocol and `where Self:` inheritance aren't indexed, so they can't be relied on
-                if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }),
-                   formatter.index(of: .keyword("where"), in: declaration.keywordIndex ..< typeDeclaration.openBraceIndex) == nil
-                {
+                // Constraints on associated types do not introduce inherited names. Constraints involving
+                // Self may introduce additional requirements, so leave those protocols unresolved.
+                let whereClause = formatter.index(of: .keyword("where"), in: declaration.keywordIndex ..< typeDeclaration.openBraceIndex)
+                let constrainsSelf = whereClause.map {
+                    formatter.tokens[$0 ..< typeDeclaration.openBraceIndex].contains { $0.string == "Self" }
+                } ?? false
+                if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }), !constrainsSelf {
                     var requirements = [SourceFileIndex.AttributedRequirement]()
                     var nestedTypeNames = [String]()
                     typeDeclaration.body.forEachRecursiveDeclaration { requirement in
@@ -1578,6 +1589,7 @@ func makeSourceFileIndex(
                         isDynamicMemberLookup: declaration.attributes.contains("@dynamicMemberLookup"),
                         isNoncopyable: typeDeclaration.conformances.contains { $0.conformance.string == "~Copyable" },
                         enumCases: formatter.indexedEnumCases(in: typeDeclaration),
+                        hasUnknownEnumCases: isSwiftInterface && typeDeclaration.keyword == "enum" && !declaration.attributes.contains("@frozen") ? true : nil,
                         enumCasePayloads: formatter.indexedEnumCasePayloads(in: typeDeclaration),
                         genericParameters: typeDeclaration.genericParameters?.types.map(\.name) ?? []
                     ))
@@ -2763,6 +2775,10 @@ extension ProjectIndex {
         guard let roots = symbolTypeKeys(named: owner, visibleFrom: fileURL), !roots.isEmpty else { return .unknown }
         func lookup(_ owner: String, module: String, sourcePath: String, visited: Set<String>) -> InheritedTypeLookup {
             guard !visited.contains(module + ":" + owner), visited.count < 32 else { return .unknown }
+            // AnyObject is a compiler builtin exposed through the standard library's alias.
+            if owner == "Builtin.AnyObject", moduleNamesByIdentifier[module] == "Swift" {
+                return .absent
+            }
             let key = TypeKey(moduleIdentifier: module, name: owner)
             let nested = TypeKey(moduleIdentifier: module, name: "\(owner).\(member)")
             if accessibleTypeKey(nested, from: fileURL.standardizedFileURL.path, inherited: true) {
@@ -2783,7 +2799,7 @@ extension ProjectIndex {
                 if let candidates = symbolTypeKeys(named: owner, in: module, imports: imports, sourcePath: sourcePath), !candidates.isEmpty {
                     let results = candidates.map { candidate in
                         lookup(candidate.name, module: candidate.moduleIdentifier,
-                               sourcePath: typeSourceFilesByModule[candidate]?.first ?? sourcePath, visited: visited)
+                               sourcePath: typeSourceFilesByModule[candidate]?.first ?? sourcePath, visited: visited.union([module + ":" + owner]))
                     }
                     return results.dropFirst().allSatisfy { $0 == results.first } ? results[0] : .unknown
                 }
@@ -2975,12 +2991,24 @@ extension ProjectIndex {
         return paths.count == 1 ? paths.first.map { URL(fileURLWithPath: $0) } : nil
     }
 
-    private func symbolTypeKeys(named name: String, visibleFrom fileURL: URL) -> [TypeKey]? {
+    /// Disambiguate imported types by arity, retaining the selected declaration's lookup context.
+    func typeSymbol(named name: String, genericArgumentCount: Int, visibleFrom fileURL: URL) -> SymbolType? {
+        guard let keys = symbolTypeKeys(named: name, visibleFrom: fileURL, genericArgumentCount: genericArgumentCount), !keys.isEmpty else { return nil }
+        var result: SymbolType?
+        for key in keys {
+            guard let paths = typeSourceFilesByModule[key], paths.count == 1, let path = paths.first,
+                  result == nil || result?.name == key.name && result?.fileURL.path == path else { return nil }
+            result = SymbolType(name: key.name, namespace: nil, fileURL: URL(fileURLWithPath: path))
+        }
+        return result
+    }
+
+    private func symbolTypeKeys(named name: String, visibleFrom fileURL: URL, genericArgumentCount: Int? = nil) -> [TypeKey]? {
         guard let file = files[fileURL.standardizedFileURL.path], !file.moduleIdentifiers.isEmpty else { return nil }
         var result = [TypeKey]()
         var missing = false
         for module in file.moduleIdentifiers {
-            guard let keys = symbolTypeKeys(named: name, in: module, imports: file.imports, sourcePath: fileURL.standardizedFileURL.path) else { return nil }
+            guard let keys = symbolTypeKeys(named: name, in: module, imports: file.imports, sourcePath: fileURL.standardizedFileURL.path, genericArgumentCount: genericArgumentCount) else { return nil }
             missing = missing || keys.isEmpty
             result += keys
         }
@@ -2989,24 +3017,18 @@ extension ProjectIndex {
 
     private func accessibleTypeKey(_ key: TypeKey, from path: String, inherited: Bool = false) -> Bool {
         let sameModule = files[path]?.moduleIdentifiers.contains(key.moduleIdentifier) == true
-        return (typeSourceFilesByModule[key] ?? []).contains { source in
-            guard let file = files[source] else { return false }
-            let visibilities = file.typeDeclarations.filter { $0.name == key.name }.map(\.visibility) +
-                file.typeAliasDeclarations.filter { $0.name == key.name }.map(\.visibility) +
-                file.protocolDeclarations.filter { $0.name == key.name }.map(\.visibility)
-            return visibilities.contains { visibility in
-                if inherited, visibility == "private" {
-                    return false
-                }
-                return source == path || sameModule && !["private", "fileprivate"].contains(visibility) ||
-                    ["public", "open", "package"].contains(visibility)
+        return (typeVisibilitiesByModule[key] ?? []).contains { source, visibility in
+            if inherited, visibility == "private" {
+                return false
             }
+            return source == path || sameModule && !["private", "fileprivate"].contains(visibility) ||
+                ["public", "open", "package"].contains(visibility)
         }
     }
 
     private func importedModuleNames(_ imports: [String]) -> Set<String> {
-        var result = Set(imports)
-        var pending = imports
+        var result = Set(imports).union(["Swift"])
+        var pending = imports + ["Swift"]
         while let name = pending.popLast() {
             for exported in exportsByModuleName[name] ?? [] where result.insert(exported).inserted {
                 pending.append(exported)
@@ -3015,7 +3037,14 @@ extension ProjectIndex {
         return result
     }
 
-    private func symbolTypeKeys(named name: String, in module: String, imports: [String], sourcePath: String) -> [TypeKey]? {
+    private func symbolTypeKeys(named name: String, in module: String, imports: [String], sourcePath: String, genericArgumentCount: Int? = nil) -> [TypeKey]? {
+        func matchesArity(_ key: TypeKey) -> Bool {
+            guard let count = genericArgumentCount else { return true }
+            let declarations = typesByModule[key] ?? []
+            let aliases = aliasesByModule[key] ?? []
+            return declarations.contains(where: { $0.genericParameters.count == count }) ||
+                aliases.contains(where: { $0.genericParameters.count == count }) || protocolsByModule.contains(key)
+        }
         let prefix = moduleNamesByIdentifier[module].map { $0 + "." }
         let localName = prefix.flatMap { name.hasPrefix($0) ? String(name.dropFirst($0.count)) : nil } ?? name
         let local = TypeKey(moduleIdentifier: module, name: localName)
@@ -3027,7 +3056,7 @@ extension ProjectIndex {
             let qualifiedPrefix = imported + "."
             let importedName = name.hasPrefix(qualifiedPrefix) ? String(name.dropFirst(qualifiedPrefix.count)) : name
             let keys = (modulesByName[imported] ?? []).map { TypeKey(moduleIdentifier: $0, name: importedName) }
-                .filter { accessibleTypeKey($0, from: sourcePath) }
+                .filter { accessibleTypeKey($0, from: sourcePath) && matchesArity($0) }
             if !keys.isEmpty {
                 matches.append(keys)
             }

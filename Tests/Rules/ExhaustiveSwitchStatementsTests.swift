@@ -953,7 +953,17 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
             }
         }
         """
-        try check(input, declarations: """
+        let output = """
+        func render(_ container: Container) {
+            if case let .value(state) = container {
+                switch state {
+                case .one: break
+                case .two: break
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
         enum Other { case one, two }
         enum Container { case value(Other), empty }
         """)
@@ -1348,6 +1358,57 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         enum State { case idle, loaded }
         enum Event<Value> { case value(Value), finished }
         """)
+    }
+
+    func testSDKEnumDefaultsRequireAFrozenDeclaration() throws {
+        let input = """
+        import SDK
+        func render(_ value: State) {
+            switch value {
+            case .idle: first()
+            default: fallback()
+            }
+        }
+        func renderOptional(_ value: State?) {
+            switch value {
+            case .idle?: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        import SDK
+        func render(_ value: State) {
+            switch value {
+            case .idle: first()
+            case .loaded: fallback()
+            }
+        }
+        func renderOptional(_ value: State?) {
+            switch value {
+            case .idle?: first()
+            case .some(.loaded), .none: fallback()
+            }
+        }
+        """
+        let url = URL(fileURLWithPath: "/Project/Calls.swift")
+        for frozen in [false, true] {
+            let index = makeSourceFileIndex(
+                from: (frozen ? "@frozen " : "") + "public enum State { case idle, loaded }",
+                moduleIdentifiers: ["SDK"], moduleNames: ["SDK": "SDK"], isSwiftInterface: true
+            )
+            let persisted = try JSONDecoder().decode(SourceFileIndex.self, from: JSONEncoder().encode(index))
+            let project = ProjectIndex(files: [
+                url.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+                "/SDK/SDK.swiftinterface": persisted,
+            ])
+            let result = try applyRules(
+                [.exhaustiveSwitchStatements], to: tokenize(input), with: .default,
+                trackChanges: false, range: nil,
+                context: FormattingContext(currentFileURL: url, projectIndex: project)
+            )
+            XCTAssertEqual(sourceCode(for: result.tokens), frozen ? output : input)
+        }
     }
 
     private func check(

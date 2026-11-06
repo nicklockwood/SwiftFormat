@@ -51,7 +51,7 @@ extension Formatter {
         if type.sourceFileURL == nil || type.sourceFileURL == resolver.fileURL, let local = resolver.localTypes[name], local.count == 1, let declaration = local.first {
             return indexedEnumCases(in: declaration)
         }
-        return resolver.project.enumCases(named: name, visibleFrom: type.sourceFileURL ?? resolver.fileURL)
+        return resolver.project.enumCases(named: name, visibleFrom: type.sourceFileURL ?? resolver.fileURL, requiringExhaustive: true)
     }
 
     func expandSwitchDefault(at switchIndex: Int, resolver: ProjectSymbolLookup) {

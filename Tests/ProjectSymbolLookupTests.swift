@@ -377,7 +377,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: "State")
     }
 
-    func testCallbackParameterInferredFromGenericFunctionInput() throws {
+    func testCovariantInputDoesNotFixAContextualCallbackParameter() throws {
         try check("""
         func render(_ state: State) {
             observe(initial: state) { value in observeValue(value) }
@@ -385,7 +385,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, declarations: """
         enum State { case idle, loaded }
         func observe<Value>(initial: Value, callback: (Value) -> Void) {}
-        """, expected: "State")
+        """, expected: nil)
     }
 
     func testAmbiguousCallbackSignaturesDoNotInferAParameterType() throws {
@@ -583,7 +583,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         enum Other { case other }
         enum Inner { case value(Other) }
         enum Outer { case wrapped(Inner), value(State) }
-        """, expected: nil)
+        """, expected: "Other")
     }
 
     func testProtocolAlternativesWithNoMatchingAssociatedTypeDoNotHideGlobalTypes() throws {
@@ -633,6 +633,511 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: nil)
     }
 
+    func testLocalDeclarationInsideAGuardInitializerClosureKeepsItsOwnScope() throws {
+        try check("""
+        func render(_ state: State) {
+            guard let current = ({ () -> State? in
+                let value = state
+                observeValue(value)
+                return value
+            })() else { return }
+        }
+        """, declarations: """
+        enum State { case idle }
+        """, expected: "State")
+    }
+
+    func testGuardPayloadBindingUsesTheEnclosingStatementScope() throws {
+        try check("""
+        func render(_ event: Event) {
+            guard case .value(let state) = event else { return }
+            observeValue(state)
+        }
+        """, declarations: """
+        enum State { case idle }
+        enum Event { case value(State), finished }
+        """, expected: "State")
+    }
+
+    func testGenericArgumentCountDisambiguatesImportedNominalTypes() throws {
+        try checkModules("""
+        import Models
+        import UI
+        func render(_ state: State) { observeValue(state) }
+        """, sources: [
+            "Models": "public enum State { case idle, loaded }",
+            "UI": "public struct State<Value> {}",
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testGenericSpecializationSelectsTheGenericImportedDeclaration() throws {
+        try checkModules("""
+        import Models
+        import UI
+        enum Phase { case idle }
+        func render(_ state: State<Phase>) { observeValue(state.value) }
+        """, sources: [
+            "Models": "public enum State { case unrelated }",
+            "UI": "public struct State<Value> { public var value: Value }",
+        ], expectedCases: ["idle"])
+    }
+
+    func testLocalGenericTypeStillShadowsAnImportedNongenericNamesake() throws {
+        try checkModules("""
+        import Models
+        struct State<Value> {
+            func render(_ state: State) { observeValue(state) }
+        }
+        """, sources: ["Models": "public enum State { case unrelated }"], expectedCases: nil)
+    }
+
+    func testCanonicalTypeDoesNotReapplyItsLexicalNamespace() throws {
+        try checkModules("""
+        enum State { case correct }
+        struct Container {
+            enum App { enum State { case wrong } }
+            func render(_ value: State) { observeValue(value) }
+        }
+        """, sources: [:], expectedCases: ["correct"])
+    }
+
+    func testGenericArgumentCountDisambiguatesImportedAliases() throws {
+        try checkModules("""
+        import Models
+        import UI
+        func render(_ state: State) { observeValue(state) }
+        """, sources: [
+            "Models": "public enum Phase { case idle }; public typealias State = Phase",
+            "UI": "public typealias State<Value> = Value",
+        ], expectedCases: ["idle"])
+    }
+
+    func testVariableAnnotationAllowsInferredGenericArguments() throws {
+        try checkModules("""
+        import Models
+        import UI
+        func render() {
+            let state: State = State(value: 1)
+            observeValue(state)
+        }
+        """, sources: [
+            "Models": "public enum State { case unrelated }",
+            "UI": "public struct State<Value> { public let value: Value }",
+        ], expectedCases: nil)
+    }
+
+    func testGuardBindingIsVisibleInsideALaterConditionClosure() throws {
+        try checkModules("""
+        enum Old { case old }
+        enum New { case new }
+        func render(_ value: Old, _ optional: New?) {
+            guard let value = optional, ({
+                let selected = value
+                observeValue(selected)
+                return true
+            })() else { return }
+        }
+        """, sources: [:], expectedCases: ["new"])
+    }
+
+    func testGuardElseBodyUsesTheOuterBinding() throws {
+        try checkModules("""
+        enum Old { case old }
+        enum New { case new }
+        func render(_ value: Old, _ optional: New?) {
+            guard let value = optional else {
+                observeValue(value)
+                return
+            }
+        }
+        """, sources: [:], expectedCases: ["old"])
+    }
+
+    func testGuardInitializerUsesTheOuterBinding() throws {
+        try checkModules("""
+        enum State { case idle }
+        func render(_ value: State?) {
+            guard let value = ({
+                observeValue(value!)
+                return value
+            })() else { return }
+        }
+        """, sources: [:], expectedCases: ["idle"])
+    }
+
+    func testIfBindingIsVisibleInsideALaterConditionClosure() throws {
+        try checkModules("""
+        enum Old { case old }
+        enum New { case new }
+        func render(_ value: Old, _ optional: New?) {
+            if let value = optional, ({
+                observeValue(value)
+                return true
+            })() {}
+        }
+        """, sources: [:], expectedCases: ["new"])
+    }
+
+    func testGuardPayloadBindingIsVisibleInALaterCondition() throws {
+        try checkModules("""
+        enum Old { case old }
+        enum New { case new }
+        enum Event { case value(New), finished }
+        func render(_ value: Old, _ event: Event) {
+            guard case .value(let value) = event, ({
+                observeValue(value)
+                return true
+            })() else { return }
+        }
+        """, sources: [:], expectedCases: ["new"])
+    }
+
+    func testGenericParentArgumentsDoNotDisambiguateANestedType() throws {
+        try checkModules("""
+        import Models
+        import UI
+        func render(_ value: Outer<Int>.State) { observeValue(value) }
+        """, sources: [
+            "Models": "public enum Outer<T> { public enum State { case correct } }",
+            "UI": "public enum Outer { public enum State<T> { case wrong } }",
+        ], expectedCases: nil)
+    }
+
+    func testImportedCanonicalTypeKeepsItsDeclarationContext() throws {
+        try checkModules("""
+        import Other
+        enum Other { enum State { case wrong } }
+        func render(_ value: State) { observeValue(value) }
+        """, sources: ["Other": "public enum State { case correct }"], expectedCases: ["correct"])
+    }
+
+    func testStandardLibraryModuleIsImplicitlyImported() throws {
+        try checkModules("""
+        func render(_ value: Result<Int, Never>) { observeValue(value) }
+        """, sources: [
+            "Swift": "public enum Result<Success, Failure> { case success(Success), failure(Failure) }",
+        ], expectedCases: ["success", "failure"])
+    }
+
+    func testGuardPayloadElseBodyUsesTheOuterBinding() throws {
+        try checkModules("""
+        enum Old { case old }
+        enum New { case new }
+        enum Event { case value(New), finished }
+        func render(_ value: Old, _ event: Event) {
+            guard case .value(let value) = event else {
+                observeValue(value)
+                return
+            }
+        }
+        """, sources: [:], expectedCases: ["old"])
+    }
+
+    func testConditionalDuplicateInheritedTypesDoNotRecurse() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle }
+        struct Renderer: Base {
+            func render(_ value: State) { observeValue(value) }
+        }
+        """, sources: ["Models": """
+        #if FIRST
+        public struct Base {}
+        #else
+        public struct Base {}
+        #endif
+        """], expectedCases: nil)
+    }
+
+    func testDeclaredPropertyOnADynamicMemberTypeUsesItsAnnotation() throws {
+        try check("""
+        func render(_ box: Box<State>) { observeValue(box.state) }
+        """, declarations: """
+        enum State { case idle }
+        @dynamicMemberLookup
+        struct Box<Value> {
+            let state: Value
+            subscript(dynamicMember name: String) -> Int { 0 }
+        }
+        """, expected: "State")
+    }
+
+    func testUndeclaredDynamicMemberDoesNotUseAGlobalNamesake() throws {
+        try check("""
+        func render(_ box: Box) { observeValue(box.state) }
+        """, declarations: """
+        enum State { case idle }
+        let state: State = .idle
+        @dynamicMemberLookup
+        struct Box { subscript(dynamicMember name: String) -> Int { 0 } }
+        """, expected: nil)
+    }
+
+    func testStandardAnyObjectAliasDoesNotBlockProjectTypeLookup() throws {
+        try checkModules("""
+        import Models
+        final class Renderer: Service {
+            func render(_ value: State) { observeValue(value) }
+        }
+        """, sources: [
+            "Models": "public protocol Service: AnyObject {}; public enum State { case idle, loaded }",
+            "Swift": "public typealias AnyObject = Builtin.AnyObject",
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAsyncThrowingProjectMethodRetainsItsDeclaredReturnType() throws {
+        try check("""
+        func render(_ model: Model) async throws {
+            let state = try await model.load()
+            observeValue(state)
+        }
+        """, declarations: """
+        enum State { case idle }
+        actor Model { func load() throws -> State { .idle } }
+        """, expected: "State")
+    }
+
+    func testOptionalTryAddsOptionalityToAProjectEnumResult() throws {
+        try check("""
+        func render(_ model: Model) {
+            let state = try? model.load()
+            observeValue(state)
+        }
+        """, declarations: """
+        enum State { case idle }
+        struct Model { func load() throws -> State { .idle } }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testGenericProjectFunctionInfersAnOptionalArgument() throws {
+        try check("""
+        func render(_ source: State?) {
+            let value = require(source)
+            observeValue(value)
+        }
+        """, declarations: """
+        enum State { case idle }
+        func require<Value>(_ value: Value?) -> Value { value! }
+        """, expected: "State")
+    }
+
+    func testGenericProjectFunctionInfersNestedReceiverArguments() throws {
+        try check("""
+        func render(_ source: Box<State>) {
+            let value = read(source)
+            observeValue(value)
+        }
+        """, declarations: """
+        enum State { case idle }
+        struct Box<Value> { let value: Value }
+        func read<Value>(_ box: Box<Value>) -> Value { box.value }
+        """, expected: "State")
+    }
+
+    func testGenericProjectAutoclosureInfersItsResultType() throws {
+        try check("""
+        func render(_ source: State?) {
+            let value = require(source)
+            observeValue(value)
+        }
+        """, declarations: """
+        enum State { case idle }
+        func require<Value>(_ value: @autoclosure () -> Value?) -> Value { value()! }
+        """, expected: "State")
+    }
+
+    func testGenericProjectFunctionRejectsConflictingNestedArguments() throws {
+        try check("""
+        func render(_ first: Box<State>, _ second: Box<Other>) {
+            let value = read(first, second)
+            observeValue(value)
+        }
+        """, declarations: """
+        enum State { case idle }
+        enum Other { case unrelated }
+        struct Box<Value> { let value: Value }
+        func read<Value>(_ first: Box<Value>, _ second: Box<Value>) -> Value { first.value }
+        """, expected: nil)
+    }
+
+    func testAnUnknownGenericArgumentCannotNarrowTheInferredResult() throws {
+        try check("""
+        func render(_ source: State?) {
+            func opaque() -> Any { 0 }
+            let value = choose(source, opaque())
+            observeValue(value)
+        }
+        """, declarations: """
+        enum State { case idle }
+        func choose<Value>(_ first: Value?, _ second: Value) -> Value { second }
+        """, expected: nil)
+    }
+
+    func testOptionalTryFlattensAProjectOptionalResultInSwift5AndLater() throws {
+        try check("""
+        func render(_ model: Model) {
+            let state = try? model.load()
+            observeValue(state)
+        }
+        """, declarations: """
+        enum State { case idle }
+        struct Model { func load() throws -> State? { .idle } }
+        """, expected: "State", expectedOptional: true, options: FormatOptions(swiftVersion: "6"))
+    }
+
+    func testOptionalTryDoesNotAssumeFlatteningBeforeSwift5() throws {
+        try check("""
+        func render(_ model: Model) {
+            let state = try? model.load()
+            observeValue(state)
+        }
+        """, declarations: """
+        enum State { case idle }
+        struct Model { func load() throws -> State? { .idle } }
+        """, expected: nil, options: FormatOptions(swiftVersion: "4.2"))
+    }
+
+    func testAnUnresolvedExpressionCannotNarrowAnotherGenericArgument() throws {
+        try check("""
+        func render(_ state: State, _ other: Any, _ flag: Bool) {
+            let value = choose(state, flag ? state : other)
+            observeValue(value)
+        }
+        """, declarations: """
+        enum State { case idle }
+        func choose<Value>(_ first: Value, _ second: Value) -> Value { first }
+        """, expected: nil)
+    }
+
+    func testCallbackResultCannotWidenAContextualGenericParameterUnnoticed() throws {
+        try check("""
+        func render(_ source: State, _ other: Any) {
+            transform(source) { value in
+                observeValue(value)
+                return other
+            }
+        }
+        """, declarations: """
+        enum State { case idle }
+        func transform<Value>(_ initial: Value, _ callback: (Value) -> Value) {}
+        """, expected: nil)
+    }
+
+    func testNestedPatternResolvesGenericProjectPayloads() throws {
+        try check("""
+        func render(_ event: Event<Result<State>>) {
+            if case .wrapped(.success(let value)) = event { observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        enum Result<Value> { case success(Value), failure }
+        enum Event<Value> { case wrapped(Value), finished }
+        """, expected: "State")
+    }
+
+    func testNestedPatternResolvesOptionalProjectPayloads() throws {
+        try check("""
+        func render(_ event: Event<State?>?) {
+            if case .some(.value(.some(let value))) = event { observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        enum Event<Value> { case value(Value), finished }
+        """, expected: "State")
+    }
+
+    func testAssociatedTypeConstraintsDoNotHideAnUnrelatedProjectType() throws {
+        try check("""
+        struct Model: Service {
+            typealias Input = Int
+            func render(_ state: State) { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        protocol Service where Input: Equatable { associatedtype Input }
+        """, expected: "State")
+    }
+
+    func testSelfConstraintsCannotHideAnInheritedProjectTypeUnnoticed() throws {
+        try check("""
+        struct Model: Service {
+            func render(_ state: State) { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        protocol Parent { associatedtype State }
+        protocol Service where Self: Parent {}
+        """, expected: nil)
+    }
+
+    func testConstrainedProtocolAssociatedTypesStillShadowProjectTypes() throws {
+        try check("""
+        struct Model: Service {
+            func render(_ state: State) { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        protocol Service where State: Equatable { associatedtype State }
+        """, expected: nil)
+    }
+
+    func testPostfixOptionalPatternResolvesAProjectPayload() throws {
+        try check("""
+        func render(_ event: Event?) {
+            if case .value(let state)? = event { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        enum Event { case value(State), finished }
+        """, expected: "State")
+    }
+
+    func testPayloadCastPatternDoesNotKeepTheUncastType() throws {
+        try check("""
+        func render(_ event: Event) {
+            if case .value(let value as State) = event { observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        enum Event { case value(Any), finished }
+        """, expected: nil)
+    }
+
+    func testInoutCallbackCannotNarrowAContextualGenericParameter() throws {
+        try check("""
+        func render(_ state: State) {
+            mutate(state) { value in observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        func mutate<Value>(_ initial: Value, _ callback: (inout Value) -> Void) {}
+        """, expected: nil)
+    }
+
+    func testInvariantCallbackInputCannotNarrowAContextualGenericParameter() throws {
+        try check("""
+        func render(_ state: State) {
+            observe(state) { box in observeValue(box.value) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        struct Box<Value> { let value: Value }
+        func observe<Value>(_ initial: Value, _ callback: (Box<Value>) -> Void) {}
+        """, expected: nil)
+    }
+
+    func testInvariantProjectInputFixesAContextualCallbackParameter() throws {
+        try check("""
+        func render(_ source: Box<State>) {
+            observe(initial: source) { value in observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle }
+        struct Box<Value> { let value: Value }
+        func observe<Value>(initial: Box<Value>, callback: (Value) -> Void) {}
+        """, expected: "State")
+    }
+
     private func checkModules(_ input: String, sources: [String: String], expectedCases: [String]?,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {
@@ -655,13 +1160,13 @@ final class ProjectSymbolLookupTests: XCTestCase {
         formatter.clearDerivedCaches()
     }
 
-    private func check(_ input: String, declarations: String, expected: String?, expectedOptional: Bool = false, file: StaticString = #filePath, line: UInt = #line) throws {
+    private func check(_ input: String, declarations: String, expected: String?, expectedOptional: Bool = false, options: FormatOptions = .default, file: StaticString = #filePath, line: UInt = #line) throws {
         let url = URL(fileURLWithPath: "/Project/Input.swift")
         let project = ProjectIndex(files: [
             url.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
             "/Project/Declarations.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
         ])
-        let formatter = Formatter(tokenize(input))
+        let formatter = Formatter(tokenize(input), options: options)
         let lookup = ProjectSymbolLookup(formatter: formatter, project: project, fileURL: url)
         let observeValue = try XCTUnwrap(formatter.tokens.firstIndex(of: .identifier("observeValue")), file: file, line: line)
         let open = try XCTUnwrap(formatter.index(of: .startOfScope("("), after: observeValue), file: file, line: line)

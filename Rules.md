@@ -3643,6 +3643,9 @@ Remove redundant explicit Sendable conformance from non-public structs and enums
   }
 ```
 
+The conformance is kept if the type conforms to a protocol that inherits from `Sendable`
+(like `Error`) in another file. This uses the project index when available.
+
 </details>
 <br/>
 

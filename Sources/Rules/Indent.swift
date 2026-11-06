@@ -758,6 +758,11 @@ public extension FormatRule {
                     indentStack.append(indent)
                     stringBodyIndentStack.append("")
                 }
+                if linewrapped, formatter.options.xcodeIndentation,
+                   let conformanceIndent = formatter.indentForTypeConformances(at: i)
+                {
+                    indent = conformanceIndent
+                }
                 // Avoid indenting commented code
                 guard !formatter.isCommentedCode(at: nextNonSpaceIndex) else {
                     break
@@ -1123,6 +1128,21 @@ extension Formatter {
     /// more deeply than the function body).
     func isWrappedFunctionName(at i: Int) -> Bool {
         last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("func")
+    }
+
+    func indentForTypeConformances(at i: Int) -> String? {
+        guard last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(","),
+              let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+              let keywordIndex = index(before: i, where: { $0.isKeyword && !$0.isAttribute }),
+              Token.swiftTypeKeywords.contains(tokens[keywordIndex].string)
+        else { return nil }
+
+        let conformances = parseConformancesOfType(atKeywordIndex: keywordIndex)
+        guard let first = conformances.first,
+              conformances.dropFirst().contains(where: { $0.index == nextIndex })
+        else { return nil }
+
+        return spaceEquivalentToTokens(from: startOfLine(at: first.index), upTo: first.index)
     }
 
     func isWrappedDeclaration(at i: Int) -> Bool {

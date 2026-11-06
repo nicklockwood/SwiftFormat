@@ -648,6 +648,53 @@ final class BlankLinesAroundMultilineStatementsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAroundMultilineStatements)
     }
 
+    func testWrappedTrailingClosureStaysAttachedToMultilineCall() {
+        let input = """
+        prepare()
+        withAnimation(.easeInOut(duration: duration)
+            .repeatForever(autoreverses: true))
+        {
+            opacity = 0.85
+        }
+        finish()
+        """
+        let output = """
+        prepare()
+
+        withAnimation(.easeInOut(duration: duration)
+            .repeatForever(autoreverses: true))
+        {
+            opacity = 0.85
+        }
+
+        finish()
+        """
+        testFormatting(for: input, output, rule: .blankLinesAroundMultilineStatements)
+    }
+
+    func testTrailingClosureWrappedByWrapMultilineStatementBraces() {
+        let input = """
+        onAppear {
+            // Animate the overlay while the operation is in progress.
+            withAnimation(.easeInOut(duration: duration)
+                .repeatForever(autoreverses: true)) {
+                opacity = 0.85
+            }
+        }
+        """
+        let output = """
+        onAppear {
+            // Animate the overlay while the operation is in progress.
+            withAnimation(.easeInOut(duration: duration)
+                .repeatForever(autoreverses: true))
+            {
+                opacity = 0.85
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.blankLinesAroundMultilineStatements, .wrapMultilineStatementBraces])
+    }
+
     func testMultipleTrailingClosures() {
         let input = """
         prepare()

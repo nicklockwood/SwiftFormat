@@ -2086,25 +2086,29 @@ extension Formatter.GenericType.GenericConformance {
     /// so a positive bound survives a neighboring suppression, in either source order.
     var indexedRequirements: [SourceFileIndex.GenericRequirement] {
         let original = SourceFileIndex.GenericRequirement(subject: typeName, target: name, isSameType: type == .concreteType)
-        guard type == .protocolConstraint else { return [original] }
-        let formatter = Formatter(tokenize(name))
-        var start = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1)
-        var requirements = [SourceFileIndex.GenericRequirement]()
-        while let next = start {
-            guard let bound = formatter.parseType(at: next, excludeProtocolCompositions: true) else { return [original] }
-            if !formatter.tokens[next].isOperator("~") {
-                requirements.append(.init(subject: typeName, target: bound.string, isSameType: false))
-            }
-            guard let separator = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: bound.range.upperBound) else { return requirements }
-            guard formatter.tokens[separator].isOperator("&"),
-                  let next = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: separator) else { return [original] }
-            start = next
-        }
-        return [original]
+        guard type == .protocolConstraint, let bounds = Formatter(tokenize(name)).indexedProtocolBounds() else { return [original] }
+        return bounds.map { .init(subject: typeName, target: $0, isSameType: false) }
     }
 }
 
 extension Formatter {
+    /// Parse top-level protocol components without splitting nested generic arguments.
+    func indexedProtocolBounds() -> [String]? {
+        var start = index(of: .nonSpaceOrCommentOrLinebreak, after: -1)
+        var bounds = [String]()
+        while let next = start {
+            guard let bound = parseType(at: next, excludeProtocolCompositions: true) else { return nil }
+            if !tokens[next].isOperator("~") {
+                bounds.append(bound.string)
+            }
+            guard let separator = index(of: .nonSpaceOrCommentOrLinebreak, after: bound.range.upperBound) else { return bounds }
+            guard tokens[separator].isOperator("&"),
+                  let next = index(of: .nonSpaceOrCommentOrLinebreak, after: separator) else { return nil }
+            start = next
+        }
+        return nil
+    }
+
     func indexedCompilationBranches(at location: Int) -> [SourceFileIndex.CompilationBranch] {
         var result = [SourceFileIndex.CompilationBranch]()
         var candidate = startOfScope(at: location)

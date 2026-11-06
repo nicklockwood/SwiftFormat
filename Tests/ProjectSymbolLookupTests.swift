@@ -10,6 +10,223 @@ import XCTest
 @testable import SwiftFormat
 
 final class ProjectSymbolLookupTests: XCTestCase {
+    func testInvariantGenericArgumentEliminatesUnequalAssociatedConstraint() throws {
+        try check("""
+        func render(_ source: Box<Model>) { consume(source) { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        struct Box<Value> {}
+        func consume<Input: Source>(_ input: Box<Input>, handle: (State) -> Void) where Input.Output == State {}
+        func consume<Input: Source>(_ input: Box<Input>, handle: (Other) -> Void) where Input.Output == Other {}
+        """, expected: "State")
+    }
+
+    func testKnownTupleArgumentEliminatesIncompatibleOverload() throws {
+        try check("""
+        func render(_ pair: (Model, State)) { observeValue(read(pair)) }
+        """, declarations: """
+        struct Model {}
+        struct Other {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        func read(_ pair: (Model, State)) -> State { .idle }
+        func read(_ pair: (Other, State)) -> Unrelated { .other }
+        """, expected: "State")
+    }
+
+    func testTupleExpressionEliminatesIncompatibleOverload() throws {
+        try check("""
+        func render(_ model: Model, _ state: State) { observeValue(read((model, state))) }
+        """, declarations: """
+        struct Model {}
+        struct Other {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        func read(_ pair: (Model, State)) -> State { .idle }
+        func read(_ pair: (Other, State)) -> Unrelated { .other }
+        """, expected: "State")
+    }
+
+    func testGroupedArgumentEliminatesIncompatibleOverload() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(((model)))) }
+        """, declarations: """
+        struct Model {}
+        struct Other {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        func read(_ model: Model) -> State { .idle }
+        func read(_ model: Other) -> Unrelated { .other }
+        """, expected: "State")
+    }
+
+    func testKnownMetatypeArgumentEliminatesIncompatibleOverload() throws {
+        try check("""
+        func render() { observeValue(read(Model.self)) }
+        """, declarations: """
+        struct Model {}
+        struct Other {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        func read(_ model: Model.Type) -> State { .idle }
+        func read(_ model: Other.Type) -> Unrelated { .other }
+        """, expected: "State")
+    }
+
+    func testTupleClassUpcastRetainsCompetingOverload() throws {
+        try check("""
+        func render(_ pair: (Child, State)) { observeValue(read(pair)) }
+        """, declarations: """
+        class Parent {}
+        class Child: Parent {}
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        func read(_ pair: (Child, State)) -> State { .idle }
+        func read(_ pair: (Parent, State)) -> Other { .unrelated }
+        """, expected: nil)
+    }
+
+    func testCollectionElementMismatchEliminatesIncompatibleOverload() throws {
+        try check("""
+        func render(_ values: [State]) { observeValue(read(values)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        func read(_ values: [State]) -> State { .idle }
+        func read(_ values: [Other]) -> Other { .unrelated }
+        """, expected: "State")
+    }
+
+    func testUnknownAssociatedWitnessRetainsConstrainedOverloads() throws {
+        try check("""
+        func render<Input: Source>(_ source: Box<Input>) { consume(source) { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        struct Box<Value> {}
+        func consume<Input: Source>(_ input: Box<Input>, handle: (State) -> Void) where Input.Output == State {}
+        func consume<Input: Source>(_ input: Box<Input>, handle: (Other) -> Void) where Input.Output == Other {}
+        """, expected: nil)
+    }
+
+    func testCollectionClassUpcastRetainsCompetingOverload() throws {
+        try check("""
+        func render(_ values: [Child]) { observeValue(read(values)) }
+        """, declarations: """
+        class Parent {}
+        class Child: Parent {}
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        func read(_ values: [Child]) -> State { .idle }
+        func read(_ values: [Parent]) -> Other { .unrelated }
+        """, expected: nil)
+    }
+
+    func testOpaqueProtocolParameterExposesConcreteProperty() throws {
+        try check("""
+        func render(_ source: some Source) { observeValue(source.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { var state: State { get } }
+        """, expected: "State")
+    }
+
+    func testOpaqueProtocolParameterExposesCallbackSignature() throws {
+        try check("""
+        func render(_ source: some Source) { source.observe { value in observeValue(value) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { func observe(_ callback: (State) -> Void) }
+        """, expected: "State")
+    }
+
+    func testOpaqueProtocolCompositionExposesConcreteProperty() throws {
+        try check("""
+        func render(_ source: some (Marker & Source)) { observeValue(source.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Marker {}
+        protocol Source { var state: State { get } }
+        """, expected: "State")
+    }
+
+    func testExistentialProtocolCompositionExposesCallbackSignature() throws {
+        try check("""
+        func render(_ source: any Marker & Source) { source.observe { value in observeValue(value) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Marker {}
+        protocol Source { func observe(_ callback: (State) -> Void) }
+        """, expected: "State")
+    }
+
+    func testAliasedProtocolCompositionKeepsDeclarationContext() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ source: Sources) { observeValue(source.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Marker {}
+        public protocol Source { var state: State { get } }
+        public typealias Sources = Marker & Source
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testProtocolCompositionKeepsUnknownBoundsConservative() throws {
+        try check("""
+        func render(_ source: some (Missing & Source)) { observeValue(source.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { var state: State { get } }
+        """, expected: nil)
+    }
+
+    func testNamedGenericAcceptsAnAliasedProtocolComposition() throws {
+        try check("""
+        func render<Input: Sources>(_ source: Input) { observeValue(source.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Marker {}
+        protocol Source { var state: State { get } }
+        typealias Sources = Marker & Source
+        """, expected: "State")
+    }
+
+    func testOptionalProtocolCompositionPreservesOptionalProjection() throws {
+        try check("""
+        func render(_ source: (any Marker & Source)?) { observeValue(source?.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Marker {}
+        protocol Source { var state: State { get } }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testProtocolCompositionKeepsCompetingCallbackOverloads() throws {
+        try check("""
+        func render(_ source: any First & Second) { source.observe { value in observeValue(value) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol First { func observe(_ callback: (State) -> Void) }
+        protocol Second { func observe(_ callback: (Other) -> Void) }
+        """, expected: nil)
+    }
+
+    func testOpaqueProtocolDoesNotGuessAssociatedWitness() throws {
+        try check("""
+        func render(_ source: some Source) { observeValue(source.value) }
+        """, declarations: """
+        enum Output { case unrelated }
+        protocol Source { associatedtype Output; var value: Output { get } }
+        """, expected: nil)
+    }
+
     func testSuppressedGenericCapabilityDoesNotBlockConcreteCallResult() throws {
         try check("""
         func render(_ model: Model) { observeValue(read(model)) }

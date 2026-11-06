@@ -63,6 +63,11 @@ final class ProjectSymbolLookup {
         var tupleElements: [TupleElement]?
         var collectionKind: CollectionKind?
         var genericBounds: [ResolvedType]?
+        var isAbstractProtocol = false
+        var isAbstract: Bool {
+            genericParameterScope != nil || isAbstractProtocol
+        }
+
         var genericParameterScope: AutoUpdatingRange?
         var genericUseSite: AutoUpdatingRange?
         var enclosingType: EnclosingType?
@@ -454,7 +459,7 @@ final class ProjectSymbolLookup {
                 }
                 guard let resolved = resolved ?? type(named: target, namespace: context.namespace, at: declarationIndex,
                                                       requiresGenericArguments: true, depth: depth + 1),
-                    resolved.genericParameterScope == nil else { continue }
+                    !resolved.isAbstract else { continue }
                 guard result == nil || sameType(result!, as: resolved) else { return nil }
                 result = resolved
             }
@@ -472,32 +477,39 @@ final class ProjectSymbolLookup {
             guard unavailableTypes[name]?.filter({ $0.range.contains(declarationIndex) })
                 .min(by: { $0.range.count < $1.range.count }) === scope else { continue }
             for requirement in context.requirements where !requirement.isSameType && requirement.subject == name {
-                let signature = Formatter(tokenize(requirement.target))
-                var start = signature.index(of: .nonSpaceOrCommentOrLinebreak, after: -1)
-                while let next = start {
-                    guard let annotation = signature.parseType(at: next, excludeProtocolCompositions: true),
-                          let bound = type(named: annotation.string, namespace: context.namespace, at: declarationIndex,
-                                           requiresGenericArguments: true, depth: depth + 1),
-                          let boundName = qualifiedName(for: bound),
-                          project.hasSymbolType(named: boundName, visibleFrom: bound.sourceFileURL ?? fileURL)
-                    else {
-                        complete = false
-                        break
-                    }
-                    bounds.append(bound)
-                    guard let separator = signature.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound) else { break }
-                    guard signature.tokens[separator].isOperator("&"),
-                          let next = signature.index(of: .nonSpaceOrCommentOrLinebreak, after: separator)
-                    else {
-                        complete = false
-                        break
-                    }
-                    start = next
+                if let resolved = protocolBounds(named: requirement.target, namespace: context.namespace,
+                                                 at: declarationIndex, depth: depth + 1)
+                {
+                    bounds.append(contentsOf: resolved)
+                } else {
+                    complete = false
                 }
             }
         }
         return ResolvedType(name: name, sourceFileURL: fileURL, genericBounds: complete ? bounds : nil,
                             genericParameterScope: scope, genericUseSite: AutoUpdatingRange(range: index ... index, formatter: formatter))
+    }
+
+    /// Resolve every component in its declaration context. A missing bound can contain a
+    /// competing member, so partial resolution cannot establish a usable abstract receiver.
+    private func protocolBounds(named spelling: String, namespace: String?, at index: Int?, sourceFileURL: URL? = nil,
+                                substitutions: [String: ResolvedType] = [:], depth: Int) -> [ResolvedType]?
+    {
+        guard depth < 16, let names = Formatter(tokenize(spelling)).indexedProtocolBounds() else { return nil }
+        var bounds = [ResolvedType]()
+        for name in names {
+            guard let bound = type(named: name, namespace: namespace, at: index, sourceFileURL: sourceFileURL,
+                                   substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1) else { return nil }
+            if bound.isAbstractProtocol, let nested = bound.genericBounds {
+                bounds.append(contentsOf: nested)
+            } else {
+                guard let nominal = qualifiedName(for: bound),
+                      project.isProtocolDeclaration(named: nominal, visibleFrom: bound.sourceFileURL ?? fileURL) ||
+                      project.typeDeclaration(named: nominal, visibleFrom: bound.sourceFileURL ?? fileURL)?.kind == "class" else { return nil }
+                bounds.append(bound)
+            }
+        }
+        return bounds
     }
 
     /// A binding's generic identity comes from its annotation; visible constraints come from
@@ -538,9 +550,13 @@ final class ProjectSymbolLookup {
     func type(named rawName: String, namespace: String?, at index: Int? = nil, sourceFileURL: URL? = nil, substitutions: [String: ResolvedType] = [:], requiresGenericArguments: Bool = false, depth: Int = 0) -> ResolvedType? {
         guard depth < 16 else { return nil }
         let isLocalReference = sourceFileURL == nil || sourceFileURL?.standardizedFileURL == fileURL.standardizedFileURL
-        let tokens = tokenize(rawName).filter { !$0.isSpaceOrCommentOrLinebreak }
-            .drop(while: { ["inout", "borrowing", "consuming", "sending", "any"].contains($0.string) })
-        let name = tokens.string
+        let prefixTokens = tokenize(rawName).filter { !$0.isSpaceOrCommentOrLinebreak }
+            .drop(while: { ["inout", "borrowing", "consuming", "sending"].contains($0.string) })
+        let isOpaque = prefixTokens.first?.string == "some"
+        let tokens = prefixTokens.drop(while: { ["any", "some"].contains($0.string) })
+        // Nested type prefixes still need a word boundary after whitespace normalization.
+        let prefixes = Set(["any", "some", "inout", "borrowing", "consuming", "sending", "async", "throws", "rethrows", "repeat", "each"])
+        let name = tokens.map { $0.string + (prefixes.contains($0.string) ? " " : "") }.joined()
         let optional = name.hasSuffix("?") || name.hasSuffix("!")
         let base = optional ? String(name.dropLast()) : name
         if var substitution = substitutions[base] {
@@ -614,6 +630,14 @@ final class ProjectSymbolLookup {
                 value.name += "?"
             }
             return value
+        }
+        // Opaque types and protocol compositions expose the same indexed bounds as named
+        // generics. They never acquire a nominal identity or an invented associated witness.
+        if isOpaque || Formatter(tokenize(base)).index(of: .operator("&", .infix), after: -1) != nil {
+            guard let bounds = protocolBounds(named: base, namespace: namespace, at: index,
+                                              sourceFileURL: sourceFileURL, substitutions: substitutions, depth: depth + 1),
+                !bounds.isEmpty else { return nil }
+            return ResolvedType(name: name, sourceFileURL: sourceFileURL, genericBounds: bounds, isAbstractProtocol: true)
         }
         let grouped = Formatter(tokenize(base))
         if grouped.tokens.first == .startOfScope("("),
@@ -892,7 +916,7 @@ final class ProjectSymbolLookup {
 
     /// Inherited names retain the declaration file even when only the conformance file imports it.
     func qualifiedTypeName(for type: ResolvedType) -> (name: String, sourceFileURL: URL?)? {
-        guard type.genericParameterScope == nil, let nominal = ProjectTypeReference(type.name) else { return nil }
+        guard !type.isAbstract, let nominal = ProjectTypeReference(type.name) else { return nil }
         var namespace = type.namespace
         while let owner = namespace {
             if project.isModuleNamespace(owner, visibleFrom: type.sourceFileURL ?? fileURL) {
@@ -928,7 +952,7 @@ final class ProjectSymbolLookup {
         if let scope = lhs.genericParameterScope {
             return scope === rhs.genericParameterScope && lhs.name == rhs.name && lhs.sourceFileURL == rhs.sourceFileURL
         }
-        guard rhs.genericParameterScope == nil else { return false }
+        guard !lhs.isAbstract, !rhs.isAbstract else { return false }
         if let kind = lhs.collectionKind {
             guard kind == rhs.collectionKind, let left = lhs.genericArguments, let right = rhs.genericArguments,
                   left.count == right.count else { return false }
@@ -1076,7 +1100,7 @@ final class ProjectSymbolLookup {
     /// and substituting its arguments before proceeding to the next declaration.
     func projectedType(_ owner: ResolvedType, to name: String, source: URL, depth: Int = 0) -> ResolvedType? {
         guard depth < 16 else { return nil }
-        if owner.genericParameterScope != nil {
+        if owner.isAbstract {
             guard let bounds = owner.genericBounds else { return nil }
             var result: ResolvedType?
             for bound in bounds {
@@ -1234,7 +1258,7 @@ final class ProjectSymbolLookup {
             }
             return elements.first(where: { $0.label == name })?.type
         }
-        if owner.genericParameterScope != nil {
+        if owner.isAbstract {
             guard unwrapped(owner) == nil, let bounds = owner.genericBounds else { return nil }
             var result: ResolvedType?
             for bound in bounds {
@@ -1747,6 +1771,24 @@ final class ProjectSymbolLookup {
         if let wrapped = unwrapped(parameter) {
             return argumentIsIncompatible(unwrapped(value) ?? value, with: wrapped)
         }
+        if unwrapped(value) == nil, value.isMetatype, parameter.isMetatype {
+            var actual = value
+            var formal = parameter
+            actual.isMetatype = false
+            formal.isMetatype = false
+            return argumentIsIncompatible(actual, with: formal)
+        }
+        if let actual = value.tupleElements, let formal = parameter.tupleElements,
+           unwrapped(value) == nil, !value.isMetatype, !parameter.isMetatype
+        {
+            return actual.count != formal.count || zip(actual, formal).contains { argumentIsIncompatible($0.type, with: $1.type) }
+        }
+        if let kind = value.collectionKind, kind == parameter.collectionKind,
+           unwrapped(value) == nil, !value.isMetatype, !parameter.isMetatype,
+           let actual = value.genericArguments, let formal = parameter.genericArguments, actual.count == formal.count
+        {
+            return zip(actual, formal).contains { argumentIsIncompatible($0, with: $1) }
+        }
         guard unwrapped(value) == nil, !value.isMetatype, !parameter.isMetatype,
               value.functionType == nil, parameter.functionType == nil,
               value.tupleElements == nil, parameter.tupleElements == nil,
@@ -1803,7 +1845,31 @@ final class ProjectSymbolLookup {
                 }
                 continue
             }
-            guard !tokenize(raw).contains(where: { unknown.contains($0.string) }),
+            // An invariant project wrapper fixes its generic arguments, including through
+            // aliases and nested tuple/collection structure. Never retain a partial match.
+            let missing = unknown.subtracting(substitutions.keys)
+            if !missing.isEmpty {
+                let placeholders = substitutions.merging(Dictionary(uniqueKeysWithValues: missing.map {
+                    ($0, ResolvedType(name: "$generic:" + $0))
+                })) { _, placeholder in placeholder }
+                if let pattern = type(named: raw, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL,
+                                      substitutions: placeholders, requiresGenericArguments: true)
+                {
+                    var inferred = substitutions
+                    if matchGenericType(pattern, to: value, genericNames: missing, source: symbol.fileURL, bind: { name, value, invariant in
+                        if invariant {
+                            if let previous = inferred[name], !self.sameType(previous, as: value) {
+                                return false
+                            }
+                            inferred[name] = value
+                        }
+                        return true
+                    }) {
+                        substitutions = inferred
+                    }
+                }
+            }
+            guard !tokenize(raw).contains(where: { unknown.contains($0.string) && substitutions[$0.string] == nil }),
                   let formal = type(named: raw, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL,
                                     substitutions: substitutions, requiresGenericArguments: true) else { continue }
             if argumentIsIncompatible(value, with: formal) {
@@ -1831,12 +1897,23 @@ final class ProjectSymbolLookup {
         guard depth < 32 else { return [:] }
         var result = [Int: ResolvedType]()
         for (position, argument) in arguments.enumerated() {
-            let token = formatter.tokens[argument.valueRange.lowerBound]
             // These expressions borrow parameter context; using it to select that parameter cycles.
-            guard token.isIdentifier || token == .keyword("self") || token == .keyword("Self") else { continue }
+            guard argumentHasIndependentRoot(in: argument.valueRange, depth: depth + 1) else { continue }
             result[position] = expressionType(in: argument.valueRange, depth: depth + 1)
         }
         return result
+    }
+
+    private func argumentHasIndependentRoot(in range: ClosedRange<Int>, depth: Int) -> Bool {
+        guard depth < 32,
+              let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
+              let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1) else { return false }
+        let token = formatter.tokens[first]
+        if token == .startOfScope("("), formatter.endOfScope(at: first) == last {
+            let arguments = formatter.parseTupleArguments(startOfScope: first)
+            return !arguments.isEmpty && arguments.allSatisfy { argumentHasIndependentRoot(in: $0.valueRange, depth: depth + 1) }
+        }
+        return token.isIdentifier || token == .keyword("self") || token == .keyword("Self")
     }
 
     /// Match type structure without choosing conversions. The caller decides how to retain
@@ -2042,7 +2119,7 @@ final class ProjectSymbolLookup {
         if let name = qualifiedName(for: owner) {
             return owner.isMetatype ? .type(name) : .instance(type: name)
         }
-        guard owner.genericParameterScope != nil, let bounds = owner.genericBounds, !bounds.isEmpty else { return nil }
+        guard owner.isAbstract, let bounds = owner.genericBounds, !bounds.isEmpty else { return nil }
         let constraints = bounds.compactMap { bound -> ProjectIndex.FunctionCallReceiver.Constraint? in
             guard let name = qualifiedName(for: bound) else { return nil }
             return .init(name: name, fileURL: bound.sourceFileURL ?? fileURL)
@@ -2714,7 +2791,7 @@ final class ProjectSymbolLookup {
                 continue
             }
             guard tokens[member].isIdentifier else { return nil }
-            if owner.genericParameterScope != nil {
+            if owner.isAbstract {
                 if let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: member), open <= last,
                    tokens[open] == .startOfScope("(") || tokens[open] == .startOfScope("{"),
                    let close = formatter.endOfScope(at: open), close <= last

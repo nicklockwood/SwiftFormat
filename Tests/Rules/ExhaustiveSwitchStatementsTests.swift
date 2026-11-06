@@ -10,6 +10,66 @@ import XCTest
 @testable import SwiftFormat
 
 final class ExhaustiveSwitchStatementsTests: XCTestCase {
+    func testInvariantInputSelectsConstrainedCallbackBeforeExpandingDefault() throws {
+        let input = """
+        func render(_ source: Box<Model>) {
+            consume(source) { state in
+                switch state {
+                case .loaded: print("loaded")
+                default: print("fallback")
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ source: Box<Model>) {
+            consume(source) { state in
+                switch state {
+                case .loaded: print("loaded")
+                case .idle: print("fallback")
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        struct Box<Value> {}
+        func consume<Input: Source>(_ input: Box<Input>, handle: (State) -> Void) where Input.Output == State {}
+        func consume<Input: Source>(_ input: Box<Input>, handle: (Other) -> Void) where Input.Output == Other {}
+        """)
+    }
+
+    func testOpaqueProtocolCallbackExpandsProjectEnumDefault() throws {
+        let input = """
+        func render(_ source: some (Marker & Source)) {
+            source.observe { state in
+                switch state {
+                case .loaded: print("loaded")
+                default: print("fallback")
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ source: some (Marker & Source)) {
+            source.observe { state in
+                switch state {
+                case .loaded: print("loaded")
+                case .idle: print("fallback")
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        protocol Marker {}
+        protocol Source { func observe(_ callback: (State) -> Void) }
+        """)
+    }
+
     func testProtocolCapabilitySuppressionsDoNotBlockEnumDefaultExpansion() throws {
         let input = """
         import Models

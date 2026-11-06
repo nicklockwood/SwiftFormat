@@ -6095,6 +6095,83 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: "State")
     }
 
+    func testImplicitGenericMethodReceiverPreservesArguments() throws {
+        try checkModules("""
+        import Models
+        extension Renderer {
+            func render() { observeValue(event()) }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        public struct Renderer<Value> {
+            public func event() -> Event<Value> { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImplicitGenericCallbackReceiverPreservesArguments() throws {
+        try checkModules("""
+        import Models
+        extension Renderer {
+            func render() {
+                receive { event in observeValue(event) }
+            }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        public struct Renderer<Value> {
+            public func receive(_ body: (Event<Value>) -> Void) {}
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImplicitGenericStaticReceiverPreservesArguments() throws {
+        try checkModules("""
+        import Models
+        extension Renderer {
+            static func render() { observeValue(event()) }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        public struct Renderer<Value> {
+            public static func event() -> Event<Value> { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImplicitInheritedGenericMethodProjectsReceiver() throws {
+        try checkModules("""
+        import Models
+        final class Renderer<Value>: Base<Value> {
+            func render() { observeValue(event()) }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        open class Base<Value> {
+            public func event() -> Event<Value> { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImplicitGenericCallbackPayloadRetainsAbstractIdentity() throws {
+        try checkModules("""
+        import Models
+        extension Renderer {
+            func render() {
+                receive { event in
+                    if case let .loaded(state) = event { observeValue(state) }
+                }
+            }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public enum Event<Value> { case idle, loaded(Value) }
+        public struct Renderer<State> {
+            public func receive(_ body: (Event<State>) -> Void) {}
+        }
+        """], expectedCases: nil, expectedAbstractParameter: "State")
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false, expectedAbstractParameter: String? = nil,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

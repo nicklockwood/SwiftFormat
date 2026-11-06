@@ -3387,6 +3387,41 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         try check(input, output)
     }
 
+    func testImplicitGenericCallbackExpandsKnownEnum() throws {
+        let input = """
+        import Models
+        extension Renderer {
+            func render() {
+                receive { event in
+                    switch event {
+                    case .loaded: showContent()
+                    default: showPlaceholder()
+                    }
+                }
+            }
+        }
+        """
+        let output = """
+        import Models
+        extension Renderer {
+            func render() {
+                receive { event in
+                    switch event {
+                    case .loaded: showContent()
+                    case .idle, .failed: showPlaceholder()
+                    }
+                }
+            }
+        }
+        """
+        try check(input, output, modules: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value), failed }
+        public struct Renderer<Value> {
+            public func receive(_ body: (Event<Value>) -> Void) {}
+        }
+        """])
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

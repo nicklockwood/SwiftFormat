@@ -1599,6 +1599,14 @@ final class ProjectSymbolLookup {
         return type(named: raw, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL, substitutions: substitutions, requiresGenericArguments: true)
     }
 
+    /// Implicit method calls use the same specialized receiver as explicit self access.
+    func implicitReceiver(for receiver: ProjectIndex.FunctionCallReceiver?, at index: Int) -> ResolvedType? {
+        guard case let .unqualified(name?, isStatic) = receiver,
+              var owner = type(named: name, namespace: nil, at: index) else { return nil }
+        owner.isMetatype = isStatic
+        return owner
+    }
+
     struct ResolvedCall {
         var symbol: ProjectIndex.FunctionSymbol
         var owner: ResolvedType?
@@ -1677,11 +1685,14 @@ final class ProjectSymbolLookup {
         }
         guard name != "init" else { return nil }
         owner = nil
+        var receiverSource = fileURL
         if let dot, let receiverStart, receiverStart < dot {
             owner = expressionType(in: receiverStart ... dot - 1, depth: depth + 1)
             receiver = owner.flatMap { value in qualifiedName(for: value).map { value.isMetatype ? .type($0) : .instance(type: $0) } }
+            receiverSource = owner?.sourceFileURL ?? fileURL
         } else {
             receiver = project.functionCallReceiver(at: identifier, in: formatter, visibleFrom: fileURL, declarations: declarations)
+            owner = implicitReceiver(for: receiver, at: identifier)
         }
         if case let .unqualified(owner, _) = receiver,
            let possibleType = type(named: name, namespace: owner, at: identifier),
@@ -1692,7 +1703,7 @@ final class ProjectSymbolLookup {
         }
         guard let receiver,
               let symbol = project.functionSymbol(named: name, receiver: receiver, arguments: arguments.map(\.label),
-                                                  visibleFrom: owner?.sourceFileURL ?? fileURL, ignoringLabelAt: trailing,
+                                                  visibleFrom: receiverSource, ignoringLabelAt: trailing,
                                                   accessedFrom: fileURL, accessedFromType: namespace, closureArguments: closureArguments,
                                                   isViable: { self.viableOverload($0, owner: owner, arguments: arguments, knownTypes: knownTypes(), ignoringLabelAt: trailing) },
                                                   requirementsSatisfied: { self.requirementsSatisfied($0, owner: owner) }) else { return nil }
@@ -2067,7 +2078,9 @@ final class ProjectSymbolLookup {
             } else {
                 guard bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true else { return nil }
                 let receiver = project.functionCallReceiver(at: first, in: formatter, visibleFrom: fileURL, declarations: declarations)
-                current = receiver.flatMap { callType(name: identifier, receiver: $0, arguments: arguments, accessingType: namespace, depth: depth + 1) }
+                current = receiver.flatMap {
+                    callType(name: identifier, receiver: $0, arguments: arguments, owner: implicitReceiver(for: $0, at: first), accessingType: namespace, depth: depth + 1)
+                }
             }
             cursor = arguments.last.map { max(close, $0.valueRange.upperBound) } ?? close
         } else if identifier == "self" || identifier == "Self" {

@@ -27,6 +27,95 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testIncompleteNominalHeaderDoesNotContributeInheritanceMetadata() {
+        let index = makeSourceFileIndex(from: """
+        enum State { case idle, loaded }
+        class Incomplete: NSObject()
+        """, moduleIdentifiers: ["App"])
+        XCTAssertEqual(index.typeDeclarations.map(\.name), ["State"])
+        XCTAssertEqual(index.inheritanceDeclarations?.map(\.owner), ["State"])
+    }
+
+    func testProtocolEqualitiesAffectDeclarationFingerprint() throws {
+        let first = makeSourceFileIndex(from: """
+        protocol Source where Output == First { associatedtype Output }
+        """, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: """
+        protocol Source where Output == Second { associatedtype Output }
+        """, moduleIdentifiers: ["App"])
+        let encoded = try JSONEncoder().encode(first)
+        XCTAssertEqual(try JSONDecoder().decode(SourceFileIndex.self, from: encoded), first)
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
+    func testSuppressedCapabilitiesAreNotIndexedAsInheritedTypes() throws {
+        let index = makeSourceFileIndex(from: """
+        protocol Parent {}
+        protocol Source: Parent, ~Copyable, ~Escapable {}
+        struct Model: ~Copyable, Source {}
+        """, moduleIdentifiers: ["App"])
+        let source = try XCTUnwrap(index.symbolProtocolDeclarations?.first { $0.name == "Source" })
+        XCTAssertEqual(source.inheritedProtocols, ["Parent"])
+        let inheritance = try XCTUnwrap(index.inheritanceDeclarations?.first { $0.owner == "Model" })
+        XCTAssertEqual(inheritance.types, ["Source"])
+        let model = try XCTUnwrap(index.typeDeclarations.first { $0.name == "Model" })
+        XCTAssertTrue(model.isNoncopyable)
+    }
+
+    func testGlobalValueLookupRetainsConditionalDeclarations() {
+        let url = URL(fileURLWithPath: "/Project/App.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: """
+        #if FIRST
+        func First() {}
+        #elseif SECOND
+        let Second = 0
+        #else
+        var Third = 0
+        #endif
+        struct Container { let First: Int; func Second() {} }
+        func unrelated(_ Third: Int) {}
+        """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"])])
+        XCTAssertFalse(project.globalValueIsAbsent(named: "First", visibleFrom: url))
+        XCTAssertFalse(project.globalValueIsAbsent(named: "Second", visibleFrom: url))
+        XCTAssertFalse(project.globalValueIsAbsent(named: "Third", visibleFrom: url))
+    }
+
+    func testPrivateImportRetainsHiddenGlobalValueShadow() {
+        let url = URL(fileURLWithPath: "/Project/Input.swift")
+        let project = ProjectIndex(files: [
+            url.path: makeSourceFileIndex(from: """
+            @_private(sourceFile: "Other.swift") import Other
+            """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"]),
+            "/Project/Other.swift": makeSourceFileIndex(from: """
+            private let State = 0
+            """, moduleIdentifiers: ["Other"], moduleNames: ["Other": "Other"]),
+        ])
+        XCTAssertFalse(project.globalValueIsAbsent(named: "State", visibleFrom: url))
+    }
+
+    func testGlobalValueLookupRequiresAbsenceInEveryBuildContext() {
+        let url = URL(fileURLWithPath: "/Project/Input.swift")
+        let project = ProjectIndex(files: [
+            url.path: makeSourceFileIndex(from: """
+            import Library
+            """, moduleIdentifiers: ["App", "OtherApp"], moduleNames: ["App": "App", "OtherApp": "OtherApp"]),
+            "/Project/Other.swift": makeSourceFileIndex(from: """
+            let State = 0
+            """, moduleIdentifiers: ["OtherApp"], moduleNames: ["OtherApp": "OtherApp"]),
+            "/Project/Library.swift": makeSourceFileIndex(from: """
+            internal let Local = 0
+            public let Visible = 0
+            """, moduleIdentifiers: ["Library"], moduleNames: ["Library": "Library"]),
+        ])
+        XCTAssertFalse(project.globalValueIsAbsent(named: "State", visibleFrom: url))
+        XCTAssertTrue(project.globalValueIsAbsent(named: "State", inModule: "Library", visibleFrom: url))
+        XCTAssertTrue(project.globalValueIsAbsent(named: "Local", visibleFrom: url))
+        XCTAssertFalse(project.globalValueIsAbsent(named: "Visible", visibleFrom: url))
+    }
+
     func testInheritedProtocolResultBuilders() {
         let declarations = """
         @resultBuilder enum Custom {}
@@ -958,7 +1047,7 @@ final class ProjectIndexTests: XCTestCase {
 
         XCTAssertEqual(index.protocolDeclarations, [
             .init(name: "Refined", inheritedProtocols: ["Base", "Module.Other", "Other"]),
-            .init(name: "Plain", inheritedProtocols: []),
+            .init(name: "Plain", inheritedProtocols: [], visibility: "public"),
         ])
         XCTAssertEqual(index.typeConformances, [])
     }
@@ -972,7 +1061,6 @@ final class ProjectIndexTests: XCTestCase {
             moduleIdentifiers: ["App"]
         )
 
-        XCTAssertEqual(SourceFileIndex.cacheVersion, 12)
         XCTAssertEqual(try JSONDecoder().decode(
             SourceFileIndex.self,
             from: JSONEncoder().encode(index)
@@ -993,6 +1081,40 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertNotEqual(
             fingerprint("protocol Named: Base {}"),
             fingerprint("protocol Named: Other {}")
+        )
+    }
+
+    func testDeclarationFingerprintIncludesInferredPropertyInitializer() {
+        let first = makeSourceFileIndex(from: """
+        enum State { case idle, loaded }
+        enum Other { case waiting, complete }
+        struct Holder { var values = [State]() }
+        """, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: """
+        enum State { case idle, loaded }
+        enum Other { case waiting, complete }
+        struct Holder { var values = [Other]() }
+        """, moduleIdentifiers: ["App"])
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
+    func testDeclarationFingerprintIncludesGenericProtocolBounds() {
+        let first = makeSourceFileIndex(from: """
+        protocol First { associatedtype Value }
+        protocol Second { associatedtype Value }
+        func consume<Value: First>(_ value: Value) {}
+        """, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: """
+        protocol First { associatedtype Value }
+        protocol Second { associatedtype Value }
+        func consume<Value: Second>(_ value: Value) {}
+        """, moduleIdentifiers: ["App"])
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
         )
     }
 
@@ -1656,6 +1778,58 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertTrue(projectIndex.isInternalType(named: "Outer.InternalInner", from: callURL))
     }
 
+    func testExplicitPublicMembersInPlainExtensionRemainPublic() {
+        let source = """
+        public struct Model {}
+        extension Model {
+            public var value: Int { 0 }
+            public func load() -> Int { 0 }
+            public struct Nested {}
+        }
+        """
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["Library"])
+
+        XCTAssertEqual(index.propertyDeclarations.map(\.visibility), ["public"])
+        XCTAssertEqual(index.symbolFunctionDeclarations?.map(\.visibility), ["public"])
+        XCTAssertEqual(index.typeDeclarations.first(where: { $0.name == "Model.Nested" })?.visibility, "public")
+    }
+
+    func testExtensionVisibilitySuppliesMemberDefaults() {
+        let source = """
+        public struct Model {}
+        public extension Model {
+            var visible: Int { 0 }
+            func load() -> Int { 0 }
+        }
+        private extension Model {
+            var hidden: Int { 0 }
+            func conceal() -> Int { 0 }
+            public var explicit: Int { 0 }
+            public func expose() -> Int { 0 }
+        }
+        """
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["Library"])
+
+        XCTAssertEqual(index.propertyDeclarations.map(\.visibility), ["public", "private", "public"])
+        XCTAssertEqual(index.symbolFunctionDeclarations?.map(\.visibility), ["public", "private", "public"])
+    }
+
+    func testEnclosingNominalStillLimitsExtensionMemberVisibility() {
+        let source = """
+        public struct Model {}
+        public extension Model {
+            internal struct Nested {
+                public var value: Int { 0 }
+                public func load() -> Int { 0 }
+            }
+        }
+        """
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["Library"])
+
+        XCTAssertEqual(index.propertyDeclarations.map(\.visibility), ["internal"])
+        XCTAssertEqual(index.symbolFunctionDeclarations?.map(\.visibility), ["internal"])
+    }
+
     func testProjectIndexRequiresFactsInEveryModuleForSharedFiles() {
         let callURL = URL(fileURLWithPath: "/Project/Shared/Call.swift")
         let appURL = URL(fileURLWithPath: "/Project/App/App.swift")
@@ -1714,5 +1888,260 @@ final class ProjectIndexTests: XCTestCase {
             "/Project/Types.swift": makeSourceFileIndex(from: generic, moduleIdentifiers: ["App"]),
         ])
         XCTAssertNotEqual(first.fingerprint(for: [.declarations]), second.fingerprint(for: [.declarations]))
+    }
+
+    func testInheritedTypeReferencesPreserveSpecializationAndDeclarationContext() {
+        let source = """
+        enum Namespace {
+            class Parent<Value> {}
+            class Child<Element>: Parent<[Element]> {}
+        }
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        XCTAssertEqual(project.inheritedTypeReferences(owner: "Namespace.Child", visibleFrom: url), [
+            .init(name: "Parent<[Element]>", namespace: "Namespace.Child", fileURL: url),
+        ])
+    }
+
+    func testConditionalConformanceCannotSupplyInheritedTypeReferences() {
+        let source = """
+        protocol Model {}
+        struct Container<Value> {}
+        extension Container: Model where Value: Equatable {}
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        XCTAssertNil(project.inheritedTypeReferences(owner: "Container", visibleFrom: url))
+    }
+
+    func testGenericEqualityAffectsDeclarationFingerprint() {
+        func fingerprint(_ target: String) -> String {
+            ProjectIndex(files: [
+                "/Project/Declarations.swift": makeSourceFileIndex(from: """
+                enum First {}
+                enum Second {}
+                protocol Source { associatedtype Value }
+                func read<Input: Source, Output>(_ value: Input) -> Output where Input.Value == \(target) { fatalError() }
+                """, moduleIdentifiers: ["App"]),
+            ]).fingerprint(for: [.declarations])
+        }
+        XCTAssertNotEqual(fingerprint("First"), fingerprint("Second"))
+    }
+
+    func testInheritedSpecializationAffectsDeclarationFingerprint() {
+        func fingerprint(_ source: String) -> String {
+            ProjectIndex(files: [
+                "/Project/Declarations.swift": makeSourceFileIndex(from: source, moduleIdentifiers: ["App"]),
+            ]).fingerprint(for: [.declarations])
+        }
+        XCTAssertNotEqual(fingerprint("class Child: Parent<First> {}"), fingerprint("class Child: Parent<Second> {}"))
+    }
+
+    func testInheritedPropertyRetainsItsGenericDeclarationOwner() {
+        let source = """
+        class Parent<Value> { var state: Value }
+        class Child<Element>: Parent<[Element]> {}
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        let symbol = project.propertySymbol(owner: "Child", member: "state", isStatic: false, visibleFrom: url)
+        XCTAssertEqual(symbol?.declaration.declaringType, "Parent")
+        XCTAssertEqual(symbol?.declaration.type, "Value")
+        XCTAssertEqual(symbol?.fileURL, url)
+    }
+
+    func testDirectPropertyShadowsInheritedProperty() {
+        let source = """
+        enum First { case idle }
+        enum Second { case ready }
+        protocol Parent {}
+        extension Parent { var state: First { .idle } }
+        struct Child: Parent { var state: Second { .ready } }
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        let symbol = project.propertySymbol(owner: "Child", member: "state", isStatic: false, visibleFrom: url)
+        XCTAssertEqual(symbol?.declaration.declaringType, "Child")
+        XCTAssertEqual(symbol?.declaration.type, "Second")
+    }
+
+    func testInheritedOverloadsCanBeSelectedByDistinctLabels() {
+        let source = """
+        class Parent<Value> { func obtain(state: Value) -> Value {} }
+        class Child<Element>: Parent<Element> { func obtain(other: Int) -> Int {} }
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        let symbol = project.functionSymbol(named: "obtain", receiver: .instance(type: "Child"), arguments: ["state"], visibleFrom: url)
+        XCTAssertEqual(symbol?.declaration.declaringType, "Parent")
+        XCTAssertEqual(symbol?.declaration.symbolReturnType, "Value")
+    }
+
+    func testSameLabelInheritedOverloadCannotBeSelectedByLabelsAlone() {
+        let source = """
+        class Parent { func obtain(state: First) -> First {} }
+        class Child: Parent { func obtain(state: Second) -> Second {} }
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        XCTAssertNil(project.functionSymbol(named: "obtain", receiver: .instance(type: "Child"), arguments: ["state"], visibleFrom: url))
+    }
+
+    func testUnknownAncestorCannotProveAnOverloadIsAbsent() {
+        let source = """
+        class Parent: ExternalParent {}
+        class Child: Parent { func obtain(state: First) -> First {} }
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        XCTAssertNil(project.functionSymbol(named: "obtain", receiver: .instance(type: "Child"), arguments: ["state"], visibleFrom: url))
+    }
+
+    func testInheritedCallablePropertyPreventsGlobalFunctionFallback() {
+        let source = """
+        class Parent { var obtain: () -> First }
+        class Child: Parent {}
+        func obtain() -> Second {}
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        XCTAssertNil(project.functionSymbol(named: "obtain", receiver: .unqualified(declaringType: "Child", isStatic: false), arguments: [], visibleFrom: url))
+    }
+
+    func testAssociatedTypeRequirementsIncludeRefinedProtocolProperties() {
+        let source = """
+        protocol Parent { associatedtype Element }
+        protocol Child: Parent { var state: Element { get } }
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        let requirements = project.associatedTypeRequirements(named: "Element", of: "Child", visibleFrom: url)
+        XCTAssertEqual(requirements?.map(\.declaration.name), ["state"])
+        XCTAssertEqual(requirements?.first?.declaration.declaringType, "Child")
+    }
+
+    func testAssociatedTypeNameCollisionCannotInferAWitness() {
+        let source = """
+        protocol First { associatedtype Element; var first: Element { get } }
+        protocol Second { associatedtype Element; var second: Element { get } }
+        protocol Combined: First, Second {}
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        XCTAssertNil(project.associatedTypeRequirements(named: "Element", of: "Combined", visibleFrom: url))
+    }
+
+    func testInheritedAliasKeepsItsDeclaringFile() {
+        let source = """
+        class Parent<Value> { typealias Element = Value }
+        class Child<Item>: Parent<[Item]> {}
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"], moduleNames: ["App": "App"])])
+        XCTAssertEqual(project.inheritedType(named: "Element", of: "Child", visibleFrom: url), .type("App.Parent.Element", sourceFileURL: url))
+    }
+
+    func testAssociatedTypeWitnessEvidenceExcludesExtensionOnlyProperties() {
+        let source = """
+        protocol Model { associatedtype Element; var state: Element { get } }
+        extension Model { var unrelated: Element { fatalError() } }
+        """
+        let url = URL(fileURLWithPath: "/Project/Declarations.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: source, moduleIdentifiers: ["App"])])
+        XCTAssertEqual(project.associatedTypeRequirements(named: "Element", of: "Model", visibleFrom: url)?.map(\.declaration.name), ["state"])
+    }
+
+    func testQualifiedConformanceExtensionRetainsItsOwnImports() {
+        let appURL = URL(fileURLWithPath: "/Project/App.swift")
+        let libraryURL = URL(fileURLWithPath: "/Project/Library.swift")
+        let project = ProjectIndex(files: [
+            appURL.path: makeSourceFileIndex(from: """
+            import Library
+            protocol Model {}
+            extension Library.Child: Model {}
+            """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"]),
+            libraryURL.path: makeSourceFileIndex(from: """
+            public class Child {}
+            """, moduleIdentifiers: ["Library"], moduleNames: ["Library": "Library"]),
+        ])
+        XCTAssertEqual(project.inheritedTypeReferences(owner: "Library.Child", visibleFrom: appURL), [
+            .init(name: "Model", namespace: "Library.Child", fileURL: appURL),
+        ])
+    }
+
+    func testAmbiguousRenamedAliasCannotHideAnInheritedInitializer() {
+        let appURL = URL(fileURLWithPath: "/Project/App.swift")
+        let modelsURL = URL(fileURLWithPath: "/Project/Models.swift")
+        let firstURL = URL(fileURLWithPath: "/Project/First.swift")
+        let secondURL = URL(fileURLWithPath: "/Project/Second.swift")
+        let project = ProjectIndex(files: [
+            appURL.path: makeSourceFileIndex(from: """
+            import Models
+            import First
+            import Second
+            extension Renamed: ExternalProtocol {}
+            """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"]),
+            modelsURL.path: makeSourceFileIndex(from: """
+            public struct Handler { public init() {} }
+            """, moduleIdentifiers: ["Models"], moduleNames: ["Models": "Models"]),
+            firstURL.path: makeSourceFileIndex(from: """
+            import Models
+            public typealias Renamed = Handler
+            """, moduleIdentifiers: ["First"], moduleNames: ["First": "First"]),
+            secondURL.path: makeSourceFileIndex(from: """
+            public struct Renamed {}
+            """, moduleIdentifiers: ["Second"], moduleNames: ["Second": "Second"]),
+        ])
+        XCTAssertNil(project.functionSymbol(named: "init", receiver: .type("Handler"), arguments: [],
+                                            visibleFrom: modelsURL, accessedFrom: appURL, kind: .initializer))
+    }
+
+    func testInaccessibleOwnersIgnoreAmbiguousConformanceAliases() {
+        let ownerURL = URL(fileURLWithPath: "/Project/Owner.swift")
+        let extensionURL = URL(fileURLWithPath: "/Project/Extension.swift")
+        let firstURL = URL(fileURLWithPath: "/Project/First.swift")
+        let secondURL = URL(fileURLWithPath: "/Project/Second.swift")
+        func project(visibility: String, extensionModule: String, aliasTarget: String = "Missing") -> ProjectIndex {
+            ProjectIndex(files: [
+                ownerURL.path: makeSourceFileIndex(from: """
+                import Library
+                \(visibility) struct Handler { public init() {}; public var state: Int { 0 } }
+                """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"]),
+                extensionURL.path: makeSourceFileIndex(from: """
+                import First
+                import Second
+                extension Renamed: ExternalProtocol {
+                    public init(extra: Int = 0) {}
+                    public var state: ExternalState { fatalError() }
+                }
+                """, moduleIdentifiers: [extensionModule], moduleNames: [extensionModule: extensionModule]),
+                firstURL.path: makeSourceFileIndex(from: """
+                public struct Other {}
+                public typealias Renamed = \(aliasTarget)
+                """, moduleIdentifiers: ["First"], moduleNames: ["First": "First"]),
+                secondURL.path: makeSourceFileIndex(from: """
+                public struct Renamed {}
+                """, moduleIdentifiers: ["Second"], moduleNames: ["Second": "Second"]),
+            ])
+        }
+        for (visibility, module) in [("", "Library"), ("private", "App"), ("fileprivate", "App")] {
+            let symbol = project(visibility: visibility, extensionModule: module).functionSymbol(
+                named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, accessedFromType: "Handler", kind: .initializer
+            )
+            XCTAssertEqual(symbol?.declaration.declaringType, "Handler", "\(visibility) owner with extension in \(module)")
+            XCTAssertEqual(project(visibility: visibility, extensionModule: module).propertySymbol(
+                owner: "Handler", member: "state", isStatic: false, visibleFrom: ownerURL, accessedFromType: "Handler"
+            )?.declaration.type, "Int")
+        }
+        let unrelated = project(visibility: "public", extensionModule: "Library", aliasTarget: "Other")
+        XCTAssertNotNil(unrelated.functionSymbol(named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, kind: .initializer))
+        XCTAssertEqual(unrelated.propertySymbol(owner: "Handler", member: "state", isStatic: false, visibleFrom: ownerURL)?.declaration.type, "Int")
+        XCTAssertNil(project(visibility: "public", extensionModule: "Library").functionSymbol(
+            named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, accessedFromType: "Handler", kind: .initializer
+        ))
+        XCTAssertNil(project(visibility: "", extensionModule: "App").functionSymbol(
+            named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, accessedFromType: "Handler", kind: .initializer
+        ))
     }
 }

@@ -751,7 +751,7 @@ func applyRules(
                                   trackChanges: trackChanges, range: range,
                                   logger: logger, context: context)
         let progress = RuleProgress()
-        formatter.projectIndexRequestStateChanged = { progress.isIndexing = $0 }
+        formatter.projectIndexRequestStateChanged = { progress.setIndexing($0, fileCount: $1) }
         queue.async(group: group) {
             for (index, rule) in rules.enumerated() {
                 progress.index = index
@@ -761,16 +761,24 @@ func applyRules(
             // the rules ran on, so the formatter is never touched from two threads at once.
             formatter.clearDerivedCaches()
         }
-        // Each rule is allowed `timeout` seconds. The wait is re-armed whenever a new rule starts,
-        // and after project indexing, which is shared work independent of the file size.
-        // A single dispatch per iteration is enough.
+        // Index construction is shared work. Subsequent symbol queries also depend on project
+        // size, so allow one additional second per thousand indexed files for the requesting rule.
+        // Poll at the ordinary interval so that allowance cannot carry into the next rule.
         var lastGeneration = -1
+        var lastProgressTime = DispatchTime.now()
         while group.wait(timeout: .now() + timeout) == .timedOut {
             let state = progress.snapshot
-            guard state.isIndexing || state.generation != lastGeneration else {
+            let now = DispatchTime.now()
+            if state.isIndexing || state.generation != lastGeneration {
+                lastGeneration = state.generation
+                lastProgressTime = now
+                continue
+            }
+            let elapsed = TimeInterval(now.uptimeNanoseconds - lastProgressTime.uptimeNanoseconds) / 1_000_000_000
+            let allowance = timeout + TimeInterval(state.indexedFileCount) / 1000
+            guard elapsed < allowance else {
                 throw FormatError.writing("\(rules[state.index].name) rule timed out")
             }
-            lastGeneration = state.generation
         }
 
         // Abort if there are fatal errors
@@ -949,6 +957,7 @@ private final class RuleProgress {
     private let queue = DispatchQueue(label: "swiftformat.ruleprogress")
     private var _index = 0
     private var _isIndexing = false
+    private var indexedFileCount = 0
     private var generation = 0
 
     var index: Int {
@@ -956,22 +965,21 @@ private final class RuleProgress {
         set {
             queue.sync {
                 _index = newValue
+                indexedFileCount = 0
                 generation += 1
             }
         }
     }
 
-    var isIndexing: Bool {
-        get { queue.sync { _isIndexing } }
-        set {
-            queue.sync {
-                _isIndexing = newValue
-                generation += 1
-            }
+    func setIndexing(_ isIndexing: Bool, fileCount: Int) {
+        queue.sync {
+            _isIndexing = isIndexing
+            indexedFileCount = max(indexedFileCount, fileCount)
+            generation += 1
         }
     }
 
-    var snapshot: (index: Int, isIndexing: Bool, generation: Int) {
-        queue.sync { (_index, _isIndexing, generation) }
+    var snapshot: (index: Int, isIndexing: Bool, generation: Int, indexedFileCount: Int) {
+        queue.sync { (_index, _isIndexing, generation, indexedFileCount) }
     }
 }

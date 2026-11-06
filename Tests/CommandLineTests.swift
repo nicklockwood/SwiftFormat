@@ -632,6 +632,41 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testChangingOneFilesConfigurationPrunesItsOldCacheEntryAndPreservesOtherFiles() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/First/Input.swift": "func first() {\nprint(1)\n}\n",
+            "Sources/Second/Input.swift": "func second() {\nprint(2)\n}\n",
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources --rules indent --indent 2 --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/First/Input.swift --rules indent --indent 4 --cache \(cacheURL.path) --quiet"
+            ), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/First/Input.swift")), """
+            func first() {
+                print(1)
+            }
+
+            """)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Sources/Second/Input.swift")), """
+            func second() {
+              print(2)
+            }
+
+            """)
+            let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any])
+            let formatting = try XCTUnwrap(cache["formatting"] as? [String: [String: String]])
+            XCTAssertEqual(formatting.count, 2)
+            XCTAssertEqual(formatting.values.flatMap(\.keys).sorted(), ["/Sources/First/Input.swift", "/Sources/Second/Input.swift"])
+        }
+    }
+
     func testProjectIndexReusesCachedSourceSummaryForUnchangedFile() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",
@@ -867,6 +902,364 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+        }
+    }
+
+    func testProjectIndexManifestRecursiveGlobIncludesNestedSourcesOnly() throws {
+        try withTmpDirectory([
+            "features/ExploreSearchFeature/Root.swift": "struct Root {}",
+            "features/ExploreSearchFeature/Nested/Model.swift": "struct Model {}",
+            "features/ExploreSearchFeature/Nested/Domain.swiftinterface": "public enum State {}",
+            "features/ExploreSearchFeature/Nested/BUILD.bazel": "",
+            "features/ExploreSearchFeature/Folder.swift/Deep.swift": "struct Deep {}",
+            "features/OtherFeature/Other.swift": "struct Other {}",
+        ]) { directory in
+            let manifest = ProjectIndexManifest(modules: [.init(name: "ExploreSearchFeature", id: "search", sources: ["features/ExploreSearchFeature/**"])])
+            let membership = try manifest.membership(relativeTo: directory)
+            XCTAssertEqual(membership.files, Dictionary(uniqueKeysWithValues: [
+                "features/ExploreSearchFeature/Root.swift",
+                "features/ExploreSearchFeature/Nested/Model.swift",
+                "features/ExploreSearchFeature/Nested/Domain.swiftinterface",
+                "features/ExploreSearchFeature/Folder.swift/Deep.swift",
+            ].map { (directory.appendingPathComponent($0).path, Set(["search"])) }))
+        }
+    }
+
+    func testProjectIndexManifestOverlappingGlobsKeepSharedTargetMembership() throws {
+        try withTmpDirectory([
+            "Models/State.swift": "enum State {}",
+            "Models/Other.swift": "enum Other {}",
+        ]) { directory in
+            let manifest = ProjectIndexManifest(modules: [
+                .init(name: "Models", id: "models", sources: ["Models/*.swift", "Models/State.swift"]),
+                .init(name: "ModelTests", id: "tests", sources: ["Models/State*.swift"]),
+            ])
+            let membership = try manifest.membership(relativeTo: directory)
+            XCTAssertEqual(membership.files, [
+                directory.appendingPathComponent("Models/State.swift").path: Set(["models", "tests"]),
+                directory.appendingPathComponent("Models/Other.swift").path: Set(["models"]),
+            ])
+            XCTAssertEqual(membership.names, ["models": "Models", "tests": "ModelTests"])
+        }
+    }
+
+    func testProjectIndexManifestAbsoluteGlobCanPointOutsideManifestDirectory() throws {
+        try withTmpDirectory([
+            "Shared/State.swift": "enum State {}",
+            "App/Config/placeholder": "",
+        ]) { directory in
+            let manifest = ProjectIndexManifest(modules: [
+                .init(name: "Models", id: "models", sources: [directory.appendingPathComponent("Shared/**/*.swift").path]),
+            ])
+            let membership = try manifest.membership(relativeTo: directory.appendingPathComponent("App/Config"))
+            XCTAssertEqual(membership.files, [directory.appendingPathComponent("Shared/State.swift").path: Set(["models"])])
+        }
+    }
+
+    func testProjectIndexManifestParentRelativeGlobUsesManifestDirectory() throws {
+        try withTmpDirectory([
+            "Models/State.swift": "enum State {}",
+            "Config/placeholder": "",
+        ]) { directory in
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["../Models/**/*.swift"])])
+            let membership = try manifest.membership(relativeTo: directory.appendingPathComponent("Config"))
+            XCTAssertEqual(membership.files, [directory.appendingPathComponent("Models/State.swift").path: Set(["models"])])
+        }
+    }
+
+    func testProjectIndexManifestGlobPreservesLiteralCommasAndBraceAlternatives() throws {
+        try withTmpDirectory([
+            "Models, Shared/State.swift": "enum State {}",
+            "Models, Shared/Domain.swiftinterface": "public enum Domain {}",
+            "Models, Shared/Ignore.txt": "",
+        ]) { directory in
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models, Shared/*.{swift,swiftinterface}"])])
+            let membership = try manifest.membership(relativeTo: directory)
+            XCTAssertEqual(membership.files, [
+                directory.appendingPathComponent("Models, Shared/State.swift").path: Set(["models"]),
+                directory.appendingPathComponent("Models, Shared/Domain.swiftinterface").path: Set(["models"]),
+            ])
+        }
+    }
+
+    func testProjectIndexManifestGlobWithNoSwiftSourcesIsRejected() throws {
+        try withTmpDirectory(["Models/README.md": "Models"]) { directory in
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models/**"])])
+            XCTAssertThrowsError(try manifest.membership(relativeTo: directory)) { error in
+                guard case FormatError.options = error else { return XCTFail("Expected options error, got \(error)") }
+            }
+        }
+    }
+
+    func testMalformedProjectIndexManifestGlobReportsAnOptionsError() throws {
+        try withTmpDirectory(["Models/State.swift": "enum State {}"]) { directory in
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models/[*.swift"])])
+            XCTAssertThrowsError(try manifest.membership(relativeTo: directory)) { error in
+                guard case FormatError.options = error else {
+                    return XCTFail("Expected a recoverable options error, got \(error)")
+                }
+            }
+        }
+    }
+
+    func testProjectIndexManifestRecursiveGlobDoesNotFollowSymlinkCycles() throws {
+        try withTmpDirectory(["Models/State.swift": "enum State {}"]) { directory in
+            let models = directory.appendingPathComponent("Models")
+            try FileManager.default.createSymbolicLink(at: models.appendingPathComponent("Cycle"), withDestinationURL: models)
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models/**"])])
+            let membership = try manifest.membership(relativeTo: directory)
+            XCTAssertEqual(membership.files, [models.appendingPathComponent("State.swift").path: Set(["models"])])
+        }
+    }
+
+    func testProjectIndexManifestGlobDoesNotAcceptDirectoryWithSwiftExtension() throws {
+        try withTmpDirectory(["Models/Folder[1].swift/Nested.swift": "enum State {}"]) { directory in
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models/Folder[1].swift"])])
+            XCTAssertThrowsError(try manifest.membership(relativeTo: directory)) { error in
+                guard case FormatError.options = error else { return XCTFail("Expected options error, got \(error)") }
+            }
+        }
+    }
+
+    func testUnmatchedProjectIndexManifestGlobIsRejected() throws {
+        try withTmpDirectory(["Models/README.md": "Models"]) { directory in
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models/NoSuch*.swift"])])
+            XCTAssertThrowsError(try manifest.membership(relativeTo: directory)) { error in
+                guard case FormatError.options = error else { return XCTFail("Expected options error, got \(error)") }
+            }
+        }
+    }
+
+    func testProjectIndexManifestGlobDoesNotSilentlySkipUnreadableSources() throws {
+        try withTmpDirectory([
+            "Models/Visible.swift": "enum Visible {}",
+            "Models/Protected/Hidden.swift": "enum Hidden {}",
+        ]) { directory in
+            let protected = directory.appendingPathComponent("Models/Protected")
+            try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: protected.path)
+            defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: protected.path) }
+            if (try? FileManager.default.contentsOfDirectory(atPath: protected.path)) != nil {
+                throw XCTSkip("This environment can read directories regardless of permission bits")
+            }
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models/**"])])
+            XCTAssertThrowsError(try manifest.membership(relativeTo: directory)) { error in
+                guard case FormatError.reading = error else { return XCTFail("Expected reading error, got \(error)") }
+            }
+        }
+    }
+
+    func testNonrecursiveManifestGlobDoesNotInspectUnreadableChildDirectories() throws {
+        try withTmpDirectory([
+            "Models/Visible.swift": "enum Visible {}",
+            "Models/Protected/Hidden.swift": "enum Hidden {}",
+        ]) { directory in
+            let protected = directory.appendingPathComponent("Models/Protected")
+            try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: protected.path)
+            defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: protected.path) }
+            if (try? FileManager.default.contentsOfDirectory(atPath: protected.path)) != nil {
+                throw XCTSkip("This environment can read directories regardless of permission bits")
+            }
+            let manifest = ProjectIndexManifest(modules: [.init(name: "Models", id: "models", sources: ["Models/*.swift"])])
+            let membership = try manifest.membership(relativeTo: directory)
+            XCTAssertEqual(membership.files, [directory.appendingPathComponent("Models/Visible.swift").path: Set(["models"])])
+        }
+    }
+
+    func testInputGlobDoesNotFormatThroughDirectorySymlinkByDefault() throws {
+        try withTmpDirectory([
+            "Models/Visible.swift": "enum Visible {}   ",
+            "External/State.swift": "enum State {}   ",
+        ]) { directory in
+            try FileManager.default.createSymbolicLink(at: directory.appendingPathComponent("Models/Linked"), withDestinationURL: directory.appendingPathComponent("External"))
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "Models/**/*.swift --rules trailingSpace --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Models/Visible.swift")), "enum Visible {}")
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("External/State.swift")), "enum State {}   ")
+        }
+    }
+
+    func testInputGlobDoesNotResolveDirectorySymlinkInItsFixedPrefix() throws {
+        try withTmpDirectory([
+            "Models/Visible.swift": "enum Visible {}",
+            "External/State.swift": "enum State {}   ",
+        ]) { directory in
+            try FileManager.default.createSymbolicLink(at: directory.appendingPathComponent("Models/Linked"), withDestinationURL: directory.appendingPathComponent("External"))
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "Models/Linked/*.swift --rules trailingSpace --cache ignore --quiet"), .error)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("External/State.swift")), "enum State {}   ")
+        }
+    }
+
+    func testProjectIndexManifestGlobsDriveCrossFileSwitchResolution() throws {
+        let input = """
+        import Models
+        func render(_ state: State) {
+            switch state {
+            default: print(state)
+            }
+        }
+        """
+        let output = """
+        import Models
+        func render(_ state: State) {
+            switch state {
+            case .idle, .loaded: print(state)
+            }
+        }
+        """
+        try withTmpDirectory([
+            "App/Input.swift": input,
+            "Models/Nested/State.swift": "public enum State { case idle, loaded }",
+            "Config/modules.json": """
+            {"modules":[
+                {"id":"app", "name":"App", "sources":["../App/**"]},
+                {"id":"models", "name":"Models", "sources":["../Models/**"]}
+            ]}
+            """,
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "App/Input.swift --rules exhaustiveSwitchStatements --project-index-manifest Config/modules.json --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("App/Input.swift")), output)
+        }
+    }
+
+    func testProjectIndexManifestResolvesSourcesOutsideGeneratedProjectAndInvalidatesCache() throws {
+        let input = """
+        import Domain
+        func render(_ state: State) {
+            switch state {
+            default: print(state)
+            }
+        }
+        """
+        let output = """
+        import Domain
+        func render(_ state: State) {
+            switch state {
+            case .idle, .loaded: print(state)
+            }
+        }
+        """
+        for domainPath in ["Domain/State.swift", "App/Domain/State.swift"] {
+            try withTmpDirectory([
+                "App/Package.swift": "// Package marker",
+                "App/Input.swift": input,
+                domainPath: "public enum State { case idle, loaded }",
+                "modules.json": """
+                {"modules":[
+                    {"id":"app", "name":"App", "sources":["App/Input.swift"]},
+                    {"id":"domain", "name":"Domain", "sources":["\(domainPath)"]}
+                ]}
+                """,
+            ]) { directory in
+                CLI.print = { _, _ in }
+                let arguments = "App/Input.swift --rules exhaustiveSwitchStatements --project-index-manifest modules.json --cache cache.json --quiet"
+                let inputURL = directory.appendingPathComponent("App/Input.swift")
+                XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+                XCTAssertEqual(try String(contentsOf: inputURL), output)
+
+                try input.write(to: inputURL, atomically: true, encoding: .utf8)
+                let manifestURL = directory.appendingPathComponent("modules.json")
+                let manifest = try String(contentsOf: manifestURL).replacingOccurrences(of: "\"name\":\"Domain\"", with: "\"name\":\"Other\"")
+                try manifest.write(to: manifestURL, atomically: true, encoding: .utf8)
+                XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+                XCTAssertEqual(try String(contentsOf: inputURL), input)
+            }
+        }
+    }
+
+    func testProjectIndexManifestIndexesSDKInterfacesForInheritedNamesAndModuleQualifiedProperties() throws {
+        let input = """
+        import Domain
+        struct Renderer: View {
+            func render(_ model: Model) {
+                switch model.state {
+                default: print(model.state)
+                }
+            }
+        }
+        """
+        let output = """
+        import Domain
+        struct Renderer: View {
+            func render(_ model: Model) {
+                switch model.state {
+                case .idle, .loaded: print(model.state)
+                }
+            }
+        }
+        """
+        try withTmpDirectory([
+            "App/Input.swift": input,
+            "SDK/Domain.swiftinterface": """
+            public protocol View { associatedtype Body }
+            @frozen public enum State { case idle, loaded }
+            public struct Model { public let state: Domain::State }
+            """,
+            "modules.json": """
+            {"modules":[
+                {"id":"app", "name":"App", "sources":["App/Input.swift"]},
+                {"id":"sdk:Domain", "name":"Domain", "sources":["SDK/Domain.swiftinterface"]}
+            ]}
+            """,
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "App/Input.swift --rules exhaustiveSwitchStatements --project-index-manifest modules.json --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("App/Input.swift")), output)
+        }
+    }
+
+    func testProjectIndexManifestRequiresAgreementAcrossSharedSourceTargets() throws {
+        let input = """
+        func render(_ state: State) {
+            switch state {
+            default: print(state)
+            }
+        }
+        """
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Input.swift": input,
+            "First.swift": "enum State { case first }",
+            "Second.swift": "enum State { case second }",
+            "modules.json": """
+            {"modules":[
+                {"id":"first", "name":"First", "sources":["Input.swift","First.swift"]},
+                {"id":"second", "name":"Second", "sources":["Input.swift","Second.swift"]}
+            ]}
+            """,
+        ]) { directory in
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "Input.swift --rules exhaustiveSwitchStatements --project-index-manifest modules.json --cache ignore --quiet"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Input.swift")), input)
+        }
+    }
+
+    func testInvalidProjectIndexManifestDoesNotModifyInput() throws {
+        let input = "let value=1"
+        for manifest in [
+            "not JSON",
+            """
+            {"modules":[{"id":"", "name":"App", "sources":["Input.swift"]}]}
+            """,
+            """
+            {"modules":[{"id":"app", "name":"", "sources":["Input.swift"]}]}
+            """,
+            """
+            {"modules":[{"id":"app", "name":"App", "sources":["Input.txt"]}]}
+            """,
+            """
+            {"modules":[
+                {"id":"same", "name":"First", "sources":["Input.swift"]},
+                {"id":"same", "name":"Second", "sources":["Input.swift"]}
+            ]}
+            """,
+        ] {
+            try withTmpDirectory(["Input.swift": input, "modules.json": manifest]) { directory in
+                CLI.print = { _, _ in }
+                XCTAssertEqual(CLI.run(in: directory.path, with: "Input.swift --rules spaceAroundOperators --project-index-manifest modules.json --cache ignore --quiet"), .error)
+                XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Input.swift")), input)
+            }
         }
     }
 

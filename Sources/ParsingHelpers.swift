@@ -2326,6 +2326,20 @@ extension Formatter {
         return nil
     }
 
+    /// Finds the matching colon without crossing scopes or confusing nested ternaries.
+    func findTernaryColon(after questionIndex: Int) -> Int? {
+        var depth = 1
+        var cursor = questionIndex
+        while let next = index(after: cursor, where: { $0 == .operator("?", .infix) || $0 == .operator(":", .infix) }) {
+            depth += tokens[next] == .operator("?", .infix) ? 1 : -1
+            if depth == 0 {
+                return next
+            }
+            cursor = next
+        }
+        return nil
+    }
+
     /// Parses the expression that contains the token at the given index.
     func parseExpressionRange(
         containing index: Int
@@ -4565,6 +4579,7 @@ extension Formatter {
     /// - When `startOfScope` is a `(`, the parenthesized arguments are parsed
     ///   and any trailing closures that immediately follow the `)` are appended
     ///   as additional arguments.
+    /// - When `startOfScope` is a `[`, subscript arguments are parsed without trailing closures.
     func parseFunctionCallArguments(startOfScope: Int, preserveWhitespace: Bool = false) -> [FunctionCallArgument] {
         // Handle calls that are solely a trailing closure with no parentheses,
         // e.g. `filter { $0.isActive }` or `animate { } completion: { }`.
@@ -4581,7 +4596,7 @@ extension Formatter {
             return arguments
         }
 
-        assert(tokens[startOfScope] == .startOfScope("("))
+        assert(tokens[startOfScope] == .startOfScope("(") || tokens[startOfScope] == .startOfScope("["))
         guard let endOfScope = endOfScope(at: startOfScope) else { return [] }
 
         var argumentLabels: [FunctionCallArgument] = []
@@ -4664,10 +4679,15 @@ extension Formatter {
             }
         }
 
+        if tokens[startOfScope] == .startOfScope("[") {
+            return argumentLabels
+        }
+
         // Append any trailing closures that immediately follow the closing paren.
         // A `{` followed by `willSet` or `didSet` is a property observer block, not a closure.
         if let openBraceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
            tokens[openBraceIndex] == .startOfScope("{"),
+           isStartOfClosure(at: openBraceIndex),
            !isPropertyObserverBlock(at: openBraceIndex),
            let endOfClosure = self.endOfScope(at: openBraceIndex)
         {
@@ -5006,30 +5026,27 @@ extension Formatter {
         return !labels.isEmpty && pendingLabel == nil ? labels : nil
     }
 
-    /// Parses the function identifier before the `(` start of scope token.
-    /// Handles `foo(`, `foo?(`, and `foo!(`.
+    /// Parses the function identifier before a call's argument list.
+    /// Handles optional calls and explicit generic specializations.
     func parseFunctionIdentifier(beforeStartOfScope startOfScope: Int) -> Int? {
         assert(tokens[startOfScope] == .startOfScope("("))
-        guard let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else { return nil }
+        return parseCallableIdentifier(before: startOfScope)
+    }
 
-        // `foo()`, `@foo()`, or `#foo()`
-        // Exclude keywords to avoid confusing `return (...)`, `as? (...)`, `{ _ in (...) }`, etc.
-        let isFunctionIdentifier = { (token: Token) in
-            token.isIdentifier || token.isAttribute || token.isMacro || token.string == "init"
+    /// The final identifier in a callable expression, before parentheses or a trailing closure.
+    func parseCallableIdentifier(before scope: Int) -> Int? {
+        guard var previous = index(of: .nonSpaceOrCommentOrLinebreak, before: scope) else { return nil }
+        if [.operator("?", .postfix), .operator("!", .postfix)].contains(tokens[previous]) {
+            guard let before = index(of: .nonSpaceOrCommentOrLinebreak, before: previous) else { return nil }
+            previous = before
         }
-
-        if isFunctionIdentifier(tokens[previousToken]) {
-            return previousToken
+        if tokens[previous] == .endOfScope(">") {
+            guard let open = startOfScope(at: previous),
+                  let before = index(of: .nonSpaceOrCommentOrLinebreak, before: open) else { return nil }
+            previous = before
         }
-
-        if [.operator("?", .postfix), .operator("!", .postfix)].contains(tokens[previousToken]),
-           let tokenBeforeOperator = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-           isFunctionIdentifier(tokens[tokenBeforeOperator])
-        {
-            return tokenBeforeOperator
-        }
-
-        return nil
+        let token = tokens[previous]
+        return token.isIdentifier || token.isAttribute || token.isMacro || token.string == "init" ? previous : nil
     }
 }
 
@@ -6298,5 +6315,36 @@ extension Formatter {
             type: propertyType,
             value: propertyValue
         )
+    }
+}
+
+extension Formatter {
+    /// Parses the case values in a single declaration, skipping commas inside associated values.
+    func enumCaseRanges(at caseIndex: Int) -> [Range<Int>] {
+        guard let scopeEnd = endOfScope(at: caseIndex),
+              var currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: caseIndex)
+        else { return [] }
+
+        var result: [Range<Int>] = []
+        var searchIndex = caseIndex
+        while let boundary = index(after: searchIndex, where: {
+            $0 == .delimiter(",") || $0 == .delimiter(";") || $0.isDeclarationTypeKeyword
+                || $0.isAttribute || $0 == .startOfScope("#if")
+                || $0 == .keyword("#else") || $0 == .keyword("#elseif")
+        }), boundary < scopeEnd {
+            if tokens[boundary] != .delimiter(",") {
+                if currentStart < boundary {
+                    result.append(currentStart ..< boundary)
+                }
+                return result
+            }
+            result.append(currentStart ..< boundary)
+            currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: boundary) ?? boundary
+            searchIndex = boundary
+        }
+        if currentStart < scopeEnd {
+            result.append(currentStart ..< scopeEnd)
+        }
+        return result
     }
 }

@@ -136,6 +136,7 @@
 * [blockComments](#blockComments)
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
+* [exhaustiveSwitchStatements](#exhaustiveSwitchStatements)
 * [forWhere](#forWhere)
 * [ifCase](#ifCase)
 * [ifExpressions](#ifExpressions)
@@ -1274,6 +1275,31 @@ Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro.
 +    @Entry var screenName: Identifier? = .init("undefined")
    }
 ```
+
+</details>
+<br/>
+
+## exhaustiveSwitchStatements
+
+Replace switch defaults with exhaustive cases from the project index.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  enum State { case idle, loading, loaded, failed }
+  func render(_ state: State) {
+      switch state {
+      case .loaded:
+          showContent()
+-     default:
++     case .idle, .loading, .failed:
+          showPlaceholder()
+      }
+  }
+```
+
+Requires the project index. Unknown defaults and unresolved types are preserved.
 
 </details>
 <br/>

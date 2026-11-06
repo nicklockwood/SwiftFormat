@@ -3859,6 +3859,15 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertNil(quuxArgs)
     }
 
+    func testParseFunctionCallArgumentsDoesNotIncludeConditionalBody() throws {
+        let formatter = Formatter(tokenize("""
+        let callback = if predicate({ value in consume(value) }) { { _ in } } else { { _ in } }
+        """))
+        let predicate = try XCTUnwrap(formatter.index(of: .identifier("predicate"), after: -1))
+        let arguments = try XCTUnwrap(formatter.parseFunctionCallArguments(after: predicate))
+        XCTAssertEqual(arguments.map(\.value), ["{ value in consume(value) }"])
+    }
+
     func testParseFunctionCallArgumentsMultipleTrailingClosures() throws {
         let input = """
         foo { $0 } onSuccess: { print("ok") } onFailure: { print("error") }
@@ -4881,5 +4890,26 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarationBodyBraces("guard let foo = bar else { return }"), [false])
         XCTAssertEqual(declarationBodyBraces("switch foo { case .bar: baaz() }"), [false])
         XCTAssertEqual(declarationBodyBraces("if foo { bar() } else { baaz() }"), [false, false])
+    }
+
+    func testCallableIdentifierBeforeSpecializedArgumentList() throws {
+        for source in [
+            "Handler<State>()",
+            "Models.Handler<State>()",
+            "Handler<Array<State>>()",
+            "Handler<State, Other>()",
+            "Handler<() -> State>()",
+        ] {
+            let formatter = Formatter(tokenize(source))
+            let call = try XCTUnwrap(formatter.tokens.lastIndex(of: .startOfScope("(")))
+            let identifier = try XCTUnwrap(formatter.parseFunctionIdentifier(beforeStartOfScope: call))
+            XCTAssertEqual(formatter.tokens[identifier], .identifier("Handler"))
+        }
+    }
+
+    func testCallableIdentifierStillRejectsParenthesizedReturnStatement() {
+        let formatter = Formatter(tokenize("return (state)"))
+        let scope = formatter.tokens.firstIndex(of: .startOfScope("("))
+        XCTAssertNil(scope.flatMap { formatter.parseFunctionIdentifier(beforeStartOfScope: $0) })
     }
 }

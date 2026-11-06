@@ -249,38 +249,6 @@ extension Formatter {
         return nil
     }
 
-    /// Finds the matching `:` for a ternary `?` operator.
-    /// Handles nested ternaries by tracking `?`/`:` depth.
-    func findTernaryColon(after questionIndex: Int) -> Int? {
-        var ternaryDepth = 1
-        var scopeDepth = 0
-        var i = questionIndex + 1
-
-        while i < tokens.count {
-            let token = tokens[i]
-            switch token {
-            case .startOfScope:
-                scopeDepth += 1
-            case .endOfScope:
-                if scopeDepth == 0 {
-                    return nil
-                }
-                scopeDepth -= 1
-            case .operator("?", .infix) where scopeDepth == 0:
-                ternaryDepth += 1
-            case .operator(":", .infix) where scopeDepth == 0:
-                ternaryDepth -= 1
-                if ternaryDepth == 0 {
-                    return i
-                }
-            default:
-                break
-            }
-            i += 1
-        }
-        return nil
-    }
-
     /// Converts a parsed ternary expression to an if expression.
     func convertTernaryToIfExpression(
         ternary: TernaryExpression,

@@ -82,11 +82,11 @@ public final class Formatter: NSObject {
     }
 
     /// Excludes shared project indexing from the per-file rule timeout.
-    var projectIndexRequestStateChanged: ((Bool) -> Void)?
+    var projectIndexRequestStateChanged: ((Bool, Int) -> Void)?
 
     func projectIndex(requiring features: Set<ProjectContextFeature>) -> ProjectIndex? {
-        projectIndexRequestStateChanged?(true)
-        defer { projectIndexRequestStateChanged?(false) }
+        projectIndexRequestStateChanged?(true, 0)
+        defer { projectIndexRequestStateChanged?(false, context.projectIndexAccess.lastIndex?.files.count ?? 0) }
         return context.projectIndexAccess.index(requiring: features)
     }
 

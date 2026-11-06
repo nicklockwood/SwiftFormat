@@ -156,6 +156,10 @@ extension Formatter {
 
     /// The declaration's visibility after accounting for enclosing types and extensions.
     func effectiveVisibility(of declaration: Declaration) -> Visibility {
+        // Protocol requirements have the protocol's access level even without a modifier.
+        if let owner = declaration.parentType, owner.keyword == "protocol" {
+            return effectiveVisibility(of: owner)
+        }
         let inheritedVisibility: Visibility?
         if declaration.visibility() == nil, declaration.parent?.keyword == "extension" {
             inheritedVisibility = declaration.parent?.visibility()
@@ -163,7 +167,9 @@ extension Formatter {
             inheritedVisibility = nil
         }
         let visibility = declaration.visibility() ?? inheritedVisibility ?? .internal
-        guard let parent = declaration.parent else { return visibility }
+        // An extension's modifier supplies a default for its members, not an upper bound.
+        // Explicit member visibility is still limited by any actual enclosing nominal type.
+        guard let parent = declaration.parent, parent.keyword != "extension" else { return visibility }
         return min(visibility, effectiveVisibility(of: parent))
     }
 

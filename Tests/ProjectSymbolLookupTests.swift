@@ -90,11 +90,10 @@ final class ProjectSymbolLookupTests: XCTestCase {
     }
 
     func testGenericParameterDoesNotResolveToGlobalType() throws {
-        try check("""
-        func render<State>(_ state: State) { observeValue(state) }
-        """, declarations: """
+        try checkModules("""
         enum State { case unrelated }
-        """, expected: nil)
+        func render<State>(_ state: State) { observeValue(state) }
+        """, sources: [:], expectedCases: nil, expectedAbstractParameter: "State")
     }
 
     func testRecursiveAliasesTerminate() throws {
@@ -5740,7 +5739,363 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """], expectedCases: ["idle", "loaded"])
     }
 
-    private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,
+    func testGenericFunctionPreservesNominalEnumWithAbstractArgument() throws {
+        try checkModules("""
+        import Models
+        func render<Value>(_ event: Event<Value>) { observeValue(event) }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testGenericTypePreservesNominalEnumWithAbstractArgument() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Value> {
+            func render(_ event: Event<Value>) { observeValue(event) }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractGenericArgumentFlowsThroughArrayElement() throws {
+        try checkModules("""
+        import Models
+        func render<Value>(_ events: [Event<Value>]) {
+            for event in events { observeValue(event) }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractGenericArgumentSubstitutesIndexedProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Value>(_ box: Box<Value>) { observeValue(box.event) }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        public struct Box<Value> { public let event: Event<Value> }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractGenericDependentMemberCannotResolveNamesake() throws {
+        try checkModules("""
+        import Models
+        func render<Payload: Model>(_ state: Payload.State) { observeValue(state) }
+        """, sources: ["Models": """
+        public protocol Model { associatedtype State }
+        public struct Payload { public enum State { case idle, loaded } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testAbstractGenericPropertyDoesNotCaptureNamesakeEnum() throws {
+        try checkModules("""
+        import Models
+        func render<State>(_ box: Box<State>) { observeValue(box.value) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Box<Value> { public let value: Value }
+        """], expectedCases: nil, expectedAbstractParameter: "State")
+    }
+
+    func testAbstractGenericParametersHaveLexicalIdentity() throws {
+        let input = """
+        func first<Value>(_ value: Value) { observeFirst(value) }
+        func second<Value>(_ value: Value) { observeSecond(value) }
+        """
+        let url = URL(fileURLWithPath: "/Project/Input.swift")
+        let formatter = Formatter(tokenize(input))
+        let lookup = ProjectSymbolLookup(formatter: formatter, project: ProjectIndex(files: [
+            url.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+        ]), fileURL: url)
+        let first = try XCTUnwrap(formatter.tokens.firstIndex(of: .identifier("observeFirst")))
+        let second = try XCTUnwrap(formatter.tokens.firstIndex(of: .identifier("observeSecond")))
+        let firstType = try XCTUnwrap(lookup.bindingType(named: "value", at: first, depth: 0))
+        let secondType = try XCTUnwrap(lookup.bindingType(named: "value", at: second, depth: 0))
+        let repeatedFirstType = try XCTUnwrap(lookup.bindingType(named: "value", at: first, depth: 0))
+        XCTAssertTrue(lookup.sameType(firstType, as: repeatedFirstType))
+        XCTAssertFalse(lookup.sameType(firstType, as: secondType))
+        XCTAssertNil(lookup.qualifiedName(for: firstType))
+        formatter.clearDerivedCaches()
+    }
+
+    func testAbstractMetatypeArgumentPreservesNominalEnum() throws {
+        try checkModules("""
+        import Models
+        func render<Value>(_ event: Event<Value.Type>) { observeValue(event) }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLocalAliasShadowsEnclosingAbstractParameter() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Value> {
+            func render() {
+                typealias Value = Unknown
+                let event: Event<Value>
+                observeValue(event)
+            }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testLexicalGenericReceiverSubstitutesExplicitSelfProperty() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Value>: Model {
+            let event: Event<Value>
+            func render() { observeValue(self.event) }
+        }
+        """, sources: ["Models": """
+        public protocol Model {}
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalGenericReceiverSubstitutesImplicitProperty() throws {
+        try checkModules("""
+        import Models
+        extension Renderer {
+            func render() { observeValue(event) }
+        }
+        """, sources: ["Models": """
+        public struct Renderer<Value> { public let event: Event<Value> }
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalGenericReceiverSubstitutesExplicitMethod() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Value> {
+            func event() -> Event<Value> { fatalError() }
+            func render() { observeValue(self.event()) }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalGenericExtensionPreservesAbstractArguments() throws {
+        try checkModules("""
+        import Models
+        extension Renderer {
+            func render() { observeValue(self.event) }
+        }
+        """, sources: ["Models": """
+        public enum Event<Value> { case idle, loaded(Value) }
+        public struct Renderer<Value> { public let event: Event<Value> }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalGenericReceiverDoesNotCaptureNamesakePayload() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<State> {
+            let value: State
+            func render() { observeValue(self.value) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        """], expectedCases: nil, expectedAbstractParameter: "State")
+    }
+
+    func testIndexedGenericSelfReferenceRetainsReceiverArguments() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render(_ model: Model<State>) { observeValue(model.copy().value) }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public struct Model<Value> {
+            public let value: Value
+            public func copy() -> Model { self }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedGenericSelfReferenceKeepsOwnerWhenMethodShadowsParameter() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render(_ model: Model<State>, _ value: Int) { observeValue(model.copy(value).value) }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public struct Model<Value> {
+            public let value: Value
+            public func copy<Value>(_ other: Value) -> Model { self }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedGenericStaticMethodReturnsNominalInstance() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render() { observeValue(Model<State>.copy().value) }
+        """, sources: ["Models": """
+        public struct Model<Value> {
+            public let value: Value
+            public static func copy() -> Model { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedGenericStaticMethodReturnsSelfInstance() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render() { observeValue(Model<State>.copy().value) }
+        """, sources: ["Models": """
+        public struct Model<Value> {
+            public let value: Value
+            public static func copy() -> Self { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedStaticPropertyInitializerUsesDeclaredResultType() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Factory { public static var initial: State { .idle } }
+        public struct Model { public var state = Factory.initial }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedStaticPropertyInitializerSubstitutesGenericOwner() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render(_ model: Model<State>) {
+            if case let .loaded(value) = model.state { observeValue(value) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public enum Request<Value> {
+            case idle, loaded(Value)
+            public static var initial: Request { .idle }
+        }
+        public struct Model<Value> { public var state = Request<Value>.initial }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedStaticPropertyInitializerFollowsStoredDeclarationChain() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Factory {
+            public static let seed = State.idle
+            public static let initial = Factory.seed
+        }
+        public struct Model { public var state = Factory.initial }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedStaticPropertyInitializerCycleRemainsUnresolved() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public struct Factory {
+            public static let initial = Factory.seed
+            public static let seed = Factory.initial
+        }
+        public struct Model { public var state = Factory.initial }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testGenericEnumStaticSelfReturnPreservesPayloadSubstitution() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render(_ type: Model<State>.Type) {
+            if case let .loaded(value) = type.copy() { observeValue(value) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public enum Model<Value> {
+            case loaded(Value)
+            public static func copy() -> Self { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testModuleQualifiedGenericStaticReceiverRetainsArguments() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render() { observeValue(Models.Model<State>.copy().value) }
+        """, sources: ["Models": """
+        public struct Model<Value> {
+            public let value: Value
+            public static func copy() -> Model { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testIndexedStaticInitializerUsesLexicalPrivateMember() throws {
+        try checkModules("""
+        import Models
+        enum Other { case unrelated }
+        extension Factory { static var initial: Other { .unrelated } }
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Factory {
+            private static var initial: State { .idle }
+            public static var proxy = Factory.initial
+        }
+        public struct Model { public var state = Factory.proxy }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLocalCoalescingInitializerUsesShadowedParameter() throws {
+        try check("""
+        func render(_ state: State?, _ fallback: State) {
+            let state = state ?? fallback
+            observeValue(state)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        """, expected: "State")
+    }
+
+    func testLocalTernaryInitializerUsesShadowedParameter() throws {
+        try check("""
+        func render(_ state: State, _ flag: Bool) {
+            let state = flag ? state : State.idle
+            observeValue(state)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        """, expected: "State")
+    }
+
+    func testLocalMemberInitializerUsesShadowedParameter() throws {
+        try check("""
+        func render(_ value: Model) {
+            let value = value.state
+            observeValue(value)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false, expectedAbstractParameter: String? = nil,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {
         let url = URL(fileURLWithPath: "/Project/Input.swift")
@@ -5762,6 +6117,12 @@ final class ProjectSymbolLookupTests: XCTestCase {
         let type = lookup.expressionType(in: open + 1 ... close - 1)
         if expectUnresolved {
             XCTAssertNil(type, file: file, line: line)
+        }
+        if let expectedAbstractParameter {
+            let abstract = try XCTUnwrap(type, file: file, line: line)
+            XCTAssertEqual(abstract.name, expectedAbstractParameter, file: file, line: line)
+            XCTAssertNotNil(abstract.genericParameterScope, file: file, line: line)
+            XCTAssertNil(lookup.qualifiedName(for: abstract), file: file, line: line)
         }
         let cases = type.flatMap { type in
             lookup.qualifiedName(for: type).flatMap { project.enumCases(named: $0, visibleFrom: type.sourceFileURL ?? url) }

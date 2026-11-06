@@ -53,6 +53,7 @@ final class ProjectSymbolLookup {
         var tupleElements: [TupleElement]?
         var collectionKind: CollectionKind?
         var genericBounds: [ResolvedType]?
+        var genericParameterScope: AutoUpdatingRange?
     }
 
     struct PayloadBinding {
@@ -89,7 +90,7 @@ final class ProjectSymbolLookup {
 
         func isVisible(at index: Int) -> Bool {
             scope.range.contains(index) && excludedScope?.range.contains(index) != true &&
-                (!requiresPrecedingDeclaration || location.range.lowerBound < index)
+                (!requiresPrecedingDeclaration || (value?.range.upperBound ?? location.range.lowerBound) < index)
         }
     }
 
@@ -99,9 +100,12 @@ final class ProjectSymbolLookup {
     let declarations: [Declaration]
     var bindings = [String: [Binding]]()
     var unavailableTypes = [String: [AutoUpdatingRange]]()
+    var genericParameterScopes = [String: [AutoUpdatingRange]]()
+    var genericTypeScopes = [String: [(range: AutoUpdatingRange, parameters: [String])]]()
 
     var localTypes = [String: [TypeDeclaration]]()
     var unindexedFunctions = Set<String>()
+    var activeBindings = Set<ObjectIdentifier>()
 
     init(formatter: Formatter, project: ProjectIndex, fileURL: URL) {
         self.formatter = formatter
@@ -113,9 +117,16 @@ final class ProjectSymbolLookup {
                 if type.definesType, let name = type.fullyQualifiedName {
                     self.localTypes[name, default: []].append(type)
                 }
-                if let parameters = type.genericParameters {
-                    for parameter in parameters.types {
-                        self.unavailableTypes[parameter.name, default: []].append(AutoUpdatingRange(range: type.range, formatter: formatter))
+                if let name = type.fullyQualifiedName {
+                    let parameters = type.genericParameters?.types.map(\.name) ??
+                        (type.keyword == "extension" ? project.typeDeclaration(named: name, visibleFrom: fileURL)?.genericParameters : nil) ?? []
+                    if !parameters.isEmpty {
+                        let scope = AutoUpdatingRange(range: type.range, formatter: formatter)
+                        self.genericTypeScopes[name, default: []].append((scope, parameters))
+                        for parameter in parameters {
+                            self.unavailableTypes[parameter, default: []].append(scope)
+                            self.genericParameterScopes[parameter, default: []].append(scope)
+                        }
                     }
                 }
             }
@@ -189,7 +200,9 @@ final class ProjectSymbolLookup {
                 if let parameters = function.genericParameterRange {
                     let scope = i ... (function.bodyRange?.upperBound ?? parameters.upperBound)
                     for parameter in formatter.parseGenericTypes(from: parameters.lowerBound).types {
-                        self.unavailableTypes[parameter.name, default: []].append(AutoUpdatingRange(range: scope, formatter: formatter))
+                        let range = AutoUpdatingRange(range: scope, formatter: formatter)
+                        self.unavailableTypes[parameter.name, default: []].append(range)
+                        self.genericParameterScopes[parameter.name, default: []].append(range)
                     }
                 }
                 guard let body = function.bodyRange else { return }
@@ -365,26 +378,24 @@ final class ProjectSymbolLookup {
         guard depth < 16 else { return nil }
         let tokens = tokenize(rawName).filter { !$0.isSpaceOrCommentOrLinebreak }
             .drop(while: { ["inout", "borrowing", "consuming", "sending", "any"].contains($0.string) })
-        if let index, tokens.contains(where: { token in
-            token.isIdentifier && (unavailableTypes[token.string] ?? []).contains { $0.range.contains(index) }
-        }) {
-            return nil
-        }
         let name = tokens.string
         let optional = name.hasSuffix("?") || name.hasSuffix("!")
         let base = optional ? String(name.dropLast()) : name
+        if var substitution = substitutions[base] {
+            if base == "Self" {
+                substitution.isMetatype = false
+            }
+            if optional {
+                substitution.name += "?"
+            }
+            return substitution
+        }
         if base == "Self", let namespace,
            project.typeDeclaration(named: namespace, visibleFrom: sourceFileURL ?? fileURL)?.enumCases != nil ||
            localTypes[namespace]?.contains(where: { $0.keyword == "enum" }) == true
         {
             return type(named: namespace + (optional ? "?" : ""), namespace: nil, at: index,
                         sourceFileURL: sourceFileURL, substitutions: substitutions, depth: depth + 1)
-        }
-        if var substitution = substitutions[base] {
-            if optional {
-                substitution.name += "?"
-            }
-            return substitution
         }
         if base.hasSuffix(".Type"),
            var value = type(named: String(base.dropLast(5)), namespace: namespace, at: index,
@@ -397,6 +408,16 @@ final class ProjectSymbolLookup {
                 value.name += "?"
             }
             return value
+        }
+        // Generic arguments may remain abstract while the surrounding nominal declaration is
+        // known. Keep the parameter's lexical identity so it cannot become a namesake type.
+        if let index, sourceFileURL == nil || sourceFileURL?.standardizedFileURL == fileURL.standardizedFileURL,
+           let reference = ProjectTypeReference(base), let root = reference.name.split(separator: ".").first,
+           let scope = unavailableTypes[String(root)]?.filter({ $0.range.contains(index) }).min(by: { $0.range.count < $1.range.count })
+        {
+            guard base == root,
+                  genericParameterScopes[String(root)]?.contains(where: { $0 === scope }) == true else { return nil }
+            return ResolvedType(name: name, sourceFileURL: fileURL, genericParameterScope: scope)
         }
         if let dot = base.firstIndex(of: "."), let owner = substitutions[String(base[..<dot])] {
             guard var value = dependentMemberType(String(base[base.index(after: dot)...]), of: owner, depth: depth + 1) else { return nil }
@@ -478,11 +499,36 @@ final class ProjectSymbolLookup {
                                 sourceFileURL: sourceFileURL, functionType: functionType)
         }
 
-        let arguments = nominal.arguments.compactMap {
-            type(named: $0, namespace: namespace, at: index, sourceFileURL: sourceFileURL, substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
+        guard let lexical = qualifiedTypeName(for: ResolvedType(name: base, namespace: namespace, sourceFileURL: sourceFileURL)) else { return nil }
+        if nominal.arguments.isEmpty, !nominal.hasGenericParent, lexical.name == namespace,
+           let owner = substitutions["Self"],
+           var projected = projectedType(owner, to: lexical.name, source: lexical.sourceFileURL ?? sourceFileURL ?? fileURL, depth: depth + 1),
+           projected.genericArguments?.isEmpty == false
+        {
+            projected.isMetatype = false
+            if optional {
+                projected.name += "?"
+            }
+            return projected
         }
-        guard arguments.count == nominal.arguments.count,
-              let lexical = qualifiedTypeName(for: ResolvedType(name: base, namespace: namespace, sourceFileURL: sourceFileURL)) else { return nil }
+        var argumentNames = nominal.arguments
+        var arguments: [ResolvedType]
+        if argumentNames.isEmpty, let index,
+           sourceFileURL == nil || sourceFileURL?.standardizedFileURL == fileURL.standardizedFileURL,
+           let scope = genericTypeScopes[lexical.name]?.filter({ $0.range.range.contains(index) }).min(by: { $0.range.range.count < $1.range.range.count })
+        {
+            // A bare reference to the enclosing generic type denotes its current specialization.
+            // Bind its own parameters, even when a nested function shadows their spellings.
+            argumentNames = scope.parameters
+            arguments = scope.parameters.map {
+                ResolvedType(name: $0, sourceFileURL: fileURL, genericParameterScope: scope.range)
+            }
+        } else {
+            arguments = argumentNames.compactMap {
+                type(named: $0, namespace: namespace, at: index, sourceFileURL: sourceFileURL, substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
+            }
+        }
+        guard arguments.count == argumentNames.count else { return nil }
         let lexicalName = lexical.name
         let lexicalSource = lexical.sourceFileURL ?? sourceFileURL
         // An alias can appear in the middle of a qualified path, including an extension's
@@ -547,7 +593,7 @@ final class ProjectSymbolLookup {
             }
             return result
         }
-        let argumentsSuffix = nominal.arguments.isEmpty ? "" : "<" + nominal.arguments.joined(separator: ",") + ">"
+        let argumentsSuffix = argumentNames.isEmpty ? "" : "<" + argumentNames.joined(separator: ",") + ">"
         return ResolvedType(name: qualified + argumentsSuffix + (optional ? String(name.suffix(1)) : ""), namespace: nil, sourceFileURL: sourceFileURL, genericArguments: arguments)
     }
 
@@ -574,7 +620,7 @@ final class ProjectSymbolLookup {
 
     /// Inherited names retain the declaration file even when only the conformance file imports it.
     func qualifiedTypeName(for type: ResolvedType) -> (name: String, sourceFileURL: URL?)? {
-        guard let nominal = ProjectTypeReference(type.name) else { return nil }
+        guard type.genericParameterScope == nil, let nominal = ProjectTypeReference(type.name) else { return nil }
         var namespace = type.namespace
         while let owner = namespace {
             if project.isModuleNamespace(owner, visibleFrom: type.sourceFileURL ?? fileURL) {
@@ -607,6 +653,10 @@ final class ProjectSymbolLookup {
             return sameType(left, as: right)
         }
         guard unwrapped(lhs) == nil, unwrapped(rhs) == nil else { return false }
+        if let scope = lhs.genericParameterScope {
+            return scope === rhs.genericParameterScope && lhs.name == rhs.name && lhs.sourceFileURL == rhs.sourceFileURL
+        }
+        guard rhs.genericParameterScope == nil else { return false }
         if let kind = lhs.collectionKind {
             guard kind == rhs.collectionKind, let left = lhs.genericArguments, let right = rhs.genericArguments,
                   left.count == right.count else { return false }
@@ -692,6 +742,9 @@ final class ProjectSymbolLookup {
             let locals = closest.filter(\.requiresPrecedingDeclaration)
             guard let binding = locals.max(by: { $0.location.range.lowerBound < $1.location.range.lowerBound }) ??
                 (closest.count == 1 ? closest.first : nil) else { return nil }
+            let identity = ObjectIdentifier(binding.location)
+            guard activeBindings.insert(identity).inserted else { return nil }
+            defer { activeBindings.remove(identity) }
             var result: ResolvedType?
             if let annotation = binding.type {
                 result = type(named: annotation, namespace: binding.namespace, at: binding.location.range.lowerBound, requiresGenericArguments: binding.typeRequiresGenericArguments)
@@ -850,7 +903,7 @@ final class ProjectSymbolLookup {
         return remaining.isEmpty ? result : dependentMemberType(remaining, of: result, depth: depth + 1)
     }
 
-    func memberType(owner: ResolvedType, name: String, accessingType: String? = nil, depth: Int = 0) -> ResolvedType? {
+    func memberType(owner: ResolvedType, name: String, accessingType: String? = nil, accessedFrom: URL? = nil, depth: Int = 0) -> ResolvedType? {
         guard depth < 16 else { return nil }
         if owner.collectionKind != nil, !owner.isMetatype, unwrapped(owner) == nil {
             return collectionMember(owner: owner, name: name)
@@ -862,7 +915,7 @@ final class ProjectSymbolLookup {
             return elements.first(where: { $0.label == name })?.type
         }
         guard let ownerName = qualifiedName(for: owner),
-              let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL, accessedFromType: accessingType),
+              let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: accessedFrom ?? fileURL, accessedFromType: accessingType),
               let declaringOwner = projectedType(owner, to: member.declaration.declaringType, source: member.fileURL, depth: depth + 1),
               var substitutions = nominalSubstitutions(for: declaringOwner) else { return nil }
         substitutions["Self"] = owner
@@ -873,7 +926,7 @@ final class ProjectSymbolLookup {
         return explicitInitializerType(initializer, namespace: member.declaration.declaringType, source: member.fileURL, substitutions: substitutions, depth: depth + 1)
     }
 
-    /// An explicit constructor or payloadless enum case determines a stored value's type without
+    /// An explicit constructor or indexed static member determines a stored value's type without
     /// evaluating its body. Keep the initializer's lexical scope and generic arguments intact.
     func explicitInitializerType(_ expression: String, namespace: String?, source: URL, substitutions: [String: ResolvedType], depth: Int = 0) -> ResolvedType? {
         guard depth < 16 else { return nil }
@@ -910,8 +963,13 @@ final class ProjectSymbolLookup {
         let root = expression.tokens[first ..< dot].string
         guard initializerRootIsUnshadowed(root),
               let result = type(named: root, namespace: namespace, sourceFileURL: source, substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1),
-              unwrapped(result) == nil, let name = qualifiedName(for: result),
-              let declaration = project.typeDeclaration(named: name, visibleFrom: result.sourceFileURL ?? source),
+              unwrapped(result) == nil, let name = qualifiedName(for: result) else { return nil }
+        var receiver = result
+        receiver.isMetatype = true
+        if let property = memberType(owner: receiver, name: expression.tokens[last].string, accessingType: namespace, accessedFrom: source, depth: depth + 1) {
+            return property
+        }
+        guard let declaration = project.typeDeclaration(named: name, visibleFrom: result.sourceFileURL ?? source),
               declaration.enumCasePayloads?[expression.tokens[last].string] == [],
               !project.hasProperty(owner: name, member: expression.tokens[last].string, visibleFrom: result.sourceFileURL ?? source, accessedFrom: source) else { return nil }
         return result
@@ -1868,6 +1926,21 @@ final class ProjectSymbolLookup {
         return commonType(wrapped, rhs)
     }
 
+    /// Prove that an expression root names a nominal type before using it as a static receiver.
+    func nominalMetatype(in range: ClosedRange<Int>, namespace: String?) -> ResolvedType? {
+        let spelling = formatter.tokens[range].string
+        guard let reference = ProjectTypeReference(spelling), let root = reference.name.split(separator: ".").first,
+              bindings[String(root)]?.contains(where: { $0.isVisible(at: range.lowerBound) }) != true,
+              !unindexedFunctions.contains(String(root)),
+              namespace.map({ project.constructorRootIsUnshadowed(String(root), in: $0, visibleFrom: fileURL) }) ?? true,
+              initializerRootIsUnshadowed(spelling),
+              var metatype = type(named: spelling, namespace: namespace, at: range.lowerBound, requiresGenericArguments: true),
+              !metatype.isMetatype, unwrapped(metatype) == nil,
+              let name = qualifiedName(for: metatype), project.hasSymbolType(named: name, visibleFrom: metatype.sourceFileURL ?? fileURL) else { return nil }
+        metatype.isMetatype = true
+        return metatype
+    }
+
     func expressionType(in range: ClosedRange<Int>, expected: ResolvedType? = nil, depth: Int = 0) -> ResolvedType? {
         guard depth < 32,
               let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
@@ -1939,18 +2012,17 @@ final class ProjectSymbolLookup {
         if let member = formatter.index(in: Range(first ... last), where: { $0.string == "self" }),
            let dot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: member), dot > first,
            tokens[dot].isOperator("."),
-           let reference = ProjectTypeReference(tokens[first ..< dot].string), let root = reference.name.split(separator: ".").first,
-           bindings[String(root)]?.contains(where: { $0.isVisible(at: first) }) != true,
-           !unindexedFunctions.contains(String(root)),
-           namespace.map({ project.constructorRootIsUnshadowed(String(root), in: $0, visibleFrom: fileURL) }) ?? true,
-           initializerRootIsUnshadowed(tokens[first ..< dot].string),
-           var metatype = type(named: tokens[first ..< dot].string, namespace: namespace, at: first, requiresGenericArguments: true),
-           !metatype.isMetatype, unwrapped(metatype) == nil,
-           let name = qualifiedName(for: metatype), project.hasSymbolType(named: name, visibleFrom: metatype.sourceFileURL ?? fileURL)
+           let metatype = nominalMetatype(in: first ... dot - 1, namespace: namespace)
         {
-            metatype.isMetatype = true
             current = metatype
             cursor = member
+        } else if let open = formatter.index(of: .startOfScope("<"), in: first ..< last),
+                  let close = formatter.endOfScope(at: open), close < last,
+                  formatter.next(.nonSpaceOrCommentOrLinebreak, after: close)?.isOperator(".") == true,
+                  let metatype = nominalMetatype(in: first ... close, namespace: namespace)
+        {
+            current = metatype
+            cursor = close
         } else if let annotation = formatter.parseType(at: first),
                   let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound),
                   tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last,
@@ -2092,7 +2164,8 @@ final class ProjectSymbolLookup {
                     current = ResolvedType(name: "\(ownerName).\(memberName)", namespace: nil, isMetatype: true)
                 }
                 if current == nil, owner.isMetatype,
-                   project.enumCases(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL)?.contains(memberName) == true
+                   project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL)?.enumCasePayloads?[memberName] == [],
+                   !project.hasProperty(owner: ownerName, member: memberName, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL)
                 {
                     current = ResolvedType(name: ownerName, namespace: nil, sourceFileURL: owner.sourceFileURL, genericArguments: owner.genericArguments)
                 }

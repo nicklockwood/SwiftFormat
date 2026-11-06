@@ -3173,6 +3173,220 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testGenericFunctionEnumeratesKnownEnumWithAbstractPayload() throws {
+        let input = """
+        func render<Value>(_ event: Event<Value>) {
+            switch event {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render<Value>(_ event: Event<Value>) {
+            switch event {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum Event<Value> { case idle, loaded(Value), failed }
+        """)
+    }
+
+    func testGenericTypeEnumeratesOptionalEnumWithAbstractPayload() throws {
+        let input = """
+        struct Renderer<Value> {
+            static func render(_ event: Event<Value>?) {
+                switch event {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        struct Renderer<Value> {
+            static func render(_ event: Event<Value>?) {
+                switch event {
+                case .loaded: showContent()
+                case .some(.idle), .some(.failed), nil: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum Event<Value> { case idle, loaded(Value), failed }
+        """)
+    }
+
+    func testAbstractPayloadDoesNotUseNamesakeEnumForExhaustiveness() throws {
+        try check("""
+        func render<State>(_ box: Box<State>) {
+            switch box.value {
+            case _ where shouldShowContent(): showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Box<Value> { let value: Value }
+        """)
+    }
+
+    func testAbstractGenericParentRetainsNestedEnumTupleDomain() throws {
+        let input = """
+        func compare<Value>(_ lhs: Task<Value>.State, _ rhs: Task<Value>.State) -> Bool {
+            switch (lhs, rhs) {
+            case (.pending, .pending), (.loaded, .loaded): true
+            default: false
+            }
+        }
+        """
+        let output = """
+        func compare<Value>(_ lhs: Task<Value>.State, _ rhs: Task<Value>.State) -> Bool {
+            switch (lhs, rhs) {
+            case (.pending, .pending), (.loaded, .loaded): true
+            case (.pending, .loaded), (.loaded, .pending): false
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        struct Task<Value> { enum State { case pending, loaded(Value) } }
+        """)
+    }
+
+    func testAbstractMetatypeArgumentExpandsKnownEnumDefault() throws {
+        let input = """
+        func render<Value>(_ event: Event<Value.Type>) {
+            switch event {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render<Value>(_ event: Event<Value.Type>) {
+            switch event {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum Event<Value> { case idle, loaded(Value), failed }
+        """)
+    }
+
+    func testLexicalGenericReceiverExpandsPropertyDefault() throws {
+        let input = """
+        struct Renderer<Value>: Model {
+            let event: Event<Value>
+            func render() {
+                switch self.event {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        struct Renderer<Value>: Model {
+            let event: Event<Value>
+            func render() {
+                switch self.event {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        protocol Model {}
+        enum Event<Value> { case idle, loaded(Value), failed }
+        """)
+    }
+
+    func testIndexedStaticPropertyInitializerExpandsDeclaredEnum() throws {
+        let input = """
+        func render(_ model: Model) {
+            switch model.state {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            switch model.state {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Factory { case unrelated; static var initial: State { .idle } }
+        struct Model { var state = Factory.initial }
+        """)
+    }
+
+    func testIndexedStaticInitializerPreservesPrivateDeclarationContext() throws {
+        let input = """
+        import Models
+        enum Other { case unrelated }
+        extension Factory { static var initial: Other { .unrelated } }
+        func render(_ model: Model) {
+            switch model.state {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        import Models
+        enum Other { case unrelated }
+        extension Factory { static var initial: Other { .unrelated } }
+        func render(_ model: Model) {
+            switch model.state {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, modules: ["Models": """
+        public enum State { case idle, loaded, failed }
+        public struct Factory {
+            private static var initial: State { .idle }
+            public static var proxy = Factory.initial
+        }
+        public struct Model { public var state = Factory.proxy }
+        """])
+    }
+
+    func testShadowedCoalescingBindingExpandsOptionalParameterDomain() throws {
+        let input = """
+        func render(_ state: State?, _ fallback: State) {
+            let state = state ?? fallback
+            switch state {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State?, _ fallback: State) {
+            let state = state ?? fallback
+            switch state {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

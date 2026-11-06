@@ -462,7 +462,7 @@ final class ProjectSymbolLookup {
     }
 
     /// Resolve a bare enum case in its declaration's scope without mistaking a local value for it.
-    func unqualifiedEnumCase(named name: String, at index: Int) -> (name: String, type: ResolvedType)? {
+    func unqualifiedEnumCase(named name: String, at index: Int) -> (name: String, type: ResolvedType, payloadTypes: [String])? {
         let name = name.replacingOccurrences(of: "`", with: "")
         let spellings = [name, "`\(name)`"]
         guard spellings.allSatisfy({ spelling in
@@ -476,9 +476,9 @@ final class ProjectSymbolLookup {
               let caseName = project.enumCases(named: owner, visibleFrom: fileURL)?.first(where: {
                   $0.replacingOccurrences(of: "`", with: "") == name
               }),
-              project.typeDeclaration(named: owner, visibleFrom: fileURL)?.enumCasePayloads?[caseName]?.isEmpty == true,
+              let payloads = project.typeDeclaration(named: owner, visibleFrom: fileURL)?.enumCasePayloads?[caseName],
               let type = type(named: owner, namespace: nil, at: index) else { return nil }
-        return (caseName, type)
+        return (caseName, type, payloads)
     }
 
     func bindingType(named name: String, at index: Int, depth: Int) -> ResolvedType? {
@@ -841,9 +841,10 @@ final class ProjectSymbolLookup {
             } else {
                 current = namespace.map { ResolvedType(name: $0, namespace: nil, isMetatype: identifier == "Self" || isStatic) }
             }
+        } else if let enumCase = unqualifiedEnumCase(named: identifier, at: first) {
+            current = enumCase.payloadTypes.isEmpty ? enumCase.type : nil
         } else {
-            current = unqualifiedEnumCase(named: identifier, at: first)?.type ??
-                bindingType(named: identifier, at: first, depth: depth + 1)
+            current = bindingType(named: identifier, at: first, depth: depth + 1)
             if current == nil, bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
                let possibleType = type(named: identifier, namespace: namespace, at: first),
                let name = qualifiedName(for: possibleType), project.hasSymbolType(named: name, visibleFrom: fileURL)

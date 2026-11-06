@@ -1488,6 +1488,18 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: nil)
     }
 
+    func testAssociatedValueConstructorShadowsGlobalEnumValue() throws {
+        try check("""
+        let loaded: Other = .ready
+        extension State {
+            static func render() { observeValue(loaded) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded(Int) }
+        enum Other { case ready }
+        """, expected: nil)
+    }
+
     func testLocalBindingShadowsUnqualifiedEnumCase() throws {
         try check("""
         extension State {

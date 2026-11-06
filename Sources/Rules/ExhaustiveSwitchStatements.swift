@@ -103,6 +103,9 @@ extension Formatter {
               let cases = exhaustiveSwitchCases(for: type, resolver: resolver),
               let branches = switchStatementBranches(at: switchIndex)
         else { return }
+        // Earlier patterns consume the compiler's exhaustiveness budget too. A 9-by-9
+        // equality switch can exceed it even though the same default-only product compiles.
+        guard type.tupleElements == nil || branches.count == 1 || cases.count <= 64 else { return }
         var defaultIndex: Int?
         var covered = Set<String>()
         for branch in branches {

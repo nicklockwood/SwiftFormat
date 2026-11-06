@@ -1618,6 +1618,32 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """, declarations: "enum State { case idle, loaded }")
     }
 
+    func testBareAssociatedValueCaseCoversItsWholePayload() throws {
+        let input = """
+        extension State {
+            static func same(_ lhs: State, _ rhs: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.error, error): true
+                case (loaded(let left), loaded(let right)): left == right
+                default: false
+                }
+            }
+        }
+        """
+        let output = """
+        extension State {
+            static func same(_ lhs: State, _ rhs: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.error, error): true
+                case (loaded(let left), loaded(let right)): left == right
+                case (.error, .loaded), (.loaded, .error): false
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State: Equatable { case error(Int), loaded(Int) }")
+    }
+
     func testTuplePayloadPatternsKeepPartiallyMatchedCases() throws {
         let input = """
         func render(_ lhs: State, _ rhs: State) {
@@ -1793,6 +1819,55 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         }
         """
         try check(input, output, declarations: declarations)
+    }
+
+    func testTupleWithEarlierPatternsPreservesCompilerRequiredDefault() throws {
+        try check("""
+        func compare(_ lhs: State, _ rhs: State) -> Bool {
+            switch (lhs, rhs) {
+            case (.a, .a), (.b, .b), (.c, .c), (.d, .d), (.e, .e), (.f, .f), (.g, .g), (.h, .h), (.i, .i): true
+            default: false
+            }
+        }
+        """, declarations: "enum State { case a, b, c, d, e, f, g, h, i }")
+    }
+
+    func testSixtyFourCellTupleWithEarlierPatternCanExpand() throws {
+        let input = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            case (.a, _): first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            case (.a, _): first()
+            case (.b, .a), (.b, .b), (.b, .c), (.b, .d), (.b, .e), (.b, .f), (.b, .g), (.b, .h), (.c, .a), (.c, .b), (.c, .c), (.c, .d), (.c, .e), (.c, .f), (.c, .g), (.c, .h), (.d, .a), (.d, .b), (.d, .c), (.d, .d), (.d, .e), (.d, .f), (.d, .g), (.d, .h), (.e, .a), (.e, .b), (.e, .c), (.e, .d), (.e, .e), (.e, .f), (.e, .g), (.e, .h), (.f, .a), (.f, .b), (.f, .c), (.f, .d), (.f, .e), (.f, .f), (.f, .g), (.f, .h), (.g, .a), (.g, .b), (.g, .c), (.g, .d), (.g, .e), (.g, .f), (.g, .g), (.g, .h), (.h, .a), (.h, .b), (.h, .c), (.h, .d), (.h, .e), (.h, .f), (.h, .g), (.h, .h): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case a, b, c, d, e, f, g, h }")
+    }
+
+    func testLargerDefaultOnlyTupleCanStillExpand() throws {
+        let input = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            case (.a, .a), (.a, .b), (.a, .c), (.a, .d), (.a, .e), (.a, .f), (.a, .g), (.a, .h), (.a, .i), (.b, .a), (.b, .b), (.b, .c), (.b, .d), (.b, .e), (.b, .f), (.b, .g), (.b, .h), (.b, .i), (.c, .a), (.c, .b), (.c, .c), (.c, .d), (.c, .e), (.c, .f), (.c, .g), (.c, .h), (.c, .i), (.d, .a), (.d, .b), (.d, .c), (.d, .d), (.d, .e), (.d, .f), (.d, .g), (.d, .h), (.d, .i), (.e, .a), (.e, .b), (.e, .c), (.e, .d), (.e, .e), (.e, .f), (.e, .g), (.e, .h), (.e, .i), (.f, .a), (.f, .b), (.f, .c), (.f, .d), (.f, .e), (.f, .f), (.f, .g), (.f, .h), (.f, .i), (.g, .a), (.g, .b), (.g, .c), (.g, .d), (.g, .e), (.g, .f), (.g, .g), (.g, .h), (.g, .i), (.h, .a), (.h, .b), (.h, .c), (.h, .d), (.h, .e), (.h, .f), (.h, .g), (.h, .h), (.h, .i), (.i, .a), (.i, .b), (.i, .c), (.i, .d), (.i, .e), (.i, .f), (.i, .g), (.i, .h), (.i, .i): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case a, b, c, d, e, f, g, h, i }")
     }
 
     func testLargeTupleProductPreservesCompilerRequiredDefault() throws {

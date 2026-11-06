@@ -23,11 +23,24 @@ final class ProjectSymbolLookup {
         case contiguousArray = "ContiguousArray"
         case dictionaryKeys = "Dictionary.Keys"
         case dictionaryValues = "Dictionary.Values"
+        case enumeratedSequence = "EnumeratedSequence"
+        case reversedCollection = "ReversedCollection"
+        case slice = "Slice"
     }
 
     struct ElementBinding {
         var source: AutoUpdatingRange
         var tuplePath: [Int]
+    }
+
+    final class FunctionType {
+        let parameters: [ResolvedType]
+        let result: ResolvedType
+
+        init(parameters: [ResolvedType], result: ResolvedType) {
+            self.parameters = parameters
+            self.result = result
+        }
     }
 
     struct ResolvedType {
@@ -36,7 +49,7 @@ final class ProjectSymbolLookup {
         var sourceFileURL: URL?
         var genericArguments: [ResolvedType]?
         var isMetatype = false
-        var functionParameters: [ResolvedType]?
+        var functionType: FunctionType?
         var tupleElements: [TupleElement]?
         var collectionKind: CollectionKind?
     }
@@ -419,12 +432,12 @@ final class ProjectSymbolLookup {
                 guard elements.count == parameters.count else { return nil }
                 return ResolvedType(name: name, namespace: namespace, sourceFileURL: sourceFileURL, tupleElements: elements)
             }
-            var functionParameters: [ResolvedType]?
+            var functionType: FunctionType?
             var foundFunctionSignature = false
             signature.forEach(.startOfScope("(")) { open, _ in
                 guard !foundFunctionSignature, signature.isStartOfClosureType(at: open),
                       let close = signature.endOfScope(at: open),
-                      signature.index(of: .operator("->", .infix), after: close) != nil else { return }
+                      let arrow = signature.index(of: .operator("->", .infix), after: close) else { return }
                 foundFunctionSignature = true
                 let parameters = signature.parseTupleArguments(startOfScope: open)
                 let resolved = parameters.compactMap {
@@ -432,13 +445,19 @@ final class ProjectSymbolLookup {
                          sourceFileURL: sourceFileURL, substitutions: substitutions,
                          requiresGenericArguments: true, depth: depth + 1)
                 }
-                if resolved.count == parameters.count {
-                    functionParameters = resolved
+                if resolved.count == parameters.count,
+                   let result = type(named: signature.tokens[arrow + 1 ..< signature.tokens.count].string,
+                                     namespace: namespace, at: index, sourceFileURL: sourceFileURL,
+                                     substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
+                {
+                    functionType = FunctionType(parameters: resolved, result: result)
                 }
             }
-            return ResolvedType(name: name, namespace: namespace, sourceFileURL: sourceFileURL,
-                                functionParameters: functionParameters)
+            // A result's optional suffix belongs to the result, not to the function value.
+            return ResolvedType(name: functionType == nil ? name : "(" + name + ")", namespace: namespace,
+                                sourceFileURL: sourceFileURL, functionType: functionType)
         }
+
         let arguments = nominal.arguments.compactMap {
             type(named: $0, namespace: namespace, at: index, sourceFileURL: sourceFileURL, substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
         }
@@ -525,6 +544,10 @@ final class ProjectSymbolLookup {
         if let left = lhs.tupleElements, let right = rhs.tupleElements {
             return left.count == right.count && zip(left, right).allSatisfy { $0.label == $1.label && sameType($0.type, as: $1.type) }
         }
+        if let left = lhs.functionType, let right = rhs.functionType {
+            return left.parameters.count == right.parameters.count &&
+                zip(left.parameters, right.parameters).allSatisfy { sameType($0, as: $1) } && sameType(left.result, as: right.result)
+        }
         if let left = standardScalarName(lhs), let right = standardScalarName(rhs) {
             return left == right
         }
@@ -557,6 +580,8 @@ final class ProjectSymbolLookup {
     }
 
     func bindingType(named name: String, at index: Int, depth: Int) -> ResolvedType? {
+        guard depth < 32, !unindexedFunctions.contains(name),
+              unavailableTypes[name]?.contains(where: { $0.range.contains(index) }) != true else { return nil }
         if name.hasPrefix("$"), let position = Int(name.dropFirst()) {
             var scope = formatter.startOfScope(at: index)
             while let open = scope {
@@ -674,6 +699,14 @@ final class ProjectSymbolLookup {
     func collectionElement(of owner: ResolvedType) -> ResolvedType? {
         guard !owner.isMetatype, unwrapped(owner) == nil, let kind = owner.collectionKind,
               let arguments = owner.genericArguments else { return nil }
+        if [.reversedCollection, .slice].contains(kind), arguments.count == 1 {
+            return collectionElement(of: arguments[0])
+        }
+        if kind == .enumeratedSequence, arguments.count == 1, let element = collectionElement(of: arguments[0]) {
+            return ResolvedType(name: "(offset: Swift.Int, element: \(element.name))",
+                                tupleElements: [TupleElement(label: "offset", type: ResolvedType(name: "Swift.Int")),
+                                                TupleElement(label: "element", type: element)])
+        }
         if arguments.count == 2 {
             if kind == .dictionaryKeys {
                 return arguments[0]
@@ -707,7 +740,7 @@ final class ProjectSymbolLookup {
     func collectionMember(owner: ResolvedType, name: String) -> ResolvedType? {
         guard let kind = owner.collectionKind, let element = collectionElement(of: owner),
               !project.hasCollectionMember(named: name, kind: kind.rawValue, visibleFrom: fileURL) else { return nil }
-        if name == "first" || name == "last" && [.array, .arraySlice, .contiguousArray].contains(kind) {
+        if name == "first" || name == "last" && [.array, .arraySlice, .contiguousArray, .reversedCollection, .slice].contains(kind) {
             return optionalType(element)
         }
         if ["startIndex", "endIndex"].contains(name), [.array, .arraySlice, .contiguousArray].contains(kind) {
@@ -764,10 +797,105 @@ final class ProjectSymbolLookup {
         return elements[binding.parameterIndex].type
     }
 
-    func collectionCall(owner: ResolvedType, name: String, arguments: [Formatter.FunctionCallArgument]) -> ResolvedType? {
+    /// Resolves a key path against an independently known root, retaining each member's
+    /// declaring module. This is shared by standard collection transforms and other consumers.
+    func keyPathValueType(in range: ClosedRange<Int>, root: ResolvedType) -> ResolvedType? {
+        guard let slash = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
+              formatter.tokens[slash] == .operator("\\", .prefix),
+              let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: slash), first <= range.upperBound else { return nil }
+        var dot = first
+        if !formatter.tokens[first].isOperator(".") {
+            var cursor = first
+            var rootEnd: Int?
+            while let candidate = formatter.index(after: cursor, where: { $0.isOperator(".") }), candidate <= range.upperBound {
+                let namespace = formatter.parseEnclosingType(containing: slash, declarations: declarations)?.fullyQualifiedName
+                if let explicit = type(named: formatter.tokens[first ..< candidate].string, namespace: namespace, at: first, requiresGenericArguments: true),
+                   sameType(explicit, as: root)
+                {
+                    rootEnd = candidate
+                    break
+                }
+                cursor = candidate
+            }
+            guard let rootEnd else { return nil }
+            dot = rootEnd
+        }
+        var value = root
+        var optionalChain = false
+        while dot <= range.upperBound {
+            guard formatter.tokens[dot].isOperator("."),
+                  let member = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dot), member <= range.upperBound else { return nil }
+            let name = formatter.tokens[member].string
+            if name != "self" {
+                let namespace = formatter.parseEnclosingType(containing: slash, declarations: declarations)?.fullyQualifiedName
+                guard let result = memberType(owner: value, name: name, accessingType: namespace) else { return nil }
+                value = result
+            }
+            guard let next = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: member), next <= range.upperBound else {
+                return optionalChain && unwrapped(value) == nil ? optionalType(value) : value
+            }
+            if formatter.tokens[next].isUnwrapOperator {
+                guard let wrapped = unwrapped(value),
+                      let nextDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: next), nextDot <= range.upperBound else { return nil }
+                optionalChain = optionalChain || formatter.tokens[next].isOperator("?")
+                value = wrapped
+                dot = nextDot
+            } else {
+                dot = next
+            }
+        }
+        return nil
+    }
+
+    /// The result of a transform closure is resolved only from an explicit annotation or one
+    /// expression. Multiple return paths require control-flow and common-supertype inference.
+    func closureResultType(in range: ClosedRange<Int>, depth: Int) -> ResolvedType? {
+        guard depth < 16, formatter.tokens[range.lowerBound] == .startOfScope("{"),
+              formatter.endOfScope(at: range.lowerBound) == range.upperBound else { return nil }
+        let arguments = formatter.parseClosureArguments(at: range.lowerBound)
+        let signatureEnd = arguments?.inKeywordIndex ?? range.lowerBound
+        if let arguments,
+           let arrow = formatter.index(of: .operator("->", .infix), in: range.lowerBound + 1 ..< arguments.inKeywordIndex),
+           let start = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: arrow),
+           let annotation = formatter.parseType(at: start), annotation.range.upperBound < arguments.inKeywordIndex
+        {
+            let namespace = formatter.parseEnclosingType(containing: range.lowerBound, declarations: declarations)?.fullyQualifiedName
+            return type(named: annotation.string, namespace: namespace, at: start, requiresGenericArguments: true)
+        }
+        guard var start = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: signatureEnd), start < range.upperBound else { return nil }
+        if formatter.tokens[start] == .keyword("return") {
+            guard let expression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: start) else { return nil }
+            start = expression
+        }
+        guard let expression = formatter.parseExpressionRange(startingAt: start),
+              formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expression.upperBound) == range.upperBound else { return nil }
+        return expressionType(in: expression, depth: depth + 1)
+    }
+
+    /// EnumeratedSequence's conditional bidirectional conformance depends on deployment
+    /// availability as well as the compiler. The index does not establish that availability.
+    func collectionIsBidirectional(_ value: ResolvedType) -> Bool? {
+        guard let kind = value.collectionKind else { return nil }
+        switch kind {
+        case .array, .arraySlice, .contiguousArray, .reversedCollection:
+            return true
+        case .slice:
+            return value.genericArguments?.first.flatMap(collectionIsBidirectional)
+        case .enumeratedSequence:
+            guard let base = value.genericArguments?.first, let bidirectional = collectionIsBidirectional(base) else { return nil }
+            if !bidirectional {
+                return false
+            }
+            return nil
+        case .dictionary, .dictionaryKeys, .dictionaryValues, .set:
+            return false
+        }
+    }
+
+    func collectionCall(owner: ResolvedType, name: String, arguments: [Formatter.FunctionCallArgument], depth: Int) -> ResolvedType? {
         guard let kind = owner.collectionKind, let element = collectionElement(of: owner),
               !project.hasCollectionMember(named: name, kind: kind.rawValue, visibleFrom: fileURL) else { return nil }
-        if name == "filter", arguments.count == 1 {
+        if name == "filter", arguments.count == 1, arguments[0].label == nil {
             return kind == .dictionary || kind == .set ? owner : collectionType(.array, arguments: [element])
         }
         if ["first", "last"].contains(name), arguments.count == 1, arguments[0].label == "where" {
@@ -775,6 +903,36 @@ final class ProjectSymbolLookup {
         }
         if name == "randomElement", arguments.isEmpty {
             return optionalType(element)
+        }
+        if name == "enumerated", arguments.isEmpty {
+            return collectionType(.enumeratedSequence, arguments: [owner])
+        }
+        if name == "reversed", arguments.isEmpty {
+            if kind == .reversedCollection {
+                return owner.genericArguments?.first
+            }
+            guard let bidirectional = collectionIsBidirectional(owner) else { return nil }
+            return bidirectional ? collectionType(.reversedCollection, arguments: [owner]) : collectionType(.array, arguments: [element])
+        }
+        if name == "sorted", arguments.isEmpty || arguments.count == 1 && arguments[0].label == "by" {
+            return collectionType(.array, arguments: [element])
+        }
+        if ["prefix", "suffix", "dropFirst", "dropLast"].contains(name),
+           [.array, .arraySlice, .contiguousArray].contains(kind),
+           arguments.isEmpty && ["dropFirst", "dropLast"].contains(name) || arguments.count == 1 && arguments[0].label == nil
+        {
+            return collectionType(.arraySlice, arguments: [element])
+        }
+        if ["map", "compactMap", "flatMap"].contains(name), arguments.count == 1, arguments[0].label == nil,
+           let result = closureResultType(in: arguments[0].valueRange, depth: depth + 1) ?? keyPathValueType(in: arguments[0].valueRange, root: element)
+        {
+            if name == "compactMap" {
+                return collectionType(.array, arguments: [unwrapped(result) ?? result])
+            }
+            if name == "flatMap" {
+                return collectionElement(of: result).map { collectionType(.array, arguments: [$0]) }
+            }
+            return collectionType(.array, arguments: [result])
         }
         return nil
     }
@@ -813,36 +971,57 @@ final class ProjectSymbolLookup {
         let genericNames = Set(symbol.declaration.genericParameters)
         var fixedGenericNames = Set<String>()
         var contextualGenericNames = Set<String>()
-        func infer(_ pattern: String, from value: ResolvedType, nesting: Int = 0, invariant: Bool = false) -> Bool {
-            guard nesting < 8 else { return false }
-            let pattern = tokenize(pattern).filter { !$0.isSpaceOrCommentOrLinebreak }.string
-            if genericNames.contains(pattern) {
-                if let previous = substitutions[pattern], !sameType(previous, as: value) {
+        // Resolve the pattern with opaque placeholders so aliases, tuple labels and collection
+        // sugar use the same parser and declaration provenance as all other type lookup.
+        let placeholders = Dictionary(uniqueKeysWithValues: genericNames.map { ($0, ResolvedType(name: "$generic:" + $0)) })
+        func match(_ pattern: ResolvedType, to value: ResolvedType, nesting: Int = 0, invariant: Bool = false) -> Bool {
+            guard nesting < 16 else { return false }
+            if pattern.name.hasPrefix("$generic:"), genericNames.contains(String(pattern.name.dropFirst("$generic:".count))) {
+                let name = String(pattern.name.dropFirst("$generic:".count))
+                if let previous = substitutions[name], !sameType(previous, as: value) {
                     return false
                 }
-                substitutions[pattern] = value
+                substitutions[name] = value
                 if invariant {
-                    fixedGenericNames.insert(pattern)
+                    fixedGenericNames.insert(name)
                 }
                 return true
             }
-            if pattern.hasSuffix("?") || pattern.hasSuffix("!") {
-                guard let wrapped = unwrapped(value) else { return false }
-                return infer(String(pattern.dropLast()), from: wrapped, nesting: nesting + 1, invariant: invariant)
+            if let wrapped = unwrapped(pattern) {
+                guard let actual = unwrapped(value) else { return false }
+                return match(wrapped, to: actual, nesting: nesting + 1, invariant: invariant)
             }
-            guard let reference = ProjectTypeReference(pattern), !reference.hasGenericParent,
-                  let actual = ProjectTypeReference(value.name), !actual.hasGenericParent,
-                  let formal = type(named: reference.name, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL),
-                  let formalName = qualifiedName(for: formal), let actualName = qualifiedName(for: value),
-                  let identity = project.typeIdentity(named: formalName, visibleFrom: formal.sourceFileURL ?? symbol.fileURL),
-                  identity == project.typeIdentity(named: actualName, visibleFrom: value.sourceFileURL ?? fileURL) else { return false }
-            let arguments = value.genericArguments ?? actual.arguments.compactMap {
-                type(named: $0, namespace: value.namespace, sourceFileURL: value.sourceFileURL)
+            guard unwrapped(value) == nil else { return false }
+            if let elements = pattern.tupleElements {
+                guard let actual = value.tupleElements, elements.count == actual.count else { return false }
+                return zip(elements, actual).allSatisfy {
+                    $0.label == $1.label && match($0.type, to: $1.type, nesting: nesting + 1, invariant: invariant)
+                }
             }
-            guard arguments.count == reference.arguments.count else { return false }
-            let declarationSource = project.typeSourceFile(named: formalName, visibleFrom: formal.sourceFileURL ?? symbol.fileURL)
-            let fixed = invariant || declarationSource?.pathExtension == "swift"
-            return zip(reference.arguments, arguments).allSatisfy { infer($0.0, from: $0.1, nesting: nesting + 1, invariant: fixed) }
+            if let kind = pattern.collectionKind {
+                guard kind == value.collectionKind, let formal = pattern.genericArguments, let actual = value.genericArguments,
+                      formal.count == actual.count else { return false }
+                // Standard collections can widen class/existential element types. Only an
+                // enclosing invariant project wrapper makes these arguments fixed.
+                return zip(formal, actual).allSatisfy { match($0, to: $1, nesting: nesting + 1, invariant: invariant) }
+            }
+            guard let formalName = qualifiedName(for: pattern), let actualName = qualifiedName(for: value),
+                  let identity = project.typeIdentity(named: formalName, visibleFrom: pattern.sourceFileURL ?? symbol.fileURL),
+                  identity == project.typeIdentity(named: actualName, visibleFrom: value.sourceFileURL ?? fileURL)
+            else {
+                return sameType(pattern, as: value)
+            }
+            let formal = pattern.genericArguments ?? []
+            let actual = value.genericArguments ?? []
+            guard formal.count == actual.count else { return false }
+            let source = project.typeSourceFile(named: formalName, visibleFrom: pattern.sourceFileURL ?? symbol.fileURL)
+            let fixed = invariant || source?.pathExtension == "swift"
+            return zip(formal, actual).allSatisfy { match($0, to: $1, nesting: nesting + 1, invariant: fixed) }
+        }
+        func infer(_ pattern: String, from value: ResolvedType) -> Bool {
+            guard let formal = type(named: pattern, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL,
+                                    substitutions: placeholders, requiresGenericArguments: true) else { return false }
+            return match(formal, to: value)
         }
         if let parameters = symbol.declaration.symbolArgumentTypes,
            let indices = symbol.declaration.parameterIndices(matching: arguments.map(\.label), ignoringLabelAt: ignoredLabel)
@@ -877,44 +1056,197 @@ final class ProjectSymbolLookup {
         return type(named: raw, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL, substitutions: substitutions, requiresGenericArguments: true)
     }
 
+    struct ResolvedCall {
+        var symbol: ProjectIndex.FunctionSymbol
+        var owner: ResolvedType?
+        var arguments: [Formatter.FunctionCallArgument]
+        var trailingArgument: Int?
+    }
+
+    /// Resolves callable declarations once for both callback parameters and argument context.
+    func resolvedCall(identifier: Int, scope: Int, depth: Int) -> ResolvedCall? {
+        guard depth < 32 else { return nil }
+        let name = formatter.tokens[identifier].string
+        let arguments = formatter.parseFunctionCallArguments(startOfScope: scope)
+        let scopeEnd = formatter.endOfScope(at: scope) ?? scope
+        let trailing = arguments.firstIndex { formatter.tokens[scope] == .startOfScope("{") || $0.valueRange.lowerBound > scopeEnd }
+        let namespace = formatter.parseEnclosingType(containing: identifier, declarations: declarations)?.fullyQualifiedName
+        let dot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifier)
+            .flatMap { formatter.tokens[$0].isOperator(".") ? $0 : nil }
+        let receiverStart = dot.flatMap { dot in
+            formatter.startOfMemberCallReceiver(endingAt: dot).flatMap { $0 < dot ? $0 : nil }
+        }
+        let start = receiverStart ?? identifier
+        // A local callable value or factory can shadow an otherwise visible constructor/function.
+        if dot == nil || receiverStart != nil {
+            let root = formatter.tokens[start].string
+            guard !unindexedFunctions.contains(root),
+                  bindings[root]?.contains(where: { $0.isVisible(at: identifier) }) != true || dot != nil else { return nil }
+        }
+        var owner: ResolvedType?
+        var receiver: ProjectIndex.FunctionCallReceiver?
+        if name == "init", let dot {
+            if let receiverStart {
+                let root = formatter.tokens[receiverStart].string
+                if !["self", "Self"].contains(root), bindings[root]?.contains(where: { $0.isVisible(at: identifier) }) != true,
+                   let namespace,
+                   !project.isTypeWithoutInheritance(named: namespace, visibleFrom: fileURL) ||
+                   project.isDynamicMemberLookupType(named: namespace, visibleFrom: fileURL) ||
+                   project.hasProperty(owner: namespace, member: root, visibleFrom: fileURL)
+                {
+                    return nil
+                }
+                if let annotation = formatter.parseType(at: receiverStart), annotation.range.upperBound < dot,
+                   bindings[formatter.tokens[receiverStart].string]?.contains(where: { $0.isVisible(at: identifier) }) != true,
+                   namespace.map({ project.isTypeWithoutInheritance(named: $0, visibleFrom: fileURL) &&
+                           !project.isDynamicMemberLookupType(named: $0, visibleFrom: fileURL) &&
+                           !project.hasProperty(owner: $0, member: formatter.tokens[receiverStart].string, visibleFrom: fileURL) }) ?? true
+                {
+                    owner = type(named: annotation.string, namespace: namespace, at: identifier, requiresGenericArguments: true)
+                }
+                if owner == nil, let value = expressionType(in: receiverStart ... dot - 1, depth: depth + 1), value.isMetatype {
+                    owner = value
+                }
+            } else {
+                owner = contextualType(at: dot, depth: depth + 1).flatMap { unwrapped($0) ?? $0 }
+            }
+        } else if let annotation = formatter.parseType(at: start),
+                  let end = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: scope), annotation.range.upperBound == end,
+                  bindings[formatter.tokens[start].string]?.contains(where: { $0.isVisible(at: identifier) }) != true,
+                  let reference = ProjectTypeReference(annotation.string),
+                  project.declarationCountsAreUnambiguous(for: String(reference.name.split(separator: ".").last ?? ""), includingAliases: true)
+        {
+            owner = type(named: annotation.string, namespace: namespace, at: identifier, requiresGenericArguments: true)
+            if owner != nil, let namespace,
+               !project.isTypeWithoutInheritance(named: namespace, visibleFrom: fileURL) ||
+               project.isDynamicMemberLookupType(named: namespace, visibleFrom: fileURL) ||
+               project.hasProperty(owner: namespace, member: formatter.tokens[start].string, visibleFrom: fileURL)
+            {
+                return nil
+            }
+        }
+        if let owner, let nominal = qualifiedName(for: owner),
+           let symbol = project.functionSymbol(named: "init", receiver: .type(nominal), arguments: arguments.map(\.label),
+                                               visibleFrom: owner.sourceFileURL ?? fileURL, ignoringLabelAt: trailing,
+                                               accessedFrom: fileURL, accessedFromType: namespace, kind: .initializer)
+        {
+            return ResolvedCall(symbol: symbol, owner: owner, arguments: arguments, trailingArgument: trailing)
+        }
+        guard name != "init" else { return nil }
+        owner = nil
+        if let dot, let receiverStart, receiverStart < dot {
+            owner = expressionType(in: receiverStart ... dot - 1, depth: depth + 1)
+            receiver = owner.flatMap { value in qualifiedName(for: value).map { value.isMetatype ? .type($0) : .instance(type: $0) } }
+        } else {
+            receiver = project.functionCallReceiver(at: identifier, in: formatter, visibleFrom: fileURL, declarations: declarations)
+        }
+        if case let .unqualified(owner, _) = receiver,
+           let possibleType = type(named: name, namespace: owner, at: identifier),
+           let nominal = qualifiedName(for: possibleType),
+           project.hasSymbolType(named: nominal, visibleFrom: possibleType.sourceFileURL ?? fileURL)
+        {
+            return nil
+        }
+        guard let receiver,
+              let symbol = project.functionSymbol(named: name, receiver: receiver, arguments: arguments.map(\.label),
+                                                  visibleFrom: owner?.sourceFileURL ?? fileURL, ignoringLabelAt: trailing,
+                                                  accessedFrom: fileURL, accessedFromType: namespace) else { return nil }
+        if case let .unqualified(owner?, _) = receiver, symbol.declaration.declaringType == nil {
+            guard project.isTypeWithoutInheritance(named: owner, visibleFrom: fileURL),
+                  !project.isDynamicMemberLookupType(named: owner, visibleFrom: fileURL),
+                  !project.hasProperty(owner: owner, member: name, visibleFrom: fileURL) else { return nil }
+        }
+        return ResolvedCall(symbol: symbol, owner: owner, arguments: arguments, trailingArgument: trailing)
+    }
+
+    func parameterType(of call: ResolvedCall, argument: Int, depth: Int) -> ResolvedType? {
+        guard call.arguments.indices.contains(argument),
+              let indices = call.symbol.declaration.parameterIndices(matching: call.arguments.map(\.label), ignoringLabelAt: call.trailingArgument),
+              let parameterTypes = call.symbol.declaration.symbolArgumentTypes ?? call.symbol.declaration.argumentTypes,
+              parameterTypes.indices.contains(indices[argument]),
+              let substitutions = substitutions(for: call.symbol, owner: call.owner, arguments: call.arguments, depth: depth + 1,
+                                                ignoringLabelAt: call.trailingArgument, contextualClosureArgumentAt: argument) else { return nil }
+        return signatureType(parameterTypes[indices[argument]], symbol: call.symbol, substitutions: substitutions)
+    }
+
+    /// Expected types retain the declaration context and generic substitutions of the enclosing call.
+    func contextualType(at expression: Int, depth: Int) -> ResolvedType? {
+        guard depth < 32, let previous = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: expression) else { return nil }
+        let namespace = formatter.parseEnclosingType(containing: expression, declarations: declarations)?.fullyQualifiedName
+        switch formatter.tokens[previous] {
+        case .keyword("return"), .startOfScope("{"):
+            let implicit = formatter.tokens[previous] == .startOfScope("{")
+            return formatter.staticMemberReturnType(at: expression, implicit: implicit)
+                .flatMap { type(named: $0, namespace: namespace, at: expression, requiresGenericArguments: true) }
+        case .operator("=", .infix):
+            if let keyword = formatter.indexOfLastSignificantKeyword(at: previous),
+               ["let", "var"].contains(formatter.tokens[keyword].string),
+               let property = formatter.parsePropertyDeclaration(atIntroducerIndex: keyword),
+               property.value?.expressionRange.lowerBound == expression
+            {
+                guard !formatter.modifiersForDeclaration(at: keyword, contains: { _, modifier in modifier.hasPrefix("@") }) else { return nil }
+                return property.type.flatMap { type(named: $0.string, namespace: namespace, at: expression, requiresGenericArguments: true) }
+            }
+            guard let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: previous), formatter.tokens[last].isIdentifier else { return nil }
+            let dot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: last)
+            let start = dot.flatMap { formatter.tokens[$0].isOperator(".") ? formatter.startOfMemberCallReceiver(endingAt: $0) : nil } ?? last
+            return expressionType(in: start ... last, depth: depth + 1)
+        case .startOfScope("("), .delimiter(","), .delimiter(":"):
+            guard let scope = formatter.startOfScope(at: expression), formatter.tokens[scope] == .startOfScope("("),
+                  let identifier = formatter.parseFunctionIdentifier(beforeStartOfScope: scope),
+                  let call = resolvedCall(identifier: identifier, scope: scope, depth: depth + 1),
+                  let argument = call.arguments.firstIndex(where: { $0.valueRange.lowerBound == expression }) else { return nil }
+            if let indices = call.symbol.declaration.parameterIndices(matching: call.arguments.map(\.label), ignoringLabelAt: call.trailingArgument),
+               call.symbol.declaration.autoclosureArgumentIndices.contains(indices[argument]),
+               let raw = call.symbol.declaration.symbolArgumentTypes?[indices[argument]],
+               let substitutions = substitutions(for: call.symbol, owner: call.owner, arguments: call.arguments, depth: depth + 1,
+                                                 ignoringLabelAt: call.trailingArgument, contextualClosureArgumentAt: argument)
+            {
+                let signature = Formatter(tokenize(raw))
+                guard let arrow = signature.index(of: .operator("->", .infix), after: -1) else { return nil }
+                return signatureType(signature.tokens[arrow + 1 ..< signature.tokens.count].string, symbol: call.symbol, substitutions: substitutions)
+            }
+            return parameterType(of: call, argument: argument, depth: depth + 1)
+        default:
+            return nil
+        }
+    }
+
+    func closureInputType(_ parameters: [ResolvedType], binding: ClosureBinding) -> ResolvedType? {
+        let arity = formatter.parseClosureArguments(at: binding.location.range.lowerBound)?.argumentIndices.count ?? parameters.count
+        if arity == parameters.count {
+            return parameters.indices.contains(binding.parameterIndex) ? parameters[binding.parameterIndex] : nil
+        }
+        guard parameters.count == 1, let elements = parameters[0].tupleElements,
+              elements.count == arity, elements.indices.contains(binding.parameterIndex) else { return nil }
+        return elements[binding.parameterIndex].type
+    }
+
     func closureParameterType(_ binding: ClosureBinding, depth: Int) -> ResolvedType? {
         let location = binding.location.range.lowerBound
-        guard depth < 12, let call = formatter.callContainingClosure(at: location),
-              !unindexedFunctions.contains(formatter.tokens[call.identifier].string),
-              bindings[formatter.tokens[call.identifier].string]?.contains(where: { $0.isVisible(at: call.identifier) }) != true else { return nil }
+        guard depth < 32 else { return nil }
+        if let expected = contextualType(at: location, depth: depth + 1),
+           let parameters = expected.functionType?.parameters,
+           let parameter = closureInputType(parameters, binding: binding)
+        {
+            return parameter
+        }
+        guard let call = formatter.callContainingClosure(at: location) else { return nil }
         let arguments = formatter.parseFunctionCallArguments(startOfScope: call.scope)
         guard let argument = arguments.firstIndex(where: { $0.valueRange.lowerBound == location }) else { return nil }
         let scopeEnd = formatter.endOfScope(at: call.scope) ?? call.scope
         let trailing = arguments.firstIndex { formatter.tokens[call.scope] == .startOfScope("{") || $0.valueRange.lowerBound > scopeEnd }
-        var owner: ResolvedType?
-        let receiver: ProjectIndex.FunctionCallReceiver?
         if let dot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: call.identifier), formatter.tokens[dot].isOperator("."),
-           let start = formatter.startOfMemberCallReceiver(endingAt: dot), start < dot
+           let start = formatter.startOfMemberCallReceiver(endingAt: dot), start < dot,
+           let owner = expressionType(in: start ... dot - 1, depth: depth + 1), owner.collectionKind != nil
         {
-            owner = expressionType(in: start ... dot - 1, depth: depth + 1)
-            receiver = owner.flatMap { value in qualifiedName(for: value).map { value.isMetatype ? .type($0) : .instance(type: $0) } }
-        } else {
-            receiver = project.functionCallReceiver(at: call.identifier, in: formatter, visibleFrom: fileURL, declarations: declarations)
-        }
-        if let owner, owner.collectionKind != nil {
             return collectionClosureParameter(owner: owner, name: formatter.tokens[call.identifier].string,
                                               arguments: arguments, closureArgument: argument, binding: binding, trailing: trailing)
         }
-        guard let receiver,
-              let symbol = project.functionSymbol(named: formatter.tokens[call.identifier].string, receiver: receiver,
-                                                  arguments: arguments.map(\.label), visibleFrom: owner?.sourceFileURL ?? fileURL, ignoringLabelAt: trailing, accessedFrom: fileURL, accessedFromType: formatter.parseEnclosingType(containing: location, declarations: declarations)?.fullyQualifiedName),
-              let indices = symbol.declaration.parameterIndices(matching: arguments.map(\.label), ignoringLabelAt: trailing),
-              let parameterTypes = symbol.declaration.symbolArgumentTypes ?? symbol.declaration.argumentTypes,
-              parameterTypes.indices.contains(indices[argument]),
-              let substitutions = substitutions(for: symbol, owner: owner, arguments: arguments, depth: depth + 1, ignoringLabelAt: trailing, contextualClosureArgumentAt: argument) else { return nil }
-        if case let .unqualified(owner?, _) = receiver, symbol.declaration.declaringType == nil {
-            guard project.isTypeWithoutInheritance(named: owner, visibleFrom: fileURL),
-                  !project.isDynamicMemberLookupType(named: owner, visibleFrom: fileURL),
-                  !project.hasProperty(owner: owner, member: formatter.tokens[call.identifier].string, visibleFrom: fileURL) else { return nil }
-        }
-        guard let signature = signatureType(parameterTypes[indices[argument]], symbol: symbol, substitutions: substitutions),
-              let parameters = signature.functionParameters, parameters.indices.contains(binding.parameterIndex) else { return nil }
-        return parameters[binding.parameterIndex]
+        guard let resolved = resolvedCall(identifier: call.identifier, scope: call.scope, depth: depth + 1),
+              let signature = parameterType(of: resolved, argument: argument, depth: depth + 1),
+              let parameters = signature.functionType?.parameters else { return nil }
+        return closureInputType(parameters, binding: binding)
     }
 
     func callType(name: String, receiver: ProjectIndex.FunctionCallReceiver, arguments: [Formatter.FunctionCallArgument],
@@ -965,8 +1297,87 @@ final class ProjectSymbolLookup {
         return result
     }
 
+    func functionValueResult(_ value: ResolvedType, arguments: [Formatter.FunctionCallArgument]) -> ResolvedType? {
+        guard !value.isMetatype, unwrapped(value) == nil, let signature = value.functionType,
+              arguments.count == signature.parameters.count, arguments.allSatisfy({ $0.label == nil }) else { return nil }
+        return signature.result
+    }
+
+    /// A shorthand case can borrow context from a separately resolved operand, never from
+    /// its spelling alone. Payload constructors still require normal callable resolution.
+    func implicitEnumCaseType(in range: ClosedRange<Int>, expected: ResolvedType) -> ResolvedType? {
+        guard let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
+              formatter.tokens[first].isOperator("."),
+              let member = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: first),
+              let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1), member == last,
+              formatter.tokens[member].isIdentifier else { return nil }
+        let wrapped = unwrapped(expected) ?? expected
+        guard let name = qualifiedName(for: wrapped),
+              let cases = project.enumCases(named: name, visibleFrom: wrapped.sourceFileURL ?? fileURL),
+              cases.contains(formatter.tokens[member].string) else { return nil }
+        // Optional.none / Optional.some must not be mistaken for wrapped enum cases.
+        if unwrapped(expected) != nil, ["none", "some"].contains(formatter.tokens[member].string) {
+            return nil
+        }
+        return expected
+    }
+
+    func commonType(_ lhs: ResolvedType, _ rhs: ResolvedType) -> ResolvedType? {
+        if sameType(lhs, as: rhs) {
+            return lhs
+        }
+        if let wrapped = unwrapped(lhs), sameType(wrapped, as: rhs) {
+            return lhs
+        }
+        if let wrapped = unwrapped(rhs), sameType(lhs, as: wrapped) {
+            return rhs
+        }
+        return nil
+    }
+
+    func branchExpressionType(first: Int, last: Int, depth: Int) -> ResolvedType? {
+        if let question = formatter.index(of: .operator("?", .infix), in: first ..< last) {
+            var cursor = question
+            var nesting = 0
+            var colon: Int?
+            while let next = formatter.index(after: cursor, where: { $0 == .operator("?", .infix) || $0.isOperator(":") || $0 == .delimiter(":") }), next < last {
+                if formatter.tokens[next] == .operator("?", .infix) {
+                    nesting += 1
+                } else if nesting == 0 {
+                    colon = next
+                    break
+                } else {
+                    nesting -= 1
+                }
+                cursor = next
+            }
+            guard let colon, question + 1 < colon, colon + 1 <= last else { return nil }
+            let lhsRange = question + 1 ... colon - 1
+            let rhsRange = colon + 1 ... last
+            let lhs = expressionType(in: lhsRange, depth: depth + 1)
+            let rhs = expressionType(in: rhsRange, depth: depth + 1)
+            if let lhs, let rhs {
+                return commonType(lhs, rhs)
+            }
+            if let lhs {
+                return implicitEnumCaseType(in: rhsRange, expected: lhs)
+            }
+            if let rhs {
+                return implicitEnumCaseType(in: lhsRange, expected: rhs)
+            }
+            return nil
+        }
+        guard let coalescing = formatter.index(of: .operator("??", .infix), in: first ..< last), coalescing > first,
+              !project.hasOperatorFunction(named: "??", visibleFrom: fileURL),
+              let lhs = expressionType(in: first ... coalescing - 1, depth: depth + 1), let wrapped = unwrapped(lhs) else { return nil }
+        let rhsRange = coalescing + 1 ... last
+        let rhs = expressionType(in: rhsRange, depth: depth + 1) ?? implicitEnumCaseType(in: rhsRange, expected: wrapped)
+        guard let rhs else { return nil }
+        return commonType(wrapped, rhs)
+    }
+
     func expressionType(in range: ClosedRange<Int>, depth: Int = 0) -> ResolvedType? {
-        guard depth < 12,
+        guard depth < 32,
               let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
               let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1), first <= last else { return nil }
         let tokens = formatter.tokens
@@ -987,6 +1398,11 @@ final class ProjectSymbolLookup {
                 }
             }
             return result
+        }
+        if formatter.index(of: .operator("?", .infix), in: first ..< last) != nil ||
+            formatter.index(of: .operator("??", .infix), in: first ..< last) != nil
+        {
+            return branchExpressionType(first: first, last: last, depth: depth + 1)
         }
         if let cast = formatter.index(of: .keyword("as"), in: first ..< last),
            formatter.index(in: first ..< cast, where: { token in
@@ -1046,10 +1462,17 @@ final class ProjectSymbolLookup {
         } else if let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: first), open <= last,
                   tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last
         {
-            guard bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true else { return nil }
-            let receiver = project.functionCallReceiver(at: first, in: formatter, visibleFrom: fileURL, declarations: declarations)
-            current = receiver.flatMap { callType(name: identifier, receiver: $0, arguments: formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last }, accessingType: namespace, depth: depth + 1) }
-            cursor = close
+            guard !unindexedFunctions.contains(identifier),
+                  unavailableTypes[identifier]?.contains(where: { $0.range.contains(first) }) != true else { return nil }
+            let arguments = formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last }
+            if let value = bindingType(named: identifier, at: first, depth: depth + 1), value.functionType != nil {
+                current = functionValueResult(value, arguments: arguments)
+            } else {
+                guard bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true else { return nil }
+                let receiver = project.functionCallReceiver(at: first, in: formatter, visibleFrom: fileURL, declarations: declarations)
+                current = receiver.flatMap { callType(name: identifier, receiver: $0, arguments: arguments, accessingType: namespace, depth: depth + 1) }
+            }
+            cursor = arguments.last.map { max(close, $0.valueRange.upperBound) } ?? close
         } else if identifier == "self" || identifier == "Self" {
             let receiver = project.functionCallReceiver(at: first, in: formatter, visibleFrom: fileURL, declarations: declarations)
             let isStatic: Bool
@@ -1090,6 +1513,14 @@ final class ProjectSymbolLookup {
             } else if let value = current, value.name.hasSuffix("!") {
                 current = unwrapped(value)
             }
+            if [Token.startOfScope("("), .startOfScope("{")].contains(tokens[dot]),
+               let close = formatter.endOfScope(at: dot), close <= last, let callable = current, callable.functionType != nil
+            {
+                let arguments = formatter.parseFunctionCallArguments(startOfScope: dot).filter { $0.valueRange.upperBound <= last }
+                current = functionValueResult(callable, arguments: arguments)
+                cursor = arguments.last.map { max(close, $0.valueRange.upperBound) } ?? close
+                continue
+            }
             if tokens[dot] == .startOfScope("["), let close = formatter.endOfScope(at: dot), close <= last,
                let owner = current, owner.collectionKind != nil
             {
@@ -1113,7 +1544,10 @@ final class ProjectSymbolLookup {
             {
                 let arguments = formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last }
                 if owner.collectionKind != nil {
-                    current = collectionCall(owner: owner, name: memberName, arguments: arguments)
+                    current = collectionCall(owner: owner, name: memberName, arguments: arguments, depth: depth + 1)
+                } else if project.hasProperty(owner: ownerName, member: memberName, visibleFrom: owner.sourceFileURL ?? fileURL) {
+                    guard let value = memberType(owner: owner, name: memberName, accessingType: namespace) else { return nil }
+                    current = functionValueResult(value, arguments: arguments)
                 } else {
                     current = callType(name: memberName, receiver: owner.isMetatype ? .type(ownerName) : .instance(type: ownerName), arguments: arguments, sourceFileURL: owner.sourceFileURL, owner: owner, accessingType: namespace, depth: depth + 1)
                 }

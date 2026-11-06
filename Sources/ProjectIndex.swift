@@ -1846,8 +1846,8 @@ extension Formatter {
         {
             return (identifier, scope)
         }
-        if tokens[previous].isIdentifier {
-            return (previous, closure)
+        if let identifier = parseCallableIdentifier(before: closure) {
+            return (identifier, closure)
         }
         if let scope = startOfScope(at: closure), tokens[scope] == .startOfScope("("),
            let identifier = parseFunctionIdentifier(beforeStartOfScope: scope)
@@ -3108,6 +3108,24 @@ extension ProjectIndex {
         guard let first = candidates.first, first.declaration.symbolHasUnresolvedConstraints != true,
               candidates.allSatisfy({ $0 == first }) else { return nil }
         return first
+    }
+
+    /// Operator syntax alone cannot establish that the standard-library overload is selected.
+    func hasOperatorFunction(named name: String, visibleFrom fileURL: URL) -> Bool {
+        guard let file = files[fileURL.standardizedFileURL.path] else { return true }
+        let modules = Set(file.moduleIdentifiers + importedModuleNames(file.imports).flatMap { modulesByName[$0] ?? [] })
+        for module in modules where moduleNamesByIdentifier[module] != "Swift" {
+            if (symbolFunctionsByModule[module]?[name] ?? []).contains(where: { symbol in
+                let visibility = symbol.declaration.visibility
+                if ["private", "fileprivate"].contains(visibility) {
+                    return symbol.fileURL.standardizedFileURL == fileURL.standardizedFileURL
+                }
+                return file.moduleIdentifiers.contains(module) || ["public", "open", "package"].contains(visibility)
+            }) {
+                return true
+            }
+        }
+        return false
     }
 
     /// The declaration and compilation modules that a resolved nominal type refers to.

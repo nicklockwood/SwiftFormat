@@ -4882,4 +4882,25 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarationBodyBraces("switch foo { case .bar: baaz() }"), [false])
         XCTAssertEqual(declarationBodyBraces("if foo { bar() } else { baaz() }"), [false, false])
     }
+
+    func testCallableIdentifierBeforeSpecializedArgumentList() throws {
+        for source in [
+            "Handler<State>()",
+            "Models.Handler<State>()",
+            "Handler<Array<State>>()",
+            "Handler<State, Other>()",
+            "Handler<() -> State>()",
+        ] {
+            let formatter = Formatter(tokenize(source))
+            let call = try XCTUnwrap(formatter.tokens.lastIndex(of: .startOfScope("(")))
+            let identifier = try XCTUnwrap(formatter.parseFunctionIdentifier(beforeStartOfScope: call))
+            XCTAssertEqual(formatter.tokens[identifier], .identifier("Handler"))
+        }
+    }
+
+    func testCallableIdentifierStillRejectsParenthesizedReturnStatement() {
+        let formatter = Formatter(tokenize("return (state)"))
+        let scope = formatter.tokens.firstIndex(of: .startOfScope("("))
+        XCTAssertNil(scope.flatMap { formatter.parseFunctionIdentifier(beforeStartOfScope: $0) })
+    }
 }

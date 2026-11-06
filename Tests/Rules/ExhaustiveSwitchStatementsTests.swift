@@ -1094,7 +1094,17 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
             }
         }
         """
-        try check(input, declarations: """
+        let output = """
+        extension Model {
+            func render() {
+                switch loadState() {
+                case .one: break
+                case .two: break
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
         enum State { case idle, loaded }
         enum Other { case one, two }
         struct Model { let loadState: () -> Other }
@@ -2124,6 +2134,534 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         extension CustomSequence where Element == State {
             func map(_ body: (Other) -> Void) { body(.idle) }
         }
+        """)
+    }
+
+    func testSpecializedConstructorCallbackExpandsItsProjectEnum() throws {
+        let input = """
+        func render() {
+            Handler<State> { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render() {
+            Handler<State> { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Handler<Value> { init(_ callback: (Value) -> Void) {} }
+        """)
+    }
+
+    func testContextualInitializerCallbackExpandsItsProjectEnum() throws {
+        let input = """
+        func render() {
+            let handler: Handler<State> = .init { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render() {
+            let handler: Handler<State> = .init { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Handler<Value> { init(_ callback: (Value) -> Void) {} }
+        """)
+    }
+
+    func testIndexedCallContextSuppliesInitializerCallbackEnum() throws {
+        let input = """
+        func render() {
+            consume(.init { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            })
+        }
+        """
+        let output = """
+        func render() {
+            consume(.init { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            })
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Handler<Value> { init(_ callback: (Value) -> Void) {} }
+        func consume(_ handler: Handler<State>) {}
+        """)
+    }
+
+    func testGenericArrayFunctionResultExpandsProjectEnum() throws {
+        let input = """
+        func render(_ states: [State]) {
+            switch select(states) {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ states: [State]) {
+            switch select(states) {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        func select<Value>(_ values: [Value]) -> Value { fatalError() }
+        """)
+    }
+
+    func testGenericTupleAliasFunctionResultExpandsProjectEnum() throws {
+        let input = """
+        func render(_ pair: (Int, State)) {
+            switch select(pair) {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ pair: (Int, State)) {
+            switch select(pair) {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        typealias Pair<Value> = (Int, Value)
+        func select<Value>(_ pair: Pair<Value>) -> Value { fatalError() }
+        """)
+    }
+
+    func testEnumeratedCollectionCallbackExpandsProjectEnum() throws {
+        let input = """
+        func render(_ states: [State]) {
+            states.enumerated().forEach { _, state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ states: [State]) {
+            states.enumerated().forEach { _, state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testReversedCollectionLoopExpandsProjectEnum() throws {
+        let input = """
+        func render(_ states: [State]) {
+            for state in states.reversed() {
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ states: [State]) {
+            for state in states.reversed() {
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testMappedProjectMemberExpandsOptionalEnumCases() throws {
+        let input = """
+        func render(_ models: [Model]) {
+            switch models.map({ $0.state }).first {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ models: [Model]) {
+            switch models.map({ $0.state }).first {
+            case .loaded?: showContent()
+            case .some(.idle), .some(.failed), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State }
+        """)
+    }
+
+    func testCompactMappedProjectMemberExpandsOptionalEnumCases() throws {
+        let input = """
+        func render(_ models: [Model]) {
+            switch models.compactMap({ $0.state }).first {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ models: [Model]) {
+            switch models.compactMap({ $0.state }).first {
+            case .loaded?: showContent()
+            case .some(.idle), .some(.failed), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State? }
+        """)
+    }
+
+    func testConstructorCallbackOverloadsPreserveDefault() throws {
+        try check("""
+        func render() {
+            Handler { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case loaded, unrelated }
+        struct Handler {
+            init(_ callback: (State) -> Void) {}
+            init(_ callback: (Other) -> Void) {}
+        }
+        """)
+    }
+
+    func testAnnotatedClosureVariableExpandsItsInputEnum() throws {
+        let input = """
+        func render() {
+            let callback: (State) -> Void = { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render() {
+            let callback: (State) -> Void = { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testReturnedClosureExpandsItsInputEnum() throws {
+        let input = """
+        func render() -> (State) -> Void {
+            { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render() -> (State) -> Void {
+            { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testCallableParameterResultExpandsProjectEnum() throws {
+        let input = """
+        func render(_ make: () -> State) {
+            switch make() {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ make: () -> State) {
+            switch make() {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testOptionalCallableResultIncludesNilPattern() throws {
+        let input = """
+        func render(_ make: (() -> State)?) {
+            switch make?() {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ make: (() -> State)?) {
+            switch make?() {
+            case .loaded?: showContent()
+            case .some(.idle), .some(.failed), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testGenericCallablePropertyResultExpandsProjectEnum() throws {
+        let input = """
+        func render(_ model: Model<State>) {
+            switch model.make() {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model<State>) {
+            switch model.make() {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model<Value> { let make: () -> Value }
+        """)
+    }
+
+    func testTernarySubjectUsesTheCommonProjectEnum() throws {
+        let input = """
+        func render(_ flag: Bool, _ state: State) {
+            switch flag ? state : .idle {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ flag: Bool, _ state: State) {
+            switch flag ? state : .idle {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testCoalescedSubjectUsesTheWrappedProjectEnum() throws {
+        let input = """
+        func render(_ state: State?) {
+            switch state ?? .idle {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State?) {
+            switch state ?? .idle {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        """)
+    }
+
+    func testKeyPathTransformExpandsItsOptionalProjectResult() throws {
+        let input = """
+        func render(_ models: [Model]) {
+            switch models.map(\\.state).first {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ models: [Model]) {
+            switch models.map(\\.state).first {
+            case .loaded?: showContent()
+            case .some(.idle), .some(.failed), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State }
+        """)
+    }
+
+    func testCompactMapKeyPathRemovesOneOptionalLayer() throws {
+        let input = """
+        func render(_ models: [Model]) {
+            switch models.compactMap(\\.state).first {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ models: [Model]) {
+            switch models.compactMap(\\.state).first {
+            case .loaded?: showContent()
+            case .some(.idle), .some(.failed), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State? }
+        """)
+    }
+
+    func testLocalNominalShadowsCallableBindingDuringFormatting() throws {
+        try check("""
+        let make: () -> State = { .idle }
+        func render() {
+            struct make {}
+            switch make() {
+            case let value where isHandled(value): break
+            default: break
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded, failed }
+        func isHandled<Value>(_ value: Value) -> Bool { false }
+        """)
+    }
+
+    func testOperatorOverloadPreventsCoalescingSubjectExpansion() throws {
+        try check("""
+        func render(_ state: State?, _ fallback: State) {
+            switch state ?? fallback {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case loaded, unrelated }
+        func ?? (_ lhs: State?, _ rhs: State) -> Other { .unrelated }
+        """)
+    }
+
+    func testKeyPathTransformOverloadPreservesDefault() throws {
+        try check("""
+        func render(_ models: [Model]) {
+            switch models.map(\\.state).first {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State }
+        enum Other { case loaded, unrelated }
+        extension Array where Element == Model {
+            func map(_ keyPath: KeyPath<Model, State>) -> [Other] { [] }
+        }
+        """)
+    }
+
+    func testOptionalTryCoalescingRetainsThrownErrorNilCase() throws {
+        let input = """
+        func render() {
+            switch try? make() ?? State.idle {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render() {
+            switch try? make() ?? State.idle {
+            case .loaded?: showContent()
+            case .some(.idle), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        func make() throws -> State? { .loaded }
         """)
     }
 

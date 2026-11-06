@@ -5011,30 +5011,27 @@ extension Formatter {
         return !labels.isEmpty && pendingLabel == nil ? labels : nil
     }
 
-    /// Parses the function identifier before the `(` start of scope token.
-    /// Handles `foo(`, `foo?(`, and `foo!(`.
+    /// Parses the function identifier before a call's argument list.
+    /// Handles optional calls and explicit generic specializations.
     func parseFunctionIdentifier(beforeStartOfScope startOfScope: Int) -> Int? {
         assert(tokens[startOfScope] == .startOfScope("("))
-        guard let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else { return nil }
+        return parseCallableIdentifier(before: startOfScope)
+    }
 
-        // `foo()`, `@foo()`, or `#foo()`
-        // Exclude keywords to avoid confusing `return (...)`, `as? (...)`, `{ _ in (...) }`, etc.
-        let isFunctionIdentifier = { (token: Token) in
-            token.isIdentifier || token.isAttribute || token.isMacro || token.string == "init"
+    /// The final identifier in a callable expression, before parentheses or a trailing closure.
+    func parseCallableIdentifier(before scope: Int) -> Int? {
+        guard var previous = index(of: .nonSpaceOrCommentOrLinebreak, before: scope) else { return nil }
+        if [.operator("?", .postfix), .operator("!", .postfix)].contains(tokens[previous]) {
+            guard let before = index(of: .nonSpaceOrCommentOrLinebreak, before: previous) else { return nil }
+            previous = before
         }
-
-        if isFunctionIdentifier(tokens[previousToken]) {
-            return previousToken
+        if tokens[previous] == .endOfScope(">") {
+            guard let open = startOfScope(at: previous),
+                  let before = index(of: .nonSpaceOrCommentOrLinebreak, before: open) else { return nil }
+            previous = before
         }
-
-        if [.operator("?", .postfix), .operator("!", .postfix)].contains(tokens[previousToken]),
-           let tokenBeforeOperator = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-           isFunctionIdentifier(tokens[tokenBeforeOperator])
-        {
-            return tokenBeforeOperator
-        }
-
-        return nil
+        let token = tokens[previous]
+        return token.isIdentifier || token.isAttribute || token.isMacro || token.string == "init" ? previous : nil
     }
 }
 

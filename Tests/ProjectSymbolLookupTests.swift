@@ -7036,6 +7036,120 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """], expectedCases: ["correct"])
     }
 
+    func testTernaryTrueClosureInheritsAnnotatedFunctionType() throws {
+        try check("""
+        func render(_ enabled: Bool) {
+            let callback: ((State) -> Void)? = enabled ? { state in observeValue(state) } : nil
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testTernaryFalseClosureInheritsAssignedMemberType() throws {
+        try check("""
+        func render(_ model: Model, _ enabled: Bool) {
+            model.callback = enabled ? nil : { state in observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        class Model { var callback: ((State) -> Void)? }
+        """, expected: "State")
+    }
+
+    func testNestedTernaryClosureInheritsOuterExpectedType() throws {
+        try check("""
+        func render(_ first: Bool, _ second: Bool) {
+            let callback: ((State) -> Void)? = first ? nil : second ? { state in observeValue(state) } : nil
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testParenthesizedClosureInheritsCallArgumentType() throws {
+        try checkModules("""
+        import Models
+        func render() { listen(({ state in observeValue(state) })) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public func listen(_ callback: (State) -> Void) {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testParenthesizedInitializerInheritsGenericParameterType() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render() { listen((.init(callback: { state in observeValue(state) }))) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Receiver<Value> { public init(callback: (Value) -> Void) {} }
+        public func listen(_ receiver: Receiver<State>) {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testTernaryInitializerInheritsGenericParameterType() throws {
+        try checkModules("""
+        import Models
+        func render(_ enabled: Bool) {
+            listen(enabled ? nil : .init(callback: { state in observeValue(state) }))
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Receiver<Value> { public init(callback: (Value) -> Void) {} }
+        public func listen(_ receiver: Receiver<State>?) {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testTernaryCallbackDoesNotSelectUnknownOverloadFromCaseNames() throws {
+        try checkModules("""
+        import Models
+        func render(_ enabled: Bool) { listen(enabled ? nil : { state in observeValue(state) }) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public func listen(_ callback: ((State) -> Void)?) {}
+        public func listen(_ callback: ((OtherState) -> Void)?) {}
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testTernaryConditionCallbackUsesItsOwnParameterContext() throws {
+        try checkModules("""
+        import Models
+        func render() {
+            let callback: ((OtherState) -> Void)? = predicate { state in observeValue(state) } ? nil : nil
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public func predicate(_ callback: (State) -> Void) -> Bool { true }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testGroupedClosureCastDoesNotBorrowOuterFunctionParameters() throws {
+        try check("""
+        func render() {
+            let callback: (State) -> Void = ({ value in observeValue(value) } as (Any) -> Void)
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testTernaryClosureCastDoesNotBorrowOuterFunctionParameters() throws {
+        try check("""
+        func render(_ enabled: Bool) {
+            let callback: ((State) -> Void)? = enabled ? ({ value in observeValue(value) } as (Any) -> Void) : nil
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testInvokedGroupedClosureDoesNotBorrowItsResultFunctionParameters() throws {
+        try check("""
+        func render() {
+            let callback: (State) -> Void = ({ value in
+                observeValue(value)
+                return { (_: State) in }
+            })(0)
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false, expectedAbstractParameter: String? = nil,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

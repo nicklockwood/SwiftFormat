@@ -2100,8 +2100,68 @@ final class ProjectSymbolLookup {
     }
 
     /// Expected types retain the declaration context and generic substitutions of the enclosing call.
+    /// A cast or suffix constrains the expression's result, not the input of a closure
+    /// or initializer at its start. Do not skip across that boundary to an outer annotation.
+    func contextualValueIsTransformed(at expression: Int) -> Bool {
+        var end: Int?
+        if [Token.startOfScope("("), .startOfScope("{")].contains(formatter.tokens[expression]) {
+            end = formatter.endOfScope(at: expression)
+        } else if formatter.tokens[expression].isOperator("."),
+                  let member = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expression)
+        {
+            if let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: member),
+               formatter.tokens[open] == .startOfScope("(")
+            {
+                end = formatter.endOfScope(at: open)
+            } else {
+                end = member
+            }
+        }
+        guard let end, let next = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: end) else { return false }
+        let token = formatter.tokens[next]
+        return [Token.keyword("as"), .keyword("is"), .startOfScope("("), .startOfScope("[")].contains(token) ||
+            token.isOperator(".") || token.isOperator(ofType: .postfix) ||
+            token.isOperator(ofType: .infix) && !["?", ":"].contains(token.string)
+    }
+
+    /// Only grouping and ternary result branches preserve their enclosing expected type.
+    /// Calls, tuple elements and conditional operands keep their own parameter contexts.
+    func enclosingContextualExpression(at expression: Int) -> Int? {
+        guard let previous = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: expression) else { return nil }
+        if formatter.tokens[previous] == .startOfScope("("),
+           formatter.parseFunctionIdentifier(beforeStartOfScope: previous) == nil,
+           let close = formatter.endOfScope(at: previous),
+           let range = formatter.parseExpressionRange(startingAt: expression),
+           formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.upperBound) == close
+        {
+            return previous
+        }
+        var question: Int?
+        if formatter.tokens[previous] == .operator("?", .infix) {
+            question = previous
+        } else if formatter.tokens[previous] == .operator(":", .infix) {
+            var cursor = previous
+            while let candidate = formatter.index(of: .operator("?", .infix), before: cursor) {
+                if formatter.findTernaryColon(after: candidate) == previous {
+                    question = candidate
+                    break
+                }
+                cursor = candidate
+            }
+        }
+        guard let question, let end = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: question),
+              let condition = formatter.parseExpressionRange(endingAt: end), condition.lowerBound < expression else { return nil }
+        return condition.lowerBound
+    }
+
     func contextualType(at expression: Int, depth: Int) -> ResolvedType? {
-        guard depth < 32, let previous = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: expression) else { return nil }
+        guard depth < 32, !contextualValueIsTransformed(at: expression),
+              let previous = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: expression) else { return nil }
+        if let outer = enclosingContextualExpression(at: expression),
+           let expected = contextualType(at: outer, depth: depth + 1)
+        {
+            return expected
+        }
         let namespace = formatter.parseEnclosingType(containing: expression, declarations: declarations)?.fullyQualifiedName
         switch formatter.tokens[previous] {
         case .keyword("return"), .startOfScope("{"):

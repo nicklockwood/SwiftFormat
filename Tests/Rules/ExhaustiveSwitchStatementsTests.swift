@@ -3570,6 +3570,60 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """])
     }
 
+    func testTernaryAssignedCallbackExpandsKnownEnum() throws {
+        let input = """
+        func render(_ enabled: Bool) {
+            let callback: ((State) -> Void)? = enabled ? nil : { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ enabled: Bool) {
+            let callback: ((State) -> Void)? = enabled ? nil : { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testTernaryGroupedInitializerPropagatesCrossModuleCallbackType() throws {
+        let input = """
+        import Models
+        func render(_ enabled: Bool) {
+            listen(enabled ? nil : (.init(callback: { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            })))
+        }
+        """
+        let output = """
+        import Models
+        func render(_ enabled: Bool) {
+            listen(enabled ? nil : (.init(callback: { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            })))
+        }
+        """
+        try check(input, output, declarations: "", modules: ["Models": """
+        public enum State { case idle, loaded, failed }
+        public struct Receiver<Value> { public init(callback: (Value) -> Void) {} }
+        public func listen(_ receiver: Receiver<State>?) {}
+        """])
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

@@ -2326,6 +2326,20 @@ extension Formatter {
         return nil
     }
 
+    /// Finds the matching colon without crossing scopes or confusing nested ternaries.
+    func findTernaryColon(after questionIndex: Int) -> Int? {
+        var depth = 1
+        var cursor = questionIndex
+        while let next = index(after: cursor, where: { $0 == .operator("?", .infix) || $0 == .operator(":", .infix) }) {
+            depth += tokens[next] == .operator("?", .infix) ? 1 : -1
+            if depth == 0 {
+                return next
+            }
+            cursor = next
+        }
+        return nil
+    }
+
     /// Parses the expression that contains the token at the given index.
     func parseExpressionRange(
         containing index: Int

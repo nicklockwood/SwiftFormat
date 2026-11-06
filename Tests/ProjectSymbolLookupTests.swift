@@ -4961,12 +4961,13 @@ final class ProjectSymbolLookupTests: XCTestCase {
     }
 
     func testGenericMetatypeDoesNotInventConcreteArgument() throws {
-        try check("""
+        try checkModules("""
+        import Models
         func render<Value>(_: Value.Type) { observeValue(load(Value.self)) }
-        """, declarations: """
-        enum Value { case unrelated }
-        func load<T>(_ type: T.Type) -> T { fatalError() }
-        """, expected: nil)
+        """, sources: ["Models": """
+        public enum Value { case unrelated }
+        public func load<T>(_ type: T.Type) -> T { fatalError() }
+        """], expectedCases: nil, expectedAbstractParameter: "Value")
     }
 
     func testHigherMetatypeDoesNotBecomeAnEnumInstance() throws {
@@ -6597,6 +6598,232 @@ final class ProjectSymbolLookupTests: XCTestCase {
         public protocol Modeling { associatedtype State }
         public struct Other: Modeling { public typealias State = Models.State }
         """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testAbstractProtocolBoundResolvesConcreteProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractWhereBoundResolvesConcreteProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model>(_ model: Model) where Model: Modeling { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractInheritedProtocolBoundResolvesProperty() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: RefinedModeling> {
+            func render(_ model: Model) { observeValue(model.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { var state: State { get } }
+        public protocol RefinedModeling: Modeling {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractAssociatedPropertyUsesLexicalEquality() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) where Model.State == State { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State; var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractSelfAssociatedPropertyUsesLexicalEquality() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> where Model.State == State {
+            func render(_ model: Model) { observeValue(model.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State; var state: Self.State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractAssociatedPropertyRemainsUnresolvedWithoutEquality() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public protocol Modeling { associatedtype State; var state: State { get } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testAbstractBoundRetainsDeclarationNamespace() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) {
+            typealias Modeling = Other
+            observeValue(model.state)
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public protocol Modeling { var state: State { get } }
+        public protocol Other { var state: OtherState { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractClassBoundResolvesInheritedProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Base>(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        open class Base { public var state: State { .idle } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractStoredReceiverUsesMethodRefinement() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> {
+            let model: Model
+            func render() where Model.State == State { observeValue(model.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State; var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractComposedBoundsResolveAgreeingPropertyTypes() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second>(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol First { var state: State { get } }
+        public protocol Second { var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractBoundUsesShadowingMethodGenericIdentity() throws {
+        // This generic shadowing is permitted in Swift 5.
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> {
+            func render<Model: Other>(_ model: Model) { observeValue(model.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public enum OtherState { case correct }
+        public protocol Modeling { var state: State { get } }
+        public protocol Other { var state: OtherState { get } }
+        """], expectedCases: ["correct"])
+    }
+
+    func testAbstractAssociatedDefaultDoesNotEstablishConcreteWitness() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum DefaultState { case unrelated }
+        public protocol Modeling { associatedtype State = DefaultState; var state: State { get } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testAbstractOptionalReceiverPreservesOptionalPropertyResult() throws {
+        try check("""
+        func render<Model: Modeling>(_ model: Model?) { observeValue(model?.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Modeling { var state: State { get } }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testAbstractMetatypeResolvesStaticProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_: Model.Type) { observeValue(Model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { static var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractUnindexedAdditionalBoundDoesNotProveMemberLookup() throws {
+        try checkModules("""
+        import Foundation
+        import Models
+        func render<Model: Modeling & NSObjectProtocol>(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { var state: State { get } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testAbstractSpecializedSuperclassBoundProjectsInheritedProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Child<State>>(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        open class Base<Value> {
+            public let state: Value
+            public init(_ value: Value) { state = value }
+        }
+        open class Child<Value>: Base<Value> {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractTupleReceiverRetainsVisibleMethodRefinement() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> {
+            let stored: (model: Model, count: Int)
+            func render() where Model.State == State { observeValue(stored.model.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State; var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractCollectionReceiverRetainsVisibleMethodRefinement() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> {
+            let models: [Model]
+            func render() where Model.State == State { observeValue(models[0].state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State; var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAbstractSuperclassBoundRetainsVisibleArgumentRefinement() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Value, Model: Child<Value>> {
+            let model: Model
+            func render() where Value == State { observeValue(model.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        open class Base<Value> {
+            public let state: Value
+            public init(_ value: Value) { state = value }
+        }
+        open class Child<Value>: Base<Value> {}
+        """], expectedCases: ["idle", "loaded"])
     }
 
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false, expectedAbstractParameter: String? = nil,

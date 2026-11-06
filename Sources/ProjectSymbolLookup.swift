@@ -62,6 +62,7 @@ final class ProjectSymbolLookup {
         var collectionKind: CollectionKind?
         var genericBounds: [ResolvedType]?
         var genericParameterScope: AutoUpdatingRange?
+        var genericUseSite: AutoUpdatingRange?
         var enclosingType: EnclosingType?
     }
 
@@ -407,8 +408,8 @@ final class ProjectSymbolLookup {
         if let whereClause {
             formatter.parseGenericTypes(from: whereClause, into: &generics)
         }
-        let requirements = generics.flatMap(\.conformances).filter { $0.type == .concreteType }.map {
-            SourceFileIndex.GenericRequirement(subject: $0.typeName, target: $0.name, isSameType: true)
+        let requirements = generics.flatMap(\.conformances).map {
+            SourceFileIndex.GenericRequirement(subject: $0.typeName, target: $0.name, isSameType: $0.type == .concreteType)
         }
         if !requirements.isEmpty {
             genericContexts.append(GenericContext(scope: AutoUpdatingRange(range: scope, formatter: formatter),
@@ -428,7 +429,7 @@ final class ProjectSymbolLookup {
             let declarationIndex = context.scope.range.lowerBound
             guard unavailableTypes[String(root)]?.filter({ $0.range.contains(declarationIndex) })
                 .min(by: { $0.range.count < $1.range.count }) === scope else { continue }
-            for requirement in context.requirements {
+            for requirement in context.requirements where requirement.isSameType {
                 let target: String
                 if requirement.subject == name {
                     target = requirement.target
@@ -454,6 +455,78 @@ final class ProjectSymbolLookup {
                 guard result == nil || sameType(result!, as: resolved) else { return nil }
                 result = resolved
             }
+        }
+        return result
+    }
+
+    /// Bounds belong to the generic declaration, while refinements belong to the use site.
+    /// Keep both so a constrained receiver never becomes an unrelated nominal namesake.
+    private func abstractGenericType(named name: String, scope: AutoUpdatingRange, at index: Int, depth: Int) -> ResolvedType {
+        var bounds = [ResolvedType]()
+        var complete = depth < 16
+        for context in genericContexts where context.scope.range.contains(index) {
+            let declarationIndex = context.scope.range.lowerBound
+            guard unavailableTypes[name]?.filter({ $0.range.contains(declarationIndex) })
+                .min(by: { $0.range.count < $1.range.count }) === scope else { continue }
+            for requirement in context.requirements where !requirement.isSameType && requirement.subject == name {
+                let signature = Formatter(tokenize(requirement.target))
+                var start = signature.index(of: .nonSpaceOrCommentOrLinebreak, after: -1)
+                while let next = start {
+                    guard let annotation = signature.parseType(at: next, excludeProtocolCompositions: true),
+                          let bound = type(named: annotation.string, namespace: context.namespace, at: declarationIndex,
+                                           requiresGenericArguments: true, depth: depth + 1),
+                          let boundName = qualifiedName(for: bound),
+                          project.hasSymbolType(named: boundName, visibleFrom: bound.sourceFileURL ?? fileURL)
+                    else {
+                        complete = false
+                        break
+                    }
+                    bounds.append(bound)
+                    guard let separator = signature.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound) else { break }
+                    guard signature.tokens[separator].isOperator("&"),
+                          let next = signature.index(of: .nonSpaceOrCommentOrLinebreak, after: separator)
+                    else {
+                        complete = false
+                        break
+                    }
+                    start = next
+                }
+            }
+        }
+        return ResolvedType(name: name, sourceFileURL: fileURL, genericBounds: complete ? bounds : nil,
+                            genericParameterScope: scope, genericUseSite: AutoUpdatingRange(range: index ... index, formatter: formatter))
+    }
+
+    /// A binding's generic identity comes from its annotation; visible constraints come from
+    /// the expression using it. Refresh structural arguments without rebinding their names.
+    private func typeAtUseSite(_ value: ResolvedType, at index: Int, depth: Int) -> ResolvedType {
+        guard depth < 16 else { return value }
+        var result = value
+        if let scope = value.genericParameterScope {
+            let optional = unwrapped(value)
+            let name = optional?.name ?? value.name
+            if var concrete = lexicalEqualityType(named: name, scope: scope, at: index, depth: depth + 1) {
+                concrete.isMetatype = value.isMetatype
+                if optional != nil {
+                    concrete.name += String(value.name.suffix(1))
+                }
+                return concrete
+            }
+            result = abstractGenericType(named: name, scope: scope, at: index, depth: depth + 1)
+            result.isMetatype = value.isMetatype
+            if optional != nil {
+                result.name += String(value.name.suffix(1))
+            }
+        }
+        result.genericArguments = result.genericArguments?.map { typeAtUseSite($0, at: index, depth: depth + 1) }
+        result.genericBounds = result.genericBounds?.map { typeAtUseSite($0, at: index, depth: depth + 1) }
+        result.tupleElements = result.tupleElements?.map { TupleElement(label: $0.label, type: typeAtUseSite($0.type, at: index, depth: depth + 1)) }
+        if let signature = result.functionType {
+            result.functionType = FunctionType(parameters: signature.parameters.map { typeAtUseSite($0, at: index, depth: depth + 1) },
+                                               result: typeAtUseSite(signature.result, at: index, depth: depth + 1))
+        }
+        if let enclosing = result.enclosingType {
+            result.enclosingType = EnclosingType(typeAtUseSite(enclosing.type, at: index, depth: depth + 1))
         }
         return result
     }
@@ -515,10 +588,25 @@ final class ProjectSymbolLookup {
                 return value
             }
             guard base == root else { return nil }
-            return ResolvedType(name: name, sourceFileURL: fileURL, genericParameterScope: scope)
+            var result = abstractGenericType(named: base, scope: scope, at: index, depth: depth + 1)
+            if optional {
+                result.name += String(name.suffix(1))
+            }
+            return result
         }
         if let dot = base.firstIndex(of: "."), let owner = substitutions[String(base[..<dot])] {
             guard var value = dependentMemberType(String(base[base.index(after: dot)...]), of: owner, depth: depth + 1) else { return nil }
+            if optional {
+                value.name += "?"
+            }
+            return value
+        }
+        if let namespace, let owner = substitutions["Self"],
+           let reference = ProjectTypeReference(base), reference.arguments.isEmpty,
+           let root = reference.name.split(separator: ".").first,
+           project.associatedTypeRequirements(named: String(root), of: namespace, visibleFrom: sourceFileURL ?? fileURL) != nil
+        {
+            guard var value = dependentMemberType(base, of: owner, depth: depth + 1) else { return nil }
             if optional {
                 value.name += "?"
             }
@@ -627,7 +715,7 @@ final class ProjectSymbolLookup {
             // Bind its own parameters, even when a nested function shadows their spellings.
             argumentNames = scope.parameters
             arguments = scope.parameters.map {
-                ResolvedType(name: $0, sourceFileURL: fileURL, genericParameterScope: scope.range)
+                abstractGenericType(named: $0, scope: scope.range, at: index, depth: depth + 1)
             }
         } else {
             arguments = argumentNames.compactMap {
@@ -963,7 +1051,7 @@ final class ProjectSymbolLookup {
             if binding.unwrapsOptional, binding.type == nil, let current = result {
                 result = unwrapped(current)
             }
-            return result
+            return result.map { typeAtUseSite($0, at: index, depth: depth + 1) }
         }
         guard let owner = enclosingType.flatMap({ type(named: $0, namespace: nil, at: index) }) else { return nil }
         return memberType(owner: owner, name: name, accessingType: enclosingType)
@@ -979,7 +1067,18 @@ final class ProjectSymbolLookup {
     /// Project a receiver through its declared inheritance edges, preserving each edge's imports
     /// and substituting its arguments before proceeding to the next declaration.
     func projectedType(_ owner: ResolvedType, to name: String, source: URL, depth: Int = 0) -> ResolvedType? {
-        guard depth < 16, let ownerName = qualifiedName(for: owner),
+        guard depth < 16 else { return nil }
+        if owner.genericParameterScope != nil {
+            guard let bounds = owner.genericBounds else { return nil }
+            var result: ResolvedType?
+            for bound in bounds {
+                guard let candidate = projectedType(bound, to: name, source: source, depth: depth + 1) else { continue }
+                guard result == nil || sameType(result!, as: candidate) else { return nil }
+                result = candidate
+            }
+            return result
+        }
+        guard let ownerName = qualifiedName(for: owner),
               let identity = project.typeIdentity(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) else { return nil }
         let target: Set<String>
         if project.typeDeclaration(named: name, visibleFrom: source) != nil,
@@ -1055,8 +1154,18 @@ final class ProjectSymbolLookup {
     /// Resolve dependent paths such as Model.State from concrete typealias witnesses. An inferred
     /// witness must be backed by concrete property declarations that agree on the same type.
     func dependentMemberType(_ path: String, of owner: ResolvedType, depth: Int) -> ResolvedType? {
-        guard depth < 16, !owner.isMetatype, unwrapped(owner) == nil,
-              let reference = ProjectTypeReference(path), reference.arguments.isEmpty,
+        guard depth < 16, !owner.isMetatype, unwrapped(owner) == nil else { return nil }
+        if let scope = owner.genericParameterScope, let index = owner.genericUseSite?.range.lowerBound {
+            let components = path.split(separator: ".")
+            for end in components.indices.reversed() {
+                let prefix = components[...end].joined(separator: ".")
+                guard let value = lexicalEqualityType(named: owner.name + "." + prefix, scope: scope, at: index, depth: depth + 1) else { continue }
+                let remaining = components.suffix(from: end + 1).joined(separator: ".")
+                return remaining.isEmpty ? value : dependentMemberType(remaining, of: value, depth: depth + 1)
+            }
+            return nil
+        }
+        guard let reference = ProjectTypeReference(path), reference.arguments.isEmpty,
               let component = reference.name.split(separator: ".").first,
               let name = qualifiedName(for: owner),
               let substitutions = nominalSubstitutions(for: owner) else { return nil }
@@ -1117,8 +1226,27 @@ final class ProjectSymbolLookup {
             }
             return elements.first(where: { $0.label == name })?.type
         }
+        if owner.genericParameterScope != nil {
+            guard unwrapped(owner) == nil, let bounds = owner.genericBounds else { return nil }
+            var result: ResolvedType?
+            for bound in bounds {
+                guard let boundName = qualifiedName(for: bound) else { return nil }
+                guard project.hasProperty(owner: boundName, member: name, visibleFrom: bound.sourceFileURL ?? fileURL, accessedFrom: accessedFrom ?? fileURL) else { continue }
+                guard let member = project.propertySymbol(owner: boundName, member: name, isStatic: owner.isMetatype,
+                                                          visibleFrom: bound.sourceFileURL ?? fileURL, accessedFrom: accessedFrom ?? fileURL, accessedFromType: accessingType),
+                    let value = propertyType(member, owner: owner, depth: depth + 1),
+                    result == nil || sameType(result!, as: value) else { return nil }
+                result = value
+            }
+            return result
+        }
         guard let ownerName = qualifiedName(for: owner),
-              let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: accessedFrom ?? fileURL, accessedFromType: accessingType),
+              let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: accessedFrom ?? fileURL, accessedFromType: accessingType) else { return nil }
+        return propertyType(member, owner: owner, depth: depth + 1)
+    }
+
+    private func propertyType(_ member: ProjectIndex.PropertySymbol, owner: ResolvedType, depth: Int) -> ResolvedType? {
+        guard depth < 16,
               let declaringOwner = projectedType(owner, to: member.declaration.declaringType, source: member.fileURL, depth: depth + 1),
               var substitutions = nominalSubstitutions(for: declaringOwner) else { return nil }
         substitutions["Self"] = owner
@@ -2306,6 +2434,13 @@ final class ProjectSymbolLookup {
                 current = namespace.flatMap { type(named: $0, namespace: nil, at: first) }
                 current?.isMetatype = identifier == "Self" || isStatic
             }
+        } else if bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
+                  !unindexedFunctions.contains(identifier),
+                  var generic = type(named: identifier, namespace: namespace, at: first),
+                  generic.genericParameterScope != nil, unwrapped(generic) == nil
+        {
+            generic.isMetatype = true
+            current = generic
         } else if let enumCase = unqualifiedEnumCase(named: identifier, at: first) {
             current = enumCase.payloadTypes.isEmpty ? enumCase.type : nil
         } else {
@@ -2363,7 +2498,13 @@ final class ProjectSymbolLookup {
                 cursor = member
                 continue
             }
-            guard tokens[member].isIdentifier, let ownerName = qualifiedName(for: owner) else { return nil }
+            guard tokens[member].isIdentifier else { return nil }
+            if owner.genericParameterScope != nil {
+                current = memberType(owner: owner, name: memberName, accessingType: namespace, depth: depth + 1)
+                cursor = member
+                continue
+            }
+            guard let ownerName = qualifiedName(for: owner) else { return nil }
             if let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: member), open <= last,
                tokens[open] == .startOfScope("(") || tokens[open] == .startOfScope("{"),
                let close = formatter.endOfScope(at: open), close <= last

@@ -108,6 +108,7 @@ extension Formatter {
         guard type.tupleElements == nil || branches.count == 1 || cases.count <= 64 else { return }
         var defaultIndex: Int?
         var covered = Set<String>()
+        var unresolvedQualifiedPattern = false
         for branch in branches {
             guard let keyword = index(before: branch.startOfBranch, where: { $0.isSwitchCaseOrDefault }) else { return }
             if tokens[keyword] == .endOfScope("default") {
@@ -118,7 +119,9 @@ extension Formatter {
             var start = keyword + 1
             while start < branch.startOfBranch {
                 let end = index(of: .delimiter(","), in: start ..< branch.startOfBranch) ?? branch.startOfBranch
-                covered.formUnion(exhaustiveSwitchCoveredCases(in: start ..< end, type: type, resolver: resolver, cases: cases))
+                covered.formUnion(exhaustiveSwitchCoveredCases(in: start ..< end, type: type, resolver: resolver, cases: cases,
+                                                               unresolvedQualifiedPattern: &unresolvedQualifiedPattern))
+                guard !unresolvedQualifiedPattern else { return }
                 start = end + 1
             }
         }
@@ -165,7 +168,8 @@ extension Formatter {
     }
 
     func exhaustiveSwitchCoveredCases(in range: Range<Int>, type: ProjectSymbolLookup.ResolvedType,
-                                      resolver: ProjectSymbolLookup, cases: [String], bindsPayloads: Bool = false) -> [String]
+                                      resolver: ProjectSymbolLookup, cases: [String], bindsPayloads: Bool = false,
+                                      unresolvedQualifiedPattern: inout Bool) -> [String]
     {
         guard index(of: .keyword("where"), in: range) == nil else { return [] }
         let significant = tokens[range].filter { !$0.isSpaceOrCommentOrLinebreak }
@@ -189,7 +193,8 @@ extension Formatter {
             guard let domains = exhaustiveSwitchTupleDomains(for: elements, resolver: resolver) else { return [] }
             for ((argument, element), domain) in zip(zip(arguments, elements), domains) {
                 let covered = exhaustiveSwitchCoveredCases(in: Range(argument.valueRange), type: element.type,
-                                                           resolver: resolver, cases: domain, bindsPayloads: bindsAll)
+                                                           resolver: resolver, cases: domain, bindsPayloads: bindsAll,
+                                                           unresolvedQualifiedPattern: &unresolvedQualifiedPattern)
                 combinations = combinations.flatMap { prefix in
                     covered.map { prefix + [exhaustiveSwitchPattern(for: $0, type: element.type, resolver: resolver)] }
                 }
@@ -199,13 +204,16 @@ extension Formatter {
         guard let wrapped = resolver.unwrapped(type),
               let wrappedCases = exhaustiveSwitchCases(for: wrapped, resolver: resolver)
         else {
-            return exhaustiveSwitchCoveredCase(in: range, type: type, resolver: resolver, cases: cases, bindsPayloads: bindsPayloads).map { [$0] } ?? []
+            return exhaustiveSwitchCoveredCase(in: range, type: type, resolver: resolver, cases: cases, bindsPayloads: bindsPayloads,
+                                               unresolvedQualifiedPattern: &unresolvedQualifiedPattern).map { [$0] } ?? []
         }
         let unbound = significant.filter { $0 != .keyword("let") && $0 != .keyword("var") }
         if unbound.string == "nil" || unbound.string == ".none" {
             return ["none"]
         }
-        if exhaustiveSwitchCoveredCase(in: range, type: type, resolver: resolver, cases: ["some"]) != nil {
+        if exhaustiveSwitchCoveredCase(in: range, type: type, resolver: resolver, cases: ["some"],
+                                       unresolvedQualifiedPattern: &unresolvedQualifiedPattern) != nil
+        {
             return cases.filter { $0 != "none" }
         }
         if let open = index(of: .startOfScope("("), in: range),
@@ -216,21 +224,24 @@ extension Formatter {
         {
             return exhaustiveSwitchCoveredCases(in: open + 1 ..< close, type: wrapped, resolver: resolver,
                                                 cases: wrappedCases, bindsPayloads: bindsPayloads || tokens[range.lowerBound ..< open].contains(.keyword("let")) ||
-                                                    tokens[range.lowerBound ..< open].contains(.keyword("var"))).map {
+                                                    tokens[range.lowerBound ..< open].contains(.keyword("var")),
+                                                unresolvedQualifiedPattern: &unresolvedQualifiedPattern).map {
                 "some(\(exhaustiveSwitchPattern(for: $0, type: wrapped, resolver: resolver)))"
             }
         }
         let end = unbound.last?.isOperator("?") == true
             ? index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound) ?? range.upperBound : range.upperBound
         return exhaustiveSwitchCoveredCases(in: range.lowerBound ..< end, type: wrapped, resolver: resolver,
-                                            cases: wrappedCases, bindsPayloads: bindsPayloads).map {
+                                            cases: wrappedCases, bindsPayloads: bindsPayloads,
+                                            unresolvedQualifiedPattern: &unresolvedQualifiedPattern).map {
             "some(\(exhaustiveSwitchPattern(for: $0, type: wrapped, resolver: resolver)))"
         }
     }
 
     /// Only subtract patterns that cover the entire case, including all of its payloads.
     func exhaustiveSwitchCoveredCase(in range: Range<Int>, type: ProjectSymbolLookup.ResolvedType,
-                                     resolver: ProjectSymbolLookup, cases: [String], bindsPayloads: Bool = false) -> String?
+                                     resolver: ProjectSymbolLookup, cases: [String], bindsPayloads: Bool = false,
+                                     unresolvedQualifiedPattern: inout Bool) -> String?
     {
         // A where clause guards only its own comma-separated pattern.
         guard index(of: .keyword("where"), in: range) == nil else { return nil }
@@ -250,15 +261,34 @@ extension Formatter {
             {
                 return true
             }
-            guard head.hasSuffix(".\(unescaped)"),
-                  let end = index(of: .nonSpaceOrCommentOrLinebreak, before: payload ?? range.upperBound),
+            guard head.hasSuffix(".\(unescaped)") else { return false }
+            guard let end = index(of: .nonSpaceOrCommentOrLinebreak, before: payload ?? range.upperBound),
                   let dot = index(of: .nonSpaceOrCommentOrLinebreak, before: end), tokens[dot].isOperator("."),
                   let start = index(in: range, where: { !$0.isSpaceOrCommentOrLinebreak && $0 != .keyword("let") && $0 != .keyword("var") }),
-                  start < dot, var prefix = resolver.expressionType(in: start ... dot - 1), prefix.isMetatype
-            else { return false }
+                  start < dot,
+                  var prefix = resolver.expressionType(in: start ... dot - 1)
+            else {
+                // This may already cover an enum case; do not emit it again without proof.
+                unresolvedQualifiedPattern = true
+                return false
+            }
+            guard prefix.isMetatype else { return false }
             // A qualified case uses the enum's metatype to name a case of its instance type.
             prefix.isMetatype = false
-            return resolver.sameType(prefix, as: type)
+            if resolver.sameType(prefix, as: type) {
+                return true
+            }
+            if let prefixName = resolver.qualifiedName(for: prefix),
+               let subjectName = resolver.qualifiedName(for: type),
+               let prefixIdentity = resolver.project.typeIdentity(named: prefixName, visibleFrom: prefix.sourceFileURL ?? resolver.fileURL),
+               let subjectIdentity = resolver.project.typeIdentity(named: subjectName, visibleFrom: type.sourceFileURL ?? resolver.fileURL),
+               prefixIdentity.isDisjoint(with: subjectIdentity)
+            {
+                return false
+            }
+            // Generic arguments may be supplied by the switch subject's context.
+            unresolvedQualifiedPattern = true
+            return false
         }) else { return nil }
         guard let payload else { return name }
         guard let end = endOfScope(at: payload),

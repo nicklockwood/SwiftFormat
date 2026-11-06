@@ -2883,6 +2883,47 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testUnresolvedQualifiedCasePreservesDefault() throws {
+        try check("""
+        func render(_ state: State) {
+            switch state {
+            case State.loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Other { var State: Int }
+        """)
+    }
+
+    func testUnresolvedQualifiedOptionalCasePreservesDefault() throws {
+        try check("""
+        func render(_ state: State?) {
+            switch state {
+            case State.loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Other { var State: Int }
+        """)
+    }
+
+    func testUnspecializedQualifiedGenericCasePreservesDefault() throws {
+        try check("""
+        func render(_ state: State<Int>) {
+            switch state {
+            case State.loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State<Value> { case idle, loaded }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

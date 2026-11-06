@@ -921,11 +921,11 @@ SwiftFormat searches upwards from each input for a `Package.swift` file or a dir
 
 Swift package modules are identified using the conventional `Sources/<target>` and `Tests/<target>` directory layout. For Xcode projects, SwiftFormat reads target membership from source build phases and synchronized source groups, including membership exceptions. Files shared by multiple targets are handled conservatively: cross-file information must be compatible across the file's targets before it is used.
 
-Build tools can supply exact module membership with `--project-index-manifest modules.json`, independently of Xcode project generation. Each module has a unique target `id`, its Swift module `name`, and a list of `sources` (absolute paths, or paths relative to the manifest). SDK `.swiftinterface` files can also be supplied as sources, so inherited associated types can be resolved through imported framework protocols. Sources can belong to multiple targets; all compilation contexts must agree before a rule uses the declaration.
+Build tools can supply exact module membership with `--project-index-manifest modules.json`, independently of Xcode project generation. Each module has a unique target `id`, its Swift module `name`, and a list of `sources` (absolute paths, or paths relative to the manifest). Source entries support the same glob syntax as `--exclude`, including recursive patterns such as `features/ExploreSearchFeature/**`; globs select only `.swift` and `.swiftinterface` files, and an entry that matches no source files is an error. SDK `.swiftinterface` files can also be supplied as sources, so inherited associated types can be resolved through imported framework protocols. Sources can belong to multiple targets; all compilation contexts must agree before a rule uses the declaration.
 
 ```json
 {"modules": [
-    {"id": "app-target", "name": "App", "sources": ["App/Main.swift"]},
+    {"id": "app-target", "name": "App", "sources": ["App/**/*.swift"]},
     {"id": "domain-target", "name": "Domain", "sources": ["Domain/State.swift"]}
 ]}
 ```

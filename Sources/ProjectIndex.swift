@@ -2197,7 +2197,7 @@ struct ProjectModuleMembership {
 }
 
 /// Build tools can provide exact module membership without generating an Xcode project.
-/// Source paths are relative to the manifest, or absolute. A file may belong to multiple modules.
+/// Source paths and globs are relative to the manifest, or absolute. A file may belong to multiple modules.
 struct ProjectIndexManifest: Decodable {
     struct Module: Decodable {
         var name: String
@@ -2217,11 +2217,23 @@ struct ProjectIndexManifest: Decodable {
             }
             result.names[module.id] = module.name
             for source in module.sources {
-                let url = URL(fileURLWithPath: source, relativeTo: directory).standardizedFileURL
-                guard ["swift", "swiftinterface"].contains(url.pathExtension) else {
-                    throw FormatError.options("Project index manifest source must be Swift source or an interface: \(source)")
+                let urls: [URL]
+                if pathContainsGlobSyntax(source) {
+                    let matches = try matchGlobs(parseGlobs(source, in: directory.path, splitOnCommas: false), in: "/", includingDirectories: false, skipUnreadableDirectories: false)
+                    urls = matches.filter { ["swift", "swiftinterface"].contains($0.pathExtension) }
+                    guard !urls.isEmpty else {
+                        throw FormatError.options("Project index manifest glob did not match Swift source or interfaces: \(source)")
+                    }
+                } else {
+                    let url = expandPath(source, in: directory.path).standardizedFileURL
+                    guard ["swift", "swiftinterface"].contains(url.pathExtension) else {
+                        throw FormatError.options("Project index manifest source must be Swift source or an interface: \(source)")
+                    }
+                    urls = [url]
                 }
-                result.files[url.path, default: []].insert(module.id)
+                for url in urls {
+                    result.files[url.standardizedFileURL.path, default: []].insert(module.id)
+                }
             }
         }
         return result

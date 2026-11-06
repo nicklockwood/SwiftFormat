@@ -54,6 +54,29 @@ public enum Glob: CustomStringConvertible, Hashable {
         }
     }
 
+    /// Whether a directory can contain a match, without descending into unrelated or deeper trees.
+    func canMatchDescendant(of directory: URL) -> Bool {
+        guard case let .regex(prefix, regex) = self, directory.path.hasPrefix(prefix) else { return false }
+        let components = directory.path.dropFirst(prefix.count).split(separator: "/").map(String.init)
+        // Protect the slash in the generated single-component wildcard character class.
+        let placeholder = "<<<slash>>>"
+        let pattern = regex.pattern.dropFirst().dropLast().replacingOccurrences(of: "[^/]", with: placeholder)
+        let segments = pattern.components(separatedBy: "/")
+        for (position, component) in components.enumerated() {
+            guard segments.indices.contains(position) else { return false }
+            let segment = segments[position].replacingOccurrences(of: placeholder, with: "[^/]")
+            if segment.contains(".+") {
+                return true
+            } // A recursive wildcard can consume any remaining path.
+            // Slash-containing brace alternatives cannot always be split into independent regexes.
+            guard let expression = try? NSRegularExpression(pattern: "^" + segment + "$") else { return true }
+            if expression.firstMatch(in: component, range: NSRange(location: 0, length: component.utf16.count)) == nil {
+                return false
+            }
+        }
+        return components.count < segments.count
+    }
+
     public var description: String {
         switch self {
         case let .path(path):
@@ -75,9 +98,14 @@ public enum Glob: CustomStringConvertible, Hashable {
 }
 
 /// Expand one or more comma-delimited file paths using glob syntax
-public func expandGlobs(_ paths: String, in directory: String) -> [Glob] {
+public func expandGlobs(_ paths: String, in directory: String, splitOnCommas: Bool = true) -> [Glob] {
+    try! parseGlobs(paths, in: directory, splitOnCommas: splitOnCommas)
+}
+
+/// Compile glob patterns with recoverable errors for user-supplied manifests.
+func parseGlobs(_ paths: String, in directory: String, splitOnCommas: Bool = true) throws -> [Glob] {
     guard pathContainsGlobSyntax(paths) else {
-        return parseCommaDelimitedList(paths).map {
+        return (splitOnCommas ? parseCommaDelimitedList(paths) : [paths]).map {
             .path(expandPath($0, in: directory).path)
         }
     }
@@ -91,7 +119,7 @@ public func expandGlobs(_ paths: String, in directory: String) -> [Glob] {
         tokens[token] = "(\(options.joined(separator: "|")))"
         paths.replaceSubrange(range, with: token)
     }
-    return parseCommaDelimitedList(paths).map { path -> Glob in
+    return try (splitOnCommas ? parseCommaDelimitedList(paths) : [paths]).map { path -> Glob in
         let path = expandPath(path, in: directory).path
         if FileManager.default.fileExists(atPath: path) {
             // TODO: should we also handle cases where path includes tokens?
@@ -115,46 +143,69 @@ public func expandGlobs(_ paths: String, in directory: String) -> [Glob] {
         for (token, replacement) in tokens {
             regex = regex.replacingOccurrences(of: token, with: replacement)
         }
-        return try! .regex(prefix, NSRegularExpression(pattern: regex, options: []))
+        do {
+            return try .regex(prefix, NSRegularExpression(pattern: regex, options: []))
+        } catch {
+            throw FormatError.options("Invalid glob \(path): \(error.localizedDescription)")
+        }
     }
 }
 
-func matchGlobs(_ globs: [Glob], in directory: String) throws -> [URL] {
+func matchGlobs(_ globs: [Glob], in directory: String, includingDirectories: Bool = true, skipUnreadableDirectories: Bool = true) throws -> [URL] {
     var urls = [URL]()
     let keys: [URLResourceKey] = [.isDirectoryKey]
     let manager = FileManager.default
-    func enumerate(_ directory: URL, with glob: Glob) {
-        guard let files = try? manager.contentsOfDirectory(
-            at: directory, includingPropertiesForKeys: keys, options: []
-        ) else {
+    var ancestors = Set<String>()
+    func enumerate(_ directory: URL, with glob: Glob) throws {
+        if (try? directory.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink == true {
             return
         }
-        for url in files {
+        let identity = directory.resolvingSymlinksInPath().standardizedFileURL.path
+        guard ancestors.insert(identity).inserted else { return }
+        defer { ancestors.remove(identity) }
+        let files: [URL]
+        do {
+            files = try manager.contentsOfDirectory(at: directory, includingPropertiesForKeys: keys, options: [])
+        } catch {
+            if skipUnreadableDirectories {
+                return
+            }
+            throw FormatError.reading("Failed to enumerate \(directory.path): \(error.localizedDescription)")
+        }
+        for file in files {
+            // Foundation may resolve a symlink in directory URLs returned by enumeration.
+            // Keep paths in the same spelling as the glob's prefix (e.g. /var vs /private/var).
+            let url = directory.appendingPathComponent(file.lastPathComponent)
             let path = url.path
             var isDirectory: ObjCBool = false
-            if glob.matches(path) {
+            _ = manager.fileExists(atPath: path, isDirectory: &isDirectory)
+            if glob.matches(path), includingDirectories || !isDirectory.boolValue {
                 urls.append(url)
-            } else if manager.fileExists(atPath: path, isDirectory: &isDirectory),
-                      isDirectory.boolValue
-            {
-                enumerate(url, with: glob)
+            } else if isDirectory.boolValue {
+                let isSymlink = (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink == true
+                if !isSymlink, glob.canMatchDescendant(of: url) {
+                    try enumerate(url, with: glob)
+                }
             }
         }
     }
     for glob in globs {
         switch glob {
         case let .path(path):
-            if manager.fileExists(atPath: path) {
-                urls.append(URL(fileURLWithPath: path))
+            var isDirectory: ObjCBool = false
+            if manager.fileExists(atPath: path, isDirectory: &isDirectory) {
+                if includingDirectories || !isDirectory.boolValue {
+                    urls.append(URL(fileURLWithPath: path))
+                }
             } else {
                 throw FormatError.options("File not found at \(glob)")
             }
         case let .regex(path, _):
             let count = urls.count
             if directory.hasPrefix(path) {
-                enumerate(URL(fileURLWithPath: directory).standardized, with: glob)
+                try enumerate(URL(fileURLWithPath: directory).standardized, with: glob)
             } else if path.hasPrefix(directory) {
-                enumerate(URL(fileURLWithPath: path).standardized, with: glob)
+                try enumerate(URL(fileURLWithPath: path).standardized, with: glob)
             }
             if count == urls.count {
                 throw FormatError.options("Glob did not match any files at \(glob)")

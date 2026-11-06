@@ -50,9 +50,12 @@ public extension FormatRule {
 extension Formatter {
     /// Whether this begins a standalone comment group attached to a statement or declaration.
     func commentIntroducesStatement(at index: Int) -> Bool {
+        if case let .commentBody(body)? = next(.nonSpaceOrLinebreak, after: index), body.isCommentDirective {
+            return false
+        }
         guard let statement = self.index(of: .nonSpaceOrCommentOrLinebreak, in: index ..< tokens.count),
               startOfStatementIncludingComments(at: statement) == index,
-              currentScope(at: index).map({ ["{", ":", "#if"].contains($0.string) }) ?? true,
+              currentScope(at: index).map({ $0 == .startOfScope("{") }) ?? true,
               !isInClosureArguments(at: statement),
               isStartOfStatement(at: statement),
               let previous = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),

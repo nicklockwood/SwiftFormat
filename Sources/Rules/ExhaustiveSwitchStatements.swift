@@ -255,11 +255,19 @@ extension Formatter {
                 return true
             }
             if head == unescaped,
-               let start = index(of: .nonSpaceOrCommentOrLinebreak, in: range),
-               let reference = resolver.unqualifiedEnumCase(named: head, at: start),
-               resolver.sameType(reference.type, as: type)
+               let start = index(of: .nonSpaceOrCommentOrLinebreak, in: range)
             {
-                return true
+                if let reference = resolver.unqualifiedEnumCase(named: head, at: start),
+                   resolver.sameType(reference.type, as: type)
+                {
+                    return true
+                }
+                // A bare case name may already cover this case even when incomplete ancestry
+                // prevents proving its identity. A known local value remains an expression pattern.
+                if resolver.expressionType(in: start ... start) == nil {
+                    unresolvedQualifiedPattern = true
+                }
+                return false
             }
             guard head.hasSuffix(".\(unescaped)") else { return false }
             guard let end = index(of: .nonSpaceOrCommentOrLinebreak, before: payload ?? range.upperBound),

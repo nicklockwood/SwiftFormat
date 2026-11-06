@@ -1475,6 +1475,19 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, declarations: "enum State { case idle, loaded }", expected: nil)
     }
 
+    func testOwnEnumCaseShadowsInheritedStaticProperty() throws {
+        try check("""
+        extension State {
+            static func render() { observeValue(idle) }
+        }
+        """, declarations: """
+        enum Other { case ready }
+        protocol Rendering {}
+        extension Rendering { static var idle: Other { .ready } }
+        enum State: Rendering { case idle, loaded }
+        """, expected: "State")
+    }
+
     func testInheritedInstancePropertyShadowsEnumCase() throws {
         try check("""
         extension State {

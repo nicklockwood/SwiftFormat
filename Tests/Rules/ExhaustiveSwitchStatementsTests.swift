@@ -1537,6 +1537,52 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         try check(input, output, declarations: "enum State: Equatable { case idle, loaded }")
     }
 
+    func testTupleSubtractsOwnBareCaseDespiteAmbiguousConformanceAliases() throws {
+        let input = """
+        import First
+        import Second
+        extension Renamed: ExternalProtocol {}
+        extension State {
+            static func same(_ lhs: State, _ rhs: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.idle, idle): true
+                default: false
+                }
+            }
+        }
+        """
+        let output = """
+        import First
+        import Second
+        extension Renamed: ExternalProtocol {}
+        extension State {
+            static func same(_ lhs: State, _ rhs: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.idle, idle): true
+                case (.idle, .loaded), (.loaded, .idle), (.loaded, .loaded): false
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: "public enum State: Equatable { case idle, loaded }", modules: [
+            "First": "public typealias Renamed = Missing",
+            "Second": "public struct Renamed {}",
+        ])
+    }
+
+    func testTuplePreservesDefaultWhenBareCaseIdentityIsUnresolved() throws {
+        let input = """
+        import External
+        func same(_ lhs: State, _ rhs: State) -> Bool {
+            switch (lhs, rhs) {
+            case (.idle, idle): true
+            default: false
+            }
+        }
+        """
+        try check(input, declarations: "enum State { case idle, loaded }")
+    }
+
     func testTupleDoesNotSubtractLocalValueNamedAfterEnumCase() throws {
         let input = """
         extension State {

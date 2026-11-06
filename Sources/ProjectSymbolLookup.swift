@@ -619,7 +619,8 @@ final class ProjectSymbolLookup {
               }),
               let owner = formatter.parseEnclosingType(containing: index, declarations: declarations)?.fullyQualifiedName,
               case .unqualified(_, true) = project.functionCallReceiver(at: index, in: formatter, visibleFrom: fileURL, declarations: declarations),
-              !project.hasProperty(owner: owner, member: name, visibleFrom: fileURL),
+              // In a static context, the enum's own case takes precedence over inherited
+              // protocol members. Unknown ancestry cannot introduce a shadow of that case.
               let caseName = project.enumCases(named: owner, visibleFrom: fileURL)?.first(where: {
                   $0.replacingOccurrences(of: "`", with: "") == name
               }),

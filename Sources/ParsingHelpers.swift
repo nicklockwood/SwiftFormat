@@ -4687,6 +4687,7 @@ extension Formatter {
         // A `{` followed by `willSet` or `didSet` is a property observer block, not a closure.
         if let openBraceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
            tokens[openBraceIndex] == .startOfScope("{"),
+           isStartOfClosure(at: openBraceIndex),
            !isPropertyObserverBlock(at: openBraceIndex),
            let endOfClosure = self.endOfScope(at: openBraceIndex)
         {

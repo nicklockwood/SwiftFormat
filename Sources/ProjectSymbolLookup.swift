@@ -137,6 +137,7 @@ final class ProjectSymbolLookup {
     var activeAliases = Set<String>()
     var genericContexts = [GenericContext]()
     var activeRequirements = Set<RequirementQuery>()
+    var conditionalExpressions = [AutoUpdatingRange]()
 
     init(formatter: Formatter, project: ProjectIndex, fileURL: URL) {
         self.formatter = formatter
@@ -173,6 +174,12 @@ final class ProjectSymbolLookup {
             return start
         }
         formatter.forEachToken { i, token in
+            if token == .keyword("if") || token == .keyword("switch"),
+               self.conditionalValueRanges(at: i) != nil,
+               let end = formatter.conditionalBranches(at: i)?.last?.endOfBranch
+            {
+                self.conditionalExpressions.append(AutoUpdatingRange(range: i ... end, formatter: formatter))
+            }
             guard ["typealias", "let", "var", "for", "class", "struct", "enum", "actor"].contains(token.string) ||
                 token.isFunctionDeclarationKeyword || token == .startOfScope("{") else { return }
             let namespace = formatter.parseEnclosingType(containing: i, declarations: self.declarations)?.fullyQualifiedName
@@ -2326,6 +2333,14 @@ final class ProjectSymbolLookup {
         {
             return previous
         }
+        if formatter.tokens[previous] == .startOfScope("{") || formatter.tokens[previous] == .startOfScope(":") {
+            for conditional in conditionalExpressions.filter({ $0.range.contains(expression) }).sorted(by: { $0.range.count < $1.range.count }) {
+                let keyword = conditional.range.lowerBound
+                if conditionalValueRanges(at: keyword)?.contains(where: { $0.lowerBound == expression }) == true {
+                    return keyword
+                }
+            }
+        }
         var question: Int?
         if formatter.tokens[previous] == .operator("?", .infix) {
             question = previous
@@ -2565,6 +2580,35 @@ final class ProjectSymbolLookup {
         return nil
     }
 
+    /// A conditional value has one expression per exhaustive branch. Statements, directives,
+    /// and unresolved branches cannot supply a common type just because another branch can.
+    func conditionalValueRanges(at keyword: Int) -> [ClosedRange<Int>]? {
+        guard let branches = formatter.conditionalBranches(at: keyword), let last = branches.last,
+              formatter.conditionalBranchesAreExhaustive(conditionKeywordIndex: keyword, branches: branches),
+              !formatter.tokens[keyword ... last.endOfBranch].contains(.startOfScope("#if")) else { return nil }
+        let ranges = branches.compactMap { branch -> ClosedRange<Int>? in
+            guard let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
+                  first < branch.endOfBranch,
+                  let range = formatter.parseExpressionRange(startingAt: first, allowConditionalExpressions: true),
+                  formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.upperBound) == branch.endOfBranch else { return nil }
+            return range
+        }
+        return ranges.count == branches.count ? ranges : nil
+    }
+
+    func conditionalExpressionType(first: Int, last: Int, depth: Int) -> ResolvedType? {
+        guard formatter.conditionalBranches(at: first)?.last?.endOfBranch == last,
+              let ranges = conditionalValueRanges(at: first) else { return nil }
+        let values = ranges.map { expressionType(in: $0, depth: depth + 1) }
+        guard var result = values.compactMap({ $0 }).first else { return nil }
+        for (range, value) in zip(ranges, values) {
+            guard let branch = value ?? implicitEnumCaseType(in: range, expected: result),
+                  let common = commonType(result, branch) else { return nil }
+            result = common
+        }
+        return result
+    }
+
     func branchExpressionType(first: Int, last: Int, depth: Int) -> ResolvedType? {
         if let question = formatter.index(of: .operator("?", .infix), in: first ..< last) {
             var cursor = question
@@ -2626,6 +2670,9 @@ final class ProjectSymbolLookup {
               let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
               let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1), first <= last else { return nil }
         let tokens = formatter.tokens
+        if tokens[first] == .keyword("if") || tokens[first] == .keyword("switch") {
+            return conditionalExpressionType(first: first, last: last, depth: depth + 1)
+        }
         if tokens[first] == .keyword("try") || tokens[first].string == "await" {
             guard var start = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: first), start <= last else { return nil }
             let isOptionalTry = tokens[first] == .keyword("try") && tokens[start].isOperator("?")

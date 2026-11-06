@@ -10,6 +10,61 @@ import XCTest
 @testable import SwiftFormat
 
 final class ExhaustiveSwitchStatementsTests: XCTestCase {
+    func testConditionalExpressionBindingExpandsProjectEnumDefault() throws {
+        let input = """
+        func render(_ enabled: Bool, current: State, fallback: State) {
+            let selected = if enabled { current } else { fallback }
+            switch selected {
+            case .loaded: print("loaded")
+            default: print("fallback")
+            }
+        }
+        """
+        let output = """
+        func render(_ enabled: Bool, current: State, fallback: State) {
+            let selected = if enabled { current } else { fallback }
+            switch selected {
+            case .loaded: print("loaded")
+            case .idle: print("fallback")
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testConditionalInitializerCallbackExpandsProjectEnumDefault() throws {
+        let input = """
+        func render(_ enabled: Bool) {
+            let handler: Handler<State> = if enabled {
+                .init(callback: { value in
+                    switch value {
+                    default: print("fallback")
+                    }
+                })
+            } else {
+                .init(callback: { _ in })
+            }
+        }
+        """
+        let output = """
+        func render(_ enabled: Bool) {
+            let handler: Handler<State> = if enabled {
+                .init(callback: { value in
+                    switch value {
+                    case .idle, .loaded: print("fallback")
+                    }
+                })
+            } else {
+                .init(callback: { _ in })
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        struct Handler<Value> { init(callback: (Value) -> Void) {} }
+        """)
+    }
+
     func testInheritedProtocolEqualityExpandsAssociatedCallbackDefault() throws {
         let input = """
         func render<Input: Loader>(_ source: Input) {

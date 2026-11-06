@@ -10,6 +10,149 @@ import XCTest
 @testable import SwiftFormat
 
 final class ProjectSymbolLookupTests: XCTestCase {
+    func testIfExpressionPropagatesCallbackExpectedType() throws {
+        try check("""
+        func render(_ enabled: Bool) {
+            let callback: (State) -> Void = if enabled {
+                { value in observeValue(value) }
+            } else {
+                { _ in }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testSwitchExpressionPropagatesCallbackExpectedType() throws {
+        try check("""
+        func render(_ enabled: Bool) {
+            let callback: (State) -> Void = switch enabled {
+            case true: { value in observeValue(value) }
+            default: { _ in }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testNestedConditionalInitializerKeepsExpectedGenericArgument() throws {
+        try check("""
+        func render(_ enabled: Bool) {
+            let handler: Handler<State> = if enabled {
+                .init(callback: { value in observeValue(value) })
+            } else {
+                .init(callback: { _ in })
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Handler<Value> { init(callback: (Value) -> Void) {} }
+        """, expected: "State")
+    }
+
+    func testConditionalConditionCallbackKeepsItsOwnContext() throws {
+        try check("""
+        func render() {
+            let callback: (Other) -> Void = if predicate({ value in observeValue(value) }) {
+                { _ in }
+            } else {
+                { _ in }
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        func predicate(_ callback: (State) -> Void) -> Bool { true }
+        """, expected: "State")
+    }
+
+    func testConditionalBranchClosureCastDoesNotBorrowOuterParameters() throws {
+        try check("""
+        func render(_ enabled: Bool) {
+            let callback: (State) -> Void = if enabled {
+                ({ value in observeValue(value) } as (Any) -> Void)
+            } else {
+                { _ in }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testIfExpressionJoinsKnownProjectTypes() throws {
+        try check("""
+        func render(_ enabled: Bool, current: State, fallback: State) {
+            let selected = if enabled { current } else { fallback }
+            observeValue(selected)
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testNestedConditionalExpressionsPreserveMemberTypes() throws {
+        try check("""
+        func render(_ first: Bool, _ second: Bool, model: Model) {
+            let selected = if first { if second { model.current } else { model.fallback } } else { model.current }
+            observeValue(selected)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let current: State; let fallback: State }
+        """, expected: "State")
+    }
+
+    func testSwitchExpressionJoinsKnownProjectTypes() throws {
+        try check("""
+        func render(_ enabled: Bool, current: State, fallback: State) {
+            let selected = switch enabled {
+            case true: current
+            default: fallback
+            }
+            observeValue(selected)
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testConditionalExpressionRetainsForeignDeclarationContext() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ enabled: Bool, model: Model) {
+            let selected = if enabled { model.current } else { model.fallback }
+            observeValue(selected)
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public let current: State; public let fallback: State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConditionalExpressionDoesNotGuessUnknownBranch() throws {
+        try check("""
+        func render(_ enabled: Bool, current: State) {
+            let selected = if enabled { current } else { unknown() }
+            observeValue(selected)
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testConditionalExpressionDoesNotJoinUnrelatedNominalTypes() throws {
+        try check("""
+        func render(_ enabled: Bool, current: State, fallback: Other) {
+            let selected = if enabled { current } else { fallback }
+            observeValue(selected)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        """, expected: nil)
+    }
+
+    func testConditionalExpressionRequiresSingleExpressionBranches() throws {
+        try check("""
+        func render(_ enabled: Bool, current: State) {
+            let selected = if enabled { consume(); current } else { current }
+            observeValue(selected)
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
     func testProtocolEqualityResolvesAbstractAssociatedProperty() throws {
         try check("""
         func render<Input: Source>(_ source: Input) { observeValue(source.value) }

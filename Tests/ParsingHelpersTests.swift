@@ -3859,6 +3859,15 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertNil(quuxArgs)
     }
 
+    func testParseFunctionCallArgumentsDoesNotIncludeConditionalBody() throws {
+        let formatter = Formatter(tokenize("""
+        let callback = if predicate({ value in consume(value) }) { { _ in } } else { { _ in } }
+        """))
+        let predicate = try XCTUnwrap(formatter.index(of: .identifier("predicate"), after: -1))
+        let arguments = try XCTUnwrap(formatter.parseFunctionCallArguments(after: predicate))
+        XCTAssertEqual(arguments.map(\.value), ["{ value in consume(value) }"])
+    }
+
     func testParseFunctionCallArgumentsMultipleTrailingClosures() throws {
         let input = """
         foo { $0 } onSuccess: { print("ok") } onFailure: { print("error") }

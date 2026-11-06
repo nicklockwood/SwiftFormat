@@ -569,6 +569,7 @@ extension _Descriptors {
             languageMode,
             markdownFiles,
             unknownOptions,
+            timeout,
         ]
     }
 
@@ -1771,6 +1772,15 @@ struct _Descriptors {
         displayName: "Unknown Options",
         help: "Unknown rules or options:",
         keyPath: \.unknownOptions
+    )
+    let timeout = OptionDescriptor(
+        argumentName: "timeout",
+        displayName: "Rule Timeout",
+        help: "CPU seconds each rule may take per file, plus 1ms per token (default 1)",
+        keyPath: \.timeout,
+        type: .text,
+        fromArgument: { Double($0).flatMap { $0 > 0 && $0.isFinite ? $0 : nil } },
+        toArgument: { $0.rounded() == $0 ? String(Int($0)) : String($0) }
     )
 
     // MARK: - DEPRECATED

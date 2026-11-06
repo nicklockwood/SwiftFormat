@@ -1485,7 +1485,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var allOptions: [String: Any] {
         let pairs = Mirror(reflecting: self).children.map { ($0!, $1) }
         var options = Dictionary(pairs, uniquingKeysWith: { $1 })
-        for key in ["fileInfo", "enabledRules", "timeout"] { // Special cases
+        for key in ["fileInfo", "enabledRules"] { // Special cases
             options[key] = nil
         }
         return options

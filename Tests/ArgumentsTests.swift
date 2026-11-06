@@ -1093,6 +1093,22 @@ final class ArgumentsTests: XCTestCase {
         XCTAssertEqual(paths, ["/dir/foo bar", "/dir/baz"])
     }
 
+    func testParseTimeoutOption() throws {
+        let options = try Options(["timeout": "2.5"], in: "")
+        XCTAssertEqual(options.formatOptions?.timeout, 2.5)
+    }
+
+    func testParseInvalidTimeoutOptionThrows() {
+        for value in ["0", "-1", "foo", "inf"] {
+            XCTAssertThrowsError(try Options(["timeout": value], in: ""), value)
+        }
+    }
+
+    func testParseTimeoutOptionFromConfigFile() throws {
+        let args = try parseConfigFile(Data("--timeout 5".utf8))
+        XCTAssertEqual(try Options(args.first ?? [:], in: "").formatOptions?.timeout, 5)
+    }
+
     func testParseDeprecatedOption() throws {
         let options = try Options(["ranges": "nospace"], in: "")
         XCTAssertEqual(options.formatOptions?.spaceAroundRangeOperators, .remove)

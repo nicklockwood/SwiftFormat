@@ -227,6 +227,7 @@ func printHelp(as type: CLI.OutputType) {
     --swift-version    \(stripMarkdown(Descriptors.swiftVersion.help))
     --language-mode    \(stripMarkdown(Descriptors.languageMode.help))
     --unknown-options  \(stripMarkdown(Descriptors.unknownOptions.help))
+    --timeout          \(stripMarkdown(Descriptors.timeout.help))
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --project-index    Project symbol indexing: "auto" (default) or "disabled"

@@ -156,6 +156,10 @@ extension Formatter {
 
     /// The declaration's visibility after accounting for enclosing types and extensions.
     func effectiveVisibility(of declaration: Declaration) -> Visibility {
+        // Protocol requirements have the protocol's access level even without a modifier.
+        if let owner = declaration.parentType, owner.keyword == "protocol" {
+            return effectiveVisibility(of: owner)
+        }
         let inheritedVisibility: Visibility?
         if declaration.visibility() == nil, declaration.parent?.keyword == "extension" {
             inheritedVisibility = declaration.parent?.visibility()

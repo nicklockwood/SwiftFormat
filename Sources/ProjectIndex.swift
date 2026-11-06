@@ -303,7 +303,7 @@ struct SourceFileIndex: Codable, Equatable {
         var hasUnresolvedConstraints: Bool? = nil
     }
 
-    static let cacheVersion = 26
+    static let cacheVersion = 27
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -948,7 +948,7 @@ struct ProjectIndex {
         guard let keys = symbolTypeKeys(named: owner, visibleFrom: fileURL), !keys.isEmpty else { return nil }
         var result: PropertySymbol?
         for key in keys {
-            guard typesByModule[key]?.count == 1,
+            guard typesByModule[key]?.count == 1 || symbolProtocolDeclarationsByModule[key]?.count == 1,
                   let matches = memberProperties(named: member, owner: key, visibleFrom: accessURL ?? fileURL, accessingType: accessType),
                   matches.count == 1, let symbol = matches.first,
                   symbol.declaration.isStatic == isStatic,
@@ -2986,6 +2986,12 @@ extension ProjectIndex {
             result = declaration
         }
         return result
+    }
+
+    /// Protocol receivers can expose concrete member annotations without solving associated types.
+    func isProtocolDeclaration(named name: String, visibleFrom fileURL: URL) -> Bool {
+        guard let keys = symbolTypeKeys(named: name, visibleFrom: fileURL), !keys.isEmpty else { return false }
+        return keys.allSatisfy { symbolProtocolDeclarationsByModule[$0]?.count == 1 && typesByModule[$0] == nil }
     }
 
     func typeAlias(named name: String, visibleFrom fileURL: URL) -> SourceFileIndex.TypeAliasDeclaration? {

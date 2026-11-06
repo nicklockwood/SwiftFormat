@@ -2831,6 +2831,35 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testConcreteProtocolPropertyExpandsImportedEnum() throws {
+        let input = """
+        import Models
+        func render(_ model: Model) {
+            switch model.state {
+            case .loaded:
+                showContent()
+            default:
+                showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        import Models
+        func render(_ model: Model) {
+            switch model.state {
+            case .loaded:
+                showContent()
+            case .idle, .failed:
+                showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: "", modules: ["Models": """
+        public enum State { case idle, loaded, failed }
+        public protocol Model { var state: State { get } }
+        """])
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

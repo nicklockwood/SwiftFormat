@@ -4511,6 +4511,121 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: nil)
     }
 
+    func testExplicitExistentialProtocolProperty() throws {
+        try check("""
+        func render(_ model: any Model) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model { var state: State { get } }
+        """, expected: "State")
+    }
+
+    func testConcreteProtocolRequirementProperty() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model { var state: State { get } }
+        """, expected: "State")
+    }
+
+    func testPublicProtocolRequirementRetainsVisibilityAcrossModules() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Model { var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConcreteProtocolExtensionPropertyKeepsImports() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        enum State { case unrelated }
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: [
+            "Models": "public protocol Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public var state: State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConcreteProtocolPropertyInsideExtension() throws {
+        try check("""
+        extension Model { func render() { observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model { var state: State { get } }
+        """, expected: "State")
+    }
+
+    func testProtocolAssociatedTypePropertyRemainsUnknown() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case unrelated }
+        protocol Model { associatedtype State; var state: State { get } }
+        """, expected: nil)
+    }
+
+    func testProtocolPrimaryAssociatedTypeArgumentsRemainUnknown() throws {
+        try check("""
+        func render(_ model: Model<State>) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model<Value> { associatedtype Value; var state: State { get } }
+        """, expected: nil)
+    }
+
+    func testConstrainedProtocolExtensionPropertyRemainsUnknown() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model { associatedtype Value }
+        extension Model where Value == Int { var state: State { .idle } }
+        """, expected: nil)
+    }
+
+    func testCompetingProtocolExtensionPropertyRemainsUnknown() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public protocol Model { associatedtype Value }
+            extension Model { public var state: State { .idle } }
+            """,
+            "Adapters": """
+            import Models
+            public enum State { case unrelated }
+            extension Model where Value == Int { public var state: State { .unrelated } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testProtocolExtensionPropertyDoesNotReachUnrelatedNamesake() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Models.Model) { observeValue(model.state) }
+        """, sources: [
+            "Models": "public protocol Model {}",
+            "Adapters": """
+            public enum State { case unrelated }
+            public protocol Model {}
+            extension Model { public var state: State { .unrelated } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

@@ -363,7 +363,7 @@ final class ProjectSymbolLookup {
     func type(named rawName: String, namespace: String?, at index: Int? = nil, sourceFileURL: URL? = nil, substitutions: [String: ResolvedType] = [:], requiresGenericArguments: Bool = false, depth: Int = 0) -> ResolvedType? {
         guard depth < 16 else { return nil }
         let tokens = tokenize(rawName).filter { !$0.isSpaceOrCommentOrLinebreak }
-            .drop(while: { ["inout", "borrowing", "consuming", "sending"].contains($0.string) })
+            .drop(while: { ["inout", "borrowing", "consuming", "sending", "any"].contains($0.string) })
         if let index, tokens.contains(where: { token in
             token.isIdentifier && (unavailableTypes[token.string] ?? []).contains { $0.range.contains(index) }
         }) {
@@ -679,13 +679,20 @@ final class ProjectSymbolLookup {
         }
         guard let ownerName = qualifiedName(for: owner),
               let nominal = ProjectTypeReference(owner.name),
-              let declaration = project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL),
               let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL, accessedFromType: accessingType) else { return nil }
         let arguments = owner.genericArguments ?? nominal.arguments.compactMap {
             type(named: $0, namespace: owner.namespace, sourceFileURL: owner.sourceFileURL)
         }
-        guard declaration.genericParameters.count == arguments.count else { return nil }
-        let substitutions = Dictionary(uniqueKeysWithValues: zip(declaration.genericParameters, arguments))
+        let parameters: [String]
+        if let declaration = project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) {
+            parameters = declaration.genericParameters
+        } else if project.isProtocolDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) {
+            parameters = []
+        } else {
+            return nil
+        }
+        guard parameters.count == arguments.count else { return nil }
+        let substitutions = Dictionary(uniqueKeysWithValues: zip(parameters, arguments))
         if let annotation = member.declaration.type {
             return type(named: annotation, namespace: member.declaration.declaringType, sourceFileURL: member.fileURL, substitutions: substitutions)
         }

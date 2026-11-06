@@ -183,6 +183,28 @@ final class TestSuiteAccessControlTests: XCTestCase {
         testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
     }
 
+    func testXCTestPreservesMembersOfOpenTestClass() {
+        let input = """
+        import XCTest
+
+        open class CollectionTestCase: XCTestCase {
+            public var context: TestContext {
+                _context!
+            }
+
+            open var isAvailable: Bool {
+                true
+            }
+
+            func testExample() {
+                XCTAssertTrue(isAvailable)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .testSuiteAccessControl)
+    }
+
     func testXCTestPreservesStaticFunctions() {
         let input = """
         import XCTest

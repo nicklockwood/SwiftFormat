@@ -36,11 +36,13 @@ final class ProjectSymbolLookup {
     final class FunctionType {
         let parameters: [ResolvedType]
         let result: ResolvedType
+        let qualifiers: [String]
         let requiresArgumentProof: Bool
 
-        init(parameters: [ResolvedType], result: ResolvedType, requiresArgumentProof: Bool = false) {
+        init(parameters: [ResolvedType], result: ResolvedType, qualifiers: [String], requiresArgumentProof: Bool = false) {
             self.parameters = parameters
             self.result = result
+            self.qualifiers = qualifiers
             self.requiresArgumentProof = requiresArgumentProof
         }
     }
@@ -98,6 +100,7 @@ final class ProjectSymbolLookup {
         var scope: AutoUpdatingRange
         var type: String?
         var value: AutoUpdatingRange?
+        var tuplePath = [Int]()
         var namespace: String?
         var unwrapsOptional = false
         var requiresPrecedingDeclaration = false
@@ -145,9 +148,11 @@ final class ProjectSymbolLookup {
         self.fileURL = fileURL
         declarations = formatter.parseDeclarations()
         declarations.forEachRecursiveDeclaration { declaration in
-            if let type = declaration.asTypeDeclaration {
+            if let type = declaration.asTypeDeclaration,
+               let openingBrace = formatter.index(of: .startOfScope("{"), in: type.keywordIndex ..< type.range.upperBound)
+            {
                 self.addGenericContext(type.genericParameters?.types ?? [],
-                                       whereClause: formatter.index(of: .keyword("where"), in: type.keywordIndex ..< type.openBraceIndex),
+                                       whereClause: formatter.index(of: .keyword("where"), in: type.keywordIndex ..< openingBrace),
                                        scope: type.range, namespace: type.fullyQualifiedName)
                 if type.definesType, let name = type.fullyQualifiedName {
                     self.localTypes[name, default: []].append(type)
@@ -205,6 +210,9 @@ final class ProjectSymbolLookup {
                 let isPattern = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("case") ||
                     formatter.startOfScope(at: i).map { formatter.tokens[$0] == .startOfScope("(") } == true
                 guard !isPattern else { return }
+                if conditional == nil, self.addTupleDeclarationBindings(at: i, scope: scope, namespace: namespace) {
+                    return
+                }
                 let property = formatter.parsePropertyDeclaration(atIntroducerIndex: i)
                 let names = conditional != nil && property != nil ? [property!.identifier] : formatter.namesInDeclaration(at: i) ?? []
                 var unwrapsOptional = false
@@ -341,7 +349,10 @@ final class ProjectSymbolLookup {
                   let body = formatter.startOfConditionalBranchBody(after: index),
                   let end = formatter.endOfScope(at: body) else { return }
             if token == .keyword("catch") {
-                self.addBinding("error", at: index, scope: body ... end, namespace: nil)
+                let patternEnd = formatter.index(of: .keyword("where"), in: index + 1 ..< body) ?? body
+                if !formatter.tokens[index + 1 ..< patternEnd].contains(where: { $0 == .keyword("let") || $0 == .keyword("var") }) {
+                    self.addBinding("error", at: index, scope: body ... end, namespace: nil)
+                }
             }
             if token == .keyword("catch") || formatter.tokens[index ..< body].contains(.keyword("case")) {
                 let scopeEnd = token == .keyword("guard")
@@ -362,6 +373,48 @@ final class ProjectSymbolLookup {
         for (range, scope, source, excludedScope) in patterns {
             addPatternBindings(in: range, scope: scope, source: source, excludedScope: excludedScope)
         }
+    }
+
+    /// Destructured declarations retain the tuple's annotation or initializer and project
+    /// each binding from that shared source. Initializers are evaluated before the new names.
+    private func addTupleDeclarationBindings(at index: Int, scope: ClosedRange<Int>, namespace: String?) -> Bool {
+        guard let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+              formatter.tokens[open] == .startOfScope("(") else { return false }
+        var pattern: Int? = open
+        while let start = pattern {
+            guard let close = formatter.tokens[start] == .startOfScope("(") ? formatter.endOfScope(at: start) : start,
+                  formatter.tokens[start].isIdentifier || formatter.tokens[start] == .startOfScope("(") else { break }
+            var end = close
+            var tail = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: close)
+            var annotation: String?
+            if let colon = tail, formatter.tokens[colon] == .delimiter(":"),
+               let start = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colon), let type = formatter.parseType(at: start)
+            {
+                annotation = type.string
+                end = type.range.upperBound
+                tail = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: end)
+            }
+            let value = tail.flatMap { formatter.tokens[$0] == .operator("=", .infix) ? formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: $0) : nil }
+                .flatMap { formatter.parseExpressionRange(startingAt: $0, allowConditionalExpressions: true) }
+            func add(in range: ClosedRange<Int>, path: [Int]) {
+                guard let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
+                      let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1), first <= last else { return }
+                if first == last, formatter.tokens[first].isIdentifier, formatter.tokens[first].string != "_" {
+                    addBinding(formatter.tokens[first].string, at: index, scope: scope, type: annotation, value: value, tuplePath: path,
+                               namespace: namespace, requiresPrecedingDeclaration: formatter.declarationScope(at: index) == .local,
+                               isGlobal: formatter.declarationScope(at: index) == .global)
+                } else if formatter.tokens[first] == .startOfScope("("), formatter.endOfScope(at: first) == last {
+                    for (position, element) in formatter.parseTupleArguments(startOfScope: first).enumerated() {
+                        add(in: element.valueRange, path: path + [position])
+                    }
+                }
+            }
+            add(in: start ... close, path: [])
+            guard let comma = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: value?.upperBound ?? end),
+                  formatter.tokens[comma] == .delimiter(",") else { break }
+            pattern = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: comma)
+        }
+        return true
     }
 
     func addPatternBindings(in range: Range<Int>, scope: ClosedRange<Int>, source: ClosedRange<Int>?, excludedScope: ClosedRange<Int>? = nil) {
@@ -402,18 +455,23 @@ final class ProjectSymbolLookup {
                     }
                 }
             }
-            addBinding(name, at: index, scope: scope, namespace: nil, pattern: pattern, excludedScope: excludedScope)
+            let cast = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: location)
+                .flatMap { formatter.tokens[$0] == .keyword("as") ? formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: $0) : nil }
+                .flatMap { formatter.parseType(at: $0) }
+            let annotation = cast.flatMap { $0.range.upperBound < range.upperBound ? $0.string : nil }
+            let namespace = formatter.parseEnclosingType(containing: index, declarations: declarations)?.fullyQualifiedName
+            addBinding(name, at: index, scope: scope, type: annotation, namespace: namespace, pattern: pattern, excludedScope: excludedScope)
         }
     }
 
     func addBinding(_ name: String, at index: Int, scope: ClosedRange<Int>, type: String? = nil,
-                    value: ClosedRange<Int>? = nil, namespace: String?, unwrapsOptional: Bool = false,
+                    value: ClosedRange<Int>? = nil, tuplePath: [Int] = [], namespace: String?, unwrapsOptional: Bool = false,
                     requiresPrecedingDeclaration: Bool = false, isGlobal: Bool = false, wrapsOptional: Bool = false, pattern: PatternBinding? = nil, closure: ClosureBinding? = nil, element: ElementBinding? = nil, typeRequiresGenericArguments: Bool = false, excludedScope: ClosedRange<Int>? = nil)
     {
         bindings[name, default: []].append(Binding(
             element: element, closure: closure, pattern: pattern, wrapsOptional: wrapsOptional, location: AutoUpdatingRange(range: index ... index, formatter: formatter),
             scope: AutoUpdatingRange(range: scope, formatter: formatter), type: type,
-            value: value.map { AutoUpdatingRange(range: $0, formatter: formatter) }, namespace: namespace,
+            value: value.map { AutoUpdatingRange(range: $0, formatter: formatter) }, tuplePath: tuplePath, namespace: namespace,
             unwrapsOptional: unwrapsOptional, requiresPrecedingDeclaration: requiresPrecedingDeclaration, isGlobal: isGlobal,
             typeRequiresGenericArguments: typeRequiresGenericArguments,
             excludedScope: excludedScope.map { AutoUpdatingRange(range: $0, formatter: formatter) }
@@ -545,7 +603,7 @@ final class ProjectSymbolLookup {
         result.tupleElements = result.tupleElements?.map { TupleElement(label: $0.label, type: typeAtUseSite($0.type, at: index, depth: depth + 1)) }
         if let signature = result.functionType {
             result.functionType = FunctionType(parameters: signature.parameters.map { typeAtUseSite($0, at: index, depth: depth + 1) },
-                                               result: typeAtUseSite(signature.result, at: index, depth: depth + 1), requiresArgumentProof: signature.requiresArgumentProof)
+                                               result: typeAtUseSite(signature.result, at: index, depth: depth + 1), qualifiers: signature.qualifiers, requiresArgumentProof: signature.requiresArgumentProof)
         }
         if let enclosing = result.enclosingType {
             result.enclosingType = EnclosingType(typeAtUseSite(enclosing.type, at: index, depth: depth + 1))
@@ -711,7 +769,16 @@ final class ProjectSymbolLookup {
                                      namespace: namespace, at: index, sourceFileURL: sourceFileURL,
                                      substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
                 {
-                    functionType = FunctionType(parameters: resolved, result: result)
+                    func conventions(in range: Range<Int>) -> String {
+                        signature.tokens[range].filter { !$0.isSpaceOrCommentOrLinebreak }
+                            .prefix { ["inout", "borrowing", "consuming", "sending", "isolated", "__shared", "__owned"].contains($0.string) }.string
+                    }
+                    // Equality requires the same effects and ownership conventions, even when
+                    // the parameter and result types themselves have the same nominal identity.
+                    let qualifiers = [signature.tokens[..<open].filter { !$0.isSpaceOrCommentOrLinebreak }.string,
+                                      signature.tokens[close + 1 ..< arrow].filter { !$0.isSpaceOrCommentOrLinebreak }.string] +
+                        parameters.map { conventions(in: Range($0.valueRange)) } + [conventions(in: arrow + 1 ..< signature.tokens.count)]
+                    functionType = FunctionType(parameters: resolved, result: result, qualifiers: qualifiers)
                 }
             }
             // A result's optional suffix belongs to the result, not to the function value.
@@ -969,7 +1036,7 @@ final class ProjectSymbolLookup {
             return left.count == right.count && zip(left, right).allSatisfy { $0.label == $1.label && sameType($0.type, as: $1.type) }
         }
         if let left = lhs.functionType, let right = rhs.functionType {
-            return left.parameters.count == right.parameters.count &&
+            return left.qualifiers == right.qualifiers && left.parameters.count == right.parameters.count &&
                 zip(left.parameters, right.parameters).allSatisfy { sameType($0, as: $1) } && sameType(left.result, as: right.result)
         }
         if let left = standardScalarName(lhs), let right = standardScalarName(rhs) {
@@ -1059,10 +1126,12 @@ final class ProjectSymbolLookup {
             guard activeBindings.insert(identity).inserted else { return nil }
             defer { activeBindings.remove(identity) }
             var result: ResolvedType?
+            var tuplePath = binding.tuplePath
             if let annotation = binding.type {
                 result = type(named: annotation, namespace: binding.namespace, at: binding.location.range.lowerBound, requiresGenericArguments: binding.typeRequiresGenericArguments)
             } else if let value = binding.value {
-                result = expressionType(in: value.range, depth: depth + 1)
+                result = expressionType(in: value.range, projecting: tuplePath, depth: depth + 1)
+                tuplePath = []
             } else if let element = binding.element,
                       let collection = expressionType(in: element.source.range, depth: depth + 1)
             {
@@ -1083,6 +1152,9 @@ final class ProjectSymbolLookup {
                 }
             } else if binding.unwrapsOptional {
                 result = bindingType(named: name, at: binding.location.range.lowerBound, depth: depth + 1)
+            }
+            for position in tuplePath {
+                result = result.flatMap { memberType(owner: $0, name: String(position)) }
             }
             if binding.wrapsOptional, let current = result, !current.name.hasSuffix("?") {
                 result?.name += "?"
@@ -1338,7 +1410,7 @@ final class ProjectSymbolLookup {
         }
         guard !methodsAreAbsent else { return value }
         var result = value
-        result.functionType = FunctionType(parameters: signature.parameters, result: signature.result, requiresArgumentProof: true)
+        result.functionType = FunctionType(parameters: signature.parameters, result: signature.result, qualifiers: signature.qualifiers, requiresArgumentProof: true)
         return result
     }
 
@@ -1989,6 +2061,13 @@ final class ProjectSymbolLookup {
                 return match(instancePattern, to: instanceValue, nesting: nesting + 1, invariant: invariant)
             }
             guard !value.isMetatype else { return false }
+            if let signature = pattern.functionType {
+                guard let actual = value.functionType, signature.qualifiers == actual.qualifiers,
+                      signature.parameters.count == actual.parameters.count else { return false }
+                return zip(signature.parameters, actual.parameters).allSatisfy {
+                    match($0, to: $1, nesting: nesting + 1, invariant: invariant)
+                } && match(signature.result, to: actual.result, nesting: nesting + 1, invariant: invariant)
+            }
             if let elements = pattern.tupleElements {
                 guard let actual = value.tupleElements, elements.count == actual.count else { return false }
                 return zip(elements, actual).allSatisfy {
@@ -2665,11 +2744,26 @@ final class ProjectSymbolLookup {
         return metatype
     }
 
-    func expressionType(in range: ClosedRange<Int>, expected: ResolvedType? = nil, depth: Int = 0) -> ResolvedType? {
+    func expressionType(in range: ClosedRange<Int>, projecting tuplePath: [Int] = [], expected: ResolvedType? = nil, depth: Int = 0) -> ResolvedType? {
         guard depth < 32,
               let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(range)),
               let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1), first <= last else { return nil }
         let tokens = formatter.tokens
+        if let position = tuplePath.first {
+            if tokens[first] == .startOfScope("("), formatter.endOfScope(at: first) == last {
+                let arguments = formatter.parseTupleArguments(startOfScope: first)
+                if arguments.count == 1, let argument = arguments.first, argument.label == nil {
+                    return expressionType(in: argument.valueRange, projecting: tuplePath, depth: depth + 1)
+                }
+                guard arguments.indices.contains(position) else { return nil }
+                return expressionType(in: arguments[position].valueRange, projecting: Array(tuplePath.dropFirst()), depth: depth + 1)
+            }
+            var result = expressionType(in: first ... last, depth: depth + 1)
+            for position in tuplePath {
+                result = result.flatMap { memberType(owner: $0, name: String(position)) }
+            }
+            return result
+        }
         if tokens[first] == .keyword("if") || tokens[first] == .keyword("switch") {
             return conditionalExpressionType(first: first, last: last, depth: depth + 1)
         }

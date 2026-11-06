@@ -6317,3 +6317,34 @@ extension Formatter {
         )
     }
 }
+
+extension Formatter {
+    /// Parses the case values in a single declaration, skipping commas inside associated values.
+    func enumCaseRanges(at caseIndex: Int) -> [Range<Int>] {
+        guard let scopeEnd = endOfScope(at: caseIndex),
+              var currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: caseIndex)
+        else { return [] }
+
+        var result: [Range<Int>] = []
+        var searchIndex = caseIndex
+        while let boundary = index(after: searchIndex, where: {
+            $0 == .delimiter(",") || $0 == .delimiter(";") || $0.isDeclarationTypeKeyword
+                || $0.isAttribute || $0 == .startOfScope("#if")
+                || $0 == .keyword("#else") || $0 == .keyword("#elseif")
+        }), boundary < scopeEnd {
+            if tokens[boundary] != .delimiter(",") {
+                if currentStart < boundary {
+                    result.append(currentStart ..< boundary)
+                }
+                return result
+            }
+            result.append(currentStart ..< boundary)
+            currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: boundary) ?? boundary
+            searchIndex = boundary
+        }
+        if currentStart < scopeEnd {
+            result.append(currentStart ..< scopeEnd)
+        }
+        return result
+    }
+}

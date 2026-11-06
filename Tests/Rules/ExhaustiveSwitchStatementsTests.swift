@@ -10,6 +10,86 @@ import XCTest
 @testable import SwiftFormat
 
 final class ExhaustiveSwitchStatementsTests: XCTestCase {
+    func testCatchCastExpandsProjectErrorEnum() throws {
+        let input = """
+        func render() {
+            do { try externalCall() }
+            catch let error as Failure {
+                switch error {
+                case .offline: print("offline")
+                default: print("failure")
+                }
+            }
+        }
+        """
+        let output = """
+        func render() {
+            do { try externalCall() }
+            catch let error as Failure {
+                switch error {
+                case .offline: print("offline")
+                case .cancelled: print("failure")
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: "enum Failure: Error { case offline, cancelled }")
+    }
+
+    func testTupleDeclarationExpandsProjectedProjectEnum() throws {
+        let input = """
+        func render(_ pair: Pair<State>) {
+            let (state, _) = pair.split()
+            switch state {
+            case .loaded: print("loaded")
+            default: print("fallback")
+            }
+        }
+        """
+        let output = """
+        func render(_ pair: Pair<State>) {
+            let (state, _) = pair.split()
+            switch state {
+            case .loaded: print("loaded")
+            case .idle: print("fallback")
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        struct Pair<Value> { func split() -> (Value, Int) { fatalError() } }
+        """)
+    }
+
+    func testAssociatedFunctionEqualityExpandsCallbackEnum() throws {
+        let input = """
+        func render(_ source: Model) {
+            consume(source) { value in
+                switch value {
+                case .loaded: print("loaded")
+                default: print("fallback")
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ source: Model) {
+            consume(source) { value in
+                switch value {
+                case .loaded: print("loaded")
+                case .idle: print("fallback")
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = (State) -> Int }
+        func consume<Input: Source, Value>(_ input: Input, handle: (Value) -> Void) where Input.Output == (Value) -> Int {}
+        """)
+    }
+
     func testConditionalExpressionBindingExpandsProjectEnumDefault() throws {
         let input = """
         func render(_ enabled: Bool, current: State, fallback: State) {

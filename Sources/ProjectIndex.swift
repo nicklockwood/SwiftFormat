@@ -1806,7 +1806,8 @@ func makeSourceFileIndex(
             $0.asTypeDeclaration?.visibility()
         }
         if let typeDeclaration = declaration.asTypeDeclaration,
-           let name = declaration.fullyQualifiedName
+           let name = declaration.fullyQualifiedName,
+           let openingBrace = formatter.index(of: .startOfScope("{"), in: declaration.keywordIndex ..< declaration.range.upperBound)
         {
             // Inverse conformances suppress an implicit capability; they cannot contribute
             // inherited declarations. Preserve the original syntax for noncopyability metadata.
@@ -1815,7 +1816,7 @@ func makeSourceFileIndex(
             }
             let inheritedTypes = Array(Set(conformances.flatMap(\.conformance.indexedNominalTypeNames))).sorted()
             var generics = typeDeclaration.genericParameters?.types ?? []
-            if let clause = formatter.index(of: .keyword("where"), in: typeDeclaration.keywordIndex ..< typeDeclaration.openBraceIndex) {
+            if let clause = formatter.index(of: .keyword("where"), in: typeDeclaration.keywordIndex ..< openingBrace) {
                 formatter.parseGenericTypes(from: clause, into: &generics)
             }
             let requirements = generics.flatMap(\.conformances).flatMap(\.indexedRequirements)

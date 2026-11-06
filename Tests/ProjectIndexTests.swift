@@ -27,6 +27,15 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testIncompleteNominalHeaderDoesNotContributeInheritanceMetadata() {
+        let index = makeSourceFileIndex(from: """
+        enum State { case idle, loaded }
+        class Incomplete: NSObject()
+        """, moduleIdentifiers: ["App"])
+        XCTAssertEqual(index.typeDeclarations.map(\.name), ["State"])
+        XCTAssertEqual(index.inheritanceDeclarations?.map(\.owner), ["State"])
+    }
+
     func testProtocolEqualitiesAffectDeclarationFingerprint() throws {
         let first = makeSourceFileIndex(from: """
         protocol Source where Output == First { associatedtype Output }

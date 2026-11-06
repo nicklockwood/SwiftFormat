@@ -53,6 +53,13 @@ extension Formatter {
               token != .startOfScope("{") || isStartOfClosure(at: index)
         else { return nil }
 
+        // A wrapped trailing closure belongs to the preceding call, not a separate statement.
+        if token == .startOfScope("{"),
+           let expression = parseExpressionRange(containing: index), expression.lowerBound < index
+        {
+            return nil
+        }
+
         if let scope = startOfScope(at: index), tokens[scope] == .startOfScope("{"),
            isStartOfClosure(at: scope),
            let arguments = parseClosureArguments(at: scope), index <= arguments.inKeywordIndex

@@ -970,6 +970,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapParameters: WrapMode
     public var wrapCollections: WrapMode
     public var wrapTypealiases: WrapMode
+    public var wrapGenericRequirements: WrapMode
     public var wrapEnumCases: WrapEnumCases
     public var wrapSingleLineEnumCases: Bool
     public var closingParenPosition: ClosingParenPosition
@@ -1150,6 +1151,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapParameters: WrapMode = .default,
                 wrapCollections: WrapMode = .preserve,
                 wrapTypealiases: WrapMode = .preserve,
+                wrapGenericRequirements: WrapMode = .preserve,
                 wrapEnumCases: WrapEnumCases = .always,
                 wrapSingleLineEnumCases: Bool = false,
                 closingParenPosition: ClosingParenPosition = .balanced,
@@ -1326,6 +1328,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
         self.wrapTypealiases = wrapTypealiases
+        self.wrapGenericRequirements = wrapGenericRequirements
         self.wrapEnumCases = wrapEnumCases
         self.wrapSingleLineEnumCases = wrapSingleLineEnumCases
         self.closingParenPosition = closingParenPosition

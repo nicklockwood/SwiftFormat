@@ -127,7 +127,7 @@ final class ProjectSymbolLookup {
     var genericTypeScopes = [String: [(range: AutoUpdatingRange, parameters: [String])]]()
 
     var localTypes = [String: [TypeDeclaration]]()
-    var unindexedFunctions = Set<String>()
+    var localFunctionScopes = [String: [AutoUpdatingRange]]()
     var activeBindings = Set<ObjectIdentifier>()
     var activeAliases = Set<String>()
     var genericContexts = [GenericContext]()
@@ -223,8 +223,11 @@ final class ProjectSymbolLookup {
             } else if token.isFunctionDeclarationKeyword,
                       let function = formatter.parseFunctionDeclaration(keywordIndex: i)
             {
-                if formatter.declarationScope(at: i) == .local, let name = function.name {
-                    self.unindexedFunctions.insert(name)
+                if formatter.declarationScope(at: i) == .local, let name = function.name,
+                   let start = lexicalScope(at: i), let end = formatter.endOfScope(at: start)
+                {
+                    self.localFunctionScopes[name.replacingOccurrences(of: "`", with: ""), default: []]
+                        .append(AutoUpdatingRange(range: start ... end, formatter: formatter))
                 }
                 self.addGenericContext(function.genericParameterRange.map { formatter.parseGenericTypes(from: $0.lowerBound).types } ?? [],
                                        whereClause: function.whereClauseRange?.lowerBound,
@@ -956,12 +959,17 @@ final class ProjectSymbolLookup {
         return leftArguments.count == rightArguments.count && zip(leftArguments, rightArguments).allSatisfy { sameType($0, as: $1) }
     }
 
+    /// Local functions are hoisted within their lexical scope, including before their declaration.
+    func hasLocalFunction(named name: String, at index: Int) -> Bool {
+        localFunctionScopes[name.replacingOccurrences(of: "`", with: "")]?.contains { $0.range.contains(index) } == true
+    }
+
     /// Resolve a bare enum case in its declaration's scope without mistaking a local value for it.
     func unqualifiedEnumCase(named name: String, at index: Int) -> (name: String, type: ResolvedType, payloadTypes: [String])? {
         let name = name.replacingOccurrences(of: "`", with: "")
         let spellings = [name, "`\(name)`"]
         guard spellings.allSatisfy({ spelling in
-                  !unindexedFunctions.contains(spelling) &&
+                  !hasLocalFunction(named: spelling, at: index) &&
                       unavailableTypes[spelling]?.contains(where: { $0.range.contains(index) }) != true &&
                       bindings[spelling]?.contains(where: { $0.isVisible(at: index) && !$0.isGlobal }) != true
               }),
@@ -978,7 +986,7 @@ final class ProjectSymbolLookup {
     }
 
     func bindingType(named name: String, at index: Int, depth: Int) -> ResolvedType? {
-        guard depth < 32, !unindexedFunctions.contains(name),
+        guard depth < 32, !hasLocalFunction(named: name, at: index),
               unavailableTypes[name]?.contains(where: { $0.range.contains(index) }) != true else { return nil }
         if name.hasPrefix("$"), let position = Int(name.dropFirst()) {
             var scope = formatter.startOfScope(at: index)
@@ -1666,6 +1674,27 @@ final class ProjectSymbolLookup {
                   let root = reference.name.split(separator: ".").first else { return false }
             return names.contains(String(root))
         }
+        func infer(_ raw: String, from value: ResolvedType) -> Bool {
+            let missing = names.subtracting(substitutions.keys)
+            guard !missing.isEmpty else { return false }
+            let placeholders = substitutions.merging(Dictionary(uniqueKeysWithValues: missing.map {
+                ($0, ResolvedType(name: "$generic:" + $0))
+            })) { _, generic in generic }
+            guard let pattern = type(named: raw, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL,
+                                     substitutions: placeholders, requiresGenericArguments: true) else { return false }
+            // Matching may bind several variables before a later component conflicts. Commit
+            // substitutions only after the entire equality has matched successfully.
+            var inferred = substitutions
+            guard matchGenericType(pattern, to: value, genericNames: missing, source: symbol.fileURL, bind: { name, value, _ in
+                if let previous = inferred[name], !sameType(previous, as: value) {
+                    return false
+                }
+                inferred[name] = value
+                return true
+            }), inferred.count > substitutions.count else { return false }
+            substitutions = inferred
+            return true
+        }
         for _ in 0 ... requirements.count {
             var changed = false
             for requirement in requirements {
@@ -1680,6 +1709,10 @@ final class ProjectSymbolLookup {
                     changed = true
                 } else if let rhs, isVariable(requirement.subject), substitutions[requirement.subject] == nil {
                     substitutions[requirement.subject] = rhs
+                    changed = true
+                } else if let lhs, infer(requirement.target, from: lhs) {
+                    changed = true
+                } else if let rhs, infer(requirement.subject, from: rhs) {
                     changed = true
                 }
             }
@@ -1808,43 +1841,16 @@ final class ProjectSymbolLookup {
         return result
     }
 
-    /// Bind a declaration's generic parameters from a known receiver and the call's arguments.
-    func substitutions(for symbol: ProjectIndex.FunctionSymbol, owner: ResolvedType?,
-                       arguments: [Formatter.FunctionCallArgument], depth: Int, ignoringLabelAt ignoredLabel: Int? = nil, contextualClosureArgumentAt contextualArgument: Int? = nil) -> [String: ResolvedType]?
+    /// Match type structure without choosing conversions. The caller decides how to retain
+    /// inferred variables and whether an invariant path fixes their eventual specialization.
+    func matchGenericType(_ pattern: ResolvedType, to value: ResolvedType, genericNames: Set<String>, source: URL,
+                          bind: (String, ResolvedType, Bool) -> Bool) -> Bool
     {
-        var substitutions = [String: ResolvedType]()
-        if let name = symbol.declaration.declaringType, let owner {
-            guard let declaringOwner = projectedType(owner, to: name, source: symbol.fileURL),
-                  let values = nominalSubstitutions(for: declaringOwner) else { return nil }
-            substitutions = values
-            substitutions["Self"] = owner
-        } else if let name = symbol.declaration.declaringType,
-                  project.typeDeclaration(named: name, visibleFrom: symbol.fileURL)?.genericParameters.isEmpty == false
-        {
-            return nil
-        }
-        for name in symbol.declaration.genericParameters {
-            substitutions.removeValue(forKey: name)
-        }
-        guard solveRequirements(of: symbol, substitutions: &substitutions) else { return nil }
-        let genericNames = Set(symbol.declaration.genericParameters)
-        var fixedGenericNames = Set(substitutions.keys)
-        var contextualGenericNames = Set<String>()
-        // Resolve the pattern with opaque placeholders so aliases, tuple labels and collection
-        // sugar use the same parser and declaration provenance as all other type lookup.
-        let placeholders = substitutions.merging(Dictionary(uniqueKeysWithValues: genericNames.map { ($0, ResolvedType(name: "$generic:" + $0)) })) { _, generic in generic }
         func match(_ pattern: ResolvedType, to value: ResolvedType, nesting: Int = 0, invariant: Bool = false) -> Bool {
             guard nesting < 16 else { return false }
             if !pattern.isMetatype, pattern.name.hasPrefix("$generic:"), genericNames.contains(String(pattern.name.dropFirst("$generic:".count))) {
                 let name = String(pattern.name.dropFirst("$generic:".count))
-                if let previous = substitutions[name], !sameType(previous, as: value) {
-                    return false
-                }
-                substitutions[name] = value
-                if invariant {
-                    fixedGenericNames.insert(name)
-                }
-                return true
+                return bind(name, value, invariant)
             }
             if let wrapped = unwrapped(pattern) {
                 guard let actual = unwrapped(value) else { return false }
@@ -1874,7 +1880,7 @@ final class ProjectSymbolLookup {
                 return zip(formal, actual).allSatisfy { match($0, to: $1, nesting: nesting + 1, invariant: invariant) }
             }
             guard let formalName = qualifiedName(for: pattern), let actualName = qualifiedName(for: value),
-                  let identity = project.typeIdentity(named: formalName, visibleFrom: pattern.sourceFileURL ?? symbol.fileURL),
+                  let identity = project.typeIdentity(named: formalName, visibleFrom: pattern.sourceFileURL ?? source),
                   identity == project.typeIdentity(named: actualName, visibleFrom: value.sourceFileURL ?? fileURL)
             else {
                 return sameType(pattern, as: value)
@@ -1888,14 +1894,51 @@ final class ProjectSymbolLookup {
             let formal = pattern.genericArguments ?? []
             let actual = value.genericArguments ?? []
             guard formal.count == actual.count else { return false }
-            let source = project.typeSourceFile(named: formalName, visibleFrom: pattern.sourceFileURL ?? symbol.fileURL)
+            let source = project.typeSourceFile(named: formalName, visibleFrom: pattern.sourceFileURL ?? source)
             let fixed = invariant || source?.pathExtension == "swift"
             return zip(formal, actual).allSatisfy { match($0, to: $1, nesting: nesting + 1, invariant: fixed) }
         }
+        return match(pattern, to: value)
+    }
+
+    /// Bind a declaration's generic parameters from a known receiver and the call's arguments.
+    func substitutions(for symbol: ProjectIndex.FunctionSymbol, owner: ResolvedType?,
+                       arguments: [Formatter.FunctionCallArgument], depth: Int, ignoringLabelAt ignoredLabel: Int? = nil, contextualClosureArgumentAt contextualArgument: Int? = nil) -> [String: ResolvedType]?
+    {
+        var substitutions = [String: ResolvedType]()
+        if let name = symbol.declaration.declaringType, let owner {
+            guard let declaringOwner = projectedType(owner, to: name, source: symbol.fileURL),
+                  let values = nominalSubstitutions(for: declaringOwner) else { return nil }
+            substitutions = values
+            substitutions["Self"] = owner
+        } else if let name = symbol.declaration.declaringType,
+                  project.typeDeclaration(named: name, visibleFrom: symbol.fileURL)?.genericParameters.isEmpty == false
+        {
+            return nil
+        }
+        for name in symbol.declaration.genericParameters {
+            substitutions.removeValue(forKey: name)
+        }
+        guard solveRequirements(of: symbol, substitutions: &substitutions) else { return nil }
+        let genericNames = Set(symbol.declaration.genericParameters)
+        var fixedGenericNames = Set(substitutions.keys)
+        var contextualGenericNames = Set<String>()
+        // Resolve the pattern with opaque placeholders so aliases, tuple labels and collection
+        // sugar use the same parser and declaration provenance as all other type lookup.
+        let placeholders = substitutions.merging(Dictionary(uniqueKeysWithValues: genericNames.map { ($0, ResolvedType(name: "$generic:" + $0)) })) { _, generic in generic }
         func infer(_ pattern: String, from value: ResolvedType) -> Bool {
             guard let formal = type(named: pattern, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL,
                                     substitutions: placeholders, requiresGenericArguments: true) else { return false }
-            return match(formal, to: value)
+            return matchGenericType(formal, to: value, genericNames: genericNames, source: symbol.fileURL) { name, value, invariant in
+                if let previous = substitutions[name], !sameType(previous, as: value) {
+                    return false
+                }
+                substitutions[name] = value
+                if invariant {
+                    fixedGenericNames.insert(name)
+                }
+                return true
+            }
         }
         if let parameters = symbol.declaration.symbolArgumentTypes,
            let indices = symbol.declaration.parameterIndices(matching: arguments.map(\.label), ignoringLabelAt: ignoredLabel)
@@ -1939,8 +1982,21 @@ final class ProjectSymbolLookup {
         for _ in equalities {
             for equality in equalities {
                 for (variable, term) in [(equality.subject, equality.target), (equality.target, equality.subject)] {
-                    if genericNames.contains(variable), substitutions[variable] != nil, isFixed(term) {
+                    guard isFixed(term) else { continue }
+                    if genericNames.contains(variable), substitutions[variable] != nil {
                         fixedGenericNames.insert(variable)
+                    } else if let pattern = type(named: variable, namespace: symbol.declaration.declaringType, sourceFileURL: symbol.fileURL,
+                                                 substitutions: placeholders, requiresGenericArguments: true),
+                        let value = signatureType(term, symbol: symbol, substitutions: substitutions)
+                    {
+                        var fixed = Set<String>()
+                        if matchGenericType(pattern, to: value, genericNames: genericNames, source: symbol.fileURL, bind: { name, value, _ in
+                            guard let inferred = substitutions[name], sameType(inferred, as: value) else { return false }
+                            fixed.insert(name)
+                            return true
+                        }) {
+                            fixedGenericNames.formUnion(fixed)
+                        }
                     }
                 }
             }
@@ -2025,7 +2081,7 @@ final class ProjectSymbolLookup {
         // A local callable value or factory can shadow an otherwise visible constructor/function.
         if dot == nil || receiverStart != nil {
             let root = formatter.tokens[start].string
-            guard !unindexedFunctions.contains(root),
+            guard !hasLocalFunction(named: root, at: identifier),
                   bindings[root]?.contains(where: { $0.isVisible(at: identifier) }) != true || dot != nil else { return nil }
         }
         var owner: ResolvedType?
@@ -2119,7 +2175,7 @@ final class ProjectSymbolLookup {
     /// or initializer at its start. Do not skip across that boundary to an outer annotation.
     func contextualValueIsTransformed(at expression: Int) -> Bool {
         var end: Int?
-        if [Token.startOfScope("("), .startOfScope("{")].contains(formatter.tokens[expression]) {
+        if [Token.startOfScope("("), .startOfScope("{"), .startOfScope("[")].contains(formatter.tokens[expression]) {
             end = formatter.endOfScope(at: expression)
         } else if formatter.tokens[expression].isOperator("."),
                   let member = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expression)
@@ -2134,6 +2190,9 @@ final class ProjectSymbolLookup {
         }
         guard let end, let next = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: end) else { return false }
         let token = formatter.tokens[next]
+        if token == .startOfScope("{"), formatter.tokens[expression].isStartOfScope {
+            return true
+        }
         return [Token.keyword("as"), .keyword("is"), .startOfScope("("), .startOfScope("[")].contains(token) ||
             token.isOperator(".") || token.isOperator(ofType: .postfix) ||
             token.isOperator(ofType: .infix) && !["?", ":"].contains(token.string)
@@ -2169,6 +2228,43 @@ final class ProjectSymbolLookup {
         return condition.lowerBound
     }
 
+    /// Aggregate literals preserve each element's declared context. Subscripts and calls
+    /// have their own signatures; custom literal conformances do not imply collection elements.
+    func aggregateElementType(at expression: Int, depth: Int) -> ResolvedType? {
+        guard let scope = formatter.startOfScope(at: expression),
+              [Token.startOfScope("("), .startOfScope("[")].contains(formatter.tokens[scope]),
+              !formatter.isSubscriptOrFunctionCall(at: scope),
+              let expected = contextualType(at: scope, depth: depth + 1) else { return nil }
+        let aggregate = unwrapped(expected) ?? expected
+        if formatter.tokens[scope] == .startOfScope("(") {
+            let arguments = formatter.parseTupleArguments(startOfScope: scope)
+            guard let elements = aggregate.tupleElements, arguments.count == elements.count,
+                  let position = arguments.firstIndex(where: { $0.valueRange.lowerBound == expression }),
+                  arguments[position].label == nil || arguments[position].label == elements[position].label else { return nil }
+            return elements[position].type
+        }
+        guard let kind = aggregate.collectionKind, let arguments = aggregate.genericArguments else { return nil }
+        for entry in formatter.commaSeparatedElementsInScope(startOfScope: scope) {
+            if kind == .dictionary {
+                guard arguments.count == 2,
+                      let colon = formatter.index(of: .delimiter(":"), in: Range(entry)),
+                      let key = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: entry.lowerBound ..< colon),
+                      let value = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colon) else { return nil }
+                if expression == key {
+                    return arguments[0]
+                }
+                if expression == value {
+                    return arguments[1]
+                }
+            } else if [.array, .arraySlice, .contiguousArray, .set].contains(kind), arguments.count == 1,
+                      formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: Range(entry)) == expression
+            {
+                return arguments[0]
+            }
+        }
+        return nil
+    }
+
     func contextualType(at expression: Int, depth: Int) -> ResolvedType? {
         guard depth < 32, !contextualValueIsTransformed(at: expression),
               let previous = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: expression) else { return nil }
@@ -2176,6 +2272,9 @@ final class ProjectSymbolLookup {
            let expected = contextualType(at: outer, depth: depth + 1)
         {
             return expected
+        }
+        if let element = aggregateElementType(at: expression, depth: depth + 1) {
+            return element
         }
         let namespace = formatter.parseEnclosingType(containing: expression, declarations: declarations)?.fullyQualifiedName
         switch formatter.tokens[previous] {
@@ -2267,12 +2366,11 @@ final class ProjectSymbolLookup {
             return nil
         }
         let knownTypes = argumentTypeProvider(arguments, depth: depth + 1)
-        guard !unindexedFunctions.contains(name),
-              let function = project.functionSymbol(named: name, receiver: receiver, arguments: arguments.map(\.label), visibleFrom: source, accessedFrom: fileURL, accessedFromType: accessingType,
+        guard let function = project.functionSymbol(named: name, receiver: receiver, arguments: arguments.map(\.label), visibleFrom: source, accessedFrom: fileURL, accessedFromType: accessingType,
                                                     isViable: { self.viableOverload($0, owner: owner, arguments: arguments, knownTypes: knownTypes()) },
                                                     requirementsSatisfied: { self.requirementsSatisfied($0, owner: owner) }),
-              let returnType = function.declaration.symbolReturnType ?? function.declaration.returnType,
-              let substitutions = substitutions(for: function, owner: owner, arguments: arguments, depth: depth + 1) else { return nil }
+            let returnType = function.declaration.symbolReturnType ?? function.declaration.returnType,
+            let substitutions = substitutions(for: function, owner: owner, arguments: arguments, depth: depth + 1) else { return nil }
         if case let .unqualified(owner?, _) = receiver, function.declaration.declaringType == nil {
             guard project.isTypeWithoutInheritance(named: owner, visibleFrom: source),
                   !project.isDynamicMemberLookupType(named: owner, visibleFrom: source),
@@ -2397,7 +2495,7 @@ final class ProjectSymbolLookup {
         let spelling = formatter.tokens[range].string
         guard let reference = ProjectTypeReference(spelling), let root = reference.name.split(separator: ".").first,
               bindings[String(root)]?.contains(where: { $0.isVisible(at: range.lowerBound) }) != true,
-              !unindexedFunctions.contains(String(root)),
+              !hasLocalFunction(named: String(root), at: range.lowerBound),
               namespace.map({ project.constructorRootIsUnshadowed(String(root), in: $0, visibleFrom: fileURL) }) ?? true,
               initializerRootIsUnshadowed(spelling, namespace: namespace),
               var metatype = type(named: spelling, namespace: namespace, at: range.lowerBound, requiresGenericArguments: true),
@@ -2495,13 +2593,13 @@ final class ProjectSymbolLookup {
                   let collection = explicitInitializerType(formatter.tokens[first ... close].string, namespace: namespace, source: fileURL, substitutions: [:]),
                   collection.collectionKind != nil,
                   bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-                  !unindexedFunctions.contains(identifier)
+                  !hasLocalFunction(named: identifier, at: first)
         {
             current = collection
             cursor = close
         } else if tokens[first].isIdentifier,
                   bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-                  !unindexedFunctions.contains(identifier),
+                  !hasLocalFunction(named: identifier, at: first),
                   let annotation = formatter.parseType(at: first),
                   let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound),
                   tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last,
@@ -2513,7 +2611,7 @@ final class ProjectSymbolLookup {
             cursor = close
         } else if tokens[first].isIdentifier,
                   bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-                  !unindexedFunctions.contains(identifier),
+                  !hasLocalFunction(named: identifier, at: first),
                   unavailableTypes[identifier]?.contains(where: { $0.range.contains(first) }) != true,
                   namespace.map({ project.constructorRootIsUnshadowed(identifier, in: $0, visibleFrom: fileURL) }) ?? true,
                   let value = explicitInitializerType(tokens[first ... last].string, namespace: namespace, source: fileURL, substitutions: [:])
@@ -2525,7 +2623,7 @@ final class ProjectSymbolLookup {
         } else if let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: first), open <= last,
                   tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last
         {
-            guard !unindexedFunctions.contains(identifier),
+            guard !hasLocalFunction(named: identifier, at: first),
                   unavailableTypes[identifier]?.contains(where: { $0.range.contains(first) }) != true else { return nil }
             let arguments = formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last }
             if let value = bindingType(named: identifier, at: first, depth: depth + 1), value.functionType != nil {
@@ -2553,7 +2651,7 @@ final class ProjectSymbolLookup {
                 current?.isMetatype = identifier == "Self" || isStatic
             }
         } else if bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-                  !unindexedFunctions.contains(identifier),
+                  !hasLocalFunction(named: identifier, at: first),
                   var generic = type(named: identifier, namespace: namespace, at: first),
                   generic.genericParameterScope != nil, unwrapped(generic) == nil
         {
@@ -2564,6 +2662,7 @@ final class ProjectSymbolLookup {
         } else {
             current = bindingType(named: identifier, at: first, depth: depth + 1)
             if current == nil, bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
+               !hasLocalFunction(named: identifier, at: first),
                initializerRootIsUnshadowed(identifier, namespace: namespace),
                namespace.map({ project.constructorRootIsUnshadowed(identifier, in: $0, visibleFrom: fileURL) }) ?? true,
                let possibleType = type(named: identifier, namespace: namespace, at: first), !possibleType.isMetatype, unwrapped(possibleType) == nil,

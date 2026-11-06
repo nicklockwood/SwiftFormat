@@ -10,6 +10,249 @@ import XCTest
 @testable import SwiftFormat
 
 final class ProjectSymbolLookupTests: XCTestCase {
+    func testStructuralAssociatedEqualityFixesCallbackGeneric() throws {
+        try check("""
+        func render(_ model: Model) { consume(model) { value in observeValue(value) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Box<Value> {}
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = Box<State> }
+        func consume<Input: Source, Value>(_ input: Input, callback: (Value) -> Void) where Input.Output == Box<Value> {}
+        """, expected: "State")
+    }
+
+    func testStructuralEqualityDoesNotFixCovariantInputCallback() throws {
+        try check("""
+        func render(_ child: Child) { consume(child) { value in observeValue(value) } }
+        """, declarations: """
+        class Parent {}
+        class Child: Parent {}
+        struct Box<Value> {}
+        func consume<Input, Value>(_ input: Input, callback: (Value) -> Void) where Box<Input> == Box<Value> {}
+        """, expected: nil)
+    }
+
+    func testAssociatedEqualityInfersGenericInsideProjectWrapper() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Box<Value> {}
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = Box<State> }
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == Box<Value> { fatalError() }
+        """, expected: "State")
+    }
+
+    func testAssociatedEqualityInfersNestedOptionalTupleGeneric() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = (payload: State?, count: Int) }
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == (payload: Value?, count: Int) { fatalError() }
+        """, expected: "State")
+    }
+
+    func testAssociatedEqualityInfersGenericThroughAliasedCollection() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = [String: State] }
+        typealias Values<Value> = [String: Value]
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == Values<Value> { fatalError() }
+        """, expected: "State")
+    }
+
+    func testStructuralEqualityDoesNotRetainPartialConflictingInference() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = (State, Other) }
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == (Value, Value) { fatalError() }
+        """, expected: nil)
+    }
+
+    func testStructuralEqualityRequiresMatchingNominalDeclaration() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Box<Value> {}
+        struct OtherBox<Value> {}
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = OtherBox<State> }
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == Box<Value> { fatalError() }
+        """, expected: nil)
+    }
+
+    func testArrayLiteralCarriesItsClosureElementContext() throws {
+        try check("""
+        func render() {
+            let handlers: [(State) -> Void] = [{ value in observeValue(value) }]
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testTupleLiteralCarriesItsLabeledClosureContext() throws {
+        try check("""
+        func render() {
+            let pair: (count: Int, callback: (State) -> Void) =
+                (count: 0, callback: { value in observeValue(value) })
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testNestedDictionaryAndArrayLiteralCarryInitializerContext() throws {
+        try check("""
+        func render() {
+            let handlers: [String: [Handler]] = ["first": [.init { value in observeValue(value) }]]
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Handler { init(_ callback: (State) -> Void) {} }
+        """, expected: "State")
+    }
+
+    func testEnumKeyDictionaryLiteralCarriesValueContext() throws {
+        try check("""
+        func render() {
+            let handlers: [Key: Handler] = [.primary: .init { value in observeValue(value) }]
+        }
+        """, declarations: """
+        enum Key { case primary }
+        enum State { case idle, loaded }
+        struct Handler { init(_ callback: (State) -> Void) {} }
+        """, expected: "State")
+    }
+
+    func testDictionaryKeyInitializerReceivesItsCallbackContext() throws {
+        try check("""
+        func render() {
+            let handlers: [Handler: Int] = [.init { value in observeValue(value) }: 0]
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Handler: Hashable { init(_ callback: (State) -> Void) {} }
+        """, expected: "State")
+    }
+
+    func testAggregateContextFlowsThroughCallParameterAndAlias() throws {
+        try check("""
+        func render() {
+            consume([.init { value in observeValue(value) }])
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Handler { init(_ callback: (State) -> Void) {} }
+        typealias Handlers = [Handler]
+        func consume(_ handlers: Handlers) {}
+        """, expected: "State")
+    }
+
+    func testCustomArrayLiteralDoesNotInventStandardElementContext() throws {
+        try check("""
+        func render() {
+            let handlers: Handlers = [{ value in observeValue(value) }]
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Handlers: ExpressibleByArrayLiteral {
+            init(arrayLiteral elements: ((State) -> Void)...) {}
+        }
+        """, expected: nil)
+    }
+
+    func testTransformedArrayLiteralDoesNotBorrowResultElementContext() throws {
+        try check("""
+        func render() {
+            let handlers: [(State) -> Void] = [{ value in observeValue(value) }].unknown()
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testTupleLiteralArityMismatchDoesNotBorrowClosureContext() throws {
+        try check("""
+        func render() {
+            let handlers: ((State) -> Void, Int, Int) = ({ value in observeValue(value) }, 0)
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testLocalFactoryInAnotherFunctionDoesNotHideEnumReference() throws {
+        try check("""
+        func unrelated() { func State() -> Int { 0 } }
+        func render() { observeValue(State.idle) }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testLocalFactoryInSiblingBranchDoesNotHideGlobalCall() throws {
+        try check("""
+        func render(_ flag: Bool) {
+            if flag { func current() -> Int { 0 } }
+            observeValue(current())
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func current() -> State { .idle }
+        """, expected: "State")
+    }
+
+    func testLocalFactoryIsVisibleBeforeItsDeclaration() throws {
+        try check("""
+        func render() {
+            observeValue(current())
+            func current() -> Int { 0 }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func current() -> State { .idle }
+        """, expected: nil)
+    }
+
+    func testEscapedLocalFactoryStillShadowsGlobalCall() throws {
+        try check("""
+        func render() {
+            func `current`() -> Int { 0 }
+            observeValue(current())
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func current() -> State { .idle }
+        """, expected: nil)
+    }
+
+    func testLocalFunctionDoesNotShadowExplicitMemberCall() throws {
+        try check("""
+        func render(_ provider: Provider) {
+            func current() -> Int { 0 }
+            observeValue(provider.current())
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Provider { func current() -> State { .idle } }
+        """, expected: "State")
+    }
+
+    func testLocalCallbackHelperInAnotherScopeDoesNotHideGlobalCallback() throws {
+        try check("""
+        func unrelated() { func consume() {} }
+        func render() {
+            consume { value in observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func consume(_ callback: (State) -> Void) {}
+        """, expected: "State")
+    }
+
     func testUnrelatedMembersAndParametersDoNotHideEnumReference() throws {
         try check("""
         func render() { observeValue(State.idle) }

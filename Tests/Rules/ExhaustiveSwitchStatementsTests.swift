@@ -10,6 +10,114 @@ import XCTest
 @testable import SwiftFormat
 
 final class ExhaustiveSwitchStatementsTests: XCTestCase {
+    func testStructuralAssociatedEqualityExpandsCallbackEnum() throws {
+        let input = """
+        func render(_ model: Model) {
+            consume(model) { value in
+                switch value {
+                case .loaded: print("loaded")
+                default: print("fallback")
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            consume(model) { value in
+                switch value {
+                case .loaded: print("loaded")
+                case .idle: print("fallback")
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        struct Box<Value> {}
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = Box<State> }
+        func consume<Input: Source, Value>(_ input: Input, callback: (Value) -> Void) where Input.Output == Box<Value> {}
+        """)
+    }
+
+    func testCalledArrayLiteralDoesNotBorrowReturnedArrayElementType() throws {
+        try check("""
+        func render() {
+            let handlers: [(State) -> Void] = [{ value in
+                switch value {
+                default: print("fallback")
+                }
+            }] {}
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        extension Array where Element == (Int) -> Void {
+            func callAsFunction(_ body: () -> Void) -> [(State) -> Void] { [] }
+        }
+        """)
+    }
+
+    func testNestedLiteralInitializerCallbackExpandsProjectEnum() throws {
+        let input = """
+        func render() {
+            let handlers: [String: [Handler]] = ["first": [.init { value in
+                switch value {
+                case .loaded: print("loaded")
+                default: print("fallback")
+                }
+            }]]
+        }
+        """
+        let output = """
+        func render() {
+            let handlers: [String: [Handler]] = ["first": [.init { value in
+                switch value {
+                case .loaded: print("loaded")
+                case .idle: print("fallback")
+                }
+            }]]
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        struct Handler { init(_ callback: (State) -> Void) {} }
+        """)
+    }
+
+    func testLocalHelperInAnotherScopeDoesNotBlockDefaultExpansion() throws {
+        let input = """
+        func unrelated() { func State() -> Int { 0 } }
+        func render() {
+            switch State.idle {
+            default: print("fallback")
+            }
+        }
+        """
+        let output = """
+        func unrelated() { func State() -> Int { 0 } }
+        func render() {
+            switch State.idle {
+            case .idle, .loaded: print("fallback")
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testHoistedLocalFactoryPreservesDefault() throws {
+        try check("""
+        func render() {
+            switch current() {
+            default: print("fallback")
+            }
+            func current() -> Int { 0 }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func current() -> State { .idle }
+        """)
+    }
+
     func testUnrelatedMemberAndParameterNamesDoNotBlockExhaustiveCases() throws {
         let input = """
         enum State { case idle, loaded }

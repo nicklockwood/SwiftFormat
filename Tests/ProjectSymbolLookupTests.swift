@@ -4950,7 +4950,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
 
     func testGenericMetatypeDoesNotInventConcreteArgument() throws {
         try check("""
-        func render<Value>() { observeValue(load(Value.self)) }
+        func render<Value>(_: Value.Type) { observeValue(load(Value.self)) }
         """, declarations: """
         enum Value { case unrelated }
         func load<T>(_ type: T.Type) -> T { fatalError() }

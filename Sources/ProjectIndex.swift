@@ -3061,6 +3061,9 @@ extension ProjectIndex {
             for module in memberModules(visibleFrom: caller) {
                 for candidate in conformanceOwnersByModule[module] ?? [] where candidate != owner {
                     for var entry in inheritanceDeclarationsByModule[candidate] ?? [] where !entry.declaration.types.isEmpty {
+                        // An extension cannot target a declaration inaccessible from its own file,
+                        // including through an unresolved alias in a different module.
+                        guard accessibleTypeKey(owner, from: entry.source.standardizedFileURL.path) else { continue }
                         guard let target = memberOwner(named: candidate.name, visibleFrom: entry.source, in: module) else {
                             if extensionOwnerMayRefer(to: owner, named: candidate.name, in: module, source: entry.source) {
                                 return nil
@@ -3312,8 +3315,11 @@ extension ProjectIndex {
         var result = [FunctionSymbol]()
         for module in memberModules(visibleFrom: caller) {
             for var symbol in symbolFunctionsByModule[module]?[name] ?? [] {
-                guard let name = symbol.declaration.declaringType else { continue }
-                guard let target = memberOwner(named: name, visibleFrom: symbol.fileURL, in: module) else { return nil }
+                guard let name = symbol.declaration.declaringType, accessibleTypeKey(owner, from: symbol.fileURL.standardizedFileURL.path) else { continue }
+                guard let target = memberOwner(named: name, visibleFrom: symbol.fileURL, in: module) else {
+                    guard !extensionOwnerMayRefer(to: owner, named: name, in: module, source: symbol.fileURL) else { return nil }
+                    continue
+                }
                 guard target.keys.contains(owner),
                       memberIsAccessible(visibility: symbol.declaration.visibility, owner: owner, source: symbol.fileURL,
                                          module: module, caller: caller, accessingType: accessingType) else { continue }
@@ -3332,7 +3338,11 @@ extension ProjectIndex {
         var result = [PropertySymbol]()
         for module in memberModules(visibleFrom: caller) {
             for var symbol in symbolPropertiesByModule[module]?[name] ?? [] {
-                guard let target = memberOwner(named: symbol.declaration.declaringType, visibleFrom: symbol.fileURL, in: module) else { return nil }
+                guard accessibleTypeKey(owner, from: symbol.fileURL.standardizedFileURL.path) else { continue }
+                guard let target = memberOwner(named: symbol.declaration.declaringType, visibleFrom: symbol.fileURL, in: module) else {
+                    guard !extensionOwnerMayRefer(to: owner, named: symbol.declaration.declaringType, in: module, source: symbol.fileURL) else { return nil }
+                    continue
+                }
                 guard target.keys.contains(owner),
                       memberIsAccessible(visibility: symbol.declaration.visibility ?? "internal", owner: owner, source: symbol.fileURL,
                                          module: module, caller: caller, accessingType: accessingType) else { continue }

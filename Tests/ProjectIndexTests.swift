@@ -1993,4 +1993,52 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertNil(project.functionSymbol(named: "init", receiver: .type("Handler"), arguments: [],
                                             visibleFrom: modelsURL, accessedFrom: appURL, kind: .initializer))
     }
+
+    func testInaccessibleOwnersIgnoreAmbiguousConformanceAliases() {
+        let ownerURL = URL(fileURLWithPath: "/Project/Owner.swift")
+        let extensionURL = URL(fileURLWithPath: "/Project/Extension.swift")
+        let firstURL = URL(fileURLWithPath: "/Project/First.swift")
+        let secondURL = URL(fileURLWithPath: "/Project/Second.swift")
+        func project(visibility: String, extensionModule: String, aliasTarget: String = "Missing") -> ProjectIndex {
+            ProjectIndex(files: [
+                ownerURL.path: makeSourceFileIndex(from: """
+                import Library
+                \(visibility) struct Handler { public init() {}; public var state: Int { 0 } }
+                """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"]),
+                extensionURL.path: makeSourceFileIndex(from: """
+                import First
+                import Second
+                extension Renamed: ExternalProtocol {
+                    public init(extra: Int = 0) {}
+                    public var state: ExternalState { fatalError() }
+                }
+                """, moduleIdentifiers: [extensionModule], moduleNames: [extensionModule: extensionModule]),
+                firstURL.path: makeSourceFileIndex(from: """
+                public struct Other {}
+                public typealias Renamed = \(aliasTarget)
+                """, moduleIdentifiers: ["First"], moduleNames: ["First": "First"]),
+                secondURL.path: makeSourceFileIndex(from: """
+                public struct Renamed {}
+                """, moduleIdentifiers: ["Second"], moduleNames: ["Second": "Second"]),
+            ])
+        }
+        for (visibility, module) in [("", "Library"), ("private", "App"), ("fileprivate", "App")] {
+            let symbol = project(visibility: visibility, extensionModule: module).functionSymbol(
+                named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, accessedFromType: "Handler", kind: .initializer
+            )
+            XCTAssertEqual(symbol?.declaration.declaringType, "Handler", "\(visibility) owner with extension in \(module)")
+            XCTAssertEqual(project(visibility: visibility, extensionModule: module).propertySymbol(
+                owner: "Handler", member: "state", isStatic: false, visibleFrom: ownerURL, accessedFromType: "Handler"
+            )?.declaration.type, "Int")
+        }
+        let unrelated = project(visibility: "public", extensionModule: "Library", aliasTarget: "Other")
+        XCTAssertNotNil(unrelated.functionSymbol(named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, kind: .initializer))
+        XCTAssertEqual(unrelated.propertySymbol(owner: "Handler", member: "state", isStatic: false, visibleFrom: ownerURL)?.declaration.type, "Int")
+        XCTAssertNil(project(visibility: "public", extensionModule: "Library").functionSymbol(
+            named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, accessedFromType: "Handler", kind: .initializer
+        ))
+        XCTAssertNil(project(visibility: "", extensionModule: "App").functionSymbol(
+            named: "init", receiver: .type("Handler"), arguments: [], visibleFrom: ownerURL, accessedFromType: "Handler", kind: .initializer
+        ))
+    }
 }

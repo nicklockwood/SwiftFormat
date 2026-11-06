@@ -27,6 +27,14 @@ public extension FormatRule {
             ) ?? false
         }
 
+        // Whether `Self` in the type enclosing the given index may be noncopyable,
+        // e.g. in `struct Foo: ~Copyable` or `extension Foo where Element: ~Copyable`
+        func enclosingTypeMayBeNoncopyable(at index: Int) -> Bool {
+            guard let type = formatter.parseEnclosingType(containing: index) else { return false }
+            return formatter.containsCopyableSuppression(in: type.keywordIndex ..< type.openBraceIndex)
+                || isNoncopyableType(named: type.name?.unqualifiedTypeName)
+        }
+
         formatter.forEachToken { keywordIndex, token in
             guard [.identifier("borrowing"), .identifier("consuming")].contains(token),
                   let nextTokenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: keywordIndex)
@@ -49,11 +57,7 @@ public extension FormatRule {
             let isValidOwnershipModifier: Bool
             if formatter.tokens[nextTokenIndex] == .keyword("func") {
                 // A `consuming` method of a noncopyable type can consume or mutate `self`
-                if token == .identifier("consuming"),
-                   let type = formatter.parseEnclosingType(containing: keywordIndex),
-                   formatter.containsCopyableSuppression(in: type.keywordIndex ..< type.openBraceIndex)
-                   || isNoncopyableType(named: type.name?.unqualifiedTypeName)
-                {
+                if token == .identifier("consuming"), enclosingTypeMayBeNoncopyable(at: keywordIndex) {
                     return
                 }
                 isValidOwnershipModifier = true
@@ -64,6 +68,10 @@ public extension FormatRule {
             {
                 // A parameter of a noncopyable type must specify its ownership
                 if isNoncopyableType(named: type.nominalTypeName) {
+                    return
+                }
+                // `Self` is the enclosing type, which may be declared in another file
+                if type.nominalTypeName == "Self", enclosingTypeMayBeNoncopyable(at: keywordIndex) {
                     return
                 }
                 isValidOwnershipModifier = true

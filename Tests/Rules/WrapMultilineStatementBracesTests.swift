@@ -222,15 +222,22 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
         testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
-    func testMultilineClassBraceNotAppliedForXcodeIndentationMode() {
+    func testMultilineClassBraceWithXcodeIndentationMode() {
         let input = """
         class Foo: BarProtocol,
-        BazProtocol {
+                   BazProtocol {
+            init() {}
+        }
+        """
+        let output = """
+        class Foo: BarProtocol,
+                   BazProtocol
+        {
             init() {}
         }
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: .wrapMultilineStatementBraces, options: options)
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces, options: options)
     }
 
     func testMultilineBraceAppliedToTrailingClosure_wrapBeforeFirst() {

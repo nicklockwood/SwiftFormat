@@ -1275,18 +1275,19 @@ final class IndentTests: XCTestCase {
         """
         let output = """
         class Foo: Bar,
-        Baz {
+                   Baz {
             init() {}
         }
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: .indent, options: options)
+        testFormatting(for: input, output, rule: .indent, options: options,
+                       exclude: [.wrapMultilineStatementBraces])
     }
 
     func testWrappedClassDeclarationWithBracesOnSameLineLikeXcode() {
         let input = """
         class Foo: Bar,
-        Baz {}
+                   Baz {}
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, rule: .indent, options: options)
@@ -1295,13 +1296,128 @@ final class IndentTests: XCTestCase {
     func testWrappedClassDeclarationWithBraceOnNextLineLikeXcode() {
         let input = """
         class Foo: Bar,
-            Baz
+                   Baz
         {
             init() {}
         }
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testWrappedTypeConformancesLikeXcode() {
+        for keyword in ["class", "struct", "actor", "enum", "protocol", "extension"] {
+            let input = """
+            \(keyword) Foo: Bar,
+                Baz,
+                Qux {}
+            """
+            let alignment = String(repeating: " ", count: keyword.count + 6)
+            let output = """
+            \(keyword) Foo: Bar,
+            \(alignment)Baz,
+            \(alignment)Qux {}
+            """
+            testFormatting(for: input, output, rule: .indent,
+                           options: FormatOptions(xcodeIndentation: true))
+        }
+    }
+
+    func testWrappedNestedTypeConformancesLikeXcode() {
+        let input = """
+        enum Outer {
+            struct Foo<T>: Bar<T>, // First conformance
+                Baz,
+                Qux where T: Equatable {
+                let value: T
+            }
+        }
+        """
+        let output = """
+        enum Outer {
+            struct Foo<T>: Bar<T>, // First conformance
+                           Baz,
+                           Qux where T: Equatable {
+                let value: T
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       options: FormatOptions(xcodeIndentation: true),
+                       exclude: [.wrapMultilineStatementBraces, .simplifyGenericConstraints])
+    }
+
+    func testWrappedAttributedConformanceLikeXcode() {
+        let input = """
+        class Foo: @unchecked Sendable,
+            Bar {}
+        """
+        let output = """
+        class Foo: @unchecked Sendable,
+                   Bar {}
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       options: FormatOptions(xcodeIndentation: true))
+    }
+
+    func testWrappedConformancesStartingOnNewLineLikeXcode() {
+        let input = """
+        struct Foo:
+            Bar,
+            Baz {}
+        """
+        testFormatting(for: input, rule: .indent,
+                       options: FormatOptions(xcodeIndentation: true))
+    }
+
+    func testWrappedConformancesWithSmartTabsLikeXcode() {
+        let input = """
+        enum Outer {
+        \tstruct Foo: Bar,
+        \t\tBaz {}
+        }
+        """
+        let output = """
+        enum Outer {
+        \tstruct Foo: Bar,
+        \t            Baz {}
+        }
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       options: FormatOptions(indent: "\t", xcodeIndentation: true, tabWidth: 4))
+    }
+
+    func testWrappedConformancesWithoutSmartTabsLikeXcode() {
+        let input = """
+        enum Outer {
+        \tstruct Foo: Bar,
+        \t\tBaz {}
+        }
+        """
+        let output = """
+        enum Outer {
+        \tstruct Foo: Bar,
+        \t\t\t\tBaz {}
+        }
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       options: FormatOptions(indent: "\t", xcodeIndentation: true, tabWidth: 4, smartTabs: false))
+    }
+
+    func testWrappedConformancesBeforeWhereClauseLikeXcode() {
+        let input = """
+        struct Foo<T>: Bar,
+            Baz
+            where T: Qux {}
+        """
+        let output = """
+        struct Foo<T>: Bar,
+                       Baz
+            where T: Qux {}
+        """
+        testFormatting(for: input, output, rule: .indent,
+                       options: FormatOptions(xcodeIndentation: true),
+                       exclude: [.simplifyGenericConstraints])
     }
 
     func testWrappedClassWhereDeclarationLikeXcode() {

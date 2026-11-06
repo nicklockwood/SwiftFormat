@@ -4489,6 +4489,32 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testEnumWithValueGeneric() {
+        let input = "enum Foo<let N: Int> { case bar }"
+        let output: [Token] = [
+            .keyword("enum"),
+            .space(" "),
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .keyword("let"),
+            .space(" "),
+            .identifier("N"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Int"),
+            .endOfScope(">"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .keyword("case"),
+            .space(" "),
+            .identifier("bar"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testForCaseLetPreceededByAwait() {
         let input = "func forGroup(_ group: TaskGroup<String?>) async { for await case let value? in group { print(value.description) } }"
         let output: [Token] = [

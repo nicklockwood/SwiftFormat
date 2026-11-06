@@ -2073,11 +2073,13 @@ public func tokenize(_ source: String) -> [Token] {
                         processToken()
                         return
                     case "case":
-                        if let keywordIndex = index(of: .keyword, before: scopeIndex) {
+                        if var keywordIndex = index(of: .keyword, before: scopeIndex) {
                             var keyword = tokens[keywordIndex]
-                            if keyword == .keyword("where"),
-                               let keywordIndex = index(of: .keyword, before: keywordIndex)
+                            // Skip `where` clauses and value generic parameters like `enum Foo<let N: Int>`
+                            while [.keyword("where"), .keyword("let")].contains(keyword),
+                                  let prevIndex = index(of: .keyword, before: keywordIndex)
                             {
+                                keywordIndex = prevIndex
                                 keyword = tokens[keywordIndex]
                             }
                             if case .keyword("enum") = keyword {

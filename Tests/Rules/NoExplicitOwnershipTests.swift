@@ -151,6 +151,75 @@ final class NoExplicitOwnershipTests: XCTestCase {
         testFormatting(for: input, output, rule: .noExplicitOwnership)
     }
 
+    func testDoesntRemoveOwnershipKeywordsFromSelfParameterOfNoncopyableType() {
+        let input = """
+        extension RigidArray where Element: ~Copyable {
+            public func isTriviallyIdentical(to other: borrowing Self) -> Bool {
+                _count == other._count
+            }
+
+            public static func == (left: borrowing Self, right: borrowing Self) -> Bool {
+                left.span == right.span
+            }
+        }
+
+        extension Array {
+            func isIdentical(to other: borrowing Self) -> Bool {
+                count == other.count
+            }
+        }
+        """
+
+        let output = """
+        extension RigidArray where Element: ~Copyable {
+            public func isTriviallyIdentical(to other: borrowing Self) -> Bool {
+                _count == other._count
+            }
+
+            public static func == (left: borrowing Self, right: borrowing Self) -> Bool {
+                left.span == right.span
+            }
+        }
+
+        extension Array {
+            func isIdentical(to other: Self) -> Bool {
+                count == other.count
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .noExplicitOwnership)
+    }
+
+    func testProjectDoesntRemoveOwnershipKeywordsFromSelfParameterOfNoncopyableTypeInAnotherFile() throws {
+        let declarations = """
+        struct Foo: ~Copyable {}
+        struct Bar {}
+        """
+
+        let input = """
+        extension Foo {
+            func isIdentical(to other: borrowing Self) -> Bool { true }
+        }
+
+        extension Bar {
+            func isIdentical(to other: borrowing Self) -> Bool { true }
+        }
+        """
+
+        let output = """
+        extension Foo {
+            func isIdentical(to other: borrowing Self) -> Bool { true }
+        }
+
+        extension Bar {
+            func isIdentical(to other: Self) -> Bool { true }
+        }
+        """
+
+        try testProjectFormatting(for: input, output, declarations: declarations)
+    }
+
     func testProjectDoesntRemoveOwnershipKeywordsFromNoncopyableTypeInAnotherFile() throws {
         let declarations = """
         struct Foo: ~Copyable {}

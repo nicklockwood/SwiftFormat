@@ -385,6 +385,18 @@ final class ProjectSymbolLookup {
             }
             return substitution
         }
+        if base.hasSuffix(".Type"),
+           var value = type(named: String(base.dropLast(5)), namespace: namespace, at: index,
+                            sourceFileURL: sourceFileURL, substitutions: substitutions,
+                            requiresGenericArguments: requiresGenericArguments, depth: depth + 1)
+        {
+            guard !value.isMetatype, unwrapped(value) == nil else { return nil }
+            value.isMetatype = true
+            if optional {
+                value.name += "?"
+            }
+            return value
+        }
         let grouped = Formatter(tokenize(base))
         if grouped.tokens.first == .startOfScope("("),
            let close = grouped.endOfScope(at: 0), close == grouped.tokens.count - 1,
@@ -544,6 +556,7 @@ final class ProjectSymbolLookup {
 
     /// Names alone cannot establish equality when imports introduce namesakes.
     func sameType(_ lhs: ResolvedType, as rhs: ResolvedType) -> Bool {
+        guard lhs.isMetatype == rhs.isMetatype else { return false }
         if let left = unwrapped(lhs), let right = unwrapped(rhs) {
             return sameType(left, as: right)
         }
@@ -1070,7 +1083,7 @@ final class ProjectSymbolLookup {
         let placeholders = Dictionary(uniqueKeysWithValues: genericNames.map { ($0, ResolvedType(name: "$generic:" + $0)) })
         func match(_ pattern: ResolvedType, to value: ResolvedType, nesting: Int = 0, invariant: Bool = false) -> Bool {
             guard nesting < 16 else { return false }
-            if pattern.name.hasPrefix("$generic:"), genericNames.contains(String(pattern.name.dropFirst("$generic:".count))) {
+            if !pattern.isMetatype, pattern.name.hasPrefix("$generic:"), genericNames.contains(String(pattern.name.dropFirst("$generic:".count))) {
                 let name = String(pattern.name.dropFirst("$generic:".count))
                 if let previous = substitutions[name], !sameType(previous, as: value) {
                     return false
@@ -1086,6 +1099,15 @@ final class ProjectSymbolLookup {
                 return match(wrapped, to: actual, nesting: nesting + 1, invariant: invariant)
             }
             guard unwrapped(value) == nil else { return false }
+            if pattern.isMetatype {
+                guard value.isMetatype else { return false }
+                var instancePattern = pattern
+                var instanceValue = value
+                instancePattern.isMetatype = false
+                instanceValue.isMetatype = false
+                return match(instancePattern, to: instanceValue, nesting: nesting + 1, invariant: invariant)
+            }
+            guard !value.isMetatype else { return false }
             if let elements = pattern.tupleElements {
                 guard let actual = value.tupleElements, elements.count == actual.count else { return false }
                 return zip(elements, actual).allSatisfy {
@@ -1534,13 +1556,28 @@ final class ProjectSymbolLookup {
         let identifier = tokens[first].string
         var current: ResolvedType?
         var cursor = first
-        if let annotation = formatter.parseType(at: first),
-           let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound),
-           tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last,
-           let collection = explicitInitializerType(formatter.tokens[first ... close].string, namespace: namespace, source: fileURL, substitutions: [:]),
-           collection.collectionKind != nil,
-           bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-           !unindexedFunctions.contains(identifier)
+        if let member = formatter.index(in: Range(first ... last), where: { $0.string == "self" }),
+           let dot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: member), dot > first,
+           tokens[dot].isOperator("."),
+           let reference = ProjectTypeReference(tokens[first ..< dot].string), let root = reference.name.split(separator: ".").first,
+           bindings[String(root)]?.contains(where: { $0.isVisible(at: first) }) != true,
+           !unindexedFunctions.contains(String(root)),
+           namespace.map({ project.constructorRootIsUnshadowed(String(root), in: $0, visibleFrom: fileURL) }) ?? true,
+           initializerRootIsUnshadowed(tokens[first ..< dot].string),
+           var metatype = type(named: tokens[first ..< dot].string, namespace: namespace, at: first, requiresGenericArguments: true),
+           !metatype.isMetatype, unwrapped(metatype) == nil,
+           let name = qualifiedName(for: metatype), project.hasSymbolType(named: name, visibleFrom: metatype.sourceFileURL ?? fileURL)
+        {
+            metatype.isMetatype = true
+            current = metatype
+            cursor = member
+        } else if let annotation = formatter.parseType(at: first),
+                  let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound),
+                  tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last,
+                  let collection = explicitInitializerType(formatter.tokens[first ... close].string, namespace: namespace, source: fileURL, substitutions: [:]),
+                  collection.collectionKind != nil,
+                  bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
+                  !unindexedFunctions.contains(identifier)
         {
             current = collection
             cursor = close
@@ -1591,7 +1628,9 @@ final class ProjectSymbolLookup {
         } else {
             current = bindingType(named: identifier, at: first, depth: depth + 1)
             if current == nil, bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-               let possibleType = type(named: identifier, namespace: namespace, at: first),
+               initializerRootIsUnshadowed(identifier),
+               namespace.map({ project.constructorRootIsUnshadowed(identifier, in: $0, visibleFrom: fileURL) }) ?? true,
+               let possibleType = type(named: identifier, namespace: namespace, at: first), !possibleType.isMetatype, unwrapped(possibleType) == nil,
                let name = qualifiedName(for: possibleType), project.hasSymbolType(named: name, visibleFrom: fileURL)
             {
                 var metatype = possibleType
@@ -1632,6 +1671,10 @@ final class ProjectSymbolLookup {
                   let member = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dot), member <= last,
                   let owner = current else { return nil }
             let memberName = tokens[member].string
+            if tokens[member].string == "self" {
+                cursor = member
+                continue
+            }
             if owner.tupleElements != nil {
                 current = memberType(owner: owner, name: memberName, accessingType: namespace)
                 cursor = member

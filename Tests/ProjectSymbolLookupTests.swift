@@ -4881,6 +4881,160 @@ final class ProjectSymbolLookupTests: XCTestCase {
         XCTAssertFalse(project.constructorRootIsUnshadowed("hashValue", in: "Renderer", visibleFrom: url))
     }
 
+    func testMetatypeArgumentInfersGenericCallResult() throws {
+        try check("""
+        func render() { observeValue(load(State.self)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: "State")
+    }
+
+    func testAnnotatedMetatypeBindingInfersGenericCallResult() throws {
+        try check("""
+        func render(_ type: State.Type) { observeValue(load(type)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: "State")
+    }
+
+    func testMetatypeArgumentPropagatesThroughGenericCollection() throws {
+        try check("""
+        func render() { observeValue(events(ofType: Model.self).first?.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { var state: State }
+        func events<Value>(ofType type: Value.Type) -> [Value] { [] }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testGenericNominalMetatypeRetainsTypeArguments() throws {
+        try check("""
+        func render() { observeValue(load(Box<State>.self).value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Box<Value> { var value: Value }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: "State")
+    }
+
+    func testImportedMetatypeAliasRetainsDeclarationContext() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render() { observeValue(load(Namespace.Status.self)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum Namespace { public typealias Status = State }
+        public func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testInstanceSelfPreservesItsValueType() throws {
+        try check("""
+        func render(_ state: State) { observeValue(state.self) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        """, expected: "State")
+    }
+
+    func testMetatypeParameterDoesNotAcceptInstanceArgument() throws {
+        try check("""
+        func render(_ state: State) { observeValue(load(state)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: nil)
+    }
+
+    func testGenericMetatypeDoesNotInventConcreteArgument() throws {
+        try check("""
+        func render<Value>() { observeValue(load(Value.self)) }
+        """, declarations: """
+        enum Value { case unrelated }
+        func load<T>(_ type: T.Type) -> T { fatalError() }
+        """, expected: nil)
+    }
+
+    func testHigherMetatypeDoesNotBecomeAnEnumInstance() throws {
+        try check("""
+        func render() { observeValue(load(State.Type.self)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: nil)
+    }
+
+    func testHigherMetatypeAliasDoesNotBecomeAnEnumInstance() throws {
+        try check("""
+        func render() { observeValue(load(Kind.self)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        typealias Kind = State.Type
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: nil)
+    }
+
+    func testOptionalReferentMetatypeRemainsUnknown() throws {
+        try check("""
+        func render(_ type: (State?).Type) { observeValue(load(type)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: nil)
+    }
+
+    func testMetatypeInferenceDoesNotFixCovariantCallbackParameter() throws {
+        try check("""
+        func render() { visit(State.self) { value in observeValue(value) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func visit<Value>(_ type: Value.Type, _ callback: (Value) -> Void) {}
+        """, expected: nil)
+    }
+
+    func testMetatypeValueCanPassThroughGenericIdentity() throws {
+        try check("""
+        func render() { observeValue(load(identity(State.self))) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func identity<Value>(_ value: Value) -> Value { value }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: "State")
+    }
+
+    func testGenericInferenceDistinguishesMetatypesFromInstances() throws {
+        try check("""
+        func render(_ state: State) { observeValue(choose(state, State.self)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func choose<Value>(_ first: Value, _ second: Value) -> Value { first }
+        """, expected: nil)
+    }
+
+    func testOptionalMetatypeDoesNotEraseOptionalReferent() throws {
+        try check("""
+        func render(_ type: (State?).Type) { observeValue(load(type)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        func load<Value>(_ type: Value.Type?) -> Value { fatalError() }
+        """, expected: nil)
+    }
+
+    func testInheritedMetatypePropertyDoesNotUseGlobalTypeNamesake() throws {
+        try check("""
+        class Renderer: Base {
+            func render() { observeValue(load(State.self)) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        class Base { var State: Other.Type { Other.self } }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: nil)
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

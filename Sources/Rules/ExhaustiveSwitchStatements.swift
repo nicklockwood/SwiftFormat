@@ -254,8 +254,10 @@ extension Formatter {
                   let end = index(of: .nonSpaceOrCommentOrLinebreak, before: payload ?? range.upperBound),
                   let dot = index(of: .nonSpaceOrCommentOrLinebreak, before: end), tokens[dot].isOperator("."),
                   let start = index(in: range, where: { !$0.isSpaceOrCommentOrLinebreak && $0 != .keyword("let") && $0 != .keyword("var") }),
-                  start < dot, let prefix = resolver.expressionType(in: start ... dot - 1), prefix.isMetatype
+                  start < dot, var prefix = resolver.expressionType(in: start ... dot - 1), prefix.isMetatype
             else { return false }
+            // A qualified case uses the enum's metatype to name a case of its instance type.
+            prefix.isMetatype = false
             return resolver.sameType(prefix, as: type)
         }) else { return nil }
         guard let payload else { return name }

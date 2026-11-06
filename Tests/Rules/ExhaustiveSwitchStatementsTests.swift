@@ -2860,6 +2860,29 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """])
     }
 
+    func testMetatypeArgumentResolvesGenericSwitchSubject() throws {
+        let input = """
+        func render() {
+            switch load(State.self) {
+            case State.loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render() {
+            switch load(State.self) {
+            case State.loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

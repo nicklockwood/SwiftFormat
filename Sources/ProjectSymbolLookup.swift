@@ -43,6 +43,14 @@ final class ProjectSymbolLookup {
         }
     }
 
+    final class EnclosingType {
+        let type: ResolvedType
+
+        init(_ type: ResolvedType) {
+            self.type = type
+        }
+    }
+
     struct ResolvedType {
         var name: String
         var namespace: String?
@@ -54,6 +62,7 @@ final class ProjectSymbolLookup {
         var collectionKind: CollectionKind?
         var genericBounds: [ResolvedType]?
         var genericParameterScope: AutoUpdatingRange?
+        var enclosingType: EnclosingType?
     }
 
     struct PayloadBinding {
@@ -106,6 +115,7 @@ final class ProjectSymbolLookup {
     var localTypes = [String: [TypeDeclaration]]()
     var unindexedFunctions = Set<String>()
     var activeBindings = Set<ObjectIdentifier>()
+    var activeAliases = Set<String>()
 
     init(formatter: Formatter, project: ProjectIndex, fileURL: URL) {
         self.formatter = formatter
@@ -376,6 +386,7 @@ final class ProjectSymbolLookup {
     /// Resolve an annotated type in its declaration's lexical namespace, including aliases.
     func type(named rawName: String, namespace: String?, at index: Int? = nil, sourceFileURL: URL? = nil, substitutions: [String: ResolvedType] = [:], requiresGenericArguments: Bool = false, depth: Int = 0) -> ResolvedType? {
         guard depth < 16 else { return nil }
+        let isLocalReference = sourceFileURL == nil || sourceFileURL?.standardizedFileURL == fileURL.standardizedFileURL
         let tokens = tokenize(rawName).filter { !$0.isSpaceOrCommentOrLinebreak }
             .drop(while: { ["inout", "borrowing", "consuming", "sending", "any"].contains($0.string) })
         let name = tokens.string
@@ -499,6 +510,14 @@ final class ProjectSymbolLookup {
                                 sourceFileURL: sourceFileURL, functionType: functionType)
         }
 
+        if nominal.hasGenericParent {
+            guard var nested = nestedType(nominal, namespace: namespace, at: index, sourceFileURL: sourceFileURL,
+                                          substitutions: substitutions, depth: depth + 1) else { return nil }
+            if optional {
+                nested.name += "?"
+            }
+            return nested
+        }
         guard let lexical = qualifiedTypeName(for: ResolvedType(name: base, namespace: namespace, sourceFileURL: sourceFileURL)) else { return nil }
         if nominal.arguments.isEmpty, !nominal.hasGenericParent, lexical.name == namespace,
            let owner = substitutions["Self"],
@@ -570,6 +589,9 @@ final class ProjectSymbolLookup {
         if let alias = project.typeAlias(named: qualified, visibleFrom: sourceFileURL ?? fileURL,
                                          compilationContext: index.map { formatter.indexedCompilationBranches(at: $0) } ?? [], contextFileURL: fileURL)
         {
+            let identity = (sourceFileURL ?? fileURL).standardizedFileURL.path + ":" + qualified
+            guard activeAliases.insert(identity).inserted else { return nil }
+            defer { activeAliases.remove(identity) }
             guard alias.hasUnresolvedConstraints != true, alias.genericParameters.count == arguments.count else { return nil }
             let owner = alias.name.contains(".") ? alias.name.split(separator: ".").dropLast().joined(separator: ".") : nil
             var aliasArguments = [String: ResolvedType]()
@@ -594,7 +616,79 @@ final class ProjectSymbolLookup {
             return result
         }
         let argumentsSuffix = argumentNames.isEmpty ? "" : "<" + argumentNames.joined(separator: ",") + ">"
-        return ResolvedType(name: qualified + argumentsSuffix + (optional ? String(name.suffix(1)) : ""), namespace: nil, sourceFileURL: sourceFileURL, genericArguments: arguments)
+        var result = ResolvedType(name: qualified + argumentsSuffix + (optional ? String(name.suffix(1)) : ""), namespace: nil, sourceFileURL: sourceFileURL, genericArguments: arguments)
+        if let dot = qualified.lastIndex(of: ".") {
+            let parentName = String(qualified[..<dot])
+            let source = sourceFileURL ?? fileURL
+            if let parentDeclaration = project.typeDeclaration(named: parentName, visibleFrom: source), parentDeclaration.isGeneric {
+                // The parent owns a separate specialization. Its parameters must not be
+                // counted as arguments of the nested type, or lost when resolving members.
+                guard let owner = enclosingGenericType(named: parentName, declaration: parentDeclaration,
+                                                       at: isLocalReference ? index : nil, source: source,
+                                                       substitutions: substitutions, depth: depth + 1) else { return nil }
+                result.enclosingType = EnclosingType(owner)
+            }
+        }
+        return result
+    }
+
+    /// Arguments written on the nested member belong to the caller's lexical context;
+    /// its declaration and inherited parent specialization belong to the parent's context.
+    private func nestedType(_ reference: ProjectTypeReference, namespace: String?, at index: Int?,
+                            sourceFileURL: URL?, substitutions: [String: ResolvedType], depth: Int) -> ResolvedType?
+    {
+        guard depth < 16, let parent = reference.parent, let member = reference.member,
+              let memberType = ProjectTypeReference(member),
+              let owner = type(named: parent, namespace: namespace, at: index, sourceFileURL: sourceFileURL,
+                               substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1),
+              let ownerName = qualifiedName(for: owner), var context = nominalSubstitutions(for: owner) else { return nil }
+        let arguments = memberType.arguments.compactMap {
+            type(named: $0, namespace: namespace, at: index, sourceFileURL: sourceFileURL,
+                 substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
+        }
+        guard arguments.count == memberType.arguments.count else { return nil }
+        let placeholders = arguments.indices.map { "$nestedArgument" + String($0) }
+        for (key, argument) in zip(placeholders, arguments) {
+            context[key] = argument
+        }
+        let suffix = placeholders.isEmpty ? "" : "<" + placeholders.joined(separator: ",") + ">"
+        let name = ownerName + "." + memberType.name
+        guard var nested = type(named: name + suffix, namespace: ownerName, at: index,
+                                sourceFileURL: owner.sourceFileURL ?? sourceFileURL,
+                                substitutions: context, requiresGenericArguments: true, depth: depth + 1) else { return nil }
+        if project.typeDeclaration(named: name, visibleFrom: owner.sourceFileURL ?? fileURL) != nil {
+            nested.name = name + (arguments.isEmpty ? "" : "<" + arguments.map(\.name).joined(separator: ",") + ">")
+        }
+        return nested
+    }
+
+    private func enclosingGenericType(named name: String, declaration: SourceFileIndex.TypeDeclaration,
+                                      at index: Int?, source: URL, substitutions: [String: ResolvedType], depth: Int) -> ResolvedType?
+    {
+        guard depth < 16 else { return nil }
+        var owner = substitutions["Self"]
+        let identity = project.typeIdentity(named: name, visibleFrom: source)
+        while let candidate = owner {
+            if let name = qualifiedName(for: candidate), let identity,
+               project.typeIdentity(named: name, visibleFrom: candidate.sourceFileURL ?? fileURL) == identity
+            {
+                break
+            }
+            owner = candidate.enclosingType?.type
+        }
+        if owner == nil, let index {
+            owner = type(named: name, namespace: nil, at: index, substitutions: substitutions,
+                         requiresGenericArguments: true, depth: depth + 1)
+        }
+        if owner == nil, !declaration.genericParameters.isEmpty,
+           declaration.genericParameters.allSatisfy({ substitutions[$0] != nil })
+        {
+            owner = type(named: name + "<" + declaration.genericParameters.joined(separator: ",") + ">",
+                         namespace: nil, sourceFileURL: source, substitutions: substitutions,
+                         requiresGenericArguments: true, depth: depth + 1)
+        }
+        guard let owner, nominalSubstitutions(for: owner) != nil else { return nil }
+        return owner
     }
 
     /// Context can specialize an omitted generic argument list, but cannot change a named type
@@ -675,6 +769,11 @@ final class ProjectSymbolLookup {
         guard let left = qualifiedName(for: lhs), let right = qualifiedName(for: rhs),
               let identity = project.typeIdentity(named: left, visibleFrom: lhs.sourceFileURL ?? fileURL),
               identity == project.typeIdentity(named: right, visibleFrom: rhs.sourceFileURL ?? fileURL) else { return false }
+        if let parent = lhs.enclosingType {
+            guard let other = rhs.enclosingType, sameType(parent.type, as: other.type) else { return false }
+        } else if rhs.enclosingType != nil {
+            return false
+        }
         let leftArguments = lhs.genericArguments ?? []
         let rightArguments = rhs.genericArguments ?? []
         return leftArguments.count == rightArguments.count && zip(leftArguments, rightArguments).allSatisfy { sameType($0, as: $1) }
@@ -794,10 +893,20 @@ final class ProjectSymbolLookup {
     /// and substituting its arguments before proceeding to the next declaration.
     func projectedType(_ owner: ResolvedType, to name: String, source: URL, depth: Int = 0) -> ResolvedType? {
         guard depth < 16, let ownerName = qualifiedName(for: owner),
-              let identity = project.typeIdentity(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL),
-              let targetType = type(named: name, namespace: nil, sourceFileURL: source),
-              let targetName = qualifiedName(for: targetType),
-              let target = project.typeIdentity(named: targetName, visibleFrom: targetType.sourceFileURL ?? source) else { return nil }
+              let identity = project.typeIdentity(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) else { return nil }
+        let target: Set<String>
+        if project.typeDeclaration(named: name, visibleFrom: source) != nil,
+           let nominalIdentity = project.typeIdentity(named: name, visibleFrom: source)
+        {
+            // Projection needs declaration identity, not an unspecialized instance of a
+            // nested generic type. Aliases still resolve in their declaration context.
+            target = nominalIdentity
+        } else {
+            guard let targetType = type(named: name, namespace: nil, sourceFileURL: source, depth: depth + 1),
+                  let targetName = qualifiedName(for: targetType),
+                  let targetIdentity = project.typeIdentity(named: targetName, visibleFrom: targetType.sourceFileURL ?? source) else { return nil }
+            target = targetIdentity
+        }
         if identity == target {
             return owner
         }
@@ -820,7 +929,14 @@ final class ProjectSymbolLookup {
         }
         guard let declaration = project.typeDeclaration(named: name, visibleFrom: owner.sourceFileURL ?? fileURL),
               declaration.genericParameters.count == (owner.genericArguments ?? []).count else { return nil }
-        var result = Dictionary(uniqueKeysWithValues: zip(declaration.genericParameters, owner.genericArguments ?? []))
+        var result: [String: ResolvedType] = [:]
+        if let parent = owner.enclosingType {
+            guard let context = nominalSubstitutions(for: parent.type) else { return nil }
+            result = context
+        }
+        for (name, argument) in zip(declaration.genericParameters, owner.genericArguments ?? []) {
+            result[name] = argument
+        }
         result["Self"] = owner
         return result
     }
@@ -1264,16 +1380,11 @@ final class ProjectSymbolLookup {
             }
         }
         guard let ownerName = qualifiedName(for: owner),
-              let nominal = ProjectTypeReference(owner.name),
               let declaration = project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL),
               let payloads = declaration.enumCasePayloads?[caseName], payloads.indices.contains(position),
-              let source = project.typeSourceFile(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) else { return nil }
-        let arguments = owner.genericArguments ?? nominal.arguments.compactMap {
-            type(named: $0, namespace: owner.namespace, sourceFileURL: owner.sourceFileURL)
-        }
-        guard arguments.count == declaration.genericParameters.count else { return nil }
-        return type(named: payloads[position], namespace: declaration.name, sourceFileURL: source,
-                    substitutions: Dictionary(uniqueKeysWithValues: zip(declaration.genericParameters, arguments)))
+              let source = project.typeSourceFile(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL),
+              let substitutions = nominalSubstitutions(for: owner) else { return nil }
+        return type(named: payloads[position], namespace: declaration.name, sourceFileURL: source, substitutions: substitutions)
     }
 
     func applyGenericBounds(of symbol: ProjectIndex.FunctionSymbol, to substitutions: inout [String: ResolvedType]) -> Bool {
@@ -1373,6 +1484,11 @@ final class ProjectSymbolLookup {
                   project.typeSourceFile(named: actualName, visibleFrom: value.sourceFileURL ?? fileURL)?.pathExtension == "swift",
                   let actualArguments = value.genericArguments, let formalArguments = parameter.genericArguments,
                   actualArguments.count == formalArguments.count else { return false }
+            if let parent = value.enclosingType, let other = parameter.enclosingType,
+               argumentIsIncompatible(parent.type, with: other.type)
+            {
+                return true
+            }
             return zip(actualArguments, formalArguments).contains { argumentIsIncompatible($0, with: $1) }
         }
         if actualKind == "class", formalKind == "class" {
@@ -1509,6 +1625,12 @@ final class ProjectSymbolLookup {
                   identity == project.typeIdentity(named: actualName, visibleFrom: value.sourceFileURL ?? fileURL)
             else {
                 return sameType(pattern, as: value)
+            }
+            if let parent = pattern.enclosingType {
+                guard let other = value.enclosingType,
+                      match(parent.type, to: other.type, nesting: nesting + 1, invariant: true) else { return false }
+            } else if value.enclosingType != nil {
+                return false
             }
             let formal = pattern.genericArguments ?? []
             let actual = value.genericArguments ?? []
@@ -2174,13 +2296,20 @@ final class ProjectSymbolLookup {
             } else {
                 current = memberType(owner: owner, name: memberName, accessingType: namespace)
                 if current == nil, owner.isMetatype, project.hasSymbolType(named: "\(ownerName).\(memberName)", visibleFrom: fileURL) {
-                    current = ResolvedType(name: "\(ownerName).\(memberName)", namespace: nil, isMetatype: true)
+                    var instance = owner
+                    instance.isMetatype = false
+                    if var nested = dependentMemberType(memberName, of: instance, depth: depth + 1) {
+                        nested.isMetatype = true
+                        current = nested
+                    }
                 }
                 if current == nil, owner.isMetatype,
                    project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL)?.enumCasePayloads?[memberName] == [],
                    !project.hasProperty(owner: ownerName, member: memberName, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL)
                 {
-                    current = ResolvedType(name: ownerName, namespace: nil, sourceFileURL: owner.sourceFileURL, genericArguments: owner.genericArguments)
+                    var value = owner
+                    value.isMetatype = false
+                    current = value
                 }
                 cursor = member
             }
@@ -2200,6 +2329,8 @@ struct ProjectTypeReference {
     var name: String
     var arguments: [String]
     var hasGenericParent: Bool
+    var parent: String?
+    var member: String?
 
     init?(_ spelling: String) {
         let formatter = Formatter(tokenize(spelling))
@@ -2207,6 +2338,7 @@ struct ProjectTypeReference {
         var components = [String]()
         var arguments = [String]()
         var hasGenericParent = false
+        var lastDot: Int?
         var skipThrough = -1
         var valid = true
         formatter.forEachToken { index, token in
@@ -2224,6 +2356,9 @@ struct ProjectTypeReference {
                 }
                 skipThrough = end
             } else if token.isIdentifier || token.isOperator(".") {
+                if token.isOperator(".") {
+                    lastDot = index
+                }
                 components.append(token.string)
             } else {
                 valid = false
@@ -2233,5 +2368,9 @@ struct ProjectTypeReference {
         name = components.joined()
         self.arguments = arguments
         self.hasGenericParent = hasGenericParent
+        if let lastDot {
+            parent = formatter.tokens[..<lastDot].string
+            member = formatter.tokens[lastDot + 1 ..< formatter.tokens.count].string
+        }
     }
 }

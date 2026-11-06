@@ -3422,6 +3422,66 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """])
     }
 
+    func testNestedGenericParentPayloadExpandsKnownEnum() throws {
+        let input = """
+        import Models
+        func render(_ event: Container<State>.Event) {
+            if case let .loaded(state) = event {
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        import Models
+        func render(_ event: Container<State>.Event) {
+            if case let .loaded(state) = event {
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, modules: ["Models": """
+        public enum State { case idle, loaded, failed }
+        public struct Container<Value> { public enum Event { case idle, loaded(Value) } }
+        """])
+    }
+
+    func testNestedOwnArgumentUsesCallerEnumForExhaustiveness() throws {
+        let input = """
+        import Models
+        enum LocalState { case idle, loaded, failed }
+        func render(_ event: Container<Int>.Event<LocalState>) {
+            if case let .loaded(state) = event {
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        import Models
+        enum LocalState { case idle, loaded, failed }
+        func render(_ event: Container<Int>.Event<LocalState>) {
+            if case let .loaded(state) = event {
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, modules: ["Models": """
+        public enum LocalState { case wrong }
+        public struct Container<Value> { public enum Event<Detail> { case loaded(Detail) } }
+        """])
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

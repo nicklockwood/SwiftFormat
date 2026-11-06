@@ -791,7 +791,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, sources: [:], expectedCases: ["new"])
     }
 
-    func testGenericParentArgumentsDoNotDisambiguateANestedType() throws {
+    func testGenericParentArityDisambiguatesItsOwnDeclaration() throws {
         try checkModules("""
         import Models
         import UI
@@ -799,7 +799,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, sources: [
             "Models": "public enum Outer<T> { public enum State { case correct } }",
             "UI": "public enum Outer { public enum State<T> { case wrong } }",
-        ], expectedCases: nil)
+        ], expectedCases: ["correct"])
     }
 
     func testImportedCanonicalTypeKeepsItsDeclarationContext() throws {
@@ -6170,6 +6170,203 @@ final class ProjectSymbolLookupTests: XCTestCase {
             public func receive(_ body: (Event<State>) -> Void) {}
         }
         """], expectedCases: nil, expectedAbstractParameter: "State")
+    }
+
+    func testNestedGenericParentPreservesPayloadType() throws {
+        try checkModules("""
+        import Models
+        func render(_ event: Container<State>.Event) {
+            if case let .loaded(state) = event { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> {
+            public enum Event { case idle, loaded(Value) }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedTypeRetainsItsOwnGenericArguments() throws {
+        try checkModules("""
+        import Models
+        func render(_ event: Container<State>.Event<Other>) {
+            if case let .loaded(_, value) = event { observeValue(value) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum Other { case first, second }
+        public struct Container<Value> {
+            public enum Event<Detail> { case idle, loaded(Value, Detail) }
+        }
+        """], expectedCases: ["first", "second"])
+    }
+
+    func testNestedGenericParentMemberUsesOuterArgument() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Container<State>.Model) { observeValue(model.value) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> {
+            public struct Model { public let value: Value }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedGenericParentAliasUsesOuterArgument() throws {
+        try checkModules("""
+        import Models
+        func render(_ value: Container<State>.Alias) { observeValue(value) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> { public typealias Alias = Value }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedGenericParentMethodResultPreservesArguments() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Container<State>.Model) { observeValue(model.value()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> {
+            public struct Model { public func value() -> Value { fatalError() } }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedGenericParentInferenceBindsOuterArgument() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Container<State>.Model) { observeValue(extract(model)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> { public struct Model {} }
+        public func extract<Value>(_ model: Container<Value>.Model) -> Value { fatalError() }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedGenericParentSpecializationsSelectOverload() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Container<State>.Model) { observeValue(extract(model)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum Other { case unrelated }
+        public struct Container<Value> { public struct Model {} }
+        public func extract(_ model: Container<State>.Model) -> State { fatalError() }
+        public func extract(_ model: Container<Other>.Model) -> Other { fatalError() }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testBareNestedTypeRetainsEnclosingSpecialization() throws {
+        try checkModules("""
+        import Models
+        extension Container {
+            func render(_ model: Model) { observeValue(model.value) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public struct Container<State> {
+            public struct Model { public let value: State }
+        }
+        """], expectedCases: nil, expectedAbstractParameter: "State")
+    }
+
+    func testNestedGenericParentAmbiguityPreservesUnknownType() throws {
+        try checkModules("""
+        import Models
+        import Other
+        func render(_ value: Container<Int>.Event) { observeValue(value) }
+        """, sources: [
+            "Models": "public struct Container<T> { public enum Event { case first } }",
+            "Other": "public struct Container<T> { public enum Event { case second } }",
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testNestedGenericParentCannotUseMissingArgumentNamesake() throws {
+        try checkModules("""
+        import Models
+        func render(_ value: Container.Model) { observeValue(value.state) }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public struct Container<State> { public struct Model { public let state: State } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testMultipleNestedGenericParentsPreserveOuterArgument() throws {
+        try checkModules("""
+        import Models
+        func render(_ value: Container<State>.Middle<Int>.Model) { observeValue(value.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> {
+            public struct Middle<Detail> { public struct Model { public let state: Value } }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedGenericEnumValueRetainsPayloadSubstitution() throws {
+        try checkModules("""
+        import Models
+        func render() {
+            let event = Container<State>.Event.idle
+            if case let .loaded(state) = event { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> { public enum Event { case idle, loaded(Value) } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedGenericOwnArgumentUsesCallerDeclaration() throws {
+        try checkModules("""
+        import Models
+        enum State { case correct }
+        func render(_ event: Container<Int>.Event<State>) {
+            if case let .loaded(state) = event { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case wrong }
+        public struct Container<Value> { public enum Event<Detail> { case loaded(Detail) } }
+        """], expectedCases: ["correct"])
+    }
+
+    func testNestedGenericOwnArgumentRetainsAbstractIdentity() throws {
+        try checkModules("""
+        import Models
+        func render<State>(_ event: Container<Int>.Event<State>) {
+            if case let .loaded(state) = event { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public struct Container<Value> { public enum Event<Detail> { case loaded(Detail) } }
+        """], expectedCases: nil, expectedAbstractParameter: "State")
+    }
+
+    func testNestedGenericInferenceBindsOwnArgument() throws {
+        try checkModules("""
+        import Models
+        func render(_ event: Container<Int>.Event<State>) { observeValue(extract(event)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Container<Value> { public enum Event<Detail> { case loaded(Detail) } }
+        public func extract<Detail>(_ event: Container<Int>.Event<Detail>) -> Detail { fatalError() }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testGenericAliasRetainsNestedArgumentCallerContext() throws {
+        try checkModules("""
+        import Models
+        enum State { case correct }
+        func render(_ event: Envelope<State>) {
+            if case let .loaded(state) = event { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case wrong }
+        public struct Container<Value> { public enum Event<Detail> { case loaded(Detail) } }
+        public typealias Envelope<Detail> = Container<Int>.Event<Detail>
+        """], expectedCases: ["correct"])
     }
 
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false, expectedAbstractParameter: String? = nil,

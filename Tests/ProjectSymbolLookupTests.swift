@@ -1511,6 +1511,369 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: "Other")
     }
 
+    func testArrayAliasPreservesElementDeclarationContext() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ model: Model) { observeValue(model.states.first!) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public typealias States = [State]
+        public struct Model { public let states: States }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testArraySubscriptResolvesCrossFileMember() throws {
+        try check("""
+        func render(_ models: [Model], _ index: Int) { observeValue(models[index].state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    func testDictionaryLookupAddsOptionalToValue() throws {
+        try check("""
+        func render(_ states: [String: State], _ key: String) { observeValue(states[key]) }
+        """, declarations: "enum State { case idle, loaded }", expected: "State", expectedOptional: true)
+    }
+
+    func testDictionaryDefaultSubscriptKeepsNonoptionalValue() throws {
+        try check("""
+        func render(_ states: [String: State], _ key: String, _ fallback: State) {
+            observeValue(states[key, default: fallback])
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testNestedOptionalCollectionsPreserveElementType() throws {
+        try check("""
+        func render(_ models: [String: [Model]]?, _ key: String) {
+            observeValue(models?[key]?.first?.state)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testArrayForLoopPropagatesElementType() throws {
+        try check("""
+        func render(_ models: [Model]) {
+            for model in models { observeValue(model.state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    func testDictionaryForLoopDestructuresKeyAndValue() throws {
+        try check("""
+        func render(_ models: [String: Model]) {
+            for (_, model) in models { observeValue(model.state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    func testArrayLoopDestructuresTupleElement() throws {
+        try check("""
+        func render(_ pairs: [(State, Other)]) {
+            for (_, state) in pairs { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        """, expected: "Other")
+    }
+
+    func testDictionaryValuesCollectionRetainsValueType() throws {
+        try check("""
+        func render(_ models: Dictionary<String, Model>) {
+            for model in models.values { observeValue(model.state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    func testSetForEachInfersNamedClosureParameter() throws {
+        try check("""
+        func render(_ states: Set<State>) {
+            states.forEach { state in observeValue(state) }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testArrayMapInfersShorthandParameterMember() throws {
+        try check("""
+        func render(_ models: [Model]) {
+            models.map { observeValue($0.state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    func testDictionaryCallbackDestructuresElement() throws {
+        try check("""
+        func render(_ models: [String: Model]) {
+            models.forEach { key, value in observeValue(value.state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    func testFilterChainPreservesCollectionElement() throws {
+        try check("""
+        func render(_ models: [Model]) {
+            models.filter { $0.isVisible }.map { observeValue($0.state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State; let isVisible: Bool }
+        """, expected: "State")
+    }
+
+    func testNestedShorthandClosuresUseInnermostCollection() throws {
+        try check("""
+        func render(_ groups: [[Model]]) {
+            groups.forEach { $0.forEach { observeValue($0.state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: "State")
+    }
+
+    func testNamedInnerClosureDoesNotCaptureOuterShorthandType() throws {
+        try check("""
+        func render(_ models: [Model]) {
+            models.forEach { consume($0) { value in observeValue($0.state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """, expected: nil)
+    }
+
+    func testProjectArrayNamesakeUsesIndexedProperty() throws {
+        try check("""
+        func render(_ states: Array<State>) { observeValue(states.first) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        struct Array<Element> { let first: Other }
+        """, expected: "Other")
+    }
+
+    func testCollectionSugarBypassesProjectArrayNamesake() throws {
+        try check("""
+        func render(_ states: [State]) { observeValue(states.first!) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        struct Array<Element> { let first: Other }
+        """, expected: "State")
+    }
+
+    func testSliceSubscriptIsNotAnElementSubscript() throws {
+        try check("""
+        func render(_ states: [State]) { observeValue(states[0..<2]) }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testUnknownArrayIndexTypeDoesNotGuessAnElement() throws {
+        try check("""
+        func render(_ states: [State], _ index: UnknownIndex) { observeValue(states[index]) }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testExplicitSwiftCollectionIsNotShadowedByLocalType() throws {
+        try check("""
+        func render(_ states: Swift.Array<State>) { observeValue(states.last!) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Array<Element> {}
+        """, expected: "State")
+    }
+
+    func testDictionaryIndexDoesNotResolveAsAKeyLookup() throws {
+        try check("""
+        func render(_ states: [String: State], index: Dictionary<String, State>.Index) {
+            observeValue(states[index])
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testArrayStartIndexResolvesAsAnElementSubscript() throws {
+        try check("""
+        func render(_ states: [State]) { observeValue(states[states.startIndex]) }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testCollectionExtensionCallbackOverloadDoesNotUseBuiltinParameter() throws {
+        try check("""
+        func render(_ states: [State]) { states.map { observeValue($0) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        extension Array where Element == State {
+            func map(_ body: (Other) -> Void) {}
+        }
+        """, expected: nil)
+    }
+
+    func testCollectionExtensionSubscriptDoesNotUseBuiltinResult() throws {
+        try check("""
+        func render(_ states: [State], _ index: Int) { observeValue(states[index]) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        extension Array where Element == State {
+            subscript(index: Int) -> Other { .ready }
+        }
+        """, expected: nil)
+    }
+
+    func testDictionaryViewExtensionDoesNotAssumeBuiltinCallback() throws {
+        try check("""
+        func render(_ states: [String: State]) { states.values.map { observeValue($0) } }
+        """, declarations: """
+        enum State: Hashable { case idle, loaded }
+        enum Other { case idle, unrelated }
+        extension Dictionary.Values where Value == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """, expected: nil)
+    }
+
+    func testCollectionProtocolExtensionDoesNotAssumeBuiltinCallback() throws {
+        try check("""
+        func render(_ states: [State]) { states.map { observeValue($0) } }
+        """, declarations: """
+        enum State: Hashable { case idle, loaded }
+        enum Other { case idle, unrelated }
+        protocol CustomSequence: Sequence {}
+        extension Array: CustomSequence {}
+        extension CustomSequence where Element == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """, expected: nil)
+    }
+
+    func testProjectSwiftNamespaceDoesNotUseBuiltinCollectionShape() throws {
+        try check("""
+        func render(_ states: Swift.Array<State>) { observeValue(states.first) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        enum Swift {
+            struct Array<Element> { let first: Other }
+        }
+        """, expected: "Other")
+    }
+
+    func testIndexedSwiftCollectionStillChecksProjectOverloads() throws {
+        try checkModules("""
+        enum State { case idle, loaded }
+        enum Other { case idle, unrelated }
+        extension Array where Element == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        func render(_ states: [State]) { states.map { observeValue($0) } }
+        """, sources: ["Swift": "public struct Array<Element> {}"], expectedCases: nil)
+    }
+
+    func testCollectionProtocolAliasOverloadDoesNotUseBuiltinParameter() throws {
+        try check("""
+        func render(_ states: [State]) { states.map { observeValue($0) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case idle, unrelated }
+        protocol CustomSequence: Sequence {}
+        typealias Alias = CustomSequence
+        extension Array: Alias {}
+        extension CustomSequence where Element == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """, expected: nil)
+    }
+
+    func testIndexedStandardLibraryMethodsDoNotHideCollectionElementInference() throws {
+        try checkModules("""
+        enum State { case idle, loaded }
+        func render(_ states: [State]) { states.map { observeValue($0) } }
+        """, sources: ["Swift": """
+        public struct Array<Element> {
+            public func map(_ body: (Element) -> Void) {}
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testQualifiedImportedCollectionProtocolOverloadIsRecognized() throws {
+        try checkModules("""
+        import Library
+        extension Array: Library.CustomSequence {}
+        func render(_ states: [Library.State]) { states.map { observeValue($0) } }
+        """, sources: ["Library": """
+        public enum State { case idle, loaded }
+        public enum Other { case idle, unrelated }
+        public protocol CustomSequence: Sequence {}
+        public extension CustomSequence where Element == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """], expectedCases: nil)
+    }
+
+    func testCallerArrayNamesakeDoesNotHideImportedStandardCollectionOverload() throws {
+        try checkModules("""
+        import Library
+        struct Array<Element> {}
+        func render(_ states: [Library.State]) { states.map { observeValue($0) } }
+        """, sources: ["Library": """
+        public enum State { case idle, loaded }
+        public enum Other { case idle, unrelated }
+        public extension Array where Element == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """], expectedCases: nil)
+    }
+
+    func testCollectionAliasExtensionDoesNotUseBuiltinCallbackParameter() throws {
+        try check("""
+        func render(_ states: [State]) { states.map { observeValue($0) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case idle, unrelated }
+        typealias MyArray<Element> = Array<Element>
+        extension MyArray where Element == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """, expected: nil)
+    }
+
+    func testQualifiedImportedCollectionAliasPropertyDoesNotUseBuiltinType() throws {
+        try checkModules("""
+        import Library
+        extension Library.MyArray where Element == Library.State {
+            var first: Library.Other? { .idle }
+        }
+        func render(_ states: [Library.State]) { observeValue(states.first!) }
+        """, sources: ["Library": """
+        public enum State { case idle, loaded }
+        public enum Other { case idle, unrelated }
+        public typealias MyArray<Element> = Array<Element>
+        """], expectedCases: nil)
+    }
+
     private func checkModules(_ input: String, sources: [String: String], expectedCases: [String]?,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

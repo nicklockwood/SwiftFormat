@@ -4565,6 +4565,7 @@ extension Formatter {
     /// - When `startOfScope` is a `(`, the parenthesized arguments are parsed
     ///   and any trailing closures that immediately follow the `)` are appended
     ///   as additional arguments.
+    /// - When `startOfScope` is a `[`, subscript arguments are parsed without trailing closures.
     func parseFunctionCallArguments(startOfScope: Int, preserveWhitespace: Bool = false) -> [FunctionCallArgument] {
         // Handle calls that are solely a trailing closure with no parentheses,
         // e.g. `filter { $0.isActive }` or `animate { } completion: { }`.
@@ -4581,7 +4582,7 @@ extension Formatter {
             return arguments
         }
 
-        assert(tokens[startOfScope] == .startOfScope("("))
+        assert(tokens[startOfScope] == .startOfScope("(") || tokens[startOfScope] == .startOfScope("["))
         guard let endOfScope = endOfScope(at: startOfScope) else { return [] }
 
         var argumentLabels: [FunctionCallArgument] = []
@@ -4662,6 +4663,10 @@ extension Formatter {
                     currentIndex = endOfCurrentArgument
                 }
             }
+        }
+
+        if tokens[startOfScope] == .startOfScope("[") {
+            return argumentLabels
         }
 
         // Append any trailing closures that immediately follow the closing paren.

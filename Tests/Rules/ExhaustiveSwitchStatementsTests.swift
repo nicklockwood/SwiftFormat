@@ -1958,6 +1958,175 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         try check(input, output, declarations: "enum State { case idle }")
     }
 
+    func testCollectionSubscriptUsesProjectElementEnum() throws {
+        let input = """
+        func render(_ states: [State]) {
+            switch states[0] {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ states: [State]) {
+            switch states[0] {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testDictionaryLookupEnumeratesMissingKeyAndValueCases() throws {
+        let input = """
+        func render(_ states: [String: State], key: String) {
+            switch states[key] {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ states: [String: State], key: String) {
+            switch states[key] {
+            case .loaded: showContent()
+            case .some(.idle), .some(.failed), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testLoopOverCrossFileCollectionElementProperty() throws {
+        let input = """
+        func render(_ models: [Model]) {
+            for model in models {
+                switch model.state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ models: [Model]) {
+            for model in models {
+                switch model.state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State }
+        """)
+    }
+
+    func testShorthandCollectionCallbackUsesProjectPropertyType() throws {
+        let input = """
+        func render(_ models: [Model]) {
+            models.filter { $0.visible }.map {
+                switch $0.state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ models: [Model]) {
+            models.filter { $0.visible }.map {
+                switch $0.state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State; let visible: Bool }
+        """)
+    }
+
+    func testDictionaryTupleClosureUsesValueEnum() throws {
+        let input = """
+        func render(_ states: [String: State]) {
+            states.forEach { key, state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ states: [String: State]) {
+            states.forEach { key, state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testUnknownCollectionSubscriptDoesNotGuessFromCasePatterns() throws {
+        try check("""
+        func render(_ states: [State], index: ExternalIndex) {
+            switch states[index] {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """)
+    }
+
+    func testDictionaryViewExtensionDoesNotAssumeBuiltinCallback() throws {
+        try check("""
+        func render(_ states: [String: State]) {
+            states.values.map {
+                switch $0 {
+                case .idle: showIdle()
+                default: showOther()
+                }
+            }
+        }
+        """, declarations: """
+        enum State: Hashable { case idle, loaded }
+        enum Other { case idle, unrelated }
+        extension Dictionary.Values where Value == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """)
+    }
+
+    func testCollectionProtocolExtensionDoesNotAssumeBuiltinCallback() throws {
+        try check("""
+        func render(_ states: [State]) {
+            states.map {
+                switch $0 {
+                case .idle: showIdle()
+                default: showOther()
+                }
+            }
+        }
+        """, declarations: """
+        enum State: Hashable { case idle, loaded }
+        enum Other { case idle, unrelated }
+        protocol CustomSequence: Sequence {}
+        extension Array: CustomSequence {}
+        extension CustomSequence where Element == State {
+            func map(_ body: (Other) -> Void) { body(.idle) }
+        }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

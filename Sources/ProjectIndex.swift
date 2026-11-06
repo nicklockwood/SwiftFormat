@@ -429,6 +429,7 @@ struct ProjectIndex {
     private let protocolsByModule: Set<TypeKey>
     private let protocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]]
     private let conformancesByModule: [TypeKey: Set<String>]
+    private let conformanceSourcesByModule: [TypeKey: [(source: URL, parents: [String])]]
     private let propertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
     private let staticPropertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
     private let inheritedClassNamesByModule: [String: Set<String>]
@@ -481,6 +482,7 @@ struct ProjectIndex {
         var protocolsByModule = Set<TypeKey>()
         var protocolDeclarationsByModule = [TypeKey: [SourceFileIndex.ProtocolDeclaration]]()
         var conformancesByModule = [TypeKey: Set<String>]()
+        var conformanceSourcesByModule = [TypeKey: [(source: URL, parents: [String])]]()
         var propertiesByModule = [TypeKey: [SourceFileIndex.PropertyDeclaration]]()
         var staticPropertiesByModule = [TypeKey: [SourceFileIndex.PropertyDeclaration]]()
         for (path, file) in files {
@@ -508,10 +510,12 @@ struct ProjectIndex {
                     protocolsByModule.insert(key)
                     protocolDeclarationsByModule[key, default: []].append(declaration)
                     conformancesByModule[key, default: []].formUnion(declaration.inheritedProtocols)
+                    conformanceSourcesByModule[key, default: []].append((URL(fileURLWithPath: path), declaration.inheritedProtocols))
                 }
                 for conformance in file.typeConformances {
                     let key = TypeKey(moduleIdentifier: module, name: conformance.typeName)
                     conformancesByModule[key, default: []].formUnion(conformance.conformances)
+                    conformanceSourcesByModule[key, default: []].append((URL(fileURLWithPath: path), conformance.conformances))
                 }
                 for property in file.propertyDeclarations {
                     let key = TypeKey(moduleIdentifier: module, name: "\(property.declaringType).\(property.name)")
@@ -617,6 +621,7 @@ struct ProjectIndex {
         self.protocolsByModule = protocolsByModule
         self.protocolDeclarationsByModule = protocolDeclarationsByModule
         self.conformancesByModule = conformancesByModule
+        self.conformanceSourcesByModule = conformanceSourcesByModule
         self.propertiesByModule = propertiesByModule
         self.staticPropertiesByModule = staticPropertiesByModule
         self.typeVisibilities = typeVisibilities
@@ -2914,6 +2919,112 @@ extension ProjectIndex {
             }
         }
         return true
+    }
+
+    /// Whether a known standard-library spelling is unshadowed in this source context.
+    func isStandardLibraryTypeName(_ name: String, visibleFrom source: URL) -> Bool {
+        if name.hasPrefix("Swift."), hasSymbolType(named: "Swift", visibleFrom: source) {
+            return false
+        }
+        guard typeAlias(named: name, visibleFrom: source) == nil else { return false }
+        if let identity = typeIdentity(named: name, visibleFrom: source) {
+            return !identity.isEmpty && identity.allSatisfy { $0.hasPrefix("Swift:") }
+        }
+        return !hasSymbolType(named: name, visibleFrom: source)
+    }
+
+    /// Project extensions may overload standard-library collection operations. Without an indexed
+    /// standard-library signature, their presence prevents assuming the built-in operation's type.
+    func hasCollectionMember(named name: String, kind: String, visibleFrom fileURL: URL) -> Bool {
+        guard let file = files[fileURL.standardizedFileURL.path] else { return true }
+        let names = [kind, "Sequence", "Collection", "BidirectionalCollection", "RandomAccessCollection",
+                     "MutableCollection", "RangeReplaceableCollection"]
+        let roots = Set(names + names.map { "Swift." + $0 })
+        let imported = importedModuleNames(file.imports).flatMap { modulesByName[$0] ?? [] }
+        let modules = Set(file.moduleIdentifiers + imported)
+        var pending = Set<TypeKey>()
+        func enqueue(_ parents: [String], relativeTo owner: String, in source: URL) {
+            for parent in parents.inheritedNamesToResolve {
+                if let keys = symbolTypeKeys(named: parent, visibleFrom: source) {
+                    pending.formUnion(keys)
+                }
+                // An unqualified nested protocol may need the declaration's lexical namespace.
+                if !parent.contains("."), let sourceFile = files[source.standardizedFileURL.path] {
+                    for module in sourceFile.moduleIdentifiers {
+                        let key = declarationTypeKey(named: parent, relativeTo: owner, in: module)
+                        if protocolsByModule.contains(key) || aliasesByModule[key] != nil {
+                            pending.insert(key)
+                        }
+                    }
+                }
+            }
+        }
+        for module in modules {
+            for root in roots {
+                let key = TypeKey(moduleIdentifier: module, name: root)
+                for entry in conformanceSourcesByModule[key] ?? [] where isStandardLibraryTypeName(root, visibleFrom: entry.source) {
+                    enqueue(entry.parents, relativeTo: root, in: entry.source)
+                }
+            }
+        }
+        var visited = Set<TypeKey>()
+        while let key = pending.popFirst() {
+            guard visited.insert(key).inserted else { continue }
+            for entry in conformanceSourcesByModule[key] ?? [] {
+                enqueue(entry.parents, relativeTo: key.name, in: entry.source)
+            }
+            for alias in aliasesByModule[key] ?? [] {
+                let formatter = Formatter(tokenize(alias.type))
+                guard alias.genericParameters.isEmpty, alias.hasUnresolvedConstraints != true,
+                      let reference = formatter.parseType(at: 0),
+                      let source = typeSourceFilesByModule[key]?.first else { return true }
+                enqueue(reference.indexedNominalTypeNames, relativeTo: key.name, in: URL(fileURLWithPath: source))
+            }
+        }
+        func isRelevantOwner(_ owner: String, source: URL, aliasesVisited: Set<TypeKey> = []) -> Bool {
+            if roots.contains(owner), isStandardLibraryTypeName(owner, visibleFrom: source) {
+                return true
+            }
+            guard let keys = symbolTypeKeys(named: owner, visibleFrom: source) else { return true }
+            if keys.contains(where: { visited.contains($0) }) {
+                return true
+            }
+            for key in keys where !aliasesVisited.contains(key) {
+                for alias in aliasesByModule[key] ?? [] {
+                    guard let path = typeSourceFilesByModule[key]?.first else { return true }
+                    let aliasSource = URL(fileURLWithPath: path)
+                    let tokens = tokenize(alias.type).filter { !$0.isSpaceOrCommentOrLinebreak }
+                    if tokens.first == .startOfScope("[") {
+                        return true
+                    }
+                    if let target = ProjectTypeReference(alias.type),
+                       isRelevantOwner(target.name, source: aliasSource, aliasesVisited: aliasesVisited.union([key]))
+                    {
+                        return true
+                    }
+                }
+            }
+            return false
+        }
+        let qualifiedOwners = visited.compactMap { key in moduleNamesByIdentifier[key.moduleIdentifier].map { $0 + "." + key.name } }
+        let aliasOwners = aliasesByModule.keys.filter { modules.contains($0.moduleIdentifier) }.flatMap { key in
+            [key.name] + (moduleNamesByIdentifier[key.moduleIdentifier].map { [$0 + "." + key.name] } ?? [])
+        }
+        let ownerNames = roots.union(visited.map(\.name)).union(qualifiedOwners).union(aliasOwners)
+        for module in modules where moduleNamesByIdentifier[module] != "Swift" {
+            for candidate in symbolFunctionsByModule[module]?[name] ?? [] {
+                if let owner = candidate.declaration.declaringType, isRelevantOwner(owner, source: candidate.fileURL) {
+                    return true
+                }
+            }
+            for owner in ownerNames {
+                let key = TypeKey(moduleIdentifier: module, name: owner + "." + name)
+                if propertySourceFilesByModule[key]?.contains(where: { isRelevantOwner(owner, source: URL(fileURLWithPath: $0)) }) == true {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     /// Resolve a function signature through its receiver or the caller's explicit imports.

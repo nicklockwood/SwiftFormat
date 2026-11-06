@@ -10,6 +10,34 @@ import XCTest
 @testable import SwiftFormat
 
 final class ExhaustiveSwitchStatementsTests: XCTestCase {
+    func testInheritedProtocolEqualityExpandsAssociatedCallbackDefault() throws {
+        let input = """
+        func render<Input: Loader>(_ source: Input) {
+            source.observe { state in
+                switch state {
+                case .loaded: print("loaded")
+                default: print("fallback")
+                }
+            }
+        }
+        """
+        let output = """
+        func render<Input: Loader>(_ source: Input) {
+            source.observe { state in
+                switch state {
+                case .loaded: print("loaded")
+                case .idle: print("fallback")
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output; func observe(_ callback: (Output) -> Void) }
+        protocol Loader: Source where Output == State {}
+        """)
+    }
+
     func testInvariantInputSelectsConstrainedCallbackBeforeExpandingDefault() throws {
         let input = """
         func render(_ source: Box<Model>) {

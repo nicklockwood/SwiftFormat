@@ -10,6 +10,116 @@ import XCTest
 @testable import SwiftFormat
 
 final class ProjectSymbolLookupTests: XCTestCase {
+    func testProtocolEqualityResolvesAbstractAssociatedProperty() throws {
+        try check("""
+        func render<Input: Source>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source where Output == State { associatedtype Output; var value: Output { get } }
+        """, expected: "State")
+    }
+
+    func testInheritedProtocolEqualityResolvesOpaqueCallback() throws {
+        try check("""
+        func render(_ source: some Loader) { source.observe { value in observeValue(value) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output; func observe(_ callback: (Output) -> Void) }
+        protocol Loader: Source where Output == State {}
+        """, expected: "State")
+    }
+
+    func testProtocolEqualityKeepsForeignTypeProvenance() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render<Input: Source>(_ source: Input) { observeValue(source.value) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Source where Output == State { associatedtype Output; var value: Output { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testProtocolEqualityResolvesAliasedOptionalWitness() throws {
+        try check("""
+        func render<Input: Loader>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        typealias Phase = State?
+        protocol Source { associatedtype Output; var value: Output { get } }
+        protocol Loader: Source where Output == Phase {}
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testProtocolEqualityFollowsAssociatedEqualityChain() throws {
+        try check("""
+        func render<Input: Loader>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output; var value: Output { get } }
+        protocol Loader: Source where Output == Payload, Payload == State { associatedtype Payload }
+        """, expected: "State")
+    }
+
+    func testProtocolEqualitiesFromDistinctBoundsMustAgree() throws {
+        try check("""
+        func render<Input: First & Second>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output; var value: Output { get } }
+        protocol First: Source where Output == State {}
+        protocol Second: Source where Output == Other {}
+        """, expected: nil)
+    }
+
+    func testConditionalProtocolEqualityDoesNotAssumeBuildConfiguration() throws {
+        try check("""
+        func render<Input: Loader>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output; var value: Output { get } }
+        #if FIRST
+        protocol Loader: Source where Output == State {}
+        #else
+        protocol Loader: Source where Output == Other {}
+        #endif
+        """, expected: nil)
+    }
+
+    func testProtocolEqualityCycleTerminatesWithoutInventingWitness() throws {
+        try check("""
+        func render<Input: Source>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum Output { case unrelated }
+        protocol Source where Output == Payload {
+            associatedtype Output
+            associatedtype Payload
+            var value: Output { get }
+        }
+        """, expected: nil)
+    }
+
+    func testProtocolDefaultAssociatedTypeDoesNotConstrainAbstractReceiver() throws {
+        try check("""
+        func render<Input: Source>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output = State; var value: Output { get } }
+        """, expected: nil)
+    }
+
+    func testConstrainedProtocolExtensionDoesNotConstrainAllReceivers() throws {
+        try check("""
+        func render<Input: Source>(_ source: Input) { observeValue(source.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output; var value: Output { get } }
+        extension Source where Output == State { func unrelated() {} }
+        """, expected: nil)
+    }
+
     func testInvariantGenericArgumentEliminatesUnequalAssociatedConstraint() throws {
         try check("""
         func render(_ source: Box<Model>) { consume(source) { state in observeValue(state) } }

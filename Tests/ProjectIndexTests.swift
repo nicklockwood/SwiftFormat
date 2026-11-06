@@ -27,6 +27,21 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testProtocolEqualitiesAffectDeclarationFingerprint() throws {
+        let first = makeSourceFileIndex(from: """
+        protocol Source where Output == First { associatedtype Output }
+        """, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: """
+        protocol Source where Output == Second { associatedtype Output }
+        """, moduleIdentifiers: ["App"])
+        let encoded = try JSONEncoder().encode(first)
+        XCTAssertEqual(try JSONDecoder().decode(SourceFileIndex.self, from: encoded), first)
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
     func testSuppressedCapabilitiesAreNotIndexedAsInheritedTypes() throws {
         let index = makeSourceFileIndex(from: """
         protocol Parent {}

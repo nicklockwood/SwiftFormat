@@ -1195,7 +1195,9 @@ final class ProjectSymbolLookup {
                 let remaining = components.suffix(from: end + 1).joined(separator: ".")
                 return remaining.isEmpty ? value : dependentMemberType(remaining, of: value, depth: depth + 1)
             }
-            return nil
+        }
+        if owner.isAbstract {
+            return abstractAssociatedType(path, owner: owner, depth: depth + 1)
         }
         guard let reference = ProjectTypeReference(path), reference.arguments.isEmpty,
               let component = reference.name.split(separator: ".").first,
@@ -1245,6 +1247,45 @@ final class ProjectSymbolLookup {
         guard let result else { return nil }
         let remaining = reference.name.split(separator: ".").dropFirst().joined(separator: ".")
         return remaining.isEmpty ? result : dependentMemberType(remaining, of: result, depth: depth + 1)
+    }
+
+    /// An associated type can be concrete even when its receiver is abstract: every conformer
+    /// must satisfy its protocol's same-type requirements, including inherited refinements.
+    private func abstractAssociatedType(_ path: String, owner: ResolvedType, depth: Int) -> ResolvedType? {
+        guard depth < 16, let bounds = owner.genericBounds,
+              let member = path.split(separator: ".").first else { return nil }
+        var values = [ResolvedType]()
+        func collect(_ bound: ResolvedType, depth: Int) -> Bool {
+            guard depth < 16, let name = qualifiedName(for: bound),
+                  let requirements = project.genericTypeRequirements(of: name, visibleFrom: bound.sourceFileURL ?? fileURL),
+                  let parents = project.inheritedTypeReferences(owner: name, visibleFrom: bound.sourceFileURL ?? fileURL),
+                  var substitutions = nominalSubstitutions(for: bound) else { return false }
+            substitutions["Self"] = owner
+            if project.associatedTypeRequirements(named: String(member), of: name, visibleFrom: bound.sourceFileURL ?? fileURL) != nil {
+                for entry in requirements where entry.requirement.isSameType {
+                    let equality = entry.requirement
+                    for (subject, target) in [(equality.subject, equality.target), (equality.target, equality.subject)]
+                        where subject == member || subject == "Self." + member
+                    {
+                        if let value = type(named: target, namespace: entry.owner, sourceFileURL: entry.fileURL,
+                                            substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1), !value.isAbstract
+                        {
+                            values.append(value)
+                        }
+                    }
+                }
+            }
+            for parent in parents {
+                guard let inherited = type(named: parent.name, namespace: parent.namespace, sourceFileURL: parent.fileURL,
+                                           substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1),
+                    collect(inherited, depth: depth + 1) else { return false }
+            }
+            return true
+        }
+        guard bounds.allSatisfy({ collect($0, depth: depth + 1) }), let value = values.first,
+              values.dropFirst().allSatisfy({ sameType(value, as: $0) }) else { return nil }
+        let remaining = path.split(separator: ".").dropFirst().joined(separator: ".")
+        return remaining.isEmpty ? value : dependentMemberType(remaining, of: value, depth: depth + 1)
     }
 
     func memberType(owner: ResolvedType, name: String, accessingType: String? = nil, accessedFrom: URL? = nil, depth: Int = 0) -> ResolvedType? {

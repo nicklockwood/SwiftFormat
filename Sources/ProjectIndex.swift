@@ -179,6 +179,7 @@ struct SourceFileIndex: Codable, Equatable {
         var types: [String]
         var associatedTypeNames: [String] = []
         var propertyRequirements: [String] = []
+        var genericRequirements: [GenericRequirement]? = nil
         var isExtension: Bool? = nil
         var hasUnresolvedConstraints: Bool? = nil
     }
@@ -341,7 +342,7 @@ struct SourceFileIndex: Codable, Equatable {
         var hasUnresolvedConstraints: Bool? = nil
     }
 
-    static let cacheVersion = 31
+    static let cacheVersion = 32
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -817,8 +818,11 @@ struct ProjectIndex {
                 .map { "\($0.className):\($0.inheritedTypes.joined(separator: ","))" }
                 .sorted()
                 .joined(separator: ",")
-            let inheritance = (file.inheritanceDeclarations ?? []).map {
-                "\($0.owner):\($0.types.joined(separator: ",")):\($0.associatedTypeNames.joined(separator: ",")):\($0.propertyRequirements.joined(separator: ",")):\($0.isExtension == true):\($0.hasUnresolvedConstraints == true)"
+            let inheritance = (file.inheritanceDeclarations ?? []).map { declaration in
+                let requirements = (declaration.genericRequirements ?? []).map {
+                    "\($0.subject)\($0.isSameType ? "==" : ":")\($0.target)"
+                }.joined(separator: ",")
+                return "\(declaration.owner):\(declaration.types.joined(separator: ",")):\(declaration.associatedTypeNames.joined(separator: ",")):\(declaration.propertyRequirements.joined(separator: ",")):\(declaration.isExtension == true):\(declaration.hasUnresolvedConstraints == true):\(requirements)"
             }.sorted().joined(separator: ",")
             let typeConformances = (file.typeConformances
                 .map { "\($0.typeName):\($0.conformances.joined(separator: ","))" }
@@ -1810,10 +1814,16 @@ func makeSourceFileIndex(
                 $0.conformance.tokens.first(where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("~") != true
             }
             let inheritedTypes = Array(Set(conformances.flatMap(\.conformance.indexedNominalTypeNames))).sorted()
+            var generics = typeDeclaration.genericParameters?.types ?? []
+            if let clause = formatter.index(of: .keyword("where"), in: typeDeclaration.keywordIndex ..< typeDeclaration.openBraceIndex) {
+                formatter.parseGenericTypes(from: clause, into: &generics)
+            }
+            let requirements = generics.flatMap(\.conformances).flatMap(\.indexedRequirements)
             inheritanceDeclarations.append(.init(
                 owner: name, types: conformances.map(\.conformance.string),
                 associatedTypeNames: typeDeclaration.body.filter { $0.keyword == "associatedtype" }.compactMap(\.name),
                 propertyRequirements: typeDeclaration.keyword == "protocol" ? typeDeclaration.body.filter { $0.keyword == "var" }.compactMap(\.name) : [],
+                genericRequirements: requirements.isEmpty ? nil : requirements,
                 isExtension: typeDeclaration.keyword == "extension" ? true : nil,
                 hasUnresolvedConstraints: hasUnresolvedConstraints ? true : nil
             ))
@@ -3299,6 +3309,32 @@ extension ProjectIndex {
             }.sorted { ($0.fileURL.path, $0.name) < ($1.fileURL.path, $1.name) }
             guard result == nil || result == references else { return nil }
             result = references
+        }
+        return result
+    }
+
+    struct TypeRequirement: Equatable {
+        var requirement: SourceFileIndex.GenericRequirement
+        var owner: String
+        var fileURL: URL
+    }
+
+    /// Only a nominal declaration's requirements constrain every instance. Requirements on
+    /// conditional extensions are applicability conditions, not new universal equalities.
+    func genericTypeRequirements(of owner: String, visibleFrom fileURL: URL) -> [TypeRequirement]? {
+        guard let keys = symbolTypeKeys(named: owner, visibleFrom: fileURL), !keys.isEmpty else { return nil }
+        var result: [TypeRequirement]?
+        for key in keys {
+            guard typesByModule[key]?.count == 1 || symbolProtocolDeclarationsByModule[key]?.count == 1,
+                  let allEntries = inheritanceDeclarationsByModule[key] else { return nil }
+            let entries = allEntries.filter { $0.declaration.isExtension != true }
+            guard entries.count == 1, let entry = entries.first,
+                  entry.declaration.hasUnresolvedConstraints != true else { return nil }
+            let requirements = (entry.declaration.genericRequirements ?? []).map {
+                TypeRequirement(requirement: $0, owner: entry.declaration.owner, fileURL: entry.source)
+            }
+            guard result == nil || result == requirements else { return nil }
+            result = requirements
         }
         return result
     }

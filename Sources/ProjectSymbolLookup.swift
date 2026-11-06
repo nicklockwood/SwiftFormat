@@ -461,6 +461,26 @@ final class ProjectSymbolLookup {
         return leftArguments.count == rightArguments.count && zip(leftArguments, rightArguments).allSatisfy { sameType($0, as: $1) }
     }
 
+    /// Resolve a bare enum case in its declaration's scope without mistaking a local value for it.
+    func unqualifiedEnumCase(named name: String, at index: Int) -> (name: String, type: ResolvedType)? {
+        let name = name.replacingOccurrences(of: "`", with: "")
+        let spellings = [name, "`\(name)`"]
+        guard spellings.allSatisfy({ spelling in
+                  !unindexedFunctions.contains(spelling) &&
+                      unavailableTypes[spelling]?.contains(where: { $0.range.contains(index) }) != true &&
+                      bindings[spelling]?.contains(where: { $0.isVisible(at: index) && !$0.isGlobal }) != true
+              }),
+              let owner = formatter.parseEnclosingType(containing: index, declarations: declarations)?.fullyQualifiedName,
+              case .unqualified(_, true) = project.functionCallReceiver(at: index, in: formatter, visibleFrom: fileURL, declarations: declarations),
+              !project.hasProperty(owner: owner, member: name, visibleFrom: fileURL),
+              let caseName = project.enumCases(named: owner, visibleFrom: fileURL)?.first(where: {
+                  $0.replacingOccurrences(of: "`", with: "") == name
+              }),
+              project.typeDeclaration(named: owner, visibleFrom: fileURL)?.enumCasePayloads?[caseName]?.isEmpty == true,
+              let type = type(named: owner, namespace: nil, at: index) else { return nil }
+        return (caseName, type)
+    }
+
     func bindingType(named name: String, at index: Int, depth: Int) -> ResolvedType? {
         let enclosingType = formatter.parseEnclosingType(containing: index, declarations: declarations)?.fullyQualifiedName
         let visible = (bindings[name] ?? []).filter {
@@ -822,7 +842,8 @@ final class ProjectSymbolLookup {
                 current = namespace.map { ResolvedType(name: $0, namespace: nil, isMetatype: identifier == "Self" || isStatic) }
             }
         } else {
-            current = bindingType(named: identifier, at: first, depth: depth + 1)
+            current = unqualifiedEnumCase(named: identifier, at: first)?.type ??
+                bindingType(named: identifier, at: first, depth: depth + 1)
             if current == nil, bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
                let possibleType = type(named: identifier, namespace: namespace, at: first),
                let name = qualifiedName(for: possibleType), project.hasSymbolType(named: name, visibleFrom: fileURL)

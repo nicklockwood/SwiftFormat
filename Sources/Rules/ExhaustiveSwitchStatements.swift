@@ -240,6 +240,13 @@ extension Formatter {
             if head == ".\(unescaped)" {
                 return true
             }
+            if head == unescaped,
+               let start = index(of: .nonSpaceOrCommentOrLinebreak, in: range),
+               let reference = resolver.unqualifiedEnumCase(named: head, at: start),
+               resolver.sameType(reference.type, as: type)
+            {
+                return true
+            }
             guard head.hasSuffix(".\(unescaped)"),
                   let end = index(of: .nonSpaceOrCommentOrLinebreak, before: payload ?? range.upperBound),
                   let dot = index(of: .nonSpaceOrCommentOrLinebreak, before: end), tokens[dot].isOperator("."),

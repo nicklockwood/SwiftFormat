@@ -1433,6 +1433,72 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: nil)
     }
 
+    func testUnqualifiedEnumCaseInCrossFileExtension() throws {
+        try check("""
+        extension State {
+            static func render() { observeValue(idle) }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testUnqualifiedEnumCaseShadowsGlobalValue() throws {
+        try check("""
+        let idle: Other = .ready
+        extension State {
+            static func render() { observeValue(idle) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        """, expected: "State")
+    }
+
+    func testLocalFunctionShadowsUnqualifiedEnumCase() throws {
+        try check("""
+        extension State {
+            static func render() {
+                func idle() {}
+                observeValue(idle)
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testLocalTypeShadowsUnqualifiedEnumCase() throws {
+        try check("""
+        extension State {
+            static func render() {
+                struct idle {}
+                observeValue(idle.self)
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: nil)
+    }
+
+    func testInheritedInstancePropertyShadowsEnumCase() throws {
+        try check("""
+        extension State {
+            func render() { observeValue(idle) }
+        }
+        """, declarations: """
+        enum Other { case ready }
+        protocol Rendering {}
+        extension Rendering { var idle: Other { .ready } }
+        enum State: Rendering { case idle, loaded }
+        """, expected: nil)
+    }
+
+    func testLocalBindingShadowsUnqualifiedEnumCase() throws {
+        try check("""
+        extension State {
+            static func render(_ idle: Other) { observeValue(idle) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case ready }
+        """, expected: "Other")
+    }
+
     private func checkModules(_ input: String, sources: [String: String], expectedCases: [String]?,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

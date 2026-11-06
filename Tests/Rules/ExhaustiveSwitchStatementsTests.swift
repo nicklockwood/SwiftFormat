@@ -1503,6 +1503,121 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testTupleSubtractsUnqualifiedEnumCaseInItsDeclarationScope() throws {
+        let input = """
+        extension State {
+            static func same(_ lhs: State, _ rhs: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.idle, idle), (.loaded, .loaded): true
+                default: false
+                }
+            }
+        }
+        """
+        let output = """
+        extension State {
+            static func same(_ lhs: State, _ rhs: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.idle, idle), (.loaded, .loaded): true
+                case (.idle, .loaded), (.loaded, .idle): false
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State: Equatable { case idle, loaded }")
+    }
+
+    func testTupleDoesNotSubtractLocalValueNamedAfterEnumCase() throws {
+        let input = """
+        extension State {
+            static func same(_ lhs: State, _ rhs: State, idle: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.idle, idle), (.loaded, .loaded): true
+                default: false
+                }
+            }
+        }
+        """
+        let output = """
+        extension State {
+            static func same(_ lhs: State, _ rhs: State, idle: State) -> Bool {
+                switch (lhs, rhs) {
+                case (.idle, idle), (.loaded, .loaded): true
+                case (.idle, .idle), (.idle, .loaded), (.loaded, .idle): false
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State: Equatable { case idle, loaded }")
+    }
+
+    func testLocalFunctionNamedAfterEnumCaseDoesNotInferAnEnumSubject() throws {
+        try check("""
+        extension State {
+            static func render() {
+                func idle() {}
+                let callback = idle
+                switch callback {
+                default: break
+                }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testEscapedParameterNamedAfterEnumCaseDoesNotInferAnEnumSubject() throws {
+        try check("""
+        extension State {
+            static func render(_ `idle`: String) {
+                switch `idle` {
+                default: break
+                }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testInstanceMethodNamedAfterEnumCaseDoesNotInferAnEnumSubject() throws {
+        try check("""
+        extension State {
+            func idle() -> String { "idle" }
+            func render() {
+                let callback = idle
+                switch callback {
+                default: break
+                }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testAssociatedValueCaseReferenceDoesNotInferAnEnumSubject() throws {
+        try check("""
+        extension State {
+            static func render() {
+                let constructor = loaded
+                switch constructor {
+                default: break
+                }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded(Int) }")
+    }
+
+    func testEscapedLocalFunctionNamedAfterEnumCaseDoesNotInferAnEnumSubject() throws {
+        try check("""
+        extension State {
+            static func render() {
+                func `idle`() {}
+                let callback = idle
+                switch callback {
+                default: break
+                }
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }")
+    }
+
     func testTuplePayloadPatternsKeepPartiallyMatchedCases() throws {
         let input = """
         func render(_ lhs: State, _ rhs: State) {

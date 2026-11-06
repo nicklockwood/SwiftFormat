@@ -10,6 +10,38 @@ import XCTest
 @testable import SwiftFormat
 
 final class SimplifyGenericConstraintsTests: XCTestCase {
+    func testIntegerConstraintPreservesFunctionBody() {
+        let input = """
+        struct Outer<let N: Int> {
+            func foo<T>(_ value: T) where T: Equatable, N == 3 {
+                print(value)
+            }
+        }
+        """
+        let output = """
+        struct Outer<let N: Int> {
+            func foo<T: Equatable>(_ value: T) where N == 3 {
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
+
+    func testTypeConstraintFollowingIntegerConstraint() {
+        let input = """
+        struct Outer<let N: Int> {
+            func foo<T>(_: T) where N == -3, T: Equatable {}
+        }
+        """
+        let output = """
+        struct Outer<let N: Int> {
+            func foo<T: Equatable>(_: T) where N == -3 {}
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
+
     func testSimplifyStructGenericConstraint() {
         let input = """
         struct Foo<T> where T: Hashable {}

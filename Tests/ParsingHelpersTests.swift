@@ -10,6 +10,61 @@ import XCTest
 @testable import SwiftFormat
 
 final class ParsingHelpersTests: XCTestCase {
+    func testParseInlineArrayTypes() {
+        for input in [
+            """
+            [3 of Int]
+            """,
+            """
+            [N of [3 of Int]]?
+            """,
+            """
+            InlineArray<-1, Int>
+            """,
+        ] {
+            let formatter = Formatter(tokenize(input))
+            XCTAssertEqual(formatter.parseType(at: 0)?.string, input)
+        }
+    }
+
+    func testIntegerArrayLiteralIsNotType() {
+        let formatter = Formatter(tokenize("""
+        [3]
+        """))
+        XCTAssertNil(formatter.parseType(at: 0))
+    }
+
+    func testParseIntegerGenericConstraints() {
+        for literal in ["3", "-3", "0xff", "-0b11", "0o7"] {
+            let formatter = Formatter(tokenize("""
+            where N == \(literal), T: Equatable
+            """))
+            let (types, range) = formatter.parseGenericTypes(from: 0)
+            XCTAssertEqual(types.map(\.name), ["N", "T"])
+            XCTAssertEqual(types.first?.conformances.first?.name, literal)
+            XCTAssertEqual(range.upperBound, formatter.tokens.count - 1)
+        }
+    }
+
+    func testParseValueGenericParameters() throws {
+        let formatter = Formatter(tokenize("""
+        <let N: Int, T, let M: Int>
+        """))
+        let types = formatter.parseGenericTypes(from: 0).types
+        XCTAssertEqual(types.map(\.name), ["N", "T", "M"])
+        XCTAssertEqual(types.map(\.isValue), [true, false, true])
+        XCTAssertNil(try XCTUnwrap(types.first).asOpaqueParameter(useSomeAny: true))
+    }
+
+    func testParseFunctionReturningInlineArray() throws {
+        let formatter = Formatter(tokenize("""
+        func foo<let N: Int>() -> [N of Int] { fatalError() }
+        """))
+        let declaration = try XCTUnwrap(formatter.parseFunctionDeclaration(keywordIndex: 0))
+        XCTAssertEqual(declaration.returnType?.string, "[N of Int]")
+        XCTAssertNotNil(declaration.bodyRange)
+    }
+
     func testFunctionDeclarationKeywords() {
         for keyword in ["func", "init", "subscript"] {
             XCTAssertTrue(keyword.isFunctionDeclarationKeyword)

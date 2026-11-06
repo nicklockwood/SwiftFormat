@@ -1780,6 +1780,25 @@ extension Formatter {
         return baseType
     }
 
+    /// Parses an integer literal used as a generic argument or constraint.
+    func parseGenericValue(at index: Int) -> TypeName? {
+        var valueIndex = index
+        if tokens[valueIndex].isOperator("-"),
+           let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: valueIndex)
+        {
+            valueIndex = nextIndex
+        }
+        switch tokens[valueIndex] {
+        case .number(_, .integer), .number(_, .binary), .number(_, .octal):
+            break
+        case let .number(value, .hex) where !value.lowercased().contains("p"):
+            break
+        default:
+            return nil
+        }
+        return TypeName(range: index ... valueIndex, formatter: self)
+    }
+
     private func parseNonOptionalType(
         at startOfTypeIndex: Int,
         excludeLowercaseIdentifiers: Bool,
@@ -1798,20 +1817,23 @@ extension Formatter {
 
         // Parse types of the form `[...]`
         if startToken == .startOfScope("["), let endOfScope = endOfScope(at: startOfTypeIndex) {
-            // Validate that the inner type is also valid
-            guard let innerTypeStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
-                  let innerType = parseType(at: innerTypeStartIndex),
-                  let indexAfterType = index(of: .nonSpaceOrCommentOrLinebreak, after: innerType.range.upperBound)
+            guard let innerTypeStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex)
+            else { return nil }
+            let innerType = parseType(at: innerTypeStartIndex)
+            guard let firstElement = innerType ?? parseGenericValue(at: innerTypeStartIndex),
+                  let indexAfterType = index(of: .nonSpaceOrCommentOrLinebreak, after: firstElement.range.upperBound)
             else { return nil }
 
-            // This is either an array type of the form `[Element]`,
-            // or a dictionary type of the form `[Key: Value]`.
-            if indexAfterType != endOfScope {
-                guard tokens[indexAfterType] == .delimiter(":"),
-                      let secondTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType),
-                      let secondType = parseType(at: secondTypeIndex),
-                      let indexAfterSecondType = index(of: .nonSpaceOrCommentOrLinebreak, after: secondType.range.upperBound),
-                      indexAfterSecondType == endOfScope
+            // Arrays contain a type; dictionaries use `:`, and inline arrays use `of`.
+            if indexAfterType == endOfScope {
+                guard innerType != nil else { return nil }
+            } else {
+                guard tokens[indexAfterType] == .identifier("of") ||
+                    (tokens[indexAfterType] == .delimiter(":") && innerType != nil),
+                    let secondTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType),
+                    let secondType = parseType(at: secondTypeIndex),
+                    let indexAfterSecondType = index(of: .nonSpaceOrCommentOrLinebreak, after: secondType.range.upperBound),
+                    indexAfterSecondType == endOfScope
                 else { return nil }
             }
 

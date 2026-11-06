@@ -2271,6 +2271,8 @@ extension Formatter {
         var conformances: [GenericConformance]
         /// Whether or not this generic parameter can be removed and replaced with an opaque generic parameter
         var eligibleToRemove = true
+        /// Value parameters cannot be represented by opaque types.
+        var isValue = false
 
         /// A constraint or conformance that applies to a generic type
         struct GenericConformance: Hashable {
@@ -2303,6 +2305,7 @@ extension Formatter {
         /// The opaque parameter syntax that represents this generic type,
         /// if the constraints can be expressed using this syntax
         func asOpaqueParameter(useSomeAny: Bool) -> [Token]? {
+            guard !isValue else { return nil }
             // Protocols with primary associated types that can be used with
             // opaque parameter syntax. In the future we could make this extensible
             // so users can add their own types here.
@@ -2408,9 +2411,13 @@ extension Formatter {
         var currentIndex = genericSignatureStartIndex
 
         while currentIndex < tokens.count {
-            guard let lhsTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
-                  let lhsType = parseType(at: lhsTypeIndex)
+            guard let parameterStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex)
             else { break }
+            let isValue = tokens[parameterStartIndex] == .keyword("let")
+            let lhsTypeIndex = isValue
+                ? index(of: .nonSpaceOrCommentOrLinebreak, after: parameterStartIndex)
+                : parameterStartIndex
+            guard let lhsTypeIndex, let lhsType = parseType(at: lhsTypeIndex) else { break }
 
             currentIndex = lhsType.range.upperBound
 
@@ -2436,7 +2443,7 @@ extension Formatter {
 
             var rhsType: TypeName?
             if let rhsTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
-               let type = parseType(at: rhsTypeIndex)
+               let type = parseGenericValue(at: rhsTypeIndex) ?? parseType(at: rhsTypeIndex)
             {
                 rhsType = type
                 currentIndex = type.range.upperBound
@@ -2485,9 +2492,14 @@ extension Formatter {
             } else {
                 genericType = GenericType(
                     name: baseGenericTypeName,
-                    definitionSourceRange: lhsType.range.lowerBound ... currentIndex
+                    definitionSourceRange: parameterStartIndex ... currentIndex
                 )
                 genericTypes.append(genericType)
+            }
+
+            if isValue || rhsType.map({ parseGenericValue(at: $0.range.lowerBound) != nil }) == true {
+                genericType.isValue = true
+                genericType.eligibleToRemove = false
             }
 
             if let rhsType, let conformanceType {

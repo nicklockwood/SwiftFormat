@@ -10,6 +10,49 @@ import XCTest
 @testable import SwiftFormat
 
 final class OpaqueGenericParametersTests: XCTestCase {
+    func testTypeParameterFollowingValueParameter() {
+        let input = """
+        func foo<let N: Int, T>(_: T, _: InlineArray<N, Int>) where T: Equatable {}
+        """
+        let output = """
+        func foo<let N: Int>(_: some Equatable, _: InlineArray<N, Int>) {}
+        """
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testValueParameterIsNotOpaqueType() {
+        let input = """
+        func foo<let N: Int>(_: InlineArray<N, Int>) {}
+        """
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testIntegerConstraintPreservesBodyTypeReference() {
+        let input = """
+        struct Outer<let N: Int> {
+            func foo<T: Equatable>(_ value: T) where N == 3 {
+                let copy: T = value
+                print(copy)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testTypeConstraintFollowingIntegerConstraint() {
+        let input = """
+        struct Outer<let N: Int> {
+            func foo<T>(_: T) where N == -3, T: Equatable {}
+        }
+        """
+        let output = """
+        struct Outer<let N: Int> {
+            func foo(_: some Equatable) where N == -3 {}
+        }
+        """
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: FormatOptions(swiftVersion: "6.2"))
+    }
+
     func testGenericNotModifiedBelowSwift5_7() {
         let input = """
         func foo<T>(_ value: T) {

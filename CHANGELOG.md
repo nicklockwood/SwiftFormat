@@ -1,5 +1,33 @@
 # Change Log
 
+## [0.64.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.6) (2026-11-06)
+
+- Fixed parsing of value generic parameters, negative integer arguments, integer constraints, and inline-array types
+- Fixed `opaqueGenericParameters` and `simplifyGenericConstraints` producing invalid code when formatting value generics
+- Updated `redundantSelf` to preserve `self` in Logger calls by default, and made `--self-required` extend the default list
+- Fixed `organizeDeclarations` and `docComments` separating conditional attributes and documentation from their declarations
+- Fixed custom prefix `/` operators being mistaken for regex literals and causing incorrect lint line numbers
+- Fixed parsing of tuple types containing parameter pack expansions
+- Fixed Xcode-style indentation of wrapped type conformances
+- Fixed `preferSwiftTesting` converting XCTest cases with conditionally compiled overrides or references to Swift Testing type names
+- Updated test suite rules to preserve open classes that may be subclassed
+- Fixed `singlePropertyPerLine` splitting tuple destructuring when the value count does not match
+- Fixed `redundantSendable` removing `Sendable` from `@usableFromInline` types
+- Fixed `redundantClosure` removing trailing closure arguments followed by a call
+- Fixed handling of `unsafe` expressions in `braces`, `redundantClosure`, `redundantParens`, and `unusedArguments`
+- Fixed `numberFormatting` grouping digits in availability version numbers
+- Fixed `trailingCommas` adding commas to `#warning`, `#error`, and other directives
+- Fixed `hoistTry` and `hoistAwait` joining keywords to preceding keywords
+- Fixed `yodaConditions` corrupting comparisons wrapped after the operator or containing macro calls
+- Fixed `redundantInit` removing `.init` when a function parameter shadows the type name
+- Fixed `redundantBackticks` removing required backticks from type members named `Protocol`
+- Fixed `opaqueGenericParameters` introducing `some` inside generic arguments of closure typealiases
+- Fixed `redundantParens` removing required parentheses around optional opaque protocol compositions
+- Fixed `extensionAccessControl` hoisting `fileprivate` onto extensions of private types
+- Fixed `duplicateImports` removing imports with different SPI names
+- Fixed `preferExplicitFalse` breaking parenthesized conditional compilation conditions
+- Fixed `preferLazyMap` making closures that capture `inout` values escape
+
 ## [0.64.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.5) (2026-10-31)
 
 - Fixed filtered config sections applying to files that do not match, and made matching sections apply in order

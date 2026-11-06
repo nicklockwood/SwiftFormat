@@ -359,6 +359,110 @@ final class BlankLinesBeforeCommentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesBeforeComments)
     }
 
+    func testSwiftLintDirective() {
+        let input = """
+        let sceneView: SCNView = .init()
+        // swiftlint:disable:next hardcoded_color_literal
+        sceneView.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
+    func testSwiftFormatDirective() {
+        let input = """
+        prepare()
+        // swiftformat:disable:next isEmpty
+        process()
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
+    func testBlockCommentDirective() {
+        let input = """
+        prepare()
+        /* swiftlint:disable:next identifier_name */
+        process()
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
+    func testMultilineFunctionArguments() {
+        let input = """
+        process(
+            order: loadOrder(
+                id: orderID
+            ),
+            // Only process ready orders.
+            options: Options(
+                requiresReady: true
+            )
+        )
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
+    func testMultilineFunctionParameters() {
+        let input = """
+        func process(
+            order: Order = loadOrder(
+                id: defaultOrderID
+            ),
+            // Only process ready orders.
+            options: Options = Options(
+                requiresReady: true
+            )
+        ) {
+            process(order, options: options)
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
+    func testMultilineArrayElements() {
+        let input = """
+        let orders = [
+            Order(
+                id: firstID
+            ),
+            // Process this order last.
+            Order(
+                id: secondID
+            ),
+        ]
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
+    func testClosureParameterList() {
+        let input = """
+        let process = {
+            (order: Order,
+             // Only process ready orders.
+             options: Options) in
+            process(order, options: options)
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
+    func testCommentsInNonBraceScopes() {
+        let input = """
+        #if DEBUG
+            prepare()
+            // Report debug information.
+            reportDebugInfo()
+        #endif
+
+        switch order {
+        case .ready:
+            prepare()
+            // Process the ready order.
+            process()
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesBeforeComments)
+    }
+
     func testCRLFLinebreaks() {
         let input = """
         prepare()

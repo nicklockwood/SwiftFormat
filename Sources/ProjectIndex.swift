@@ -174,6 +174,7 @@ struct SourceFileIndex: Codable, Equatable {
         var attributedRequirements: [AttributedRequirement] = []
         var nestedTypeNames: [String] = []
         var visibility: String = Visibility.internal.rawValue
+        var hasRequirements: Bool? = nil
     }
 
     struct AttributedRequirement: Codable, Equatable {
@@ -208,6 +209,7 @@ struct SourceFileIndex: Codable, Equatable {
         var symbolReturnType: String?
         var symbolHasUnresolvedConstraints: Bool?
         var genericParameters: [String]
+        var genericConstraints: [String: [String]]? = nil
 
         init(
             name: String,
@@ -301,7 +303,7 @@ struct SourceFileIndex: Codable, Equatable {
         var hasUnresolvedConstraints: Bool? = nil
     }
 
-    static let cacheVersion = 25
+    static let cacheVersion = 26
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -313,6 +315,7 @@ struct SourceFileIndex: Codable, Equatable {
     var classInheritances: [ClassInheritance]
     var typeConformances: [TypeConformance]
     var protocolDeclarations: [ProtocolDeclaration]
+    var symbolProtocolDeclarations: [ProtocolDeclaration]?
     var functionDeclarations: [FunctionDeclaration]
     var symbolFunctionDeclarations: [FunctionDeclaration]?
     var propertyDeclarations: [PropertyDeclaration]
@@ -344,7 +347,8 @@ struct SourceFileIndex: Codable, Equatable {
         symbolReferences: [String] = [],
         includesFunctionReferences: Bool = true,
         includesSymbolReferences: Bool = true,
-        symbolFunctionDeclarations: [FunctionDeclaration]? = nil
+        symbolFunctionDeclarations: [FunctionDeclaration]? = nil,
+        symbolProtocolDeclarations: [ProtocolDeclaration]? = nil
     ) {
         self.contentHash = contentHash
         self.moduleIdentifiers = moduleIdentifiers.sorted()
@@ -356,6 +360,7 @@ struct SourceFileIndex: Codable, Equatable {
         self.classInheritances = classInheritances
         self.typeConformances = typeConformances
         self.protocolDeclarations = protocolDeclarations
+        self.symbolProtocolDeclarations = symbolProtocolDeclarations
         self.functionDeclarations = functionDeclarations
         self.symbolFunctionDeclarations = symbolFunctionDeclarations
         self.propertyDeclarations = propertyDeclarations
@@ -436,6 +441,7 @@ struct ProjectIndex {
     private let typesByModule: [TypeKey: [SourceFileIndex.TypeDeclaration]]
     private let protocolsByModule: Set<TypeKey>
     private let protocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]]
+    private let symbolProtocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]]
     private let conformancesByModule: [TypeKey: Set<String>]
     private let conformanceSourcesByModule: [TypeKey: [(source: URL, parents: [String])]]
     private let conformanceOwnersByModule: [String: [TypeKey]]
@@ -545,6 +551,7 @@ struct ProjectIndex {
         var typesByModule = [TypeKey: [SourceFileIndex.TypeDeclaration]]()
         var protocolsByModule = Set<TypeKey>()
         var protocolDeclarationsByModule = [TypeKey: [SourceFileIndex.ProtocolDeclaration]]()
+        var symbolProtocolDeclarationsByModule = [TypeKey: [SourceFileIndex.ProtocolDeclaration]]()
         var conformancesByModule = [TypeKey: Set<String>]()
         var conformanceSourcesByModule = [TypeKey: [(source: URL, parents: [String])]]()
         var propertiesByModule = [TypeKey: [SourceFileIndex.PropertyDeclaration]]()
@@ -557,7 +564,7 @@ struct ProjectIndex {
                     )
                 }
                 let typeVisibilities = file.typeDeclarations.map { ($0.name, $0.visibility) } +
-                    file.protocolDeclarations.map { ($0.name, $0.visibility) } + file.typeAliasDeclarations.map { ($0.name, $0.visibility) }
+                    (file.symbolProtocolDeclarations ?? file.protocolDeclarations).map { ($0.name, $0.visibility) } + file.typeAliasDeclarations.map { ($0.name, $0.visibility) }
                 for (name, visibility) in typeVisibilities {
                     let key = TypeKey(moduleIdentifier: module, name: name)
                     typeSourceFilesByModule[key, default: []].insert(path)
@@ -574,9 +581,15 @@ struct ProjectIndex {
                 }
                 for declaration in file.protocolDeclarations {
                     let key = TypeKey(moduleIdentifier: module, name: declaration.name)
-                    protocolsByModule.insert(key)
                     protocolDeclarationsByModule[key, default: []].append(declaration)
-                    conformancesByModule[key, default: []].formUnion(declaration.inheritedProtocols)
+                }
+                for declaration in file.symbolProtocolDeclarations ?? file.protocolDeclarations {
+                    let key = TypeKey(moduleIdentifier: module, name: declaration.name)
+                    protocolsByModule.insert(key)
+                    symbolProtocolDeclarationsByModule[key, default: []].append(declaration)
+                    if !["private", "fileprivate"].contains(declaration.visibility) {
+                        conformancesByModule[key, default: []].formUnion(declaration.inheritedProtocols)
+                    }
                     conformanceSourcesByModule[key, default: []].append((URL(fileURLWithPath: path), declaration.inheritedProtocols))
                 }
                 for conformance in file.typeConformances {
@@ -688,6 +701,7 @@ struct ProjectIndex {
         self.aliasesByModule = aliasesByModule
         self.protocolsByModule = protocolsByModule
         self.protocolDeclarationsByModule = protocolDeclarationsByModule
+        self.symbolProtocolDeclarationsByModule = symbolProtocolDeclarationsByModule
         self.conformancesByModule = conformancesByModule
         self.conformanceSourcesByModule = conformanceSourcesByModule
         conformanceOwnersByModule = Dictionary(grouping: conformanceSourcesByModule.keys, by: \.moduleIdentifier)
@@ -729,12 +743,12 @@ struct ProjectIndex {
                 .map { "\($0.typeName):\($0.conformances.joined(separator: ","))" }
                 .sorted()
                 .joined(separator: ",")
-            let protocolDeclarations = file.protocolDeclarations
+            let protocolDeclarations = (file.symbolProtocolDeclarations ?? file.protocolDeclarations)
                 .map { declaration in
                     let requirements = declaration.attributedRequirements.map {
                         "\($0.kind):\($0.name):\($0.isStatic):\($0.argumentLabels.map { $0 ?? "_" }.joined(separator: ",")):\($0.attributes.joined(separator: ","))"
                     }.sorted().joined(separator: ";")
-                    return "\(declaration.name):\(declaration.inheritedProtocols.joined(separator: ",")):\(requirements):\(declaration.nestedTypeNames.joined(separator: ",")):\(declaration.visibility)"
+                    return "\(declaration.name):\(declaration.inheritedProtocols.joined(separator: ",")):\(requirements):\(declaration.nestedTypeNames.joined(separator: ",")):\(declaration.visibility):\(declaration.hasRequirements == true)"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -745,8 +759,11 @@ struct ProjectIndex {
                     let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
                     let attributes = declaration.attributedArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
+                    let constraints = (declaration.genericConstraints ?? [:]).keys.sorted().map {
+                        $0 + ":" + (declaration.genericConstraints?[$0] ?? []).joined(separator: "&")
+                    }.joined(separator: ";")
                     return "\(declaration.visibility):\(declaration.isStatic):\(declaration.isFailable):\(declaration.kind.rawValue):" +
-                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(attributes):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolArgumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolReturnType ?? ""):\(declaration.symbolHasUnresolvedConstraints == true):\(declaration.genericParameters.joined(separator: ","))"
+                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(attributes):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolArgumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolReturnType ?? ""):\(declaration.symbolHasUnresolvedConstraints == true):\(declaration.genericParameters.joined(separator: ",")):\(constraints)"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -1116,11 +1133,14 @@ struct ProjectIndex {
     }
 
     /// Resolve a name in its enclosing namespace before considering a top-level declaration.
-    private func declarationTypeKey(named name: String, relativeTo owner: String, in module: String) -> TypeKey {
+    private func declarationTypeKey(named name: String, relativeTo owner: String, in module: String, visibleFrom source: URL? = nil) -> TypeKey {
         var namespace = owner.split(separator: ".").dropLast()
         while !namespace.isEmpty {
             let key = TypeKey(moduleIdentifier: module, name: namespace.joined(separator: ".") + "." + name)
-            if typesByModule[key] != nil || protocolDeclarationsByModule[key] != nil || aliasesByModule[key] != nil {
+            let protocols = source == nil ? protocolDeclarationsByModule[key] : symbolProtocolDeclarationsByModule[key]
+            if typesByModule[key] != nil || protocols != nil || aliasesByModule[key] != nil,
+               source.map({ accessibleTypeKey(key, from: $0.standardizedFileURL.path) }) ?? true
+            {
                 return key
             }
             namespace = namespace.dropLast()
@@ -1543,6 +1563,7 @@ func makeSourceFileIndex(
     var classInheritances = [SourceFileIndex.ClassInheritance]()
     var typeConformances = [SourceFileIndex.TypeConformance]()
     var protocolDeclarations = [SourceFileIndex.ProtocolDeclaration]()
+    var symbolProtocolDeclarations = [SourceFileIndex.ProtocolDeclaration]()
     var functionDeclarations = [SourceFileIndex.FunctionDeclaration]()
     var symbolFunctionDeclarations = [SourceFileIndex.FunctionDeclaration]()
     var propertyDeclarations = [SourceFileIndex.PropertyDeclaration]()
@@ -1629,7 +1650,7 @@ func makeSourceFileIndex(
                 let constrainsSelf = whereClause.map {
                     formatter.tokens[$0 ..< typeDeclaration.openBraceIndex].contains { $0.string == "Self" }
                 } ?? false
-                if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }), !constrainsSelf {
+                if !constrainsSelf {
                     var requirements = [SourceFileIndex.AttributedRequirement]()
                     var nestedTypeNames = [String]()
                     typeDeclaration.body.forEachRecursiveDeclaration { requirement in
@@ -1652,11 +1673,18 @@ func makeSourceFileIndex(
                             attributes: requirement.attributes
                         ))
                     }
-                    protocolDeclarations.append(.init(
+                    let symbolProtocol = SourceFileIndex.ProtocolDeclaration(
                         name: name, inheritedProtocols: inheritedTypes, attributedRequirements: requirements,
                         nestedTypeNames: Array(Set(nestedTypeNames)).sorted(),
-                        visibility: symbolVisibility
-                    ))
+                        visibility: symbolVisibility,
+                        hasRequirements: typeDeclaration.body.contains {
+                            ["associatedtype", "func", "var", "init", "subscript"].contains($0.keyword)
+                        } ? true : nil
+                    )
+                    symbolProtocolDeclarations.append(symbolProtocol)
+                    if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }) {
+                        protocolDeclarations.append(symbolProtocol)
+                    }
                 }
             } else {
                 typeConformances.append(.init(typeName: name, conformances: inheritedTypes))
@@ -1796,6 +1824,16 @@ func makeSourceFileIndex(
             symbolReturnType: function.returnType?.string,
             genericParameters: function.genericParameterRange.map { formatter.parseGenericTypes(from: $0.lowerBound).types.map(\.name) } ?? []
         )
+        var generics = function.genericParameterRange.map { formatter.parseGenericTypes(from: $0.lowerBound).types } ?? []
+        if let whereClause = function.whereClauseRange {
+            formatter.parseGenericTypes(from: whereClause.lowerBound, into: &generics)
+        }
+        let constraints = Dictionary(uniqueKeysWithValues: generics.compactMap { generic -> (String, [String])? in
+            guard signature.genericParameters.contains(generic.name) else { return nil }
+            let bounds = generic.conformances.filter { $0.type == .protocolConstraint && $0.typeName == generic.name }.map(\.name)
+            return bounds.isEmpty ? nil : (generic.name, bounds.sorted())
+        })
+        signature.genericConstraints = constraints.isEmpty ? nil : constraints
         signature.symbolHasUnresolvedConstraints = hasUnresolvedConstraints ? true : nil
         symbolFunctionDeclarations.append(signature)
         if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }) {
@@ -1805,6 +1843,7 @@ func makeSourceFileIndex(
             conservativeSignature.symbolReturnType = nil
             conservativeSignature.symbolHasUnresolvedConstraints = nil
             conservativeSignature.genericParameters = []
+            conservativeSignature.genericConstraints = nil
             functionDeclarations.append(conservativeSignature)
         }
     }
@@ -1829,7 +1868,8 @@ func makeSourceFileIndex(
         symbolReferences: symbolReferences,
         includesFunctionReferences: includeFunctionReferences,
         includesSymbolReferences: includeSymbolReferences,
-        symbolFunctionDeclarations: symbolFunctionDeclarations
+        symbolFunctionDeclarations: symbolFunctionDeclarations,
+        symbolProtocolDeclarations: symbolProtocolDeclarations
     )
 }
 
@@ -2891,10 +2931,10 @@ extension ProjectIndex {
             if let aliases = aliasesByModule[key] {
                 guard aliases.count == 1, let alias = aliases.first, alias.genericParameters.isEmpty,
                       let target = ProjectTypeReference(alias.type), target.arguments.isEmpty else { return .unknown }
-                let parent = declarationTypeKey(named: target.name, relativeTo: alias.name, in: module).name
+                let parent = declarationTypeKey(named: target.name, relativeTo: alias.name, in: module, visibleFrom: URL(fileURLWithPath: sourcePath)).name
                 return lookup(parent, module: module, sourcePath: sourcePath, visited: visited.union([module + ":" + owner]))
             }
-            if let protocols = protocolDeclarationsByModule[key] {
+            if let protocols = symbolProtocolDeclarationsByModule[key] {
                 guard !protocols.contains(where: { $0.nestedTypeNames.contains(member) }) else { return .unknown }
             } else if typesByModule[key]?.count != 1 {
                 let imports = files[sourcePath]?.imports ?? []
@@ -2916,8 +2956,10 @@ extension ProjectIndex {
                 return members[owner].map { $0.contains(member) ? .unknown : .absent } ?? .unknown
             }
             var result = InheritedTypeLookup.absent
-            for inherited in (conformancesByModule[key] ?? []).sorted().inheritedNamesToResolve {
-                let parent = declarationTypeKey(named: inherited, relativeTo: owner, in: module).name
+            let parents = symbolProtocolDeclarationsByModule[key].map { $0.flatMap(\.inheritedProtocols) }
+                ?? Array(conformancesByModule[key] ?? [])
+            for inherited in parents.sorted().inheritedNamesToResolve {
+                let parent = declarationTypeKey(named: inherited, relativeTo: owner, in: module, visibleFrom: URL(fileURLWithPath: typeSourceFilesByModule[key]?.first ?? sourcePath)).name
                 let candidate = lookup(parent, module: module, sourcePath: typeSourceFilesByModule[key]?.first ?? sourcePath, visited: visited.union([module + ":" + owner]))
                 switch candidate {
                 case .absent: continue
@@ -3042,7 +3084,7 @@ extension ProjectIndex {
                 guard aliases.count == 1, let alias = aliases.first,
                       let paths = typeSourceFilesByModule[key], paths.count == 1, let path = paths.first else { return nil }
                 guard let reference = ProjectTypeReference(alias.type) else { continue }
-                let targetName = declarationTypeKey(named: reference.name, relativeTo: alias.name, in: key.moduleIdentifier).name
+                let targetName = declarationTypeKey(named: reference.name, relativeTo: alias.name, in: key.moduleIdentifier, visibleFrom: URL(fileURLWithPath: path)).name
                 guard let target = memberOwner(named: targetName, visibleFrom: URL(fileURLWithPath: path), in: key.moduleIdentifier, visited: visited.union([key])) else { return nil }
                 result.formUnion(target.keys)
                 constrained = constrained || target.constrained || !alias.genericParameters.isEmpty ||
@@ -3131,7 +3173,7 @@ extension ProjectIndex {
                     guard let target = memberOwner(named: conformanceOwner.name, visibleFrom: entry.source, in: module) else { return false }
                     guard target.keys.contains(owner) else { continue }
                     for inherited in entry.parents.sorted().inheritedNamesToResolve {
-                        let parentName = declarationTypeKey(named: inherited, relativeTo: conformanceOwner.name, in: module).name
+                        let parentName = declarationTypeKey(named: inherited, relativeTo: conformanceOwner.name, in: module, visibleFrom: entry.source).name
                         guard let keys = symbolTypeKeys(named: parentName, in: module,
                                                         imports: files[entry.source.path]?.imports ?? [], sourcePath: entry.source.path) else { return false }
                         if keys.isEmpty {
@@ -3201,7 +3243,7 @@ extension ProjectIndex {
                 // An unqualified nested protocol may need the declaration's lexical namespace.
                 if !parent.contains("."), let sourceFile = files[source.standardizedFileURL.path] {
                     for module in sourceFile.moduleIdentifiers {
-                        let key = declarationTypeKey(named: parent, relativeTo: owner, in: module)
+                        let key = declarationTypeKey(named: parent, relativeTo: owner, in: module, visibleFrom: source)
                         if protocolsByModule.contains(key) || aliasesByModule[key] != nil {
                             pending.insert(key)
                         }
@@ -3277,13 +3319,56 @@ extension ProjectIndex {
         return false
     }
 
+    /// A generic bound is written in its callable's lexical scope, where aliases and inherited
+    /// names can shadow a top-level protocol with the same spelling.
+    private func lexicalMemberOwner(named name: String, namespace: String?, visibleFrom source: URL) -> MemberOwner? {
+        guard let reference = ProjectTypeReference(name), reference.arguments.isEmpty, !reference.hasGenericParent else { return nil }
+        var namespace = namespace
+        while let owner = namespace {
+            let qualified = owner + "." + name
+            if hasSymbolType(named: qualified, visibleFrom: source) || typeAlias(named: qualified, visibleFrom: source) != nil {
+                return memberOwner(named: qualified, visibleFrom: source)
+            }
+            let components = name.split(separator: ".")
+            if let root = components.first {
+                switch inheritedType(named: String(root), of: owner, visibleFrom: source) {
+                case let .type(inherited):
+                    return memberOwner(named: ([inherited] + components.dropFirst().map(String.init)).joined(separator: "."), visibleFrom: source)
+                case .unknown: return nil
+                case .absent: break
+                }
+            }
+            namespace = owner.contains(".") ? owner.split(separator: ".").dropLast().joined(separator: ".") : nil
+        }
+        return memberOwner(named: name, visibleFrom: source)
+    }
+
     /// Resolve a function signature through its receiver or the caller's explicit imports.
     func functionSymbol(named name: String, receiver: FunctionCallReceiver, arguments: [String?],
                         visibleFrom fileURL: URL, ignoringLabelAt ignoredLabel: Int? = nil, accessedFrom accessURL: URL? = nil, accessedFromType accessType: String? = nil,
-                        kind: SourceFileIndex.FunctionDeclaration.Kind = .function) -> FunctionSymbol?
+                        kind: SourceFileIndex.FunctionDeclaration.Kind = .function, closureArguments: Set<Int> = []) -> FunctionSymbol?
     {
         guard let file = files[fileURL.standardizedFileURL.path], !file.moduleIdentifiers.isEmpty else { return nil }
         let caller = accessURL ?? fileURL
+        func acceptsClosureArguments(_ symbol: FunctionSymbol) -> Bool {
+            guard !closureArguments.isEmpty,
+                  let indices = symbol.declaration.parameterIndices(matching: arguments, ignoringLabelAt: ignoredLabel),
+                  let types = symbol.declaration.symbolArgumentTypes else { return true }
+            return closureArguments.allSatisfy { position in
+                guard indices.indices.contains(position), types.indices.contains(indices[position]),
+                      let bounds = symbol.declaration.genericConstraints?[types[indices[position]]] else { return true }
+                // A function value cannot supply a nominal protocol's methods or associated types.
+                // Unknown bounds and marker protocols remain possible overloads.
+                return !bounds.contains { bound in
+                    guard let target = lexicalMemberOwner(named: bound, namespace: symbol.declaration.declaringType, visibleFrom: symbol.fileURL),
+                          !target.constrained, !target.keys.isEmpty else { return false }
+                    return target.keys.allSatisfy { key in
+                        let declarations = symbolProtocolDeclarationsByModule[key] ?? []
+                        return declarations.count == 1 && declarations[0].hasRequirements == true
+                    }
+                }
+            }
+        }
         func matches(in module: String, receiver: FunctionCallReceiver) -> [FunctionSymbol] {
             (symbolFunctionsByModule[module]?[name] ?? []).filter {
                 let visibility = $0.declaration.visibility
@@ -3301,7 +3386,7 @@ extension ProjectIndex {
                 } else {
                     matchesReceiver = $0.declaration.matches(receiver: receiver)
                 }
-                return accessible && $0.declaration.kind == kind && matchesReceiver &&
+                return accessible && $0.declaration.kind == kind && matchesReceiver && acceptsClosureArguments($0) &&
                     $0.declaration.parameterIndices(matching: arguments, ignoringLabelAt: ignoredLabel) != nil
             }
         }
@@ -3312,7 +3397,7 @@ extension ProjectIndex {
             for key in keys {
                 guard let members = memberFunctions(named: name, owner: key, visibleFrom: caller, accessingType: accessType) else { return nil }
                 let matching = members.filter { symbol in
-                    guard let owner = symbol.declaration.declaringType, symbol.declaration.kind == kind,
+                    guard let owner = symbol.declaration.declaringType, symbol.declaration.kind == kind, acceptsClosureArguments(symbol),
                           symbol.declaration.parameterIndices(matching: arguments, ignoringLabelAt: ignoredLabel) != nil else { return false }
                     if kind == .initializer, case .type = receiver {
                         return true
@@ -3340,7 +3425,7 @@ extension ProjectIndex {
                         guard let members = memberFunctions(named: name, owner: key, visibleFrom: caller, accessingType: accessType),
                               hasNoInheritedFunction(named: name, owner: key, sourcePath: typeSourceFilesByModule[key]?.first ?? fileURL.path, accessedFrom: caller) else { return nil }
                         let matching = members.filter { symbol in
-                            symbol.declaration.kind == kind &&
+                            symbol.declaration.kind == kind && acceptsClosureArguments(symbol) &&
                                 symbol.declaration.matches(receiver: .unqualified(declaringType: symbol.declaration.declaringType, isStatic: isStatic)) &&
                                 symbol.declaration.parameterIndices(matching: arguments, ignoringLabelAt: ignoredLabel) != nil
                         }

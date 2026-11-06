@@ -1012,6 +1012,23 @@ final class ProjectIndexTests: XCTestCase {
         )
     }
 
+    func testDeclarationFingerprintIncludesGenericProtocolBounds() {
+        let first = makeSourceFileIndex(from: """
+        protocol First { associatedtype Value }
+        protocol Second { associatedtype Value }
+        func consume<Value: First>(_ value: Value) {}
+        """, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: """
+        protocol First { associatedtype Value }
+        protocol Second { associatedtype Value }
+        func consume<Value: Second>(_ value: Value) {}
+        """, moduleIdentifiers: ["App"])
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
     private func conformanceRequirementStatus(
         forType typeName: String = "Loader",
         isStatic: Bool = false,

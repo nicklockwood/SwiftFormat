@@ -1151,6 +1151,9 @@ final class ProjectSymbolLookup {
         guard depth < 32 else { return nil }
         let name = formatter.tokens[identifier].string
         let arguments = formatter.parseFunctionCallArguments(startOfScope: scope)
+        let closureArguments = Set(arguments.indices.filter {
+            formatter.tokens[arguments[$0].valueRange.lowerBound] == .startOfScope("{")
+        })
         let scopeEnd = formatter.endOfScope(at: scope) ?? scope
         let trailing = arguments.firstIndex { formatter.tokens[scope] == .startOfScope("{") || $0.valueRange.lowerBound > scopeEnd }
         let namespace = formatter.parseEnclosingType(containing: identifier, declarations: declarations)?.fullyQualifiedName
@@ -1211,7 +1214,7 @@ final class ProjectSymbolLookup {
         if let owner, let nominal = qualifiedName(for: owner),
            let symbol = project.functionSymbol(named: "init", receiver: .type(nominal), arguments: arguments.map(\.label),
                                                visibleFrom: owner.sourceFileURL ?? fileURL, ignoringLabelAt: trailing,
-                                               accessedFrom: fileURL, accessedFromType: namespace, kind: .initializer)
+                                               accessedFrom: fileURL, accessedFromType: namespace, kind: .initializer, closureArguments: closureArguments)
         {
             return ResolvedCall(symbol: symbol, owner: owner, arguments: arguments, trailingArgument: trailing)
         }
@@ -1233,7 +1236,7 @@ final class ProjectSymbolLookup {
         guard let receiver,
               let symbol = project.functionSymbol(named: name, receiver: receiver, arguments: arguments.map(\.label),
                                                   visibleFrom: owner?.sourceFileURL ?? fileURL, ignoringLabelAt: trailing,
-                                                  accessedFrom: fileURL, accessedFromType: namespace) else { return nil }
+                                                  accessedFrom: fileURL, accessedFromType: namespace, closureArguments: closureArguments) else { return nil }
         if case let .unqualified(owner?, _) = receiver, symbol.declaration.declaringType == nil {
             guard project.isTypeWithoutInheritance(named: owner, visibleFrom: fileURL),
                   !project.isDynamicMemberLookupType(named: owner, visibleFrom: fileURL),

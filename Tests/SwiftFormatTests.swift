@@ -325,7 +325,7 @@ final class SwiftFormatTests: XCTestCase {
             guard case let FormatError.writing(message) = error else {
                 return XCTFail("Unexpected error: \(error)")
             }
-            XCTAssert(message.hasSuffix("rule timed out"), message)
+            XCTAssertEqual(message, "\(slowRule.name) rule timed out")
         }
     }
 
@@ -368,6 +368,70 @@ final class SwiftFormatTests: XCTestCase {
                 return XCTFail("Unexpected error: \(error)")
             }
             XCTAssert(message.hasSuffix("rule timed out"), message)
+        }
+    }
+
+    func testProjectQueryTimeoutIncludesFractionalProjectSizeAllowance() throws {
+        let provider = timeoutProjectProvider(fileCount: 200)
+        let rule = FormatRule(help: "") { formatter in
+            _ = formatter.projectIndex(requiring: [.declarations])
+            Thread.sleep(forTimeInterval: 0.15)
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.02
+        _ = try applyRules([rule], to: tokenize("let value = 1"), with: options,
+                           trackChanges: false, range: nil,
+                           context: FormattingContext(projectIndexProvider: provider))
+    }
+
+    func testProjectQueryTimeoutStillBoundsSlowRule() {
+        let provider = timeoutProjectProvider(fileCount: 200)
+        let rule = FormatRule(help: "") { formatter in
+            _ = formatter.projectIndex(requiring: [.declarations])
+            Thread.sleep(forTimeInterval: 0.6)
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.02
+        XCTAssertThrowsError(try applyRules([rule], to: tokenize("let value = 1"), with: options,
+                                            trackChanges: false, range: nil,
+                                            context: FormattingContext(projectIndexProvider: provider)))
+        { error in
+            guard case let FormatError.writing(message) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+            XCTAssertEqual(message, "\(rule.name) rule timed out")
+        }
+    }
+
+    func testProjectQueryAllowanceDoesNotCarryIntoFollowingRule() {
+        let provider = timeoutProjectProvider(fileCount: 1000)
+        let indexedRule = FormatRule(help: "") { formatter in
+            _ = formatter.projectIndex(requiring: [.declarations])
+            Thread.sleep(forTimeInterval: 0.1)
+        } examples: { nil }
+        let slowRule = FormatRule(help: "") { _ in
+            Thread.sleep(forTimeInterval: 0.2)
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.02
+        XCTAssertThrowsError(try applyRules([indexedRule, slowRule], to: tokenize("let value = 1"), with: options,
+                                            trackChanges: false, range: nil,
+                                            context: FormattingContext(projectIndexProvider: provider)))
+        { error in
+            guard case let FormatError.writing(message) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+            XCTAssertEqual(message, "\(slowRule.name) rule timed out")
+        }
+    }
+
+    private func timeoutProjectProvider(fileCount: Int) -> ProjectIndexProvider {
+        ProjectIndexProvider { _ in
+            let source = SourceFileIndex(contentHash: "", moduleIdentifiers: ["App"],
+                                         typeDeclarations: [], functionDeclarations: [], typeMembers: [], symbolDeclarations: [])
+            return ProjectIndex(files: Dictionary(uniqueKeysWithValues: (0 ..< fileCount).map {
+                ("/Project/File\($0).swift", source)
+            }))
         }
     }
 

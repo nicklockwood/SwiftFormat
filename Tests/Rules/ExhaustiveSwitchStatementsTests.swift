@@ -2795,6 +2795,42 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testClosureConstructorIgnoresInapplicableProtocolBoundOverload() throws {
+        let input = """
+        func render() {
+            Consumer<State> { state in
+                switch state {
+                case .loaded:
+                    showContent()
+                default:
+                    showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render() {
+            Consumer<State> { state in
+                switch state {
+                case .loaded:
+                    showContent()
+                case .idle, .failed:
+                    showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        protocol Sink { associatedtype Input; func consume(_ value: Input) }
+        struct Consumer<Value>: Sink {
+            init(handle: @escaping (Value) -> Void) {}
+            init<Other: Sink>(_ other: Other) where Other.Input == Value {}
+            func consume(_ value: Value) {}
+        }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

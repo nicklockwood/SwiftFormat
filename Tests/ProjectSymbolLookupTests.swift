@@ -4316,6 +4316,201 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """], expectedCases: ["idle", "loaded"])
     }
 
+    func testClosureConstructorExcludesProtocolConstrainedGenericOverload() throws {
+        try check("""
+        func render() {
+            Consumer<State> { state in observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Sink { associatedtype Input; func consume(_ value: Input) }
+        struct Consumer<Value>: Sink {
+            init(handle: @escaping (Value) -> Void) {}
+            init<Other: Sink>(_ other: Other) where Other.Input == Value {}
+            func consume(_ value: Value) {}
+        }
+        """, expected: "State")
+    }
+
+    func testParenthesizedClosureExcludesGenericWhereBoundOverload() throws {
+        try check("""
+        func render() {
+            Consumer<State>({ state in observeValue(state) })
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Sink { associatedtype Input; func consume(_ value: Input) }
+        struct Consumer<Value> {
+            init(_ handle: @escaping (Value) -> Void) {}
+            init<Other>(_ other: Other) where Other: Sink, Other.Input == Value {}
+        }
+        """, expected: "State")
+    }
+
+    func testClosureFunctionExcludesAliasedImportedProtocolBound() throws {
+        try checkModules("""
+        import Models
+        enum State { case callerOnly }
+        func render() { consume { state in observeValue(state) } }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public protocol Sink { associatedtype Input; func consume(_ value: Input) }
+        public typealias Bound = Sink
+        """], otherAppSources: ["""
+        import Models
+        enum Event { case idle, loaded }
+        func consume(handle: (Event) -> Void) {}
+        func consume<Other: Bound>(_ other: Other) {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testClosureOverloadFilteringMapsDefaultedParameterPositions() throws {
+        try check("""
+        func render() { consume { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Sink { associatedtype Input }
+        func consume(_ token: Int = 0, handle: (State) -> Void) {}
+        func consume<Other: Sink>(_ token: Int = 0, _ other: Other) {}
+        """, expected: "State")
+    }
+
+    func testClosureDoesNotExcludeUnconstrainedGenericOverload() throws {
+        try check("""
+        func render() { Consumer<State> { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Consumer<Value> {
+            init(handle: (Value) -> Void) {}
+            init<Other>(_ other: Other) {}
+        }
+        """, expected: nil)
+    }
+
+    func testClosureDoesNotExcludeSendableGenericOverload() throws {
+        try check("""
+        func render() { Consumer<State> { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Consumer<Value> {
+            init(handle: (Value) -> Void) {}
+            init<Other: Sendable>(_ other: Other) {}
+        }
+        """, expected: nil)
+    }
+
+    func testClosureDoesNotExcludeAnyOverload() throws {
+        try check("""
+        func render() { Consumer<State> { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Consumer<Value> {
+            init(handle: (Value) -> Void) {}
+            init(_ other: Any) {}
+        }
+        """, expected: nil)
+    }
+
+    func testClosureDoesNotExcludeFunctionAliasOverload() throws {
+        try check("""
+        func render() { Consumer<State> { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        typealias Callback = (Int) -> Void
+        struct Consumer<Value> {
+            init(handle: (Value) -> Void) {}
+            init(_ other: Callback) {}
+        }
+        """, expected: nil)
+    }
+
+    func testClosureBoundUsesNestedAliasInsteadOfGlobalProtocolNamesake() throws {
+        try check("""
+        func render() { Factory().consume { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Bound { associatedtype Input }
+        struct Factory {
+            typealias Bound = Sendable
+            init() {}
+            func consume(handle: (State) -> Void) {}
+            func consume<Other: Bound>(_ other: Other) {}
+        }
+        """, expected: nil)
+    }
+
+    func testClosureDoesNotExcludeIndexedMarkerProtocolBound() throws {
+        try check("""
+        func render() { Consumer<State> { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        @_marker protocol Marker {}
+        struct Consumer<Value> {
+            init(handle: (Value) -> Void) {}
+            init<Other: Marker>(_ other: Other) {}
+        }
+        """, expected: nil)
+    }
+
+    func testClosureDoesNotExcludeAmbiguousProtocolBound() throws {
+        try check("""
+        func render() { Consumer<State> { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        #if FIRST
+        protocol Bound { associatedtype Input }
+        #else
+        protocol Bound { associatedtype Other }
+        #endif
+        struct Consumer<Value> {
+            init(handle: (Value) -> Void) {}
+            init<Other: Bound>(_ other: Other) {}
+        }
+        """, expected: nil)
+    }
+
+    func testClosureBoundKeepsPrivateNestedMarkerShadow() throws {
+        try check("""
+        struct Factory {
+            @_marker private protocol Bound {}
+            func consume(handle: (State) -> Void) {}
+            private func consume<Other: Bound>(_ other: Other) {}
+            func render() { consume { state in observeValue(state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Bound { associatedtype Input }
+        """, expected: nil)
+    }
+
+    func testClosureBoundAliasKeepsPrivateNestedMarkerShadow() throws {
+        try check("""
+        struct Factory {
+            @_marker private protocol Marker {}
+            private typealias Bound = Marker
+            func consume(handle: (State) -> Void) {}
+            private func consume<Other: Bound>(_ other: Other) {}
+            func render() { consume { state in observeValue(state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Marker { associatedtype Input }
+        """, expected: nil)
+    }
+
+    func testClosureDoesNotExcludeUnknownProtocolBound() throws {
+        try check("""
+        func render() { Consumer<State> { state in observeValue(state) } }
+        """, declarations: """
+        import External
+        enum State { case idle, loaded }
+        struct Consumer<Value> {
+            init(handle: (Value) -> Void) {}
+            init<Other: ExternalProtocol>(_ other: Other) {}
+        }
+        """, expected: nil)
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

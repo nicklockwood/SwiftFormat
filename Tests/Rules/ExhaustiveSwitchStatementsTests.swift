@@ -2665,6 +2665,67 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testStandardResultSuccessBindingExpandsProjectEnum() throws {
+        let input = """
+        func render(_ result: Result<State, Error>) {
+            if case let .success(state) = result {
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ result: Result<State, Error>) {
+            if case let .success(state) = result {
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testStandardResultGetExpandsProjectEnumAndThrownErrorNil() throws {
+        let input = """
+        func render(_ result: Result<State, Error>) {
+            switch try? result.get() {
+            case .loaded?: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ result: Result<State, Error>) {
+            switch try? result.get() {
+            case .loaded?: showContent()
+            case .some(.idle), .some(.failed), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output)
+    }
+
+    func testStandardResultGetOverloadPreservesDefault() throws {
+        try check("""
+        func render(_ result: Result<State, Error>) throws {
+            switch try result.get() {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case loaded, unrelated }
+        extension Result where Success == State {
+            func get() -> Other { .unrelated }
+        }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

@@ -3465,6 +3465,184 @@ final class ProjectSymbolLookupTests: XCTestCase {
         ], expectedCases: ["idle", "loaded"])
     }
 
+    func testStandardResultSuccessPayloadKeepsProjectEnumType() throws {
+        try check("""
+        func render(_ result: Result<State, Error>) {
+            if case let .success(state) = result { observeValue(state) }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testStandardResultFailurePayloadKeepsProjectErrorType() throws {
+        try check("""
+        func render(_ result: Result<Int, LoadError>) {
+            guard case let .failure(error) = result else { return }
+            observeValue(error)
+        }
+        """, declarations: "enum LoadError: Error { case offline, rejected }", expected: "LoadError")
+    }
+
+    func testStandardResultNestedOptionalPayloadKeepsAllBindings() throws {
+        try check("""
+        func render(_ result: Result<State?, Error>?) {
+            if case let .success(.some(state))? = result { observeValue(state) }
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testProjectResultUsesItsOwnPayloadDeclaration() throws {
+        try check("""
+        func render(_ result: Result<State, LoadError>) {
+            if case let .success(other) = result { observeValue(other) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        enum LoadError: Error { case offline }
+        enum Result<Value, Failure> { case success(Other), failure(Failure) }
+        """, expected: "Other")
+    }
+
+    func testQualifiedSwiftResultIgnoresProjectResultNamesake() throws {
+        try check("""
+        func render(_ result: Swift.Result<State, Error>) {
+            if case let .success(state) = result { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Result<Value, Failure> {}
+        """, expected: "State")
+    }
+
+    func testSwiftNamespaceNamesakeDoesNotUseBuiltinResultPayloads() throws {
+        try check("""
+        func render(_ result: Swift.Result<State, Error>) {
+            if case let .success(state) = result { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        enum Swift { enum Result<Value, Failure> { case success(Other), failure(Failure) } }
+        """, expected: "Other")
+    }
+
+    func testResultPayloadPreservesImportedGenericArgumentIdentity() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ response: Response) {
+            if case let .success(state) = response { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public typealias Response = Result<State, Error>
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testStandardResultGetReturnsProjectSuccessType() throws {
+        try check("""
+        func render(_ result: Result<State, Error>) throws {
+            observeValue(try result.get())
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State")
+    }
+
+    func testOptionalTryResultGetRetainsTheFailureNilCase() throws {
+        try check("""
+        func render(_ result: Result<State, Error>) {
+            observeValue(try? result.get())
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State", expectedOptional: true)
+    }
+
+    func testOptionalResultGetRetainsOptionalChain() throws {
+        try check("""
+        func render(_ result: Result<State, Error>?) throws {
+            observeValue(try result?.get())
+        }
+        """, declarations: "enum State { case idle, loaded }", expected: "State", expectedOptional: true)
+    }
+
+    func testResultGetOverloadPreventsBuiltinSignatureAssumption() throws {
+        try check("""
+        func render(_ result: Result<State, Error>) throws {
+            observeValue(try result.get())
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        extension Result where Success == State {
+            func get() -> Other { .unrelated }
+        }
+        """, expected: nil)
+    }
+
+    func testResultAliasExtensionPreventsBuiltinGetAssumption() throws {
+        try check("""
+        func render(_ result: Response) {
+            observeValue(try result.get())
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        typealias Response = Result<State, Error>
+        extension Response {
+            func get() -> Other { .unrelated }
+        }
+        """, expected: nil)
+    }
+
+    func testOtherIndexedResultMemberStillUsesItsDeclaration() throws {
+        try checkModules("""
+        enum State { case idle, loaded }
+        func render(_ result: Result<State, Error>) {
+            observeValue(result.resolvedState())
+        }
+        """, sources: ["Swift": """
+        public enum Result<Success, Failure: Error> { case success(Success), failure(Failure) }
+        public extension Result {
+            func resolvedState() -> Success { fatalError() }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testArgumentTakingResultGetStillUsesItsDeclaration() throws {
+        try checkModules("""
+        enum State { case idle, loaded }
+        func render(_ result: Result<State, Error>, fallback: State) {
+            observeValue(result.get(fallback: fallback))
+        }
+        """, sources: ["Swift": """
+        public enum Result<Success, Failure: Error> { case success(Success), failure(Failure) }
+        public extension Result {
+            func get(fallback: Success) -> Success { fallback }
+        }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImportedResultGetPreservesSuccessDeclarationIdentity() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ response: Response) throws { observeValue(try response.get()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public typealias Response = Result<State, Error>
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testProjectResultGetUsesItsOwnReturnType() throws {
+        try check("""
+        func render(_ result: Result<State, Error>) { observeValue(result.get()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Result<Value, Failure> {
+            func get() -> Other { .unrelated }
+        }
+        """, expected: "Other")
+    }
+
     private func checkModules(_ input: String, sources: [String: String], expectedCases: [String]?,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

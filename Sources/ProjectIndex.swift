@@ -2936,10 +2936,14 @@ extension ProjectIndex {
     /// Project extensions may overload standard-library collection operations. Without an indexed
     /// standard-library signature, their presence prevents assuming the built-in operation's type.
     func hasCollectionMember(named name: String, kind: String, visibleFrom fileURL: URL) -> Bool {
+        hasStandardLibraryMember(named: name, types: [kind, "Sequence", "Collection", "BidirectionalCollection", "RandomAccessCollection",
+                                                      "MutableCollection", "RangeReplaceableCollection"], visibleFrom: fileURL)
+    }
+
+    /// Project members, including alias and protocol extensions, can override a known builtin signature.
+    func hasStandardLibraryMember(named name: String, types: [String], visibleFrom fileURL: URL) -> Bool {
         guard let file = files[fileURL.standardizedFileURL.path] else { return true }
-        let names = [kind, "Sequence", "Collection", "BidirectionalCollection", "RandomAccessCollection",
-                     "MutableCollection", "RangeReplaceableCollection"]
-        let roots = Set(names + names.map { "Swift." + $0 })
+        let roots = Set(types + types.map { "Swift." + $0 })
         let imported = importedModuleNames(file.imports).flatMap { modulesByName[$0] ?? [] }
         let modules = Set(file.moduleIdentifiers + imported)
         var pending = Set<TypeKey>()
@@ -2995,7 +2999,7 @@ extension ProjectIndex {
                     let aliasSource = URL(fileURLWithPath: path)
                     let tokens = tokenize(alias.type).filter { !$0.isSpaceOrCommentOrLinebreak }
                     if tokens.first == .startOfScope("[") {
-                        return true
+                        return types.contains("Sequence")
                     }
                     if let target = ProjectTypeReference(alias.type),
                        isRelevantOwner(target.name, source: aliasSource, aliasesVisited: aliasesVisited.union([key]))

@@ -937,9 +937,32 @@ final class ProjectSymbolLookup {
         return nil
     }
 
+    /// The standard Result preserves each generic argument's original declaration context.
+    func standardResultArguments(_ owner: ResolvedType) -> [ResolvedType]? {
+        guard !owner.isMetatype, unwrapped(owner) == nil,
+              let name = qualifiedName(for: owner), ["Result", "Swift.Result"].contains(name),
+              project.isStandardLibraryTypeName(name, visibleFrom: owner.sourceFileURL ?? fileURL),
+              let arguments = owner.genericArguments, arguments.count == 2 else { return nil }
+        return arguments
+    }
+
+    func standardResultCall(owner: ResolvedType, name: String, arguments: [Formatter.FunctionCallArgument]) -> ResolvedType? {
+        guard name == "get", arguments.isEmpty, let types = standardResultArguments(owner),
+              !project.hasStandardLibraryMember(named: name, types: ["Result"], visibleFrom: fileURL) else { return nil }
+        return types[0]
+    }
+
     func enumPayloadType(owner: ResolvedType, caseName: String, at position: Int) -> ResolvedType? {
         if caseName == "some", position == 0, let wrapped = unwrapped(owner) {
             return wrapped
+        }
+        if let arguments = standardResultArguments(owner) {
+            guard position == 0 else { return nil }
+            switch caseName {
+            case "success": return arguments[0]
+            case "failure": return arguments[1]
+            default: return nil
+            }
         }
         guard let ownerName = qualifiedName(for: owner),
               let nominal = ProjectTypeReference(owner.name),
@@ -1545,6 +1568,8 @@ final class ProjectSymbolLookup {
                 let arguments = formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last }
                 if owner.collectionKind != nil {
                     current = collectionCall(owner: owner, name: memberName, arguments: arguments, depth: depth + 1)
+                } else if memberName == "get", arguments.isEmpty, standardResultArguments(owner) != nil {
+                    current = standardResultCall(owner: owner, name: memberName, arguments: arguments)
                 } else if project.hasProperty(owner: ownerName, member: memberName, visibleFrom: owner.sourceFileURL ?? fileURL) {
                     guard let value = memberType(owner: owner, name: memberName, accessingType: namespace) else { return nil }
                     current = functionValueResult(value, arguments: arguments)

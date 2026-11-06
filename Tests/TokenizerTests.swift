@@ -2702,6 +2702,18 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testNegativeValueGenericArgument() {
+        let input = """
+        Box<-1, Int, -2>
+        """
+        XCTAssertEqual(tokenize(input), [
+            .identifier("Box"), .startOfScope("<"),
+            .operator("-", .prefix), .number("1", .integer), .delimiter(","), .space(" "),
+            .identifier("Int"), .delimiter(","), .space(" "),
+            .operator("-", .prefix), .number("2", .integer), .endOfScope(">"),
+        ])
+    }
+
     func testValueGeneric() {
         let input = "func value<let count: Int>() -> InlineArray<count, UInt8>"
         let output: [Token] = [

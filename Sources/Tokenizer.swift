@@ -2002,6 +2002,11 @@ public func tokenize(_ source: String) -> [Token] {
                 switch token {
                 case let .operator(string, _):
                     switch string {
+                    case "-" where characters.first?.isDigit == true &&
+                        index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1).map {
+                            [.startOfScope("<"), .delimiter(","), .operator("==", .infix)].contains(tokens[$0])
+                        } == true:
+                        break
                     case ".", "==", "?", "!", "&", "->", "~", "::":
                         if index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1) == scopeIndex {
                             // These are allowed in a generic, but not as the first character

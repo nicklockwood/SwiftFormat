@@ -758,6 +758,8 @@ func applyRules(
                                   trackChanges: trackChanges, range: range,
                                   logger: logger, context: context)
         let progress = RuleProgress()
+        // The project index is shared by every file, so building it (or waiting for another file
+        // to build it) is not charged to whichever rule happens to request it first.
         formatter.projectIndexRequestStateChanged = { progress.setIndexing($0) }
         queue.async(group: group) {
             for (index, rule) in rules.enumerated() {
@@ -962,13 +964,16 @@ func stripMarkdown(_ input: String) -> String {
 ///
 /// Waiting for a thread to run the rules on is not counted against any rule, but is limited separately
 /// and reported as overload rather than as a rule bug, so that a real stall still fails instead of hanging.
-/// Building the shared project index is not counted against any rule either.
+/// Building the shared project index is not counted against the rule that requested it either, but has
+/// its own wall-clock limit instead (see `setIndexing(_:)`).
 final class RuleProgress {
     enum Timeout: Equatable {
         /// The rule at `index` exceeded the timeout.
         case rule(index: Int)
         /// No rule started within `limit` seconds of the progress being created.
         case notStarted(limit: TimeInterval)
+        /// Building the project index, or waiting for another file to build it, did not finish within `limit` seconds.
+        case projectIndex(limit: TimeInterval)
 
         func message(for rules: [FormatRule]) -> String {
             switch self {
@@ -976,6 +981,8 @@ final class RuleProgress {
                 return "\(rules[index].name) rule timed out"
             case let .notStarted(limit):
                 return "formatting did not start within \(Int(limit.rounded(.up)))s (the system may be overloaded)"
+            case let .projectIndex(limit):
+                return "building the project index did not finish within \(Int(limit.rounded(.up)))s"
             }
         }
     }
@@ -984,18 +991,31 @@ final class RuleProgress {
     /// and for rules that never get a thread to run on.
     static let wallClockLimitFactor: TimeInterval = 10
 
+    /// Wall-clock limit for building the project index, or waiting for another file to build it.
+    /// The index scales with the size of the project rather than the file, so this is a fixed limit
+    /// rather than a multiple of the rule timeout. It only exists to fail instead of hanging.
+    let projectIndexTimeLimit: TimeInterval
+
     private struct Start {
         var index: Int
         var uptimeNanoseconds: UInt64
         var clock: ThreadCPUClock?
         var cpuTime: TimeInterval?
+        /// Time spent building the project index that has finished.
+        var excludedNanoseconds: UInt64 = 0
+        var excludedCPUTime: TimeInterval = 0
+        /// When building the project index in progress started, if any.
+        var indexing: (uptimeNanoseconds: UInt64, cpuTime: TimeInterval?)?
     }
 
     private let queue = DispatchQueue(label: "swiftformat.ruleprogress")
     /// Create the progress immediately before dispatching the rules, as this is when waiting starts.
     private let createdUptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
     private var start: Start?
-    private var isIndexing = false
+
+    init(projectIndexTimeLimit: TimeInterval = 300) {
+        self.projectIndexTimeLimit = projectIndexTimeLimit
+    }
 
     /// Must be called on the thread that applies the rule, immediately before applying it.
     func begin(ruleAt index: Int) {
@@ -1009,32 +1029,44 @@ final class RuleProgress {
         queue.sync { self.start = start }
     }
 
-    /// Must be called on the thread that applies the rule. No timeout applies while the shared project
-    /// index is being built, and the current rule's timeout restarts once it has been.
+    /// Must be called on the thread that applies the rule. Time spent building the project index is not
+    /// counted against the current rule. Instead, building it is reported if it takes more than
+    /// `projectIndexTimeLimit` seconds of wall-clock time.
     func setIndexing(_ isIndexing: Bool) {
-        if !isIndexing, let index = queue.sync(execute: { start?.index }) {
-            begin(ruleAt: index)
+        let uptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
+        queue.sync {
+            guard var start, isIndexing != (start.indexing != nil) else {
+                return
+            }
+            let cpuTime = start.clock?.time()
+            if let indexing = start.indexing {
+                start.excludedNanoseconds += uptimeNanoseconds - indexing.uptimeNanoseconds
+                start.excludedCPUTime += indexing.cpuTime.flatMap { startCPUTime in cpuTime.map { $0 - startCPUTime } } ?? 0
+                start.indexing = nil
+            } else {
+                start.indexing = (uptimeNanoseconds, cpuTime)
+            }
+            self.start = start
         }
-        queue.sync { self.isIndexing = isIndexing }
     }
 
     /// How the rules have exceeded `timeout`, or nil if they are still within it.
     func timeout(after timeout: TimeInterval) -> Timeout? {
         let wallClockLimit = timeout * Self.wallClockLimitFactor
-        let (start, isIndexing) = queue.sync { (self.start, self.isIndexing) }
-        if isIndexing {
-            return nil
-        }
-        guard let start else {
+        guard let start = queue.sync(execute: { self.start }) else {
             return Self.seconds(since: createdUptimeNanoseconds) > wallClockLimit
                 ? .notStarted(limit: wallClockLimit) : nil
         }
-        let wallTime = Self.seconds(since: start.uptimeNanoseconds)
+        if let indexing = start.indexing {
+            return Self.seconds(since: indexing.uptimeNanoseconds) > projectIndexTimeLimit
+                ? .projectIndex(limit: projectIndexTimeLimit) : nil
+        }
+        let wallTime = Self.seconds(since: start.uptimeNanoseconds + start.excludedNanoseconds)
         if wallTime > wallClockLimit {
             return .rule(index: start.index)
         }
         let cpuTime = start.cpuTime.flatMap { startCPUTime in
-            start.clock?.time().map { $0 - startCPUTime }
+            start.clock?.time().map { $0 - startCPUTime - start.excludedCPUTime }
         }
         return (cpuTime ?? wallTime) > timeout ? .rule(index: start.index) : nil
     }

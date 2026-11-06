@@ -420,6 +420,34 @@ final class SwiftFormatTests: XCTestCase {
         XCTAssertNil(progress.timeout(after: timeout))
     }
 
+    func testProjectIndexBuildTimeIsNotCountedAgainstRule() {
+        let progress = RuleProgress()
+        let timeout = 0.05
+        progress.begin(ruleAt: 0)
+        progress.setIndexing(true)
+        let end = DispatchTime.now() + timeout * 4
+        while DispatchTime.now() < end {}
+        progress.setIndexing(false)
+        XCTAssertNil(progress.timeout(after: timeout))
+    }
+
+    func testProjectIndexBuildThatNeverFinishesTimesOut() {
+        let progress = RuleProgress(projectIndexTimeLimit: 0.05)
+        progress.begin(ruleAt: 0)
+        progress.setIndexing(true)
+        Thread.sleep(forTimeInterval: 0.1)
+        XCTAssertEqual(progress.timeout(after: 60), .projectIndex(limit: 0.05))
+    }
+
+    func testRepeatedProjectIndexStateChangeIsIgnored() {
+        let progress = RuleProgress(projectIndexTimeLimit: 0.05)
+        progress.begin(ruleAt: 0)
+        progress.setIndexing(true)
+        Thread.sleep(forTimeInterval: 0.1)
+        progress.setIndexing(true)
+        XCTAssertEqual(progress.timeout(after: 60), .projectIndex(limit: 0.05))
+    }
+
     func testTimeoutMessages() {
         let rule = FormatRule(help: "") { _ in } examples: { nil }
         XCTAssertEqual(RuleProgress.Timeout.rule(index: 0).message(for: [rule]), "\(rule.name) rule timed out")
@@ -427,6 +455,29 @@ final class SwiftFormatTests: XCTestCase {
             RuleProgress.Timeout.notStarted(limit: 49.5).message(for: []),
             "formatting did not start within 50s (the system may be overloaded)"
         )
+        XCTAssertEqual(
+            RuleProgress.Timeout.projectIndex(limit: 300).message(for: []),
+            "building the project index did not finish within 300s"
+        )
+    }
+
+    func testBuildingProjectIndexIsNotCountedAgainstRule() {
+        let provider = ProjectIndexProvider { _ in
+            // Busy-wait, as the timeout counts CPU time
+            let end = DispatchTime.now() + 0.5
+            while DispatchTime.now() < end {}
+            return nil
+        }
+        let projectAwareRule = FormatRule(help: "") { formatter in
+            _ = formatter.projectIndex(requiring: [.declarations])
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.05
+        let tokens = tokenize("let foo = 1")
+        XCTAssertNoThrow(try applyRules(
+            [projectAwareRule], to: tokens, with: options, trackChanges: false, range: nil,
+            context: FormattingContext(projectIndexProvider: provider)
+        ))
     }
 
     func testInputFileMatchesOutputFileForNilOutput() {

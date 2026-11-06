@@ -3643,13 +3643,489 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: "Other")
     }
 
-    private func checkModules(_ input: String, sources: [String: String], expectedCases: [String]?,
+    func testImportedExtensionPropertyKeepsItsDeclaringModule() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        enum State { case unrelated }
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public var state: State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImportedExtensionFunctionKeepsItsDeclaringModule() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        enum State { case unrelated }
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testTransitivelyImportedExtensionIsVisible() throws {
+        try checkModules("""
+        import Facade
+        func render() { observeValue(makeModel().state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+            "Facade": """
+            import Models
+            import Adapters
+            public func makeModel() -> Model { fatalError() }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImplementationOnlyExtensionDoesNotPropagate() throws {
+        try checkModules("""
+        import Facade
+        func render() { observeValue(makeModel().state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+            "Facade": """
+            import Models
+            @_implementationOnly import Adapters
+            public func makeModel() -> Model { fatalError() }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testImplementationOnlyExtensionIsVisibleInsideImportingModule() throws {
+        try checkModules("""
+        import Models
+        @_implementationOnly import Adapters
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testExtensionOwnerUsesCanonicalModuleIdentity() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Models.Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "OtherModels": "public struct Model {}",
+            "Adapters": """
+            import OtherModels
+            public enum State { case unrelated }
+            extension Model { public func state() -> State { .unrelated } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testQualifiedExtensionOwnerDisambiguatesImportedNamesakes() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}; public enum State { case wrong }",
+            "OtherModels": "public struct Model {}",
+            "Adapters": """
+            import Models
+            import OtherModels
+            public enum State { case idle, loaded }
+            extension Models.Model { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testUnimportedExtensionCannotSupplyMemberType() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testInternalImportedExtensionMemberIsInaccessible() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            enum State { case idle, loaded }
+            extension Model { var state: State { .idle } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testImportedExtensionOverloadPreventsLabelOnlySelection() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state(1)) }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public struct Model { public func state(_ value: Int) -> State { .idle } }
+            """,
+            "Adapters": """
+            import Models
+            public enum Other { case unrelated }
+            extension Model { public func state(_ value: String) -> Other { .unrelated } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testImportedGenericExtensionRetainsReceiverArguments() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        enum State { case idle, loaded }
+        func render(_ model: Box<State>) { observeValue(model.value()) }
+        """, sources: [
+            "Models": "public struct Box<Value> {}",
+            "Adapters": """
+            import Models
+            public enum State { case unrelated }
+            extension Box { public func value() -> Value { fatalError() } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImportedGenericExtensionPropertyRetainsReceiverArguments() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        enum State { case idle, loaded }
+        func render(_ model: Box<State>) { observeValue(model.value) }
+        """, sources: [
+            "Models": "public struct Box<Value> {}",
+            "Adapters": """
+            import Models
+            public enum State { case unrelated }
+            extension Box { public var value: Value { fatalError() } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testUnqualifiedMethodInImportedTypeExtension() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        extension Model {
+            func render() { observeValue(state()) }
+        }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAliasExtensionCannotHideCompetingOverload() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state(1)) }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public struct Model { public func state(_ value: Int) -> State { .idle } }
+            """,
+            "Adapters": """
+            import Models
+            public typealias Alias = Model
+            public enum Other { case unrelated }
+            extension Alias { public func state(_ value: String) -> Other { .unrelated } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testConstrainedExtensionCannotSupplyUnconditionalType() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Box<Int>) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Box<Value> {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Box where Value == Int { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testImportedExtensionCallablePropertyIsCalledUsingItsSignature() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.make()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public var make: () -> State { { .idle } } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImportedStaticExtensionMethod() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render() { observeValue(Model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public static func state() -> State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testSameModuleFileImportMakesExtensionAvailable() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], otherAppSources: ["import Adapters"], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConditionalImportContributesExtensionCandidates() throws {
+        try checkModules("""
+        import Models
+        #if DEBUG
+        import Adapters
+        #endif
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedAliasExtensionUsesItsLexicalOwner() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Outer.Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": """
+            public struct Model {}
+            public enum Outer {
+                public struct Model {}
+                public typealias Alias = Model
+            }
+            """,
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Outer.Alias { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedAliasExtensionDoesNotAttachToGlobalNamesake() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": """
+            public struct Model {}
+            public enum Outer {
+                public struct Model {}
+                public typealias Alias = Model
+            }
+            """,
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Outer.Alias { public func state() -> State { .idle } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testSpecializedExtensionCannotHideCompetingOverload() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Box<Int>) { observeValue(model.state(1)) }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public struct Box<Value> { public func state(_ value: Int) -> State { .idle } }
+            """,
+            "Adapters": """
+            import Models
+            public enum Other { case unrelated }
+            extension Box<Int> { public func state(_ value: String) -> Other { .unrelated } }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testExtensionConformanceCannotHideInheritedOverload() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state(1)) }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public struct Model { public func state(_ value: Int) -> State { .idle } }
+            """,
+            "Adapters": """
+            import Models
+            public enum Other { case unrelated }
+            public protocol Describing {}
+            extension Describing { public func state(_ value: String) -> Other { .unrelated } }
+            extension Model: Describing {}
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testTransitiveCollectionExtensionPreventsBuiltinSignatureAssumption() throws {
+        try checkModules("""
+        import Facade
+        func render() { observeValue(makeStates().first) }
+        """, sources: [
+            "Models": "public enum State { case idle, loaded }",
+            "Adapters": """
+            import Models
+            extension Array { public var first: Int { 0 } }
+            """,
+            "Facade": """
+            import Models
+            import Adapters
+            public func makeStates() -> [State] { [] }
+            """,
+        ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testExtensionMustBeAvailableInEveryModuleContainingSharedSource() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], otherAppSources: ["import Adapters"], inputModules: ["App", "Tests"], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testExtensionPropertyMustBeAvailableInEverySharedSourceModule() throws {
+        try checkModules("""
+        import Models
+        func render(_ model: Model) { observeValue(model.state) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public var state: State { .idle } }
+            """,
+        ], otherAppSources: ["import Adapters"], inputModules: ["App", "Tests"], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testImportedExtensionIsAvailableInEverySharedSourceModule() throws {
+        try checkModules("""
+        import Models
+        import Adapters
+        func render(_ model: Model) { observeValue(model.state()) }
+        """, sources: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded }
+            extension Model { public func state() -> State { .idle } }
+            """,
+        ], inputModules: ["App", "Tests"], expectedCases: ["idle", "loaded"])
+    }
+
+    func testSharedExtensionOwnerMustMatchInEveryCompilationContext() throws {
+        try checkModules("""
+                         import Models
+                         func render(_ model: First) { observeValue(model.state()) }
+                         """, sources: [
+                             "Models": """
+                             public struct First {}
+                             public struct Second {}
+                             public enum State { case idle, loaded }
+                             """,
+                             "AdapterA": "import Models; public typealias Model = First",
+                             "AdapterB": "import Models; public typealias Model = Second",
+                             "Shared": """
+                             import Models
+                             extension Model { public func state() -> State { .idle } }
+                             """,
+                             "Tests": "import AdapterB",
+                         ], otherAppSources: ["import AdapterA"], inputModules: ["App", "Tests"],
+                         sharedSources: ["Shared": ["AdapterA", "AdapterB"]], expectedCases: nil, expectUnresolved: true)
+    }
+
+    private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {
         let url = URL(fileURLWithPath: "/Project/Input.swift")
-        var files = [url.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"], moduleNames: ["App": "App"])]
+        var files = [url.path: makeSourceFileIndex(from: input, moduleIdentifiers: inputModules, moduleNames: Dictionary(uniqueKeysWithValues: inputModules.map { ($0, $0) }))]
+        for (index, source) in otherAppSources.enumerated() {
+            files["/Project/AppExtra\(index).swift"] = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"], moduleNames: ["App": "App"])
+        }
         for (module, source) in sources {
-            files["/Project/\(module).swift"] = makeSourceFileIndex(from: source, moduleIdentifiers: [module], moduleNames: [module: module])
+            let identifiers = sharedSources[module] ?? [module]
+            files["/Project/\(module).swift"] = makeSourceFileIndex(from: source, moduleIdentifiers: identifiers,
+                                                                    moduleNames: Dictionary(uniqueKeysWithValues: identifiers.map { ($0, $0) }))
         }
         let project = ProjectIndex(files: files)
         let formatter = Formatter(tokenize(input))
@@ -3658,6 +4134,9 @@ final class ProjectSymbolLookupTests: XCTestCase {
         let open = try XCTUnwrap(formatter.index(of: .startOfScope("("), after: observe), file: file, line: line)
         let close = try XCTUnwrap(formatter.endOfScope(at: open), file: file, line: line)
         let type = lookup.expressionType(in: open + 1 ... close - 1)
+        if expectUnresolved {
+            XCTAssertNil(type, file: file, line: line)
+        }
         let cases = type.flatMap { type in
             lookup.qualifiedName(for: type).flatMap { project.enumCases(named: $0, visibleFrom: type.sourceFileURL ?? url) }
         }

@@ -1655,6 +1655,58 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertTrue(projectIndex.isInternalType(named: "Outer.InternalInner", from: callURL))
     }
 
+    func testExplicitPublicMembersInPlainExtensionRemainPublic() {
+        let source = """
+        public struct Model {}
+        extension Model {
+            public var value: Int { 0 }
+            public func load() -> Int { 0 }
+            public struct Nested {}
+        }
+        """
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["Library"])
+
+        XCTAssertEqual(index.propertyDeclarations.map(\.visibility), ["public"])
+        XCTAssertEqual(index.symbolFunctionDeclarations?.map(\.visibility), ["public"])
+        XCTAssertEqual(index.typeDeclarations.first(where: { $0.name == "Model.Nested" })?.visibility, "public")
+    }
+
+    func testExtensionVisibilitySuppliesMemberDefaults() {
+        let source = """
+        public struct Model {}
+        public extension Model {
+            var visible: Int { 0 }
+            func load() -> Int { 0 }
+        }
+        private extension Model {
+            var hidden: Int { 0 }
+            func conceal() -> Int { 0 }
+            public var explicit: Int { 0 }
+            public func expose() -> Int { 0 }
+        }
+        """
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["Library"])
+
+        XCTAssertEqual(index.propertyDeclarations.map(\.visibility), ["public", "private", "public"])
+        XCTAssertEqual(index.symbolFunctionDeclarations?.map(\.visibility), ["public", "private", "public"])
+    }
+
+    func testEnclosingNominalStillLimitsExtensionMemberVisibility() {
+        let source = """
+        public struct Model {}
+        public extension Model {
+            internal struct Nested {
+                public var value: Int { 0 }
+                public func load() -> Int { 0 }
+            }
+        }
+        """
+        let index = makeSourceFileIndex(from: source, moduleIdentifiers: ["Library"])
+
+        XCTAssertEqual(index.propertyDeclarations.map(\.visibility), ["internal"])
+        XCTAssertEqual(index.symbolFunctionDeclarations?.map(\.visibility), ["internal"])
+    }
+
     func testProjectIndexRequiresFactsInEveryModuleForSharedFiles() {
         let callURL = URL(fileURLWithPath: "/Project/Shared/Call.swift")
         let appURL = URL(fileURLWithPath: "/Project/App/App.swift")

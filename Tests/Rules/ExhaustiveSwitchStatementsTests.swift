@@ -2726,17 +2726,60 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testTransitiveExtensionResultExpandsProjectEnum() throws {
+        let input = """
+        import Facade
+        func render() {
+            switch makeModel().state() {
+            case .loaded:
+                showContent()
+            default:
+                showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        import Facade
+        func render() {
+            switch makeModel().state() {
+            case .loaded:
+                showContent()
+            case .idle, .failed:
+                showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case unrelated }", modules: [
+            "Models": "public struct Model {}",
+            "Adapters": """
+            import Models
+            public enum State { case idle, loaded, failed }
+            extension Model { public func state() -> State { .idle } }
+            """,
+            "Facade": """
+            import Models
+            import Adapters
+            public func makeModel() -> Model { fatalError() }
+            """,
+        ])
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",
+        modules: [String: String] = [:],
         file: StaticString = #filePath, line: UInt = #line
     ) throws {
         _ = FormatRules.all
         let fileURL = URL(fileURLWithPath: "/Project/Calls.swift")
-        let project = ProjectIndex(files: [
+        var files = [
             fileURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
             "/Project/State.swift": makeSourceFileIndex(from: declarations, moduleIdentifiers: ["App"]),
-        ])
+        ]
+        for (module, source) in modules {
+            files["/Project/\(module).swift"] = makeSourceFileIndex(from: source, moduleIdentifiers: [module], moduleNames: [module: module])
+        }
+        let project = ProjectIndex(files: files)
         let result = try applyRules(
             [.exhaustiveSwitchStatements], to: tokenize(input), with: .default,
             trackChanges: false, range: nil,

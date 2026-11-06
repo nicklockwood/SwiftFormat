@@ -512,6 +512,9 @@ final class ProjectSymbolLookup {
         guard let nominal = ProjectTypeReference(type.name) else { return nil }
         var namespace = type.namespace
         while let owner = namespace {
+            if project.isModuleNamespace(owner, visibleFrom: type.sourceFileURL ?? fileURL) {
+                break
+            }
             let name = "\(owner).\(nominal.name)"
             if localTypes[name] != nil || project.hasSymbolType(named: name, visibleFrom: type.sourceFileURL ?? fileURL) ||
                 project.typeAlias(named: name, visibleFrom: type.sourceFileURL ?? fileURL) != nil
@@ -1570,7 +1573,7 @@ final class ProjectSymbolLookup {
                     current = collectionCall(owner: owner, name: memberName, arguments: arguments, depth: depth + 1)
                 } else if memberName == "get", arguments.isEmpty, standardResultArguments(owner) != nil {
                     current = standardResultCall(owner: owner, name: memberName, arguments: arguments)
-                } else if project.hasProperty(owner: ownerName, member: memberName, visibleFrom: owner.sourceFileURL ?? fileURL) {
+                } else if project.hasProperty(owner: ownerName, member: memberName, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL) {
                     guard let value = memberType(owner: owner, name: memberName, accessingType: namespace) else { return nil }
                     current = functionValueResult(value, arguments: arguments)
                 } else {

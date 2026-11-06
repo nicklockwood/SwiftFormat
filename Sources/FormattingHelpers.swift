@@ -163,7 +163,9 @@ extension Formatter {
             inheritedVisibility = nil
         }
         let visibility = declaration.visibility() ?? inheritedVisibility ?? .internal
-        guard let parent = declaration.parent else { return visibility }
+        // An extension's modifier supplies a default for its members, not an upper bound.
+        // Explicit member visibility is still limited by any actual enclosing nominal type.
+        guard let parent = declaration.parent, parent.keyword != "extension" else { return visibility }
         return min(visibility, effectiveVisibility(of: parent))
     }
 

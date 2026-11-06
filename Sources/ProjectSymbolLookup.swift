@@ -1294,11 +1294,11 @@ final class ProjectSymbolLookup {
            var result = type(named: annotation.string, namespace: namespace, sourceFileURL: source, substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
         {
             if let kind = result.collectionKind {
-                guard expression.tokens[first] == .startOfScope("[") || initializerRootIsUnshadowed(annotation.string),
+                guard expression.tokens[first] == .startOfScope("[") || initializerRootIsUnshadowed(annotation.string, namespace: namespace, source: source),
                       !project.hasCollectionMember(named: "init", kind: kind.rawValue, visibleFrom: source) else { return nil }
                 return result
             }
-            guard initializerRootIsUnshadowed(annotation.string), let name = qualifiedName(for: result),
+            guard initializerRootIsUnshadowed(annotation.string, namespace: namespace, source: source), let name = qualifiedName(for: result),
                   let initializer = project.functionSymbol(named: "init", receiver: .type(name),
                                                            arguments: expression.parseFunctionCallArguments(startOfScope: open).map(\.label),
                                                            visibleFrom: result.sourceFileURL ?? source, accessedFrom: source, accessedFromType: namespace, kind: .initializer) else { return nil }
@@ -1311,7 +1311,7 @@ final class ProjectSymbolLookup {
               expression.index(of: .nonSpaceOrCommentOrLinebreak, after: dot) == last,
               expression.tokens[last].isIdentifier else { return nil }
         let root = expression.tokens[first ..< dot].string
-        guard initializerRootIsUnshadowed(root),
+        guard initializerRootIsUnshadowed(root, namespace: namespace, source: source),
               let result = type(named: root, namespace: namespace, sourceFileURL: source, substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1),
               unwrapped(result) == nil, let name = qualifiedName(for: result) else { return nil }
         var receiver = result
@@ -1325,12 +1325,28 @@ final class ProjectSymbolLookup {
         return result
     }
 
-    /// A value or function along the qualified path can shadow a nominal initializer.
-    func initializerRootIsUnshadowed(_ spelling: String) -> Bool {
+    /// Check the expression's actual path, rather than every namesake in the project.
+    /// Alias targets are type annotations and do not introduce additional value lookups.
+    func initializerRootIsUnshadowed(_ spelling: String, namespace: String? = nil, source: URL? = nil) -> Bool {
+        let source = source ?? fileURL
         guard let reference = ProjectTypeReference(spelling) else { return false }
-        return reference.name.split(separator: ".").allSatisfy {
-            project.declarationCountsAreUnambiguous(for: String($0), includingAliases: true)
+        if let parent = reference.parent, let member = reference.member.flatMap(ProjectTypeReference.init) {
+            guard initializerRootIsUnshadowed(parent, namespace: namespace, source: source) else { return false }
+            if project.isModuleNamespace(parent, visibleFrom: source) {
+                return project.globalValueIsAbsent(named: member.name, inModule: parent, visibleFrom: source)
+            }
+            guard let owner = type(named: parent, namespace: namespace, sourceFileURL: source),
+                  let name = qualifiedName(for: owner) else { return false }
+            return project.constructorRootIsUnshadowed(member.name, in: name, visibleFrom: owner.sourceFileURL ?? source,
+                                                       accessedFrom: source, accessedFromType: namespace)
         }
+        guard project.globalValueIsAbsent(named: reference.name, visibleFrom: source) else { return false }
+        var namespace = namespace
+        while let owner = namespace, !project.isModuleNamespace(owner, visibleFrom: source) {
+            guard project.constructorRootIsUnshadowed(reference.name, in: owner, visibleFrom: source) else { return false }
+            namespace = owner.contains(".") ? owner.split(separator: ".").dropLast().joined(separator: ".") : nil
+        }
+        return true
     }
 
     /// Structural collection information is independent of the declaration context of each argument.
@@ -2038,8 +2054,7 @@ final class ProjectSymbolLookup {
         } else if let annotation = formatter.parseType(at: start),
                   let end = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: scope), annotation.range.upperBound == end,
                   bindings[formatter.tokens[start].string]?.contains(where: { $0.isVisible(at: identifier) }) != true,
-                  let reference = ProjectTypeReference(annotation.string),
-                  project.declarationCountsAreUnambiguous(for: String(reference.name.split(separator: ".").last ?? ""), includingAliases: true)
+                  initializerRootIsUnshadowed(annotation.string, namespace: namespace)
         {
             owner = type(named: annotation.string, namespace: namespace, at: identifier, requiresGenericArguments: true)
             if owner != nil, let namespace,
@@ -2276,11 +2291,9 @@ final class ProjectSymbolLookup {
             guard let reference = ProjectTypeReference(spelling), let root = reference.name.split(separator: ".").first,
                   project.constructorRootIsUnshadowed(String(root), in: accessingType, visibleFrom: fileURL) else { return nil }
         }
-        guard let reference = ProjectTypeReference(spelling),
-              project.declarationCountsAreUnambiguous(for: String(reference.name.split(separator: ".").last ?? ""), includingAliases: true),
+        guard initializerRootIsUnshadowed(spelling, namespace: namespace),
               var result = type(named: spelling, namespace: namespace, at: index, requiresGenericArguments: true),
               let name = qualifiedName(for: result),
-              project.declarationCountsAreUnambiguous(for: String(name.split(separator: ".").last ?? "")),
               let initializer = project.functionSymbol(named: "init", receiver: .type(name), arguments: arguments.map(\.label),
                                                        visibleFrom: result.sourceFileURL ?? fileURL,
                                                        accessedFrom: fileURL, accessedFromType: accessingType, kind: .initializer,
@@ -2386,7 +2399,7 @@ final class ProjectSymbolLookup {
               bindings[String(root)]?.contains(where: { $0.isVisible(at: range.lowerBound) }) != true,
               !unindexedFunctions.contains(String(root)),
               namespace.map({ project.constructorRootIsUnshadowed(String(root), in: $0, visibleFrom: fileURL) }) ?? true,
-              initializerRootIsUnshadowed(spelling),
+              initializerRootIsUnshadowed(spelling, namespace: namespace),
               var metatype = type(named: spelling, namespace: namespace, at: range.lowerBound, requiresGenericArguments: true),
               !metatype.isMetatype, unwrapped(metatype) == nil,
               let name = qualifiedName(for: metatype), project.hasSymbolType(named: name, visibleFrom: metatype.sourceFileURL ?? fileURL) else { return nil }
@@ -2551,7 +2564,7 @@ final class ProjectSymbolLookup {
         } else {
             current = bindingType(named: identifier, at: first, depth: depth + 1)
             if current == nil, bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-               initializerRootIsUnshadowed(identifier),
+               initializerRootIsUnshadowed(identifier, namespace: namespace),
                namespace.map({ project.constructorRootIsUnshadowed(identifier, in: $0, visibleFrom: fileURL) }) ?? true,
                let possibleType = type(named: identifier, namespace: namespace, at: first), !possibleType.isMetatype, unwrapped(possibleType) == nil,
                let name = qualifiedName(for: possibleType), project.hasSymbolType(named: name, visibleFrom: fileURL)

@@ -10,6 +10,150 @@ import XCTest
 @testable import SwiftFormat
 
 final class ProjectSymbolLookupTests: XCTestCase {
+    func testUnrelatedMembersAndParametersDoNotHideEnumReference() throws {
+        try check("""
+        func render() { observeValue(State.idle) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Container { associatedtype State }
+        struct Other { let State: Int }
+        func unrelated(_ State: Int) {}
+        """, expected: "State")
+    }
+
+    func testUnimportedFactoryDoesNotHideConstructor() throws {
+        try checkModules("""
+        import Models
+        func render() { observeValue(Model().state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init() {}; public let state: State = .idle }
+        """, "Unrelated": """
+        public func Model() -> Int { 0 }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testQualifiedConstructorIgnoresFactoryInAnotherImportedModule() throws {
+        try checkModules("""
+        import Models
+        import Other
+        func render() { observeValue(Models.Model().state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init() {}; public let state: State = .idle }
+        """, "Other": """
+        public func Model() -> Int { 0 }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testFilePrivateFactoryInOtherFileDoesNotHideConstructor() throws {
+        try checkModules("""
+        import Models
+        func render() { observeValue(Model().state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init() {}; public let state: State = .idle }
+        """], otherAppSources: ["""
+        private func Model(_ value: Int = 0) -> Int { value }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testImportedFactoryStillBlocksUnqualifiedConstructor() throws {
+        try checkModules("""
+        import Models
+        import Other
+        func render() { observeValue(Model().state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init() {}; public let state: State = .idle }
+        """, "Other": """
+        public func Model() -> Int { 0 }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testAliasConstructorIgnoresFactoryNamedAfterItsTarget() throws {
+        try checkModules("""
+        import Models
+        typealias Alias = Models.Model
+        func Model(_ value: Int) -> Int { value }
+        func render() { observeValue(Alias().state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init() {}; public let state: State = .idle }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testTestableImportRetainsInternalFactoryShadow() throws {
+        try checkModules("""
+        import Models
+        @testable import Other
+        func render() { observeValue(Model(0).state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init(_ value: String) {}; public let state: State = .idle }
+        """, "Other": """
+        public enum Other { case unrelated }
+        struct OtherModel { let state: Other }
+        func Model(_ value: Int) -> OtherModel { OtherModel(state: .unrelated) }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testPropertyInitializerIgnoresUnrelatedMemberAndParameterNames() throws {
+        try check("""
+        func render(_ holder: Holder) { observeValue(holder.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Holder { let state = State.idle }
+        protocol Other { associatedtype State }
+        func unused(State: Int) {}
+        """, expected: "State")
+    }
+
+    func testPropertyInitializerDoesNotMistakeMemberFactoryForNominalConstructor() throws {
+        try check("""
+        func render() { observeValue(Holder.model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Model { init(_ value: Int) {}; let state: State = .idle }
+        struct OtherModel { let state: Other }
+        struct Holder {
+            static func Model(_ value: Int) -> OtherModel { OtherModel(state: .unrelated) }
+            static let model = Model(0)
+        }
+        """, expected: nil)
+    }
+
+    func testPropertyInitializerDoesNotMistakeEscapedMemberFactoryForNominalConstructor() throws {
+        try check("""
+        func render() { observeValue(Holder.model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Model { init(_ value: Int) {}; let state: State = .idle }
+        struct OtherModel { let state: Other }
+        struct Holder {
+            static func `Model`(_ value: Int) -> OtherModel { OtherModel(state: .unrelated) }
+            static let model = Model(0)
+        }
+        """, expected: nil)
+    }
+
+    func testPropertyInitializerDoesNotMistakePrivateMemberFactoryForNominalConstructor() throws {
+        try check("""
+        func render() { observeValue(Holder.model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Model { init(_ value: Int) {}; let state: State = .idle }
+        struct OtherModel { let state: Other }
+        struct Holder {
+            private static func Model(_ value: Int) -> OtherModel { OtherModel(state: .unrelated) }
+            static let model = Model(0)
+        }
+        """, expected: nil)
+    }
+
     func testEachPatternConditionUsesItsOwnSubject() throws {
         try check("""
         func render(_ first: First, _ second: Second) {

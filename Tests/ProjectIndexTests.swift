@@ -27,6 +27,57 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testGlobalValueLookupRetainsConditionalDeclarations() {
+        let url = URL(fileURLWithPath: "/Project/App.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: """
+        #if FIRST
+        func First() {}
+        #elseif SECOND
+        let Second = 0
+        #else
+        var Third = 0
+        #endif
+        struct Container { let First: Int; func Second() {} }
+        func unrelated(_ Third: Int) {}
+        """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"])])
+        XCTAssertFalse(project.globalValueIsAbsent(named: "First", visibleFrom: url))
+        XCTAssertFalse(project.globalValueIsAbsent(named: "Second", visibleFrom: url))
+        XCTAssertFalse(project.globalValueIsAbsent(named: "Third", visibleFrom: url))
+    }
+
+    func testPrivateImportRetainsHiddenGlobalValueShadow() {
+        let url = URL(fileURLWithPath: "/Project/Input.swift")
+        let project = ProjectIndex(files: [
+            url.path: makeSourceFileIndex(from: """
+            @_private(sourceFile: "Other.swift") import Other
+            """, moduleIdentifiers: ["App"], moduleNames: ["App": "App"]),
+            "/Project/Other.swift": makeSourceFileIndex(from: """
+            private let State = 0
+            """, moduleIdentifiers: ["Other"], moduleNames: ["Other": "Other"]),
+        ])
+        XCTAssertFalse(project.globalValueIsAbsent(named: "State", visibleFrom: url))
+    }
+
+    func testGlobalValueLookupRequiresAbsenceInEveryBuildContext() {
+        let url = URL(fileURLWithPath: "/Project/Input.swift")
+        let project = ProjectIndex(files: [
+            url.path: makeSourceFileIndex(from: """
+            import Library
+            """, moduleIdentifiers: ["App", "OtherApp"], moduleNames: ["App": "App", "OtherApp": "OtherApp"]),
+            "/Project/Other.swift": makeSourceFileIndex(from: """
+            let State = 0
+            """, moduleIdentifiers: ["OtherApp"], moduleNames: ["OtherApp": "OtherApp"]),
+            "/Project/Library.swift": makeSourceFileIndex(from: """
+            internal let Local = 0
+            public let Visible = 0
+            """, moduleIdentifiers: ["Library"], moduleNames: ["Library": "Library"]),
+        ])
+        XCTAssertFalse(project.globalValueIsAbsent(named: "State", visibleFrom: url))
+        XCTAssertTrue(project.globalValueIsAbsent(named: "State", inModule: "Library", visibleFrom: url))
+        XCTAssertTrue(project.globalValueIsAbsent(named: "Local", visibleFrom: url))
+        XCTAssertFalse(project.globalValueIsAbsent(named: "Visible", visibleFrom: url))
+    }
+
     func testInheritedProtocolResultBuilders() {
         let declarations = """
         @resultBuilder enum Custom {}

@@ -10,6 +10,118 @@ import XCTest
 @testable import SwiftFormat
 
 final class ExhaustiveSwitchStatementsTests: XCTestCase {
+    func testUnrelatedMemberAndParameterNamesDoNotBlockExhaustiveCases() throws {
+        let input = """
+        enum State { case idle, loaded }
+        protocol Container { associatedtype State }
+        func unrelated(_ State: Int) {}
+        func render() {
+            switch State.idle {
+            case .loaded: print("loaded")
+            default: print("fallback")
+            }
+        }
+        """
+        let output = """
+        enum State { case idle, loaded }
+        protocol Container { associatedtype State }
+        func unrelated(_ State: Int) {}
+        func render() {
+            switch State.idle {
+            case .loaded: print("loaded")
+            case .idle: print("fallback")
+            }
+        }
+        """
+        try check(input, output, declarations: "")
+    }
+
+    func testEnumCaseConstructorIsNotMistakenForGlobalNominalConstructor() throws {
+        try check("""
+        enum State { case idle, loaded }
+        struct Model { init(_ value: Int) {}; let state: State = .idle }
+        enum Request {
+            case Model(Int)
+            var state: Request { self }
+            static func render() {
+                switch Model(0).state {
+                case .Model: print("model")
+                default: print("fallback")
+                }
+            }
+        }
+        """, declarations: "")
+    }
+
+    func testConditionalEnumCaseConstructorIsNotMistakenForGlobalNominalConstructor() throws {
+        try check("""
+        enum State { case idle, loaded }
+        struct Model { init(_ value: Int) {}; let state: State = .idle }
+        enum Request {
+            #if FIRST
+            case Model(Int)
+            #endif
+            case other
+            var state: Request { self }
+            static func render() {
+                switch Model(0).state {
+                case .Model: print("model")
+                default: print("fallback")
+                }
+            }
+        }
+        """, declarations: "")
+    }
+
+    func testTestableImportPreservesInternalExtensionFactoryShadow() throws {
+        let input = """
+        import Models
+        @testable import Other
+        extension Holder {
+            static func render() {
+                switch Model(0).state {
+                default: print("fallback")
+                }
+            }
+        }
+        """
+        try check(input, declarations: "", modules: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init(_ value: Int) {}; public let state: State = .idle }
+        public struct Holder {}
+        """, "Other": """
+        import Models
+        public enum Other { case unrelated, done }
+        struct OtherModel { let state: Other }
+        extension Holder {
+            static func Model(_ value: Int) -> OtherModel { OtherModel(state: .unrelated) }
+        }
+        """])
+    }
+
+    func testTestableImportResolvesInternalProjectTypesAndProperties() throws {
+        let input = """
+        @testable import Models
+        func render(_ model: Model) {
+            switch model.state {
+            default: print("fallback")
+            }
+        }
+        """
+        let output = """
+        @testable import Models
+        func render(_ model: Model) {
+            switch model.state {
+            case .idle, .loaded: print("fallback")
+            }
+        }
+        """
+        try check(input, output, declarations: "", modules: ["Models": """
+        enum State { case idle, loaded }
+        struct Model { let state: State }
+        """])
+    }
+
     func testCrossFileEnumWithGroupedAndRawValueCases() throws {
         let declarations = """
         enum State: String {
@@ -2929,31 +3041,61 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
-    func testUnresolvedQualifiedCasePreservesDefault() throws {
-        try check("""
+    func testUnrelatedMemberDoesNotBlockQualifiedCase() throws {
+        let input = """
         func render(_ state: State) {
             switch state {
             case State.loaded: showContent()
             default: showPlaceholder()
             }
         }
-        """, declarations: """
+        """
+        let output = """
+        func render(_ state: State) {
+            switch state {
+            case State.loaded: showContent()
+            case .idle: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
         enum State { case idle, loaded }
         struct Other { var State: Int }
         """)
     }
 
-    func testUnresolvedQualifiedOptionalCasePreservesDefault() throws {
-        try check("""
+    func testUnrelatedMemberDoesNotBlockQualifiedOptionalCase() throws {
+        let input = """
         func render(_ state: State?) {
             switch state {
             case State.loaded?: showContent()
             default: showPlaceholder()
             }
         }
-        """, declarations: """
+        """
+        let output = """
+        func render(_ state: State?) {
+            switch state {
+            case State.loaded?: showContent()
+            case .some(.idle), nil: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
         enum State { case idle, loaded }
         struct Other { var State: Int }
+        """)
+    }
+
+    func testUnknownLocalValuePreservesQualifiedPatternDefault() throws {
+        try check("""
+        func render(_ state: State) {
+            let State = unknown()
+            switch state {
+            case State.loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
         """)
     }
 

@@ -10,6 +10,32 @@ import XCTest
 @testable import SwiftFormat
 
 final class ExhaustiveSwitchStatementsTests: XCTestCase {
+    func testProtocolCapabilitySuppressionsDoNotBlockEnumDefaultExpansion() throws {
+        let input = """
+        import Models
+        func render(_ holder: Holder) {
+            switch holder.state {
+            case .loaded: print("loaded")
+            default: print("fallback")
+            }
+        }
+        """
+        let output = """
+        import Models
+        func render(_ holder: Holder) {
+            switch holder.state {
+            case .loaded: print("loaded")
+            case .idle: print("fallback")
+            }
+        }
+        """
+        try check(input, output, declarations: "", modules: ["Models": """
+        public protocol Marker: ~Copyable, ~Escapable {}
+        public enum State: Marker { case idle, loaded }
+        public struct Holder { public let state = State.idle }
+        """])
+    }
+
     func testStructuralAssociatedEqualityExpandsCallbackEnum() throws {
         let input = """
         func render(_ model: Model) {

@@ -27,6 +27,20 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
+    func testSuppressedCapabilitiesAreNotIndexedAsInheritedTypes() throws {
+        let index = makeSourceFileIndex(from: """
+        protocol Parent {}
+        protocol Source: Parent, ~Copyable, ~Escapable {}
+        struct Model: ~Copyable, Source {}
+        """, moduleIdentifiers: ["App"])
+        let source = try XCTUnwrap(index.symbolProtocolDeclarations?.first { $0.name == "Source" })
+        XCTAssertEqual(source.inheritedProtocols, ["Parent"])
+        let inheritance = try XCTUnwrap(index.inheritanceDeclarations?.first { $0.owner == "Model" })
+        XCTAssertEqual(inheritance.types, ["Source"])
+        let model = try XCTUnwrap(index.typeDeclarations.first { $0.name == "Model" })
+        XCTAssertTrue(model.isNoncopyable)
+    }
+
     func testGlobalValueLookupRetainsConditionalDeclarations() {
         let url = URL(fileURLWithPath: "/Project/App.swift")
         let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: """

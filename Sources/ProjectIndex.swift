@@ -341,7 +341,7 @@ struct SourceFileIndex: Codable, Equatable {
         var hasUnresolvedConstraints: Bool? = nil
     }
 
-    static let cacheVersion = 30
+    static let cacheVersion = 31
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -1804,9 +1804,14 @@ func makeSourceFileIndex(
         if let typeDeclaration = declaration.asTypeDeclaration,
            let name = declaration.fullyQualifiedName
         {
-            let inheritedTypes = Array(Set(typeDeclaration.conformances.flatMap(\.conformance.indexedNominalTypeNames))).sorted()
+            // Inverse conformances suppress an implicit capability; they cannot contribute
+            // inherited declarations. Preserve the original syntax for noncopyability metadata.
+            let conformances = typeDeclaration.conformances.filter {
+                $0.conformance.tokens.first(where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("~") != true
+            }
+            let inheritedTypes = Array(Set(conformances.flatMap(\.conformance.indexedNominalTypeNames))).sorted()
             inheritanceDeclarations.append(.init(
-                owner: name, types: typeDeclaration.conformances.map(\.conformance.string),
+                owner: name, types: conformances.map(\.conformance.string),
                 associatedTypeNames: typeDeclaration.body.filter { $0.keyword == "associatedtype" }.compactMap(\.name),
                 propertyRequirements: typeDeclaration.keyword == "protocol" ? typeDeclaration.body.filter { $0.keyword == "var" }.compactMap(\.name) : [],
                 isExtension: typeDeclaration.keyword == "extension" ? true : nil,
@@ -2017,15 +2022,12 @@ func makeSourceFileIndex(
         if let whereClause = function.whereClauseRange {
             formatter.parseGenericTypes(from: whereClause.lowerBound, into: &generics)
         }
-        let constraints = Dictionary(uniqueKeysWithValues: generics.compactMap { generic -> (String, [String])? in
-            guard signature.genericParameters.contains(generic.name) else { return nil }
-            let bounds = generic.conformances.filter { $0.type == .protocolConstraint && $0.typeName == generic.name }.map(\.name)
-            return bounds.isEmpty ? nil : (generic.name, bounds.sorted())
-        })
+        let ownRequirements = generics.flatMap(\.conformances).flatMap(\.indexedRequirements)
+        let constraints = Dictionary(grouping: ownRequirements.filter {
+            !$0.isSameType && signature.genericParameters.contains($0.subject)
+        }, by: \.subject).mapValues { $0.map(\.target).sorted() }
         signature.genericConstraints = constraints.isEmpty ? nil : constraints
-        let requirements = ((hasShadowedRequirements ? [] : enclosingRequirements) + generics.flatMap(\.conformances)).map {
-            SourceFileIndex.GenericRequirement(subject: $0.typeName, target: $0.name, isSameType: $0.type == .concreteType)
-        }
+        let requirements = (hasShadowedRequirements ? [] : enclosingRequirements).flatMap(\.indexedRequirements) + ownRequirements
         signature.genericRequirements = requirements.isEmpty ? nil : requirements
         if hasUnresolvedConstraints, !requirements.isEmpty {
             let unsupported = ([declaration] + declaration.parentDeclarations).contains { parent in
@@ -2077,6 +2079,29 @@ func makeSourceFileIndex(
         inheritanceDeclarations: inheritanceDeclarations,
         expandedImports: expandedImports.isEmpty ? nil : expandedImports
     )
+}
+
+extension Formatter.GenericType.GenericConformance {
+    /// Suppressed capabilities are not protocol bounds. Split compositions using type scopes
+    /// so a positive bound survives a neighboring suppression, in either source order.
+    var indexedRequirements: [SourceFileIndex.GenericRequirement] {
+        let original = SourceFileIndex.GenericRequirement(subject: typeName, target: name, isSameType: type == .concreteType)
+        guard type == .protocolConstraint else { return [original] }
+        let formatter = Formatter(tokenize(name))
+        var start = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1)
+        var requirements = [SourceFileIndex.GenericRequirement]()
+        while let next = start {
+            guard let bound = formatter.parseType(at: next, excludeProtocolCompositions: true) else { return [original] }
+            if !formatter.tokens[next].isOperator("~") {
+                requirements.append(.init(subject: typeName, target: bound.string, isSameType: false))
+            }
+            guard let separator = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: bound.range.upperBound) else { return requirements }
+            guard formatter.tokens[separator].isOperator("&"),
+                  let next = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: separator) else { return [original] }
+            start = next
+        }
+        return [original]
+    }
 }
 
 extension Formatter {

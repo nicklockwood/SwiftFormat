@@ -10,6 +10,75 @@ import XCTest
 @testable import SwiftFormat
 
 final class ProjectSymbolLookupTests: XCTestCase {
+    func testSuppressedGenericCapabilityDoesNotBlockConcreteCallResult() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model {}
+        func read<Value: ~Copyable>(_ value: borrowing Value) -> State { .idle }
+        """, expected: "State")
+    }
+
+    func testSuppressedGenericCapabilityKeepsPositiveProtocolBound() throws {
+        try check("""
+        func render<Input: Source & ~Copyable>(_ input: borrowing Input) { observeValue(input.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source: ~Copyable { var state: State { get } }
+        """, expected: "State")
+    }
+
+    func testLeadingSuppressedGenericCapabilityKeepsPositiveProtocolBound() throws {
+        try check("""
+        func render<Input: ~Copyable & Source>(_ input: borrowing Input) { observeValue(input.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source: ~Copyable { var state: State { get } }
+        """, expected: "State")
+    }
+
+    func testSuppressedGenericCapabilityDoesNotHideUnknownPositiveBound() throws {
+        try check("""
+        func render<Input: Source & ~Copyable & Missing>(_ input: borrowing Input) { observeValue(input.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source: ~Copyable { var state: State { get } }
+        """, expected: nil)
+    }
+
+    func testSuppressedWhereBoundKeepsAssociatedTypeEquality() throws {
+        try check("""
+        func render<Input: Source>(_ input: Input) where Input.Output == State { observeValue(read(input)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source: ~Copyable { associatedtype Output }
+        func read<Input: Source & ~Copyable>(_ input: borrowing Input) -> Input.Output { fatalError() }
+        """, expected: "State")
+    }
+
+    func testSuppressedCapabilitiesDoNotHideEnumCaseInitializer() throws {
+        try checkModules("""
+        import Models
+        func render(_ holder: Holder) { observeValue(holder.state) }
+        """, sources: ["Models": """
+        public protocol Marker: ~Copyable, ~Escapable {}
+        public enum State: Marker { case idle, loaded }
+        public struct Holder { public let state = State.idle }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testSuppressedCapabilitiesDoNotDiscardUnknownInheritedProtocol() throws {
+        try checkModules("""
+        import Models
+        func render(_ holder: Holder) { observeValue(holder.state) }
+        """, sources: ["Models": """
+        public protocol Marker: ~Copyable, MissingProtocol {}
+        public enum State: Marker { case idle, loaded }
+        public struct Holder { public let state = State.idle }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
     func testStructuralAssociatedEqualityFixesCallbackGeneric() throws {
         try check("""
         func render(_ model: Model) { consume(model) { value in observeValue(value) } }

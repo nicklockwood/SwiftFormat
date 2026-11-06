@@ -413,9 +413,7 @@ final class ProjectSymbolLookup {
         if let whereClause {
             formatter.parseGenericTypes(from: whereClause, into: &generics)
         }
-        let requirements = generics.flatMap(\.conformances).map {
-            SourceFileIndex.GenericRequirement(subject: $0.typeName, target: $0.name, isSameType: $0.type == .concreteType)
-        }
+        let requirements = generics.flatMap(\.conformances).flatMap(\.indexedRequirements)
         if !requirements.isEmpty {
             genericContexts.append(GenericContext(scope: AutoUpdatingRange(range: scope, formatter: formatter),
                                                   namespace: namespace, requirements: requirements))

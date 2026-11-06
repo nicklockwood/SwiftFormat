@@ -30,6 +30,13 @@
 //
 
 import Foundation
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#elseif canImport(Musl)
+    import Musl
+#endif
 
 /// The current SwiftFormat version
 let swiftFormatVersion = "0.64.6"
@@ -751,26 +758,27 @@ func applyRules(
                                   trackChanges: trackChanges, range: range,
                                   logger: logger, context: context)
         let progress = RuleProgress()
-        formatter.projectIndexRequestStateChanged = { progress.isIndexing = $0 }
+        formatter.projectIndexRequestStateChanged = { progress.setIndexing($0) }
         queue.async(group: group) {
             for (index, rule) in rules.enumerated() {
-                progress.index = index
+                progress.begin(ruleAt: index)
                 rule.apply(with: formatter)
             }
             // Cached declarations retain the formatter. Release them here, on the same queue
             // the rules ran on, so the formatter is never touched from two threads at once.
             formatter.clearDerivedCaches()
         }
-        // Each rule is allowed `timeout` seconds. The wait is re-armed whenever a new rule starts,
-        // and after project indexing, which is shared work independent of the file size.
-        // A single dispatch per iteration is enough.
-        var lastGeneration = -1
-        while group.wait(timeout: .now() + timeout) == .timedOut {
-            let state = progress.snapshot
-            guard state.isIndexing || state.generation != lastGeneration else {
-                throw FormatError.writing("\(rules[state.index].name) rule timed out")
+        // Each rule is allowed `timeout` seconds of CPU time (see `RuleProgress`). Poll rather than
+        // waiting for the whole timeout, as CPU time can lag far behind wall-clock time on a busy machine.
+        let pollInterval = min(timeout, 0.1)
+        while group.wait(timeout: .now() + pollInterval) == .timedOut {
+            guard let timedOut = progress.timeout(after: timeout),
+                  // The rules may have finished since the last wait
+                  group.wait(timeout: .now()) == .timedOut
+            else {
+                continue
             }
-            lastGeneration = state.generation
+            throw FormatError.writing(timedOut.message(for: rules))
         }
 
         // Abort if there are fatal errors
@@ -944,34 +952,142 @@ func stripMarkdown(_ input: String) -> String {
     return result
 }
 
-/// Index of the rule currently being applied, shared between the formatting queue and the waiting thread.
-private final class RuleProgress {
+/// The rule currently being applied, shared between the formatting queue and the waiting thread.
+///
+/// The rule timeout exists to catch rules that never terminate, so it is measured in CPU time used by
+/// the thread applying the rule rather than in wall-clock time. Otherwise a rule that is merely waiting
+/// for a CPU – for example when many files are formatted concurrently on a loaded CI machine – would be
+/// reported as having timed out. Where per-thread CPU time is unavailable, wall-clock time since the
+/// rule started is used instead.
+///
+/// Waiting for a thread to run the rules on is not counted against any rule, but is limited separately
+/// and reported as overload rather than as a rule bug, so that a real stall still fails instead of hanging.
+/// Building the shared project index is not counted against any rule either.
+final class RuleProgress {
+    enum Timeout: Equatable {
+        /// The rule at `index` exceeded the timeout.
+        case rule(index: Int)
+        /// No rule started within `limit` seconds of the progress being created.
+        case notStarted(limit: TimeInterval)
+
+        func message(for rules: [FormatRule]) -> String {
+            switch self {
+            case let .rule(index):
+                return "\(rules[index].name) rule timed out"
+            case let .notStarted(limit):
+                return "formatting did not start within \(Int(limit.rounded(.up)))s (the system may be overloaded)"
+            }
+        }
+    }
+
+    /// Wall-clock backstop, as a multiple of the timeout, for a rule that blocks without using CPU,
+    /// and for rules that never get a thread to run on.
+    static let wallClockLimitFactor: TimeInterval = 10
+
+    private struct Start {
+        var index: Int
+        var uptimeNanoseconds: UInt64
+        var clock: ThreadCPUClock?
+        var cpuTime: TimeInterval?
+    }
+
     private let queue = DispatchQueue(label: "swiftformat.ruleprogress")
-    private var _index = 0
-    private var _isIndexing = false
-    private var generation = 0
+    /// Create the progress immediately before dispatching the rules, as this is when waiting starts.
+    private let createdUptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
+    private var start: Start?
+    private var isIndexing = false
 
-    var index: Int {
-        get { queue.sync { _index } }
-        set {
-            queue.sync {
-                _index = newValue
-                generation += 1
-            }
-        }
+    /// Must be called on the thread that applies the rule, immediately before applying it.
+    func begin(ruleAt index: Int) {
+        let clock = ThreadCPUClock.current()
+        let start = Start(
+            index: index,
+            uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
+            clock: clock,
+            cpuTime: clock?.time()
+        )
+        queue.sync { self.start = start }
     }
 
-    var isIndexing: Bool {
-        get { queue.sync { _isIndexing } }
-        set {
-            queue.sync {
-                _isIndexing = newValue
-                generation += 1
-            }
+    /// Must be called on the thread that applies the rule. No timeout applies while the shared project
+    /// index is being built, and the current rule's timeout restarts once it has been.
+    func setIndexing(_ isIndexing: Bool) {
+        if !isIndexing, let index = queue.sync(execute: { start?.index }) {
+            begin(ruleAt: index)
         }
+        queue.sync { self.isIndexing = isIndexing }
     }
 
-    var snapshot: (index: Int, isIndexing: Bool, generation: Int) {
-        queue.sync { (_index, _isIndexing, generation) }
+    /// How the rules have exceeded `timeout`, or nil if they are still within it.
+    func timeout(after timeout: TimeInterval) -> Timeout? {
+        let wallClockLimit = timeout * Self.wallClockLimitFactor
+        let (start, isIndexing) = queue.sync { (self.start, self.isIndexing) }
+        if isIndexing {
+            return nil
+        }
+        guard let start else {
+            return Self.seconds(since: createdUptimeNanoseconds) > wallClockLimit
+                ? .notStarted(limit: wallClockLimit) : nil
+        }
+        let wallTime = Self.seconds(since: start.uptimeNanoseconds)
+        if wallTime > wallClockLimit {
+            return .rule(index: start.index)
+        }
+        let cpuTime = start.cpuTime.flatMap { startCPUTime in
+            start.clock?.time().map { $0 - startCPUTime }
+        }
+        return (cpuTime ?? wallTime) > timeout ? .rule(index: start.index) : nil
+    }
+
+    private static func seconds(since uptimeNanoseconds: UInt64) -> TimeInterval {
+        TimeInterval(DispatchTime.now().uptimeNanoseconds - uptimeNanoseconds) / 1_000_000_000
+    }
+}
+
+/// Reads the CPU time consumed by a specific thread. The clock may be read from any thread.
+private struct ThreadCPUClock {
+    #if canImport(Darwin)
+        private let thread: thread_act_t
+    #elseif canImport(Glibc) || canImport(Musl)
+        private let clockID: clockid_t
+    #endif
+
+    /// A clock for the calling thread, or nil if per-thread CPU time is unavailable on this platform.
+    static func current() -> ThreadCPUClock? {
+        #if canImport(Darwin)
+            return ThreadCPUClock(thread: pthread_mach_thread_np(pthread_self()))
+        #elseif canImport(Glibc) || canImport(Musl)
+            var clockID = clockid_t()
+            guard pthread_getcpuclockid(pthread_self(), &clockID) == 0 else {
+                return nil
+            }
+            return ThreadCPUClock(clockID: clockID)
+        #else
+            return nil
+        #endif
+    }
+
+    /// CPU time in seconds used by the thread so far, or nil if it cannot be read.
+    func time() -> TimeInterval? {
+        #if canImport(Darwin)
+            var info = thread_basic_info()
+            var count = mach_msg_type_number_t(MemoryLayout<thread_basic_info>.size / MemoryLayout<integer_t>.size)
+            let result = withUnsafeMutablePointer(to: &info) {
+                $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                    thread_info(thread, thread_flavor_t(THREAD_BASIC_INFO), $0, &count)
+                }
+            }
+            let seconds = TimeInterval(info.user_time.seconds) + TimeInterval(info.system_time.seconds)
+            let microseconds = TimeInterval(info.user_time.microseconds) + TimeInterval(info.system_time.microseconds)
+            return result == KERN_SUCCESS ? seconds + microseconds / 1_000_000 : nil
+        #elseif canImport(Glibc) || canImport(Musl)
+            var time = timespec()
+            guard clock_gettime(clockID, &time) == 0 else {
+                return nil
+            }
+            return TimeInterval(time.tv_sec) + TimeInterval(time.tv_nsec) / 1_000_000_000
+        #else
+            return nil
+        #endif
     }
 }

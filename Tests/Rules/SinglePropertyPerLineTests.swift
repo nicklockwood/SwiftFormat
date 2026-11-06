@@ -1134,4 +1134,18 @@ final class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
+
+    func testValueGenericParametersNotSplit() {
+        let input = """
+        struct Vector<let count: Int, Element> {}
+
+        func readInlineArray<
+            let count: Int,
+            Element: FixedWidthInteger
+        >(as _: Element.Type) -> InlineArray<count, Element>? {
+            nil
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
 }

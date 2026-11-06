@@ -28,9 +28,10 @@ public extension FormatRule {
             }
 
             // If this property is within a parenthesis scope, this is probably
-            // within a switch case like `case (let foo, bar):`
+            // within a switch case like `case (let foo, bar):`.
+            // In a generic parameter list, it's a value generic like `<let count: Int, Element>`.
             if let startOfScope = formatter.startOfScope(at: i),
-               formatter.tokens[startOfScope] == .startOfScope("(")
+               [.startOfScope("("), .startOfScope("<")].contains(formatter.tokens[startOfScope])
             {
                 return
             }

@@ -54,6 +54,16 @@ public extension FormatRule {
                 formatter.isRedundantSendableConformance($0.conformance)
             }) else { return }
 
+            // A conformance in another file to a protocol that inherits from `Sendable`
+            // requires the type's `Sendable` conformance to be explicit
+            if let fileURL = formatter.currentFileURL,
+               let typeName = typeDeclaration.fullyQualifiedName,
+               formatter.projectIndex(requiring: [.declarations])?
+                   .requiresExplicitSendable(forType: typeName, visibleFrom: fileURL) == true
+            {
+                return
+            }
+
             formatter.removeConformance(
                 at: sendableConformance.index,
                 range: sendableConformance.conformance.range
@@ -67,6 +77,9 @@ public extension FormatRule {
               let id: String
           }
         ```
+
+        The conformance is kept if the type conforms to a protocol that inherits from `Sendable`
+        (like `Error`) in another file. This uses the project index when available.
         """
     }
 }

@@ -9,6 +9,31 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantSendableTests: XCTestCase {
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String? = nil,
+        otherFile: String,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let inputURL = URL(fileURLWithPath: "/Project/Sources/App/Input.swift")
+        let otherURL = URL(fileURLWithPath: "/Project/Sources/App/Other.swift")
+        let projectIndex = ProjectIndex(files: [
+            inputURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            otherURL.path: makeSourceFileIndex(from: otherFile, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.redundantSendable],
+            to: tokenize(input),
+            with: .default,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: inputURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output ?? input, file: file, line: line)
+    }
+
     func testRemovesSendableFromNestedAndTopLevelNonPublicValueTypes() {
         let input = """
         struct Outer {
@@ -215,5 +240,90 @@ final class RedundantSendableTests: XCTestCase {
         """
 
         testFormatting(for: input, [output], rules: [.redundantSendable])
+    }
+
+    func testDoesNotRemoveSendableRequiredByConformanceInOtherFile() throws {
+        let input = """
+        struct MyModel: Equatable, Sendable {
+            let id: Int
+        }
+        """
+        let otherFile = """
+        protocol Identified: Sendable {}
+        protocol MyProtocol: Identified {}
+
+        extension MyModel: MyProtocol {}
+        """
+        try testProjectFormatting(for: input, otherFile: otherFile)
+    }
+
+    func testDoesNotRemoveSendableRequiredByErrorConformanceInOtherFile() throws {
+        let input = """
+        struct MyModel: Equatable, Sendable {
+            let id: Int
+        }
+        """
+        let otherFile = """
+        extension MyModel: Error {}
+        """
+        try testProjectFormatting(for: input, otherFile: otherFile)
+    }
+
+    func testDoesNotRemoveSendableWhenSameFileConformanceHasSameName() throws {
+        let input = """
+        enum Inner {
+            protocol P {}
+        }
+
+        struct MyModel: Inner.P, Sendable {
+            let id: Int
+        }
+        """
+        let otherFile = """
+        protocol P: Sendable {}
+
+        extension MyModel: P {}
+        """
+        try testProjectFormatting(for: input, otherFile: otherFile)
+    }
+
+    func testRemovesSendableWhenConformanceInOtherFileDoesNotRequireIt() throws {
+        let input = """
+        struct MyModel: Equatable, Sendable {
+            let id: Int
+        }
+        """
+        let output = """
+        struct MyModel: Equatable {
+            let id: Int
+        }
+        """
+        let otherFile = """
+        protocol MyProtocol {}
+
+        extension MyModel: MyProtocol {}
+        """
+        try testProjectFormatting(for: input, output, otherFile: otherFile)
+    }
+
+    func testRemovesSendableWhenSendableProtocolConformanceIsInSameFile() throws {
+        let input = """
+        struct MyModel: Equatable, Sendable {
+            let id: Int
+        }
+
+        extension MyModel: MyProtocol {}
+        """
+        let output = """
+        struct MyModel: Equatable {
+            let id: Int
+        }
+
+        extension MyModel: MyProtocol {}
+        """
+        let otherFile = """
+        protocol MyProtocol: Sendable {}
+        """
+        try testProjectFormatting(for: input, output, otherFile: otherFile)
     }
 }

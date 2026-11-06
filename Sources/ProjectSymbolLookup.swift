@@ -462,11 +462,13 @@ final class ProjectSymbolLookup {
             type(named: $0, namespace: namespace, at: index, sourceFileURL: sourceFileURL, substitutions: substitutions, requiresGenericArguments: true, depth: depth + 1)
         }
         guard arguments.count == nominal.arguments.count,
-              let lexicalName = qualifiedName(for: ResolvedType(name: base, namespace: namespace, sourceFileURL: sourceFileURL)) else { return nil }
+              let lexical = qualifiedTypeName(for: ResolvedType(name: base, namespace: namespace, sourceFileURL: sourceFileURL)) else { return nil }
+        let lexicalName = lexical.name
+        let lexicalSource = lexical.sourceFileURL ?? sourceFileURL
         let builtinName = lexicalName.hasPrefix("Swift.") ? String(lexicalName.dropFirst(6)) : lexicalName
         if let kind = CollectionKind(rawValue: builtinName), ![.dictionaryKeys, .dictionaryValues].contains(kind),
            !nominal.hasGenericParent, arguments.count == (kind == .dictionary ? 2 : 1),
-           project.isStandardLibraryTypeName(lexicalName, visibleFrom: sourceFileURL ?? fileURL)
+           project.isStandardLibraryTypeName(lexicalName, visibleFrom: lexicalSource ?? fileURL)
         {
             var result = collectionType(kind, arguments: arguments)
             if optional {
@@ -475,10 +477,10 @@ final class ProjectSymbolLookup {
             return result
         }
         let symbol = !nominal.hasGenericParent && (requiresGenericArguments || !nominal.arguments.isEmpty)
-            ? project.typeSymbol(named: lexicalName, genericArgumentCount: arguments.count, visibleFrom: sourceFileURL ?? fileURL)
+            ? project.typeSymbol(named: lexicalName, genericArgumentCount: arguments.count, visibleFrom: lexicalSource ?? fileURL)
             : nil
         let qualified = symbol?.name ?? lexicalName
-        let sourceFileURL = symbol?.fileURL ?? sourceFileURL
+        let sourceFileURL = symbol?.fileURL ?? lexicalSource
         if let alias = project.typeAlias(named: qualified, visibleFrom: sourceFileURL ?? fileURL) {
             guard alias.hasUnresolvedConstraints != true, alias.genericParameters.count == arguments.count else { return nil }
             let owner = alias.name.contains(".") ? alias.name.split(separator: ".").dropLast().joined(separator: ".") : nil
@@ -509,6 +511,11 @@ final class ProjectSymbolLookup {
 
     /// The nominal declaration name; optional, tuple and function types have no nominal result here.
     func qualifiedName(for type: ResolvedType) -> String? {
+        qualifiedTypeName(for: type)?.name
+    }
+
+    /// Inherited names retain the declaration file even when only the conformance file imports it.
+    func qualifiedTypeName(for type: ResolvedType) -> (name: String, sourceFileURL: URL?)? {
         guard let nominal = ProjectTypeReference(type.name) else { return nil }
         var namespace = type.namespace
         while let owner = namespace {
@@ -519,20 +526,20 @@ final class ProjectSymbolLookup {
             if (type.sourceFileURL == nil || type.sourceFileURL?.standardizedFileURL == fileURL.standardizedFileURL) && localTypes[name] != nil || project.hasSymbolType(named: name, visibleFrom: type.sourceFileURL ?? fileURL) ||
                 project.typeAlias(named: name, visibleFrom: type.sourceFileURL ?? fileURL) != nil
             {
-                return name
+                return (name, type.sourceFileURL)
             }
             let components = nominal.name.split(separator: ".")
             if let root = components.first {
                 switch project.inheritedType(named: String(root), of: owner, visibleFrom: type.sourceFileURL ?? fileURL) {
-                case let .type(name):
-                    return ([name] + components.dropFirst().map(String.init)).joined(separator: ".")
+                case let .type(name, source):
+                    return (([name] + components.dropFirst().map(String.init)).joined(separator: "."), source)
                 case .unknown: return nil
                 case .absent: break
                 }
             }
             namespace = owner.contains(".") ? owner.split(separator: ".").dropLast().joined(separator: ".") : nil
         }
-        return nominal.name
+        return (nominal.name, type.sourceFileURL)
     }
 
     /// Names alone cannot establish equality when imports introduce namesakes.
@@ -680,19 +687,16 @@ final class ProjectSymbolLookup {
         guard let ownerName = qualifiedName(for: owner),
               let nominal = ProjectTypeReference(owner.name),
               let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL, accessedFromType: accessingType) else { return nil }
+        if project.isProtocolDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) {
+            guard let annotation = member.declaration.type else { return nil }
+            return type(named: annotation, namespace: member.declaration.declaringType, sourceFileURL: member.fileURL)
+        }
+        guard let declaration = project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) else { return nil }
         let arguments = owner.genericArguments ?? nominal.arguments.compactMap {
             type(named: $0, namespace: owner.namespace, sourceFileURL: owner.sourceFileURL)
         }
-        let parameters: [String]
-        if let declaration = project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) {
-            parameters = declaration.genericParameters
-        } else if project.isProtocolDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL) {
-            parameters = []
-        } else {
-            return nil
-        }
-        guard parameters.count == arguments.count else { return nil }
-        let substitutions = Dictionary(uniqueKeysWithValues: zip(parameters, arguments))
+        guard declaration.genericParameters.count == arguments.count else { return nil }
+        let substitutions = Dictionary(uniqueKeysWithValues: zip(declaration.genericParameters, arguments))
         if let annotation = member.declaration.type {
             return type(named: annotation, namespace: member.declaration.declaringType, sourceFileURL: member.fileURL, substitutions: substitutions)
         }
@@ -1183,17 +1187,13 @@ final class ProjectSymbolLookup {
                 let root = formatter.tokens[receiverStart].string
                 if !["self", "Self"].contains(root), bindings[root]?.contains(where: { $0.isVisible(at: identifier) }) != true,
                    let namespace,
-                   !project.isTypeWithoutInheritance(named: namespace, visibleFrom: fileURL) ||
-                   project.isDynamicMemberLookupType(named: namespace, visibleFrom: fileURL) ||
-                   project.hasProperty(owner: namespace, member: root, visibleFrom: fileURL)
+                   !project.constructorRootIsUnshadowed(root, in: namespace, visibleFrom: fileURL)
                 {
                     return nil
                 }
                 if let annotation = formatter.parseType(at: receiverStart), annotation.range.upperBound < dot,
                    bindings[formatter.tokens[receiverStart].string]?.contains(where: { $0.isVisible(at: identifier) }) != true,
-                   namespace.map({ project.isTypeWithoutInheritance(named: $0, visibleFrom: fileURL) &&
-                           !project.isDynamicMemberLookupType(named: $0, visibleFrom: fileURL) &&
-                           !project.hasProperty(owner: $0, member: formatter.tokens[receiverStart].string, visibleFrom: fileURL) }) ?? true
+                   namespace.map({ project.constructorRootIsUnshadowed(formatter.tokens[receiverStart].string, in: $0, visibleFrom: fileURL) }) ?? true
                 {
                     owner = type(named: annotation.string, namespace: namespace, at: identifier, requiresGenericArguments: true)
                 }
@@ -1211,9 +1211,7 @@ final class ProjectSymbolLookup {
         {
             owner = type(named: annotation.string, namespace: namespace, at: identifier, requiresGenericArguments: true)
             if owner != nil, let namespace,
-               !project.isTypeWithoutInheritance(named: namespace, visibleFrom: fileURL) ||
-               project.isDynamicMemberLookupType(named: namespace, visibleFrom: fileURL) ||
-               project.hasProperty(owner: namespace, member: formatter.tokens[start].string, visibleFrom: fileURL)
+               !project.constructorRootIsUnshadowed(formatter.tokens[start].string, in: namespace, visibleFrom: fileURL)
             {
                 return nil
             }
@@ -1372,9 +1370,8 @@ final class ProjectSymbolLookup {
                          namespace: String?, accessingType: String?) -> ResolvedType?
     {
         if let accessingType {
-            guard project.isTypeWithoutInheritance(named: accessingType, visibleFrom: fileURL),
-                  !project.isDynamicMemberLookupType(named: accessingType, visibleFrom: fileURL),
-                  !project.hasProperty(owner: accessingType, member: spelling.split(separator: ".").first.map(String.init) ?? spelling, visibleFrom: fileURL) else { return nil }
+            guard let reference = ProjectTypeReference(spelling), let root = reference.name.split(separator: ".").first,
+                  project.constructorRootIsUnshadowed(String(root), in: accessingType, visibleFrom: fileURL) else { return nil }
         }
         guard let reference = ProjectTypeReference(spelling),
               project.declarationCountsAreUnambiguous(for: String(reference.name.split(separator: ".").last ?? ""), includingAliases: true),

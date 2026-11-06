@@ -4573,13 +4573,13 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: nil)
     }
 
-    func testProtocolPrimaryAssociatedTypeArgumentsRemainUnknown() throws {
+    func testConcretePropertyDoesNotDependOnPrimaryAssociatedTypeArguments() throws {
         try check("""
-        func render(_ model: Model<State>) { observeValue(model.state) }
+        func render(_ model: any Model<State>) { observeValue(model.state) }
         """, declarations: """
         enum State { case idle, loaded }
         protocol Model<Value> { associatedtype Value; var state: State { get } }
-        """, expected: nil)
+        """, expected: "State")
     }
 
     func testConstrainedProtocolExtensionPropertyRemainsUnknown() throws {
@@ -4624,6 +4624,261 @@ final class ProjectSymbolLookupTests: XCTestCase {
             extension Model { public var state: State { .unrelated } }
             """,
         ], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testConformanceExtensionUsesItsOwnProtocolImports() throws {
+        try checkModules("""
+        enum State { case idle, loaded }
+        struct Model {
+            func render(_ state: State) { observeValue(state) }
+        }
+        """, sources: ["Capabilities": "public protocol Marker {}"], otherAppSources: ["""
+        import Capabilities
+        extension Model: Marker {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConformanceExtensionRetainsImportedAssociatedTypeShadow() throws {
+        try checkModules("""
+        enum State { case unrelated }
+        struct Model {
+            func render(_ state: State) { observeValue(state) }
+        }
+        """, sources: ["Capabilities": "public protocol Marker { associatedtype State; var value: State { get } }"], otherAppSources: ["""
+        import Capabilities
+        extension Model: Marker { var value: Int { 0 } }
+        """], expectedCases: nil)
+    }
+
+    func testConformanceExtensionDoesNotUseDeclaringFilesProtocolNamesake() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        struct Model {
+            func render(_ state: State) { observeValue(state) }
+        }
+        """, sources: [
+            "Models": "public protocol Marker {}",
+            "Capabilities": """
+            public enum RemoteState { case idle, loaded }
+            public protocol Marker { typealias State = RemoteState }
+            """,
+        ], otherAppSources: ["""
+        import Capabilities
+        extension Model: Marker {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testRefinedProtocolInheritsConcretePropertyRequirement() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Parent { var state: State { get } }
+        protocol Child: Parent {}
+        """, expected: "State")
+    }
+
+    func testRefinedProtocolPropertyKeepsDefiningModule() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        protocol Child: Parent {}
+        func render(_ model: Child) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Parent { var state: State { get } }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testProtocolRefinementDeduplicatesDiamondRequirement() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Parent { var state: State { get } }
+        protocol First: Parent {}
+        protocol Second: Parent {}
+        protocol Child: First, Second {}
+        """, expected: "State")
+    }
+
+    func testRefinedProtocolInheritsExtensionProperty() throws {
+        try check("""
+        extension Child { func render() { observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Parent {}
+        extension Parent { var state: State { .idle } }
+        protocol Child: Parent {}
+        """, expected: "State")
+    }
+
+    func testRefinedProtocolAssociatedPropertyDoesNotUseGlobalNamesake() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case unrelated }
+        protocol Parent { associatedtype State; var state: State { get } }
+        protocol Child: Parent {}
+        """, expected: nil)
+    }
+
+    func testRefinedProtocolDoesNotSelectCompetingRequirements() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol First { var state: State { get } }
+        protocol Second { var state: State { get } }
+        protocol Child: First, Second {}
+        """, expected: nil)
+    }
+
+    func testRefinedProtocolDoesNotIgnoreUnknownParent() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(model.state) }
+        """, declarations: """
+        import External
+        enum State { case idle, loaded }
+        protocol Parent { var state: State { get } }
+        protocol Child: Parent, ExternalProtocol {}
+        """, expected: nil)
+    }
+
+    func testPrimaryAssociatedPropertyDoesNotUseGlobalNamesake() throws {
+        try check("""
+        func render(_ model: any Model<State>) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model<Value> { associatedtype Value; var state: Value { get } }
+        """, expected: nil)
+    }
+
+    func testRefinedProtocolInheritsCallableProperty() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(model.load()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Parent { var load: () -> State { get } }
+        protocol Child: Parent {}
+        """, expected: "State")
+    }
+
+    func testProtocolMarkerDoesNotHideDirectMethod() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(model.load()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model: Sendable { func load() -> State }
+        """, expected: "State")
+    }
+
+    func testRefinedProtocolMarkerDoesNotHideInheritedProperty() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Parent { var state: State { get } }
+        protocol Child: Parent, Sendable {}
+        """, expected: "State")
+    }
+
+    func testStandardProtocolExtensionPropertyStillShadowsMethod() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(model.load()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Model: Sendable { func load() -> State }
+        extension Sendable { var load: () -> State { { .idle } } }
+        """, expected: nil)
+    }
+
+    func testConstructorCallbackInsideKnownProtocolConformer() throws {
+        try check("""
+        struct Renderer: Rendering {
+            func render() { Handler<State> { state in observeValue(state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Rendering: Sendable {}
+        struct Handler<Value> { init(_ callback: (Value) -> Void) {} }
+        """, expected: "State")
+    }
+
+    func testConstructedReceiverInsideKnownProtocolConformer() throws {
+        try check("""
+        struct Renderer: Rendering {
+            func render() {
+                let model = Model<State>()
+                observeValue(model.state)
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Rendering {}
+        struct Model<Value> { init() {}; var state: Value { fatalError() } }
+        """, expected: "State")
+    }
+
+    func testExplicitInitializerCallbackInsideKnownProtocolConformer() throws {
+        try check("""
+        struct Renderer: Rendering {
+            func render() { Handler<State>.init { state in observeValue(state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Rendering {}
+        struct Handler<Value> { init(_ callback: (Value) -> Void) {} }
+        """, expected: "State")
+    }
+
+    func testConstructorDoesNotIgnoreInheritedCallableProperty() throws {
+        try check("""
+        struct Renderer: Rendering {
+            func render() { Handler { state in observeValue(state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Rendering { var Handler: ((Other) -> Void) -> Void { get } }
+        struct Handler { init(_ callback: (State) -> Void) {} }
+        """, expected: nil)
+    }
+
+    func testConstructorDoesNotIgnoreInheritedDynamicMemberLookup() throws {
+        try check("""
+        class Renderer: Base {
+            func render() { Handler { state in observeValue(state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        @dynamicMemberLookup class Base {
+            subscript(dynamicMember name: String) -> ((State) -> Void) -> Void { fatalError() }
+        }
+        struct Handler { init(_ callback: (State) -> Void) {} }
+        """, expected: nil)
+    }
+
+    func testConstructorDoesNotIgnoreStandardProtocolExtensionShadow() throws {
+        try check("""
+        struct Renderer: Equatable {
+            func render() { Handler { state in observeValue(state) } }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        extension Equatable { var Handler: ((Other) -> Void) -> Void { fatalError() } }
+        struct Handler { init(_ callback: (State) -> Void) {} }
+        """, expected: nil)
+    }
+
+    func testConstructorProofRecognizesSynthesizedStandardProperty() {
+        let url = URL(fileURLWithPath: "/Project/Input.swift")
+        let project = ProjectIndex(files: [url.path: makeSourceFileIndex(from: """
+        struct Renderer: Hashable {}
+        """, moduleIdentifiers: ["App"])])
+        XCTAssertFalse(project.constructorRootIsUnshadowed("hashValue", in: "Renderer", visibleFrom: url))
     }
 
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,

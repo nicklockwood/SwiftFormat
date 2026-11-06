@@ -6369,6 +6369,236 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """], expectedCases: ["correct"])
     }
 
+    func testLexicalAssociatedTypeEqualityResolvesParameterAnnotation() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ state: Model.State, _: Model.Type) where Model.State == State {
+            observeValue(state)
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testGenericTypeEqualityResolvesMethodParameter() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> where Model.State == State {
+            func render(_ state: Model.State) { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testGenericExtensionEqualityResolvesMethodParameter() throws {
+        try checkModules("""
+        import Models
+        extension Renderer where Model.State == State {
+            func render(_ state: Model.State) { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        public struct Renderer<Model: Modeling> {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testMethodEqualityRefinesEnclosingGenericParameter() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> {
+            func render(_ state: Model.State) where Model.State == State { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalEqualityChainResolvesAssociatedType() throws {
+        try checkModules("""
+        import Models
+        func render<First: Modeling, Second: Modeling>(_ state: First.State, _: First.Type, _: Second.Type)
+            where First.State == Second.State, Second.State == State {
+            observeValue(state)
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalEqualityTargetRetainsDeclarationNamespace() throws {
+        try checkModules("""
+        import Models
+        enum State { case local }
+        func render<Model: Modeling>(_ state: Model.State, _: Model.Type) where Model.State == State {
+            observeValue(state)
+        }
+        """, sources: ["Models": """
+        public enum State { case imported }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["local"])
+    }
+
+    func testLexicalEqualityDoesNotEscapeItsFunction() throws {
+        try checkModules("""
+        import Models
+        func constrained<Model: Modeling>(_ state: Model.State, _: Model.Type) where Model.State == State {}
+        func render<Model: Modeling>(_ state: Model.State, _: Model.Type) { observeValue(state) }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testLexicalEqualityCycleDoesNotInventNominalType() throws {
+        try checkModules("""
+        import Models
+        func render<First: Modeling, Second: Modeling>(_ state: First.State, _: First.Type, _: Second.Type)
+            where First.State == Second.State {
+            observeValue(state)
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testLexicalEqualityResolvesNestedAssociatedMember() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ state: Model.State.Phase, _: Model.Type) where Model.State == State {
+            observeValue(state)
+        }
+        """, sources: ["Models": """
+        public struct State { public enum Phase { case idle, loaded } }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalEqualityTargetIgnoresBodyTypealiasShadow() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> where Model.State == State {
+            func render(_ initial: Model.State) {
+                typealias State = Other
+                let state: Model.State = initial
+                observeValue(state)
+            }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum Other { case unrelated }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalEqualityDoesNotEscapeItsExtension() throws {
+        try checkModules("""
+        import Models
+        extension Renderer where Model.State == State {
+            func constrained(_ state: Model.State) {}
+        }
+        extension Renderer {
+            func render(_ state: Model.State) { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public protocol Modeling { associatedtype State }
+        public struct Renderer<Model: Modeling> {}
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testLexicalEqualityResolvesReversedRequirement() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ state: Model.State, _: Model.Type) where State == Model.State {
+            observeValue(state)
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalEqualityChainUsesVisibleMethodRefinement() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<First: Modeling, Second: Modeling> where First.State == Second.State {
+            func render(_ state: First.State) where Second.State == State { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalEqualityTargetIgnoresMethodGenericNamesake() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> where Model.State == State {
+            func render<State>(_ state: Model.State, _: State.Type) { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testLexicalEqualityDoesNotConstrainShadowingMethodParameter() throws {
+        // Swift 5 permits shadowing an enclosing generic parameter.
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> where Model.State == State {
+            func render<Model: Modeling>(_ state: Model.State, _: Model.Type) { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public protocol Modeling { associatedtype State }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testLexicalEqualityChainDoesNotBypassLocalAliasShadow() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<Model: Modeling> where Model.State == State {
+            func render() {
+                typealias Model = Other
+                func nested<Item: Modeling>(_ state: Item.State, _: Item.Type) where Item.State == Model.State {
+                    observeValue(state)
+                }
+            }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public enum OtherState { case other }
+        public protocol Modeling { associatedtype State }
+        public struct Other: Modeling { public typealias State = OtherState }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testLexicalEqualitySubjectDoesNotBypassLocalAliasShadow() throws {
+        try checkModules("""
+        import Models
+        struct Renderer<First: Modeling, Second: Modeling> where First.State == Second.State {
+            func render() {
+                typealias Second = Other
+                func nested<Item>(_ state: First.State, _: Item.Type) where Second.State == State {
+                    observeValue(state)
+                }
+            }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public protocol Modeling { associatedtype State }
+        public struct Other: Modeling { public typealias State = Models.State }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false, expectedAbstractParameter: String? = nil,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

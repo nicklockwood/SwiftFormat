@@ -103,6 +103,17 @@ final class ProjectSymbolLookup {
         }
     }
 
+    struct GenericContext {
+        var scope: AutoUpdatingRange
+        var namespace: String?
+        var requirements: [SourceFileIndex.GenericRequirement]
+    }
+
+    struct RequirementQuery: Hashable {
+        var scope: ObjectIdentifier
+        var name: String
+    }
+
     let formatter: Formatter
     let project: ProjectIndex
     let fileURL: URL
@@ -116,6 +127,8 @@ final class ProjectSymbolLookup {
     var unindexedFunctions = Set<String>()
     var activeBindings = Set<ObjectIdentifier>()
     var activeAliases = Set<String>()
+    var genericContexts = [GenericContext]()
+    var activeRequirements = Set<RequirementQuery>()
 
     init(formatter: Formatter, project: ProjectIndex, fileURL: URL) {
         self.formatter = formatter
@@ -124,6 +137,9 @@ final class ProjectSymbolLookup {
         declarations = formatter.parseDeclarations()
         declarations.forEachRecursiveDeclaration { declaration in
             if let type = declaration.asTypeDeclaration {
+                self.addGenericContext(type.genericParameters?.types ?? [],
+                                       whereClause: formatter.index(of: .keyword("where"), in: type.keywordIndex ..< type.openBraceIndex),
+                                       scope: type.range, namespace: type.fullyQualifiedName)
                 if type.definesType, let name = type.fullyQualifiedName {
                     self.localTypes[name, default: []].append(type)
                 }
@@ -207,6 +223,9 @@ final class ProjectSymbolLookup {
                 if formatter.declarationScope(at: i) == .local, let name = function.name {
                     self.unindexedFunctions.insert(name)
                 }
+                self.addGenericContext(function.genericParameterRange.map { formatter.parseGenericTypes(from: $0.lowerBound).types } ?? [],
+                                       whereClause: function.whereClauseRange?.lowerBound,
+                                       scope: i ... (function.bodyRange?.upperBound ?? function.whereClauseRange?.upperBound ?? i), namespace: namespace)
                 if let parameters = function.genericParameterRange {
                     let scope = i ... (function.bodyRange?.upperBound ?? parameters.upperBound)
                     for parameter in formatter.parseGenericTypes(from: parameters.lowerBound).types {
@@ -383,6 +402,62 @@ final class ProjectSymbolLookup {
         ))
     }
 
+    private func addGenericContext(_ parameters: [Formatter.GenericType], whereClause: Int?, scope: ClosedRange<Int>, namespace: String?) {
+        var generics = parameters
+        if let whereClause {
+            formatter.parseGenericTypes(from: whereClause, into: &generics)
+        }
+        let requirements = generics.flatMap(\.conformances).filter { $0.type == .concreteType }.map {
+            SourceFileIndex.GenericRequirement(subject: $0.typeName, target: $0.name, isSameType: true)
+        }
+        if !requirements.isEmpty {
+            genericContexts.append(GenericContext(scope: AutoUpdatingRange(range: scope, formatter: formatter),
+                                                  namespace: namespace, requirements: requirements))
+        }
+    }
+
+    /// A same-type requirement is usable only in its lexical scope. Resolve each target
+    /// where the requirement was written, so nested scopes cannot capture its type names.
+    private func lexicalEqualityType(named name: String, scope: AutoUpdatingRange, at index: Int, depth: Int) -> ResolvedType? {
+        guard depth < 16, let root = name.split(separator: ".").first else { return nil }
+        let query = RequirementQuery(scope: ObjectIdentifier(scope), name: name)
+        guard activeRequirements.insert(query).inserted else { return nil }
+        defer { activeRequirements.remove(query) }
+        var result: ResolvedType?
+        for context in genericContexts where context.scope.range.contains(index) {
+            let declarationIndex = context.scope.range.lowerBound
+            guard unavailableTypes[String(root)]?.filter({ $0.range.contains(declarationIndex) })
+                .min(by: { $0.range.count < $1.range.count }) === scope else { continue }
+            for requirement in context.requirements {
+                let target: String
+                if requirement.subject == name {
+                    target = requirement.target
+                } else if requirement.target == name {
+                    target = requirement.subject
+                } else {
+                    continue
+                }
+                var resolved: ResolvedType?
+                if let reference = ProjectTypeReference(target), reference.arguments.isEmpty,
+                   let root = reference.name.split(separator: ".").first,
+                   let targetScope = unavailableTypes[String(root)]?.filter({ $0.range.contains(declarationIndex) })
+                       .min(by: { $0.range.count < $1.range.count }),
+                   genericParameterScopes[String(root)]?.contains(where: { $0 === targetScope }) == true
+                {
+                    // Generic paths keep their declaration identity but can use additional
+                    // requirements that are visible at the original expression.
+                    resolved = lexicalEqualityType(named: target, scope: targetScope, at: index, depth: depth + 1)
+                }
+                guard let resolved = resolved ?? type(named: target, namespace: context.namespace, at: declarationIndex,
+                                                      requiresGenericArguments: true, depth: depth + 1),
+                    resolved.genericParameterScope == nil else { continue }
+                guard result == nil || sameType(result!, as: resolved) else { return nil }
+                result = resolved
+            }
+        }
+        return result
+    }
+
     /// Resolve an annotated type in its declaration's lexical namespace, including aliases.
     func type(named rawName: String, namespace: String?, at index: Int? = nil, sourceFileURL: URL? = nil, substitutions: [String: ResolvedType] = [:], requiresGenericArguments: Bool = false, depth: Int = 0) -> ResolvedType? {
         guard depth < 16 else { return nil }
@@ -426,8 +501,20 @@ final class ProjectSymbolLookup {
            let reference = ProjectTypeReference(base), let root = reference.name.split(separator: ".").first,
            let scope = unavailableTypes[String(root)]?.filter({ $0.range.contains(index) }).min(by: { $0.range.count < $1.range.count })
         {
-            guard base == root,
-                  genericParameterScopes[String(root)]?.contains(where: { $0 === scope }) == true else { return nil }
+            guard genericParameterScopes[String(root)]?.contains(where: { $0 === scope }) == true else { return nil }
+            var value = lexicalEqualityType(named: base, scope: scope, at: index, depth: depth + 1)
+            if value == nil, base != root, reference.arguments.isEmpty, let parent = reference.parent, let member = reference.member,
+               let owner = type(named: parent, namespace: namespace, at: index, substitutions: substitutions, depth: depth + 1)
+            {
+                value = dependentMemberType(member, of: owner, depth: depth + 1)
+            }
+            if var value {
+                if optional {
+                    value.name += "?"
+                }
+                return value
+            }
+            guard base == root else { return nil }
             return ResolvedType(name: name, sourceFileURL: fileURL, genericParameterScope: scope)
         }
         if let dot = base.firstIndex(of: "."), let owner = substitutions[String(base[..<dot])] {

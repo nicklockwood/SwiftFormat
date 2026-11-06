@@ -3482,6 +3482,28 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """])
     }
 
+    func testLexicalAssociatedEqualityExpandsKnownEnum() throws {
+        let input = """
+        import Models
+        func render<Model: Modeling>(_ state: Model.State, _: Model.Type) where Model.State == State {
+            switch state {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        import Models
+        func render<Model: Modeling>(_ state: Model.State, _: Model.Type) where Model.State == State {
+            switch state {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, modules: ["Models": "public protocol Modeling { associatedtype State }"])
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

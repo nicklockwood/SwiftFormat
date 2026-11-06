@@ -409,12 +409,19 @@ struct SourceFileIndex: Codable, Equatable {
 /// A read-only view of all source summaries discovered for a formatting run.
 struct ProjectIndex {
     enum FunctionCallReceiver: Equatable {
+        struct Constraint: Equatable {
+            var name: String
+            var fileURL: URL
+        }
+
         /// A call without an explicit receiver. `nil` represents a free function.
         case unqualified(declaringType: String?, isStatic: Bool)
         /// A call through `self` or another known instance.
         case instance(type: String)
         /// A call through `Self` or an explicit type name.
         case type(String)
+        /// A receiver whose declarations are known through cumulative generic bounds.
+        case constrained([Constraint], isStatic: Bool)
     }
 
     struct ResolvedFunctionCall: Equatable {
@@ -1576,6 +1583,9 @@ extension SourceFileIndex.FunctionDeclaration {
             return declaringType == type && !isStatic
         case let .type(type):
             return declaringType == type && isStatic
+        case .constrained:
+            // Composite receivers require candidate collection through indexed identities.
+            return false
         }
     }
 
@@ -3566,6 +3576,18 @@ extension ProjectIndex {
         return result
     }
 
+    /// A function-valued property can compete with methods sharing its base name.
+    /// Unknown ancestry must retain that possibility until the call proves applicability.
+    func memberFunctionIsAbsent(named name: String, owner: String, visibleFrom source: URL,
+                                accessedFrom caller: URL, accessedFromType: String?) -> Bool
+    {
+        guard let keys = symbolTypeKeys(named: owner, visibleFrom: source), !keys.isEmpty else { return false }
+        return keys.allSatisfy { key in
+            memberFunctions(named: name, owner: key, visibleFrom: caller, accessingType: accessedFromType)?.isEmpty == true &&
+                hasNoInheritedFunction(named: name, owner: key, sourcePath: source.path, accessedFrom: caller)
+        }
+    }
+
     /// Standard protocol requirements are known even when the standard library isn't indexed.
     /// A project extension can still add a property, so absence requires checking those too.
     private func standardInheritedPropertyIsAbsent(named name: String, owner: String, visibleFrom caller: URL) -> Bool {
@@ -3836,6 +3858,31 @@ extension ProjectIndex {
                       kind != .initializer || hasNoInheritedFunction(named: name, owner: key, sourcePath: typeSourceFilesByModule[key]?.first ?? fileURL.path, accessedFrom: caller) else { return nil }
                 candidates += matching
             }
+        case let .constrained(bounds, isStatic):
+            guard kind == .function, !bounds.isEmpty else { return nil }
+            for bound in bounds {
+                guard let keys = symbolTypeKeys(named: bound.name, visibleFrom: bound.fileURL), !keys.isEmpty else { return nil }
+                var matchesForBound: [FunctionSymbol]?
+                for key in keys {
+                    guard let members = functionCandidates(named: name, owner: key, visibleFrom: caller, accessingType: accessType) else { return nil }
+                    let matching = members.filter { symbol in
+                        guard let owner = symbol.declaration.declaringType else { return false }
+                        let receiver: FunctionCallReceiver = isStatic ? .type(owner) : .instance(type: owner)
+                        return symbol.declaration.kind == kind && symbol.declaration.matches(receiver: receiver) &&
+                            acceptsClosureArguments(symbol) &&
+                            symbol.declaration.parameterIndices(matching: arguments, ignoringLabelAt: ignoredLabel) != nil &&
+                            isViable?(symbol) != false
+                    }
+                    guard matching.allSatisfy({
+                        memberIsAvailableInEveryContext(source: $0.fileURL, visibility: $0.declaration.visibility, caller: caller)
+                    }), matchesForBound == nil || matchesForBound!.count == matching.count && matching.allSatisfy({ matchesForBound!.contains($0) }) else { return nil }
+                    matchesForBound = matching
+                }
+                for symbol in matchesForBound ?? [] where !candidates.contains(symbol) {
+                    candidates.append(symbol)
+                }
+            }
+            guard candidates.count == 1 else { return nil }
         case let .unqualified(owner, isStatic):
             for module in file.moduleIdentifiers {
                 var local = [FunctionSymbol]()

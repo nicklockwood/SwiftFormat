@@ -36,10 +36,12 @@ final class ProjectSymbolLookup {
     final class FunctionType {
         let parameters: [ResolvedType]
         let result: ResolvedType
+        let requiresArgumentProof: Bool
 
-        init(parameters: [ResolvedType], result: ResolvedType) {
+        init(parameters: [ResolvedType], result: ResolvedType, requiresArgumentProof: Bool = false) {
             self.parameters = parameters
             self.result = result
+            self.requiresArgumentProof = requiresArgumentProof
         }
     }
 
@@ -523,7 +525,7 @@ final class ProjectSymbolLookup {
         result.tupleElements = result.tupleElements?.map { TupleElement(label: $0.label, type: typeAtUseSite($0.type, at: index, depth: depth + 1)) }
         if let signature = result.functionType {
             result.functionType = FunctionType(parameters: signature.parameters.map { typeAtUseSite($0, at: index, depth: depth + 1) },
-                                               result: typeAtUseSite(signature.result, at: index, depth: depth + 1))
+                                               result: typeAtUseSite(signature.result, at: index, depth: depth + 1), requiresArgumentProof: signature.requiresArgumentProof)
         }
         if let enclosing = result.enclosingType {
             result.enclosingType = EnclosingType(typeAtUseSite(enclosing.type, at: index, depth: depth + 1))
@@ -1238,11 +1240,28 @@ final class ProjectSymbolLookup {
                     result == nil || sameType(result!, as: value) else { return nil }
                 result = value
             }
-            return result
+            return result.map { callablePropertyType($0, owner: owner, member: name, accessingType: accessingType, accessedFrom: accessedFrom ?? fileURL) }
         }
         guard let ownerName = qualifiedName(for: owner),
-              let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: accessedFrom ?? fileURL, accessedFromType: accessingType) else { return nil }
-        return propertyType(member, owner: owner, depth: depth + 1)
+              let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: accessedFrom ?? fileURL, accessedFromType: accessingType),
+              let value = propertyType(member, owner: owner, depth: depth + 1) else { return nil }
+        return callablePropertyType(value, owner: owner, member: name, accessingType: accessingType, accessedFrom: accessedFrom ?? fileURL)
+    }
+
+    /// Parentheses and inferred bindings retain the need to distinguish a property from methods.
+    private func callablePropertyType(_ value: ResolvedType, owner: ResolvedType, member: String,
+                                      accessingType: String?, accessedFrom caller: URL) -> ResolvedType
+    {
+        guard let signature = value.functionType else { return value }
+        let methodsAreAbsent = (owner.genericBounds ?? [owner]).allSatisfy { bound in
+            guard let name = qualifiedName(for: bound) else { return false }
+            return project.memberFunctionIsAbsent(named: member, owner: name, visibleFrom: bound.sourceFileURL ?? fileURL,
+                                                  accessedFrom: caller, accessedFromType: accessingType)
+        }
+        guard !methodsAreAbsent else { return value }
+        var result = value
+        result.functionType = FunctionType(parameters: signature.parameters, result: signature.result, requiresArgumentProof: true)
+        return result
     }
 
     private func propertyType(_ member: ProjectIndex.PropertySymbol, owner: ResolvedType, depth: Int) -> ResolvedType? {
@@ -1720,6 +1739,9 @@ final class ProjectSymbolLookup {
         var substitutions = owner.flatMap { owner in
             symbol.declaration.declaringType.flatMap { projectedType(owner, to: $0, source: symbol.fileURL) }.flatMap(nominalSubstitutions)
         } ?? [:]
+        if let owner {
+            substitutions["Self"] = owner
+        }
         for generic in symbol.declaration.genericParameters {
             substitutions.removeValue(forKey: generic)
         }
@@ -1944,6 +1966,21 @@ final class ProjectSymbolLookup {
         return owner
     }
 
+    /// Abstract receivers expose their indexed bounds without acquiring a nominal identity.
+    func functionReceiver(for owner: ResolvedType) -> ProjectIndex.FunctionCallReceiver? {
+        guard unwrapped(owner) == nil else { return nil }
+        if let name = qualifiedName(for: owner) {
+            return owner.isMetatype ? .type(name) : .instance(type: name)
+        }
+        guard owner.genericParameterScope != nil, let bounds = owner.genericBounds, !bounds.isEmpty else { return nil }
+        let constraints = bounds.compactMap { bound -> ProjectIndex.FunctionCallReceiver.Constraint? in
+            guard let name = qualifiedName(for: bound) else { return nil }
+            return .init(name: name, fileURL: bound.sourceFileURL ?? fileURL)
+        }
+        guard constraints.count == bounds.count else { return nil }
+        return .constrained(constraints, isStatic: owner.isMetatype)
+    }
+
     struct ResolvedCall {
         var symbol: ProjectIndex.FunctionSymbol
         var owner: ResolvedType?
@@ -2025,7 +2062,7 @@ final class ProjectSymbolLookup {
         var receiverSource = fileURL
         if let dot, let receiverStart, receiverStart < dot {
             owner = expressionType(in: receiverStart ... dot - 1, depth: depth + 1)
-            receiver = owner.flatMap { value in qualifiedName(for: value).map { value.isMetatype ? .type($0) : .instance(type: $0) } }
+            receiver = owner.flatMap(functionReceiver)
             receiverSource = owner?.sourceFileURL ?? fileURL
         } else {
             receiver = project.functionCallReceiver(at: identifier, in: formatter, visibleFrom: fileURL, declarations: declarations)
@@ -2195,9 +2232,17 @@ final class ProjectSymbolLookup {
         return result
     }
 
-    func functionValueResult(_ value: ResolvedType, arguments: [Formatter.FunctionCallArgument]) -> ResolvedType? {
-        guard !value.isMetatype, unwrapped(value) == nil, let signature = value.functionType,
+    func functionValueResult(_ value: ResolvedType, arguments: [Formatter.FunctionCallArgument], depth: Int) -> ResolvedType? {
+        guard depth < 32, !value.isMetatype, unwrapped(value) == nil, let signature = value.functionType,
               arguments.count == signature.parameters.count, arguments.allSatisfy({ $0.label == nil }) else { return nil }
+        let known = knownArgumentTypes(arguments, depth: depth + 1)
+        guard !known.contains(where: { argumentIsIncompatible($0.value, with: signature.parameters[$0.key]) }) else { return nil }
+        // Swift can choose a method when a same-named property's parameter cannot accept
+        // the argument. Mere lack of a proven mismatch does not establish applicability.
+        if signature.requiresArgumentProof {
+            guard known.count == arguments.count,
+                  known.allSatisfy({ sameType($0.value, as: signature.parameters[$0.key]) }) else { return nil }
+        }
         return signature.result
     }
 
@@ -2411,7 +2456,7 @@ final class ProjectSymbolLookup {
                   unavailableTypes[identifier]?.contains(where: { $0.range.contains(first) }) != true else { return nil }
             let arguments = formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last }
             if let value = bindingType(named: identifier, at: first, depth: depth + 1), value.functionType != nil {
-                current = functionValueResult(value, arguments: arguments)
+                current = functionValueResult(value, arguments: arguments, depth: depth + 1)
             } else {
                 guard bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true else { return nil }
                 let receiver = project.functionCallReceiver(at: first, in: formatter, visibleFrom: fileURL, declarations: declarations)
@@ -2474,7 +2519,7 @@ final class ProjectSymbolLookup {
                let close = formatter.endOfScope(at: dot), close <= last, let callable = current, callable.functionType != nil
             {
                 let arguments = formatter.parseFunctionCallArguments(startOfScope: dot).filter { $0.valueRange.upperBound <= last }
-                current = functionValueResult(callable, arguments: arguments)
+                current = functionValueResult(callable, arguments: arguments, depth: depth + 1)
                 cursor = arguments.last.map { max(close, $0.valueRange.upperBound) } ?? close
                 continue
             }
@@ -2500,8 +2545,24 @@ final class ProjectSymbolLookup {
             }
             guard tokens[member].isIdentifier else { return nil }
             if owner.genericParameterScope != nil {
-                current = memberType(owner: owner, name: memberName, accessingType: namespace, depth: depth + 1)
-                cursor = member
+                if let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: member), open <= last,
+                   tokens[open] == .startOfScope("(") || tokens[open] == .startOfScope("{"),
+                   let close = formatter.endOfScope(at: open), close <= last
+                {
+                    let arguments = formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last }
+                    if let callable = memberType(owner: owner, name: memberName, accessingType: namespace, depth: depth + 1) {
+                        current = functionValueResult(callable, arguments: arguments, depth: depth + 1)
+                    } else if let receiver = functionReceiver(for: owner) {
+                        current = callType(name: memberName, receiver: receiver, arguments: arguments, owner: owner,
+                                           accessingType: namespace, depth: depth + 1)
+                    } else {
+                        return nil
+                    }
+                    cursor = arguments.last.map { max(close, $0.valueRange.upperBound) } ?? close
+                } else {
+                    current = memberType(owner: owner, name: memberName, accessingType: namespace, depth: depth + 1)
+                    cursor = member
+                }
                 continue
             }
             guard let ownerName = qualifiedName(for: owner) else { return nil }
@@ -2516,7 +2577,7 @@ final class ProjectSymbolLookup {
                     current = standardResultCall(owner: owner, name: memberName, arguments: arguments)
                 } else if project.hasProperty(owner: ownerName, member: memberName, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL) {
                     guard let value = memberType(owner: owner, name: memberName, accessingType: namespace) else { return nil }
-                    current = functionValueResult(value, arguments: arguments)
+                    current = functionValueResult(value, arguments: arguments, depth: depth + 1)
                 } else {
                     current = callType(name: memberName, receiver: owner.isMetatype ? .type(ownerName) : .instance(type: ownerName), arguments: arguments, sourceFileURL: owner.sourceFileURL, owner: owner, accessingType: namespace, depth: depth + 1)
                 }

@@ -3526,6 +3526,50 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         try check(input, output, modules: ["Models": "public protocol Modeling { associatedtype State; var state: State { get } }"])
     }
 
+    func testConstrainedReceiverCallbackExpandsKnownEnum() throws {
+        let input = """
+        import Models
+        func render<Model: Modeling>(_ model: Model) where Model.State == State {
+            model.load { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        import Models
+        func render<Model: Modeling>(_ model: Model) where Model.State == State {
+            model.load { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, modules: ["Models": "public protocol Modeling { associatedtype State; func load(_ callback: (State) -> Void) }"])
+    }
+
+    func testIncompatibleCallablePropertyDoesNotExpandSwitchUsingWrongEnum() throws {
+        let input = """
+        import Models
+        func render<Model: First & Second>(_ model: Model, _ count: Int) {
+            switch model.load(count) {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        try check(input, declarations: "", modules: ["Models": """
+        public enum State { case idle, loaded, failed }
+        public enum OtherState { case loaded, unrelated }
+        public protocol First { func load(_ count: Int) -> State }
+        public protocol Second { var load: (String) -> OtherState { get } }
+        """])
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

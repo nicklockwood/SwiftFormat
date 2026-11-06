@@ -6826,6 +6826,216 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """], expectedCases: ["idle", "loaded"])
     }
 
+    func testConstrainedReceiverMethodResolvesConcreteResult() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) { observeValue(model.load()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { func load() -> State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedReceiverMethodResolvesAssociatedResult() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) where Model.State == State { observeValue(model.load()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State; func load() -> State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedReceiverCallbackResolvesAssociatedParameter() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) where Model.State == State {
+            model.load { state in observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { associatedtype State; func load(_ callback: (State) -> Void) }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedReceiverMethodProjectsGenericSuperclass() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Child<State>>(_ model: Model) { observeValue(model.load()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        open class Base<Value> {
+            public let value: Value
+            public init(_ value: Value) { self.value = value }
+            public func load() -> Value { value }
+        }
+        open class Child<Value>: Base<Value> {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedReceiverOverloadUsesKnownArgumentTypeAcrossBounds() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second>(_ model: Model, _ count: Int) { observeValue(model.load(count)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public protocol First { func load(_ count: Int) -> State }
+        public protocol Second { func load(_ name: String) -> OtherState }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedReceiverDeduplicatesSharedInheritedRequirement() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second>(_ model: Model) { observeValue(model.load()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { func load() -> State }
+        public protocol First: Modeling {}
+        public protocol Second: Modeling {}
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedMetatypeResolvesStaticMethodResult() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_: Model.Type) { observeValue(Model.load()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public protocol Modeling { static func load() -> State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedReceiverUnknownAdditionalAncestryPreventsOverloadSelection() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & ExternalAncestor>(_ model: Model) { observeValue(model.load()) }
+        """, sources: ["Models": """
+        import Foundation
+        public enum State { case idle, loaded }
+        public protocol First { func load() -> State }
+        public protocol ExternalAncestor: NSObjectProtocol {}
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testConstrainedReceiverOverloadResolvesSelfAssociatedArgument() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second>(_ model: Model, _ other: OtherState) where Model.State == State {
+            observeValue(model.load(other))
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case correct }
+        public protocol First { associatedtype State; func load(_ state: Self.State) -> Self.State }
+        public protocol Second { func load(_ state: OtherState) -> OtherState }
+        """], expectedCases: ["correct"])
+    }
+
+    func testConstrainedOptionalReceiverMethodPreservesOptionalResult() throws {
+        try check("""
+        func render<Model: Modeling>(_ model: Model?) { observeValue(model?.load()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Modeling { func load() -> State }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testConstrainedReceiverDoesNotInferIncompatibleCallablePropertyResult() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second>(_ model: Model, _ count: Int) { observeValue(model.load(count)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public protocol First { func load(_ count: Int) -> State }
+        public protocol Second { var load: (String) -> OtherState { get } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testConstrainedReceiverDoesNotAssumeAbstractArgumentFitsCallableProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second, Value>(_ model: Model, _ value: Value) { observeValue(model.load(value)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public protocol First { func load(_ value: Any) -> State }
+        public protocol Second { var load: (String) -> OtherState { get } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testParenthesizedConstrainedMemberRetainsCallableApplicabilityProof() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second, Value>(_ model: Model, _ value: Value) { observeValue((model.load)(value)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public protocol First { func load(_ value: Any) -> State }
+        public protocol Second { var load: (String) -> OtherState { get } }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testParenthesizedConstrainedMemberUsesCompatibleCallableProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second>(_ model: Model, _ count: Int) { observeValue((model.load)(count)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case correct }
+        public protocol First { func load(_ count: Int) -> State }
+        public protocol Second { var load: (Int) -> OtherState { get } }
+        """], expectedCases: ["correct"])
+    }
+
+    func testConstrainedReceiverUsesCompatibleCallableProperty() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second>(_ model: Model, _ count: Int) { observeValue(model.load(count)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case correct }
+        public protocol First { func load(_ count: Int) -> State }
+        public protocol Second { var load: (Int) -> OtherState { get } }
+        """], expectedCases: ["correct"])
+    }
+
+    func testConstrainedReceiverUnknownArgumentPreservesOverloadAmbiguity() throws {
+        try checkModules("""
+        import Models
+        func render<Model: First & Second, Value>(_ model: Model, _ value: Value) { observeValue(model.load(value)) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public protocol First { func load(_ value: Any) -> State }
+        public protocol Second { func load(_ value: Int) -> OtherState }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testConstrainedReceiverDistinguishesStaticAndInstanceMethods() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_ model: Model) { observeValue(model.load()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case unrelated }
+        public protocol Modeling { func load() -> State; static func load() -> OtherState }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstrainedMetatypeDistinguishesStaticAndInstanceMethods() throws {
+        try checkModules("""
+        import Models
+        func render<Model: Modeling>(_: Model.Type) { observeValue(Model.load()) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public enum OtherState { case correct }
+        public protocol Modeling { func load() -> State; static func load() -> OtherState }
+        """], expectedCases: ["correct"])
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false, expectedAbstractParameter: String? = nil,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

@@ -443,6 +443,7 @@ struct ProjectIndex {
     private let symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]]
     private let symbolDeclarationCountsByName: [String: Int]
     private let typeDeclarationCountsByShortName: [String: Int]
+    private let typeAliasDeclarationCountsByShortName: [String: Int]
     private let symbolDeclarationNames: Set<String>
 
     init(files: [String: SourceFileIndex]) {
@@ -584,6 +585,7 @@ struct ProjectIndex {
         }
         var symbolDeclarationCountsByName = [String: Int]()
         var typeDeclarationCountsByShortName = [String: Int]()
+        var typeAliasDeclarationCountsByShortName = [String: Int]()
         var inheritedNamesByTypeName = [String: Set<String>]()
         for file in files.values {
             for declaration in file.symbolDeclarations {
@@ -592,6 +594,9 @@ struct ProjectIndex {
             for declaration in file.typeDeclarations {
                 let name = declaration.name.split(separator: ".").last.map(String.init) ?? declaration.name
                 typeDeclarationCountsByShortName[name, default: 0] += 1
+            }
+            for declaration in file.typeAliasDeclarations {
+                typeAliasDeclarationCountsByShortName[declaration.name.unqualifiedTypeName, default: 0] += 1
             }
             // A type can be extended with more conformances in any file, so these aren't scoped to a module.
             for conformance in file.typeConformances {
@@ -629,6 +634,7 @@ struct ProjectIndex {
         self.symbolDeclarationsByModule = symbolDeclarationsByModule
         self.symbolDeclarationCountsByName = symbolDeclarationCountsByName
         self.typeDeclarationCountsByShortName = typeDeclarationCountsByShortName
+        self.typeAliasDeclarationCountsByShortName = typeAliasDeclarationCountsByShortName
         symbolDeclarationNames = Set(symbolDeclarationCountsByName.keys)
         let descriptions = files.keys.sorted().compactMap { path -> (String, String, String)? in
             guard let file = files[path] else { return nil }
@@ -879,9 +885,10 @@ struct ProjectIndex {
         }
     }
 
-    func declarationCountsAreUnambiguous(for shortName: String) -> Bool {
+    func declarationCountsAreUnambiguous(for shortName: String, includingAliases: Bool = false) -> Bool {
         symbolDeclarationCountsByName[shortName, default: 0] ==
-            typeDeclarationCountsByShortName[shortName, default: 0]
+            typeDeclarationCountsByShortName[shortName, default: 0] +
+            (includingAliases ? typeAliasDeclarationCountsByShortName[shortName, default: 0] : 0)
     }
 
     func containsSymbolDeclaration(named name: String) -> Bool {
@@ -2899,7 +2906,8 @@ extension ProjectIndex {
 
     /// Resolve a function signature through its receiver or the caller's explicit imports.
     func functionSymbol(named name: String, receiver: FunctionCallReceiver, arguments: [String?],
-                        visibleFrom fileURL: URL, ignoringLabelAt ignoredLabel: Int? = nil, accessedFrom accessURL: URL? = nil, accessedFromType accessType: String? = nil) -> FunctionSymbol?
+                        visibleFrom fileURL: URL, ignoringLabelAt ignoredLabel: Int? = nil, accessedFrom accessURL: URL? = nil, accessedFromType accessType: String? = nil,
+                        kind: SourceFileIndex.FunctionDeclaration.Kind = .function) -> FunctionSymbol?
     {
         guard let file = files[fileURL.standardizedFileURL.path], !file.moduleIdentifiers.isEmpty else { return nil }
         let caller = accessURL ?? fileURL
@@ -2914,7 +2922,13 @@ extension ProjectIndex {
                 {
                     return false
                 }
-                return accessible && $0.declaration.kind == .function && $0.declaration.matches(receiver: receiver) &&
+                let matchesReceiver: Bool
+                if kind == .initializer, case let .type(owner) = receiver {
+                    matchesReceiver = $0.declaration.declaringType == owner
+                } else {
+                    matchesReceiver = $0.declaration.matches(receiver: receiver)
+                }
+                return accessible && $0.declaration.kind == kind && matchesReceiver &&
                     $0.declaration.parameterIndices(matching: arguments, ignoringLabelAt: ignoredLabel) != nil
             }
         }

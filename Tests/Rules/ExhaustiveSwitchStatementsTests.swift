@@ -264,7 +264,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         func render(_ state: State?) {
             switch state {
             case .idle?: first()
-            case .some(.loaded), .some(.failed), .none: second()
+            case .some(.loaded), .some(.failed), nil: second()
             }
         }
         func other(_ value: Unknown) {
@@ -759,16 +759,16 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         func render(_ model: Model) {
             switch model.state {
             case .idle?: first()
-            case .some(.loaded), .none: fallback()
+            case .some(.loaded), nil: fallback()
             }
             switch loadState() {
             case .idle?: first()
-            case .some(.loaded), .none: fallback()
+            case .some(.loaded), nil: fallback()
             }
         }
         func optional(_ model: Model?) {
             switch model?.state {
-            case .some(.idle), .some(.loaded), .none: fallback()
+            case _?, nil: fallback()
             }
         }
         """
@@ -802,7 +802,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
                 }
             }
             switch model.state {
-            case .some(.idle), .some(.loaded), .none: fallback()
+            case _?, nil: fallback()
             }
         }
         """
@@ -1247,7 +1247,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         func render(_ state: State?) {
             switch state {
             case .some(let value): print(value)
-            case .none: fallback()
+            case nil: fallback()
             }
         }
         """
@@ -1288,7 +1288,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         let output = """
         func render(_ model: Model?) {
             switch model?.state! {
-            case .some(.idle), .some(.loaded), .none: fallback()
+            case _?, nil: fallback()
             }
             switch (model?.state)! {
             case .idle, .loaded: fallback()
@@ -1320,7 +1320,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
                 \(binding)
                 switch state {
                 case .idle: first()
-                case .some(.loaded), .none: fallback()
+                case .some(.loaded), nil: fallback()
                 }
                 \(closing)
             }
@@ -1360,6 +1360,75 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testDefaultOnlyOptionalSwitchDoesNotExpandThousandsOfNestedPatterns() throws {
+        let input = """
+        func render(_ state: State?) {
+            switch state {
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State?) {
+            switch state {
+            case _?, nil: fallback()
+            }
+        }
+        """
+        let cases = (0 ..< 1500).map { "value\($0)" }.joined(separator: ", ")
+        try check(input, output, declarations: "enum State { case \(cases) }")
+    }
+
+    func testOptionalPatternsAvoidWrappedNoneAndSomeCollisions() throws {
+        let input = """
+        func render(_ state: State?) {
+            switch state {
+            case .loaded?: first()
+            default: fallback()
+            }
+        }
+        func renderAll(_ state: State?) {
+            switch state {
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State?) {
+            switch state {
+            case .loaded?: first()
+            case .some(.none), .some(.some), nil: fallback()
+            }
+        }
+        func renderAll(_ state: State?) {
+            switch state {
+            case _?, nil: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case none, some, loaded }")
+    }
+
+    func testNestedOptionalPatternsAvoidWrappedCaseNameCollisions() throws {
+        let input = """
+        func render(_ state: State??) {
+            switch state {
+            case nil: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State??) {
+            switch state {
+            case nil: first()
+            case .some(.some(.none)), .some(.some(.some)), .some(.some(.loaded)), .some(nil): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case none, some, loaded }")
+    }
+
     func testSDKEnumDefaultsRequireAFrozenDeclaration() throws {
         let input = """
         import SDK
@@ -1387,7 +1456,7 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         func renderOptional(_ value: State?) {
             switch value {
             case .idle?: first()
-            case .some(.loaded), .none: fallback()
+            case .some(.loaded), nil: fallback()
             }
         }
         """
@@ -1409,6 +1478,294 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
             )
             XCTAssertEqual(sourceCode(for: result.tokens), frozen ? output : input)
         }
+    }
+
+    func testTupleOfCrossFileEnumsSubtractsWildcardsAndGroupedPatterns() throws {
+        let input = """
+        func render(_ state: State, _ mode: Mode) {
+            switch (state, mode) {
+            case (.idle, _), (.loaded, .first): first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ state: State, _ mode: Mode) {
+            switch (state, mode) {
+            case (.idle, _), (.loaded, .first): first()
+            case (.loaded, .second): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        enum Mode { case first, second }
+        """)
+    }
+
+    func testTuplePayloadPatternsKeepPartiallyMatchedCases() throws {
+        let input = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            case let (.loaded(first), .loaded(second)): compare(first, second)
+            case (.idle, .loaded(0)): special()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            case let (.loaded(first), .loaded(second)): compare(first, second)
+            case (.idle, .loaded(0)): special()
+            case (.idle, .idle), (.idle, .loaded), (.loaded, .idle): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle, loaded(Int) }")
+    }
+
+    func testTupleWhereClauseDoesNotCoverUnguardedValues() throws {
+        let input = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            case (.idle, _) where allowed(): first()
+            case (.loaded, .loaded): second()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            case (.idle, _) where allowed(): first()
+            case (.loaded, .loaded): second()
+            case (.idle, .idle), (.idle, .loaded), (.loaded, .idle): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testTupleWithUnresolvedComponentRemainsUnchanged() throws {
+        try check("""
+        func render(_ state: State) {
+            switch (state, opaque()) {
+            case (.idle, _): first()
+            default: fallback()
+            }
+        }
+        """)
+    }
+
+    func testAliasedCallbackExpandsItsProjectEnum() throws {
+        let input = """
+        func render(_ model: Model) {
+            model.observe { state in
+                switch state {
+                case .idle: first()
+                default: fallback()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Model) {
+            model.observe { state in
+                switch state {
+                case .idle: first()
+                case .loaded: fallback()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded }
+        typealias Observer = (State) -> Void
+        struct Model { func observe(_ callback: Observer) {} }
+        """)
+    }
+
+    func testTupleOfOptionalEnumsSubtractsSomeAndNilPatterns() throws {
+        let input = """
+        func render(_ lhs: State?, _ rhs: State?) {
+            switch (lhs, rhs) {
+            case (.some(.idle), _): first()
+            case (_, nil): second()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ lhs: State?, _ rhs: State?) {
+            switch (lhs, rhs) {
+            case (.some(.idle), _): first()
+            case (_, nil): second()
+            case (.some(.loaded), .some(.idle)), (.some(.loaded), .some(.loaded)), (nil, .some(.idle)), (nil, .some(.loaded)): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testOptionalTuplePreservesNestedPayloadBindings() throws {
+        let input = """
+        func render(_ pair: (State, State)?) {
+            switch pair {
+            case let .some((.loaded(first), .loaded(second))): compare(first, second)
+            case nil: empty()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ pair: (State, State)?) {
+            switch pair {
+            case let .some((.loaded(first), .loaded(second))): compare(first, second)
+            case nil: empty()
+            case .some((.idle, .idle)), .some((.idle, .loaded)), .some((.loaded, .idle)): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle, loaded(Int) }")
+    }
+
+    func testLargePartialOptionalSwitchUsesCompilerCheckableOuterCases() throws {
+        let cases = (0 ..< 1500).map { "value\($0)" }.joined(separator: ", ")
+        let declarations = """
+        enum State { case \(cases) }
+        """
+        let input = """
+        func render(_ value: State?) {
+            switch value {
+            case .value0: first()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ value: State?) {
+            switch value {
+            case .value0: first()
+            case _?, nil: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: declarations)
+    }
+
+    func testLargePartialOptionalSwitchKeepsPreviouslyCoveredNil() throws {
+        let cases = (0 ..< 1500).map { "value\($0)" }.joined(separator: ", ")
+        let declarations = """
+        enum State { case \(cases) }
+        """
+        let input = """
+        func render(_ value: State?) {
+            switch value {
+            case .value0: first()
+            case nil: empty()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ value: State?) {
+            switch value {
+            case .value0: first()
+            case nil: empty()
+            case _?: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: declarations)
+    }
+
+    func testLargeTupleProductPreservesCompilerRequiredDefault() throws {
+        let cases = (0 ..< 33).map { "value\($0)" }.joined(separator: ", ")
+        let declarations = """
+        enum State { case \(cases) }
+        """
+        try check("""
+        func render(_ lhs: State, _ rhs: State) {
+            switch (lhs, rhs) {
+            default: fallback()
+            }
+        }
+        """, declarations: declarations)
+    }
+
+    func testLargeOptionalTupleProductUsesOuterOptionalCases() throws {
+        let cases = (0 ..< 33).map { "value\($0)" }.joined(separator: ", ")
+        let declarations = """
+        enum State { case \(cases) }
+        """
+        let input = """
+        func render(_ lhs: State?, _ rhs: State?) {
+            switch (lhs, rhs) {
+            case (.value0, _): first()
+            case (nil, nil): empty()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ lhs: State?, _ rhs: State?) {
+            switch (lhs, rhs) {
+            case (.value0, _): first()
+            case (nil, nil): empty()
+            case (_?, _?), (_?, nil), (nil, _?): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: declarations)
+    }
+
+    func testNestedOptionalInnerNilIsSubtracted() throws {
+        let input = """
+        func render(_ value: State??) {
+            switch value {
+            case .some(nil): innerNil()
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ value: State??) {
+            switch value {
+            case .some(nil): innerNil()
+            case .some(.some(.idle)), .some(.some(.loaded)), nil: fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testHighArityTuplePreservesCompilerRequiredDefault() throws {
+        try check("""
+        func render(_ a: State, _ b: State, _ c: State, _ d: State, _ e: State, _ f: State, _ g: State, _ h: State, _ i: State) {
+            switch (a, b, c, d, e, f, g, h, i) {
+            default: fallback()
+            }
+        }
+        """, declarations: "enum State { case idle, loaded }")
+    }
+
+    func testNestedOptionalTupleCompactsBeforeCompilerBudgetIsExceeded() throws {
+        let input = """
+        func render(_ a: State???, _ b: State???, _ c: State???, _ d: State???) {
+            switch (a, b, c, d) {
+            default: fallback()
+            }
+        }
+        """
+        let output = """
+        func render(_ a: State???, _ b: State???, _ c: State???, _ d: State???) {
+            switch (a, b, c, d) {
+            case (_?, _?, _?, _?), (_?, _?, _?, nil), (_?, _?, nil, _?), (_?, _?, nil, nil), (_?, nil, _?, _?), (_?, nil, _?, nil), (_?, nil, nil, _?), (_?, nil, nil, nil), (nil, _?, _?, _?), (nil, _?, _?, nil), (nil, _?, nil, _?), (nil, _?, nil, nil), (nil, nil, _?, _?), (nil, nil, _?, nil), (nil, nil, nil, _?), (nil, nil, nil, nil): fallback()
+            }
+        }
+        """
+        try check(input, output, declarations: "enum State { case idle }")
     }
 
     private func check(

@@ -1138,6 +1138,301 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """, expected: "State")
     }
 
+    func testCallbackTypeAliasResolvesItsDeclarationContext() throws {
+        try check("""
+        func render(_ model: Model) {
+            model.observe { value in observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        typealias Observer = @Sendable (State) -> Void
+        struct Model { func observe(_ callback: Observer) {} }
+        """, expected: "State")
+    }
+
+    func testGenericCallbackTypeAliasSubstitutesNestedPayloads() throws {
+        try check("""
+        func render(_ model: Model<State>) {
+            model.observe { event in
+                if case .value(let value) = event { observeValue(value) }
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Event<Value> { case value(Value), finished }
+        typealias Observer<Value> = (Event<Value>) -> Void
+        struct Model<Value> { func observe(_ callback: Observer<Value>) {} }
+        """, expected: "State")
+    }
+
+    func testCallbackAliasDoesNotResolveToAnUnrelatedCallerType() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ model: Model) {
+            model.observe { value in observeValue(value) }
+        }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public typealias Observer = (State) -> Void
+            public struct Model { public func observe(_ callback: Observer) {} }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testCallbackAliasKeepsUnknownGenericParametersUnresolved() throws {
+        try check("""
+        func render() {
+            observe { value in observeValue(value) }
+        }
+        """, declarations: """
+        typealias Observer<Value> = (Value) -> Void
+        func observe<Value>(_ callback: Observer<Value>) {}
+        """, expected: nil)
+    }
+
+    func testTupleExpressionElementRetainsItsType() throws {
+        try check("""
+        func render(_ state: State, _ other: Other) {
+            let pair = (other, state)
+            observeValue(pair.1)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        """, expected: "State")
+    }
+
+    func testGenericLabeledTuplePropertySubstitutesSelectedElement() throws {
+        try check("""
+        func render(_ model: Model<State>) { observeValue(model.pair.current) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model<Value> { let pair: (previous: Value?, current: Value) }
+        """, expected: "State")
+    }
+
+    func testTupleElementsDoNotGuessFromAnUnknownExpression() throws {
+        try check("""
+        func render(_ state: State) {
+            let pair = (state, opaque())
+            observeValue(pair.0)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        """, expected: nil)
+    }
+
+    func testEnumSelfAnnotationResolvesToItsDeclaration() throws {
+        try check("""
+        enum State {
+            case idle, loaded
+            func render(_ other: Self) { observeValue(other) }
+        }
+        """, declarations: "", expected: "State")
+    }
+
+    func testOptionalTuplePropertyPreservesProjectionOptionality() throws {
+        try check("""
+        func render(_ model: Model<State>) { observeValue(model.pair?.current) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model<Value> { let pair: (previous: Value?, current: Value)? }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testGroupedOptionalCallbackAliasResolvesParameter() throws {
+        try check("""
+        func render(_ model: Model) {
+            model.observe { state in observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        typealias Observer = ((State) -> Void)?
+        struct Model { func observe(_ callback: Observer) {} }
+        """, expected: "State")
+    }
+
+    func testInvariantGenericInputResolvesAliasedNestedCallbackParameter() throws {
+        try check("""
+        func render(_ source: Box<State>) {
+            observe(initial: source) { box in observeValue(box.value) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Box<Value> { let value: Value }
+        typealias Observer<Value> = (Box<Value>) -> Void
+        func observe<Value>(initial: Box<Value>, callback: Observer<Value>) {}
+        """, expected: "State")
+    }
+
+    func testCovariantGenericInputDoesNotFixAliasedCallbackParameter() throws {
+        try check("""
+        func render(_ source: State) {
+            observe(initial: source) { value in observeValue(value) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        typealias Observer<Value> = (Value) -> Void
+        func observe<Value>(initial: Value, callback: Observer<Value>) {}
+        """, expected: nil)
+    }
+
+    func testEnumSelfReturnRetainsItsDeclarationModule() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ value: Models.State) { observeValue(value.copy()) }
+        """, sources: [
+            "Models": """
+            public enum State {
+                case idle, loaded
+                public func copy() -> Self { self }
+            }
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testExplicitConstructorResolvesInferredLocalReceiver() throws {
+        try check("""
+        func render() {
+            let model = Model(dependencies: opaque())
+            observeValue(model.state)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model {
+            init(dependencies: Any) {}
+            var state: State { .idle }
+        }
+        """, expected: "State")
+    }
+
+    func testExplicitGenericConstructorPreservesTypeArguments() throws {
+        try check("""
+        func render() {
+            let model = Model<State>()
+            observeValue(model.state)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model<Value> {
+            init() {}
+            var state: Value { fatalError() }
+        }
+        """, expected: "State")
+    }
+
+    func testFailableConstructorRetainsOptionalResult() throws {
+        try check("""
+        func render() {
+            let model = Model()
+            observeValue(model?.state)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model {
+            init?() {}
+            var state: State { .idle }
+        }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testConstructorCannotIgnoreASameNamedFactoryOverload() throws {
+        try checkModules("""
+        import Models
+        struct Other { var state: Int }
+        func Model(_ value: Int) -> Other { fatalError() }
+        func render() {
+            let model = Model(opaque())
+            observeValue(model.state)
+        }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public struct Model {
+                public init(_ value: String) {}
+                public var state: State { .idle }
+            }
+            """,
+        ], expectedCases: nil)
+    }
+
+    func testConstructorCannotIgnoreAmbiguousFailability() throws {
+        try check("""
+        func render() {
+            let model = Model(opaque())
+            observeValue(model.state)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model {
+            init(_ value: String) {}
+            init?(_ value: Int) {}
+            var state: State { .idle }
+        }
+        """, expected: nil)
+    }
+
+    func testConstructorAliasCannotIgnoreASameNamedFactoryOverload() throws {
+        try checkModules("""
+        import Models
+        struct Other { var state: Int }
+        func Alias(_ value: Int) -> Other { fatalError() }
+        func render() {
+            let model = Alias(opaque())
+            observeValue(model.state)
+        }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public struct Model {
+                public init(_ value: String) {}
+                public var state: State { .idle }
+            }
+            public typealias Alias = Model
+            """,
+        ], expectedCases: nil)
+    }
+
+    func testImportedAliasConstructorRetainsDeclarationContext() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render() {
+            let model = Alias()
+            observeValue(model.state)
+        }
+        """, sources: [
+            "Models": """
+            public enum State { case idle, loaded }
+            public struct Model {
+                public init() {}
+                public var state: State { .idle }
+            }
+            public typealias Alias = Model
+            """,
+        ], expectedCases: ["idle", "loaded"])
+    }
+
+    func testConstructorCannotIgnoreUnknownInheritedFactory() throws {
+        try check("""
+        class Renderer: ExternalBase {
+            func render() {
+                let model = Model()
+                observeValue(model.state)
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model {
+            init() {}
+            var state: State { .idle }
+        }
+        """, expected: nil)
+    }
+
     private func checkModules(_ input: String, sources: [String: String], expectedCases: [String]?,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

@@ -475,7 +475,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         extension P { func observe(_ callback: (Other) -> Void) {} }
         struct Source<Value>: P {}
         extension Source where Value == State { func observe(_ callback: (State) -> Void) {} }
-        """, expected: nil)
+        """, expected: "Other")
     }
 
     func testInheritedOverloadCannotBeSelectedByArgumentLabelsAlone() throws {
@@ -3889,7 +3889,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         ], expectedCases: nil, expectUnresolved: true)
     }
 
-    func testConstrainedExtensionCannotSupplyUnconditionalType() throws {
+    func testConstrainedExtensionUsesProvenReceiverRequirement() throws {
         try checkModules("""
         import Models
         import Adapters
@@ -3901,7 +3901,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
             public enum State { case idle, loaded }
             extension Box where Value == Int { public func state() -> State { .idle } }
             """,
-        ], expectedCases: nil, expectUnresolved: true)
+        ], expectedCases: ["idle", "loaded"])
     }
 
     func testImportedExtensionCallablePropertyIsCalledUsingItsSignature() throws {
@@ -5253,6 +5253,346 @@ final class ProjectSymbolLookupTests: XCTestCase {
         struct Handler<Value> { init(handle: (Value) -> Void) {} }
         func consume(_ handler: Handler<State>) {}
         """, expected: nil)
+    }
+
+    func testConditionalAliasAgreesAcrossExhaustiveBranches() throws {
+        try check("""
+        func render(_ state: Phase) { observeValue(state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        #if FIRST
+        typealias Phase = State
+        #elseif SECOND
+        typealias Phase = State
+        #else
+        typealias Phase = State
+        #endif
+        """, expected: "State")
+    }
+
+    func testConditionalAliasRequiresAllBranchesToAgree() throws {
+        try check("""
+        func render(_ state: Phase) { observeValue(state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        #if FIRST
+        typealias Phase = State
+        #else
+        typealias Phase = Other
+        #endif
+        """, expected: "Phase")
+    }
+
+    func testConditionalAliasDoesNotAssumeHostPlatform() throws {
+        try check("""
+        func render(_ state: Phase) { observeValue(state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        #if os(iOS)
+        typealias Phase = State
+        #endif
+        """, expected: "Phase")
+    }
+
+    func testAliasUsesItsOwnConditionalBranch() throws {
+        try check("""
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        #if FIRST
+        typealias Phase = State
+        func render(_ state: Phase) { observeValue(state) }
+        #else
+        typealias Phase = Other
+        #endif
+        """, declarations: """
+        """, expected: "State")
+    }
+
+    func testIndependentConditionalAliasesRemainAmbiguous() throws {
+        try check("""
+        func render(_ state: Phase) { observeValue(state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        #if FIRST
+        typealias Phase = State
+        #endif
+        #if SECOND
+        typealias Phase = State
+        #endif
+        """, expected: "Phase")
+    }
+
+    func testNestedConditionalAliasesRequireCompleteCoverage() throws {
+        try check("""
+        func render(_ state: Phase) { observeValue(state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        #if FIRST
+        #if SECOND
+        typealias Phase = State
+        #else
+        typealias Phase = State
+        #endif
+        #else
+        typealias Phase = State
+        #endif
+        """, expected: "State")
+    }
+
+    func testSameTypeRequirementPropagatesAssociatedWitnessToReturnType() throws {
+        try check("""
+        func render(_ source: Model) { observeValue(read(source)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == Value { fatalError() }
+        """, expected: "State")
+    }
+
+    func testSameTypeRequirementsReachAFixedPointRegardlessOfOrder() throws {
+        try check("""
+        func render(_ source: Model) { observeValue(read(source)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        func read<Input: Source, Value, Result>(_ input: Input) -> Result where Value == Result, Input.Output == Value { fatalError() }
+        """, expected: "State")
+    }
+
+    func testKnownArgumentTypeSelectsFunctionOverload() throws {
+        try check("""
+        func render(_ model: Model) { observeValue(read(model)) }
+        """, declarations: """
+        struct Model {}
+        struct Other {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        func read(_ model: Model) -> State { .idle }
+        func read(_ model: Other) -> Unrelated { .other }
+        """, expected: "State")
+    }
+
+    func testKnownArgumentTypeSelectsConstructorCallback() throws {
+        try check("""
+        func render(_ model: Model) {
+            Handler(model, handle: { state in observeValue(state) })
+        }
+        """, declarations: """
+        struct Model {}
+        struct Other {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        struct Handler {
+            init(_ model: Model, handle: (State) -> Void) {}
+            init(_ model: Other, handle: (Unrelated) -> Void) {}
+        }
+        """, expected: "State")
+    }
+
+    func testUnknownArgumentKeepsCompetingOverload() throws {
+        try check("""
+        func render() { observeValue(read(unknown())) }
+        """, declarations: """
+        struct Model {}
+        struct Other {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        func read(_ model: Model) -> State { .idle }
+        func read(_ model: Other) -> Unrelated { .other }
+        """, expected: nil)
+    }
+
+    func testClassUpcastKeepsCompetingOverload() throws {
+        try check("""
+        func render(_ model: Child) { observeValue(read(model)) }
+        """, declarations: """
+        class Parent {}
+        class Child: Parent {}
+        enum State { case idle, loaded }
+        enum Unrelated { case other }
+        func read(_ model: Child) -> State { .idle }
+        func read(_ model: Parent) -> Unrelated { .other }
+        """, expected: nil)
+    }
+
+    func testConstrainedExtensionOverloadEliminatesUnequalReceiver() throws {
+        try check("""
+        func render(_ box: Box<State>) { observeValue(box.read()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Box<Value> {}
+        extension Box where Value == State { func read() -> State { .idle } }
+        extension Box where Value == Other { func read() -> Other { .unrelated } }
+        """, expected: "State")
+    }
+
+    func testUnprovenProtocolRequirementRetainsDefault() throws {
+        try check("""
+        func render<Value: Marker>(_ box: Box<Value>) { observeValue(box.read()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Marker {}
+        struct Box<Value> {}
+        extension Box where Value: Marker { func read() -> State { .idle } }
+        """, expected: nil)
+    }
+
+    func testEqualityRequirementUsesOriginalInheritedAssociatedWitness() throws {
+        try check("""
+        func render(_ source: Child) { observeValue(read(source)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        class Parent: Source { typealias Output = State }
+        class Child: Parent { typealias Output = Other }
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == Value { fatalError() }
+        """, expected: "State")
+    }
+
+    func testGenericEqualityRejectsIncompatibleKnownOverload() throws {
+        try check("""
+        func render(_ source: Model) { observeValue(read(source)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        func read<Input: Source>(_ input: Input) -> State where Input.Output == State { .idle }
+        func read<Input: Source>(_ input: Input) -> Other where Input.Output == Other { .unrelated }
+        """, expected: "State")
+    }
+
+    func testSameTypeRequirementDoesNotExcludeAConvertibleClassArgument() throws {
+        try check("""
+        func render(_ child: Child) { observeValue(read(child)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        class Parent {}
+        class Child: Parent {}
+        func read<Value>(_ value: Value) -> State where Value == Parent { .idle }
+        func read(_ value: Any) -> Other { .unrelated }
+        """, expected: nil)
+    }
+
+    func testConditionalAliasContextDoesNotCrossFileBoundaries() throws {
+        try check("""
+        #if FIRST
+        func render(_ state: Phase) { observeValue(state) }
+        #endif
+        """, declarations: """
+        #if FIRST
+        typealias Phase = State
+        #else
+        typealias Phase = Other
+        #endif
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        """, expected: "Phase")
+    }
+
+    func testNestedConditionalAliasRejectsMissingInnerBranch() throws {
+        try check("""
+        func render(_ state: Phase) { observeValue(state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        #if FIRST
+        #if SECOND
+        typealias Phase = State
+        #endif
+        #else
+        typealias Phase = State
+        #endif
+        """, expected: "Phase")
+    }
+
+    func testOuterEqualityDoesNotConstrainShadowingMethodGeneric() throws {
+        try check("""
+        func render(_ box: Box<State, Model>, _ other: Other) { observeValue(box.read(other)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        struct Box<Value, Input: Source> where Input.Output == Value {
+            func read<Value>(_ value: Value) -> Value { value }
+            func read(_ value: Any) -> State { .idle }
+        }
+        """, expected: nil)
+    }
+
+    func testKnownStandardScalarSelectsOverloadWithoutSDKIndex() throws {
+        try check("""
+        func render(_ count: Int) { observeValue(read(count)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        func read(_ value: Int) -> State { .idle }
+        func read(_ value: String) -> Other { .unrelated }
+        """, expected: "State")
+    }
+
+    func testKnownInvariantGenericArgumentSelectsOverload() throws {
+        try check("""
+        func render(_ box: Box<State>) { observeValue(read(box)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Box<Value> {}
+        func read(_ value: Box<State>) -> State { .idle }
+        func read(_ value: Box<Other>) -> Other { .unrelated }
+        """, expected: "State")
+    }
+
+    func testContextualLiteralKeepsItsCompetingOverload() throws {
+        try check("""
+        func render() { observeValue(read(1)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Number: ExpressibleByIntegerLiteral { init(integerLiteral value: Int) {} }
+        func read(_ value: Int) -> State { .idle }
+        func read(_ value: Number) -> Other { .unrelated }
+        """, expected: nil)
+    }
+
+    func testAssociatedEqualitySuppliesContextualCallbackParameter() throws {
+        try check("""
+        func render(_ model: Model) { observe(model) { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        func observe<Input: Source, Value>(_ input: Input, callback: (Value) -> Void) where Input.Output == Value {}
+        """, expected: "State")
+    }
+
+    func testEqualityDoesNotFixACovariantCallbackGeneric() throws {
+        try check("""
+        func render(_ child: Child) { observe(child) { value in observeValue(value) } }
+        """, declarations: """
+        class Parent {}
+        class Child: Parent {}
+        func observe<Input, Value>(_ input: Input, callback: (Value) -> Void) where Input == Value {}
+        """, expected: nil)
+    }
+
+    func testStandardCollectionCovarianceKeepsCompetingOverload() throws {
+        try checkModules("""
+        func render(_ values: [Child]) { observeValue(read(values)) }
+        """, sources: ["Swift": "public struct Array<Element> {}"], otherAppSources: ["""
+        class Parent {}
+        class Child: Parent {}
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        func read(_ values: [Child]) -> State { .idle }
+        func read(_ values: [Parent]) -> Other { .unrelated }
+        """], expectedCases: nil, expectUnresolved: true)
     }
 
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,

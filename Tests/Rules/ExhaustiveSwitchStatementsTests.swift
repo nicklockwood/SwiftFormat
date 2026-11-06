@@ -3034,6 +3034,53 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testArgumentTypesAndEqualityRequirementsSelectExhaustiveSwitchType() throws {
+        let input = """
+        func render(_ source: Model) {
+            switch read(source) {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ source: Model) {
+            switch read(source) {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        struct Model: Source { typealias Output = State }
+        struct Unrelated {}
+        func read<Input: Source, Value>(_ input: Input) -> Value where Input.Output == Value { fatalError() }
+        func read(_ input: Unrelated) -> Other { .unrelated }
+        """)
+    }
+
+    func testDisagreeingConditionalAliasesPreserveDefault() throws {
+        try check("""
+        func render(_ state: Phase) {
+            switch state {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case loaded, unrelated }
+        #if os(iOS)
+        typealias Phase = State
+        #else
+        typealias Phase = Other
+        #endif
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

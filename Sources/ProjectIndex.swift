@@ -147,6 +147,7 @@ struct SourceFileIndex: Codable, Equatable {
     struct TypeDeclaration: Codable, Equatable {
         var name: String
         var visibility: String
+        var kind: String? = nil
         var isGeneric: Bool = false
         var isResultBuilder: Bool = false
         var isDynamicMemberLookup: Bool = false
@@ -195,6 +196,13 @@ struct SourceFileIndex: Codable, Equatable {
         var attributes: [String]
     }
 
+    /// Requirements retain both sides so dependent members can participate in inference.
+    struct GenericRequirement: Codable, Equatable {
+        var subject: String
+        var target: String
+        var isSameType: Bool
+    }
+
     struct FunctionDeclaration: Codable, Equatable {
         enum Kind: String, Codable {
             case function
@@ -220,6 +228,8 @@ struct SourceFileIndex: Codable, Equatable {
         var symbolHasUnresolvedConstraints: Bool?
         var genericParameters: [String]
         var genericConstraints: [String: [String]]? = nil
+        var genericRequirements: [GenericRequirement]? = nil
+        var symbolRequirementsCoverConstraints: Bool? = nil
 
         init(
             name: String,
@@ -305,15 +315,24 @@ struct SourceFileIndex: Codable, Equatable {
         var initializer: String? = nil
     }
 
+    /// Branch identities are local to a source file; no host platform conditions are evaluated.
+    struct CompilationBranch: Codable, Equatable {
+        var group: Int
+        var branch: Int
+        var count: Int
+        var isExhaustive: Bool
+    }
+
     struct TypeAliasDeclaration: Codable, Equatable {
         var name: String
         var type: String
+        var compilationBranches: [CompilationBranch]? = nil
         var genericParameters: [String] = []
         var visibility: String = Visibility.internal.rawValue
         var hasUnresolvedConstraints: Bool? = nil
     }
 
-    static let cacheVersion = 28
+    static let cacheVersion = 29
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -759,7 +778,7 @@ struct ProjectIndex {
                     let payloads = declaration.enumCasePayloads.map { payloads in
                         payloads.keys.sorted().map { $0 + ":" + payloads[$0]!.joined(separator: ",") }.joined(separator: ";")
                     } ?? "?"
-                    return "\(declaration.name):\(declaration.visibility):\(declaration.isGeneric):\(declaration.isResultBuilder):\(declaration.isDynamicMemberLookup):\(declaration.isNoncopyable):\(declaration.enumCases?.joined(separator: ",") ?? "?"):\(declaration.hasUnknownEnumCases == true):\(declaration.genericParameters.joined(separator: ",")):\(payloads)"
+                    return "\(declaration.name):\(declaration.visibility):\(declaration.kind ?? ""):\(declaration.isGeneric):\(declaration.isResultBuilder):\(declaration.isDynamicMemberLookup):\(declaration.isNoncopyable):\(declaration.enumCases?.joined(separator: ",") ?? "?"):\(declaration.hasUnknownEnumCases == true):\(declaration.genericParameters.joined(separator: ",")):\(payloads)"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -790,11 +809,14 @@ struct ProjectIndex {
                     let closures = declaration.closureArgumentIndices.map(String.init).joined(separator: ",")
                     let attributes = declaration.attributedArgumentIndices.map(String.init).joined(separator: ",")
                     let indices = declaration.autoclosureArgumentIndices.map(String.init).joined(separator: ",")
+                    let requirements = (declaration.genericRequirements ?? []).map {
+                        $0.subject + ($0.isSameType ? "==" : ":") + $0.target
+                    }.sorted().joined(separator: ";")
                     let constraints = (declaration.genericConstraints ?? [:]).keys.sorted().map {
                         $0 + ":" + (declaration.genericConstraints?[$0] ?? []).joined(separator: "&")
                     }.joined(separator: ";")
                     return "\(declaration.visibility):\(declaration.isStatic):\(declaration.isFailable):\(declaration.kind.rawValue):" +
-                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(attributes):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolArgumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolReturnType ?? ""):\(declaration.symbolHasUnresolvedConstraints == true):\(declaration.genericParameters.joined(separator: ",")):\(constraints)"
+                        "\(declaration.declaringType ?? "").\(declaration.name)(\(labels)):\(defaults):\(closures):\(attributes):\(indices):\(declaration.returnType ?? ""):\(declaration.argumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolArgumentTypes?.joined(separator: ",") ?? ""):\(declaration.symbolReturnType ?? ""):\(declaration.symbolHasUnresolvedConstraints == true):\(declaration.genericParameters.joined(separator: ",")):\(constraints):\(requirements):\(declaration.symbolRequirementsCoverConstraints == true)"
                 }
                 .sorted()
                 .joined(separator: ",")
@@ -822,7 +844,7 @@ struct ProjectIndex {
                 .sorted()
                 .joined(separator: ",")
             let aliases = file.typeAliasDeclarations.map {
-                "\($0.name)<\($0.genericParameters.joined(separator: ","))>=\($0.type):\($0.visibility):\($0.hasUnresolvedConstraints == true)"
+                "\($0.name)<\($0.genericParameters.joined(separator: ","))>=\($0.type):\($0.visibility):\($0.hasUnresolvedConstraints == true):\($0.compilationBranches ?? [])"
             }.sorted().joined(separator: ",")
             let moduleNames = file.moduleNames.keys.sorted().map { "\($0)=\(file.moduleNames[$0]!)" }.joined(separator: ",")
             let declarations = "\(moduleNames):\(file.imports.joined(separator: ",")):\(file.exportedImports.joined(separator: ",")):\(file.implementationOnlyImports.joined(separator: ",")):\(file.moduleIdentifiers.joined(separator: ",")):\(types):\(classInheritances):" +
@@ -1677,7 +1699,16 @@ func makeSourceFileIndex(
         {
             let parameters = formatter.index(of: .startOfScope("<"), in: declaration.keywordIndex ..< equals)
                 .flatMap { formatter.parseGenericTypes(from: $0).types.map(\.name) } ?? []
-            typeAliasDeclarations.append(.init(name: name, type: type.string, genericParameters: parameters, visibility: symbolVisibility, hasUnresolvedConstraints: hasUnresolvedConstraints ? true : nil))
+            let branches = formatter.indexedCompilationBranches(at: declaration.keywordIndex)
+            let constrainedAlias = ([declaration] + declaration.parentDeclarations).contains { parent in
+                parent.attributes.contains(where: { $0.hasPrefix("@available") }) ||
+                    parent.asTypeDeclaration.map { type in
+                        type.keyword == "extension" && (formatter.index(of: .keyword("where"), in: type.keywordIndex ..< type.openBraceIndex) != nil ||
+                            formatter.index(of: .startOfScope("<"), in: type.keywordIndex ..< type.openBraceIndex) != nil)
+                    } == true
+            }
+            typeAliasDeclarations.append(.init(name: name, type: type.string, compilationBranches: branches.isEmpty ? nil : branches,
+                                               genericParameters: parameters, visibility: symbolVisibility, hasUnresolvedConstraints: constrainedAlias ? true : nil))
         }
 
         let declarationVisibilities = [declaration.visibility()] + declaration.parentDeclarations.compactMap {
@@ -1751,6 +1782,7 @@ func makeSourceFileIndex(
                     typeDeclarations.append(.init(
                         name: name,
                         visibility: symbolVisibility,
+                        kind: typeDeclaration.keyword,
                         isGeneric: typeDeclaration.genericParameters != nil ||
                             declaration.parentDeclarations.contains(where: {
                                 $0.asTypeDeclaration?.genericParameters != nil || $0.keyword == "extension"
@@ -1878,6 +1910,22 @@ func makeSourceFileIndex(
             symbolReturnType: function.returnType?.string,
             genericParameters: function.genericParameterRange.map { formatter.parseGenericTypes(from: $0.lowerBound).types.map(\.name) } ?? []
         )
+        var enclosingGenerics = [Formatter.GenericType]()
+        for parent in declaration.parentDeclarations.reversed() {
+            guard let type = parent.asTypeDeclaration else { continue }
+            if let parameters = type.genericParameters {
+                enclosingGenerics += parameters.types
+            }
+            if let clause = formatter.index(of: .keyword("where"), in: type.keywordIndex ..< type.openBraceIndex) {
+                formatter.parseGenericTypes(from: clause, into: &enclosingGenerics)
+            }
+        }
+        // A method's generic parameters shadow parameters from enclosing nominal scopes.
+        enclosingGenerics.removeAll { signature.genericParameters.contains($0.name) }
+        let enclosingRequirements = enclosingGenerics.flatMap(\.conformances)
+        let hasShadowedRequirements = enclosingRequirements.contains { requirement in
+            tokenize(requirement.typeName + " " + requirement.name).contains { signature.genericParameters.contains($0.string) }
+        }
         var generics = function.genericParameterRange.map { formatter.parseGenericTypes(from: $0.lowerBound).types } ?? []
         if let whereClause = function.whereClauseRange {
             formatter.parseGenericTypes(from: whereClause.lowerBound, into: &generics)
@@ -1888,6 +1936,19 @@ func makeSourceFileIndex(
             return bounds.isEmpty ? nil : (generic.name, bounds.sorted())
         })
         signature.genericConstraints = constraints.isEmpty ? nil : constraints
+        let requirements = ((hasShadowedRequirements ? [] : enclosingRequirements) + generics.flatMap(\.conformances)).map {
+            SourceFileIndex.GenericRequirement(subject: $0.typeName, target: $0.name, isSameType: $0.type == .concreteType)
+        }
+        signature.genericRequirements = requirements.isEmpty ? nil : requirements
+        if hasUnresolvedConstraints, !requirements.isEmpty {
+            let unsupported = ([declaration] + declaration.parentDeclarations).contains { parent in
+                parent.keyword == "#if" || parent.attributes.contains(where: { $0.hasPrefix("@available") }) ||
+                    parent.asTypeDeclaration.map { type in
+                        type.keyword == "extension" && formatter.index(of: .startOfScope("<"), in: type.keywordIndex ..< type.openBraceIndex) != nil
+                    } == true
+            }
+            signature.symbolRequirementsCoverConstraints = unsupported || hasShadowedRequirements ? nil : true
+        }
         signature.symbolHasUnresolvedConstraints = hasUnresolvedConstraints ? true : nil
         symbolFunctionDeclarations.append(signature)
         if !declarationVisibilities.contains(where: { $0 == .private || $0 == .fileprivate }) {
@@ -1898,6 +1959,8 @@ func makeSourceFileIndex(
             conservativeSignature.symbolHasUnresolvedConstraints = nil
             conservativeSignature.genericParameters = []
             conservativeSignature.genericConstraints = nil
+            conservativeSignature.genericRequirements = nil
+            conservativeSignature.symbolRequirementsCoverConstraints = nil
             functionDeclarations.append(conservativeSignature)
         }
     }
@@ -1929,6 +1992,19 @@ func makeSourceFileIndex(
 }
 
 extension Formatter {
+    func indexedCompilationBranches(at location: Int) -> [SourceFileIndex.CompilationBranch] {
+        var result = [SourceFileIndex.CompilationBranch]()
+        var candidate = startOfScope(at: location)
+        while let index = candidate {
+            candidate = startOfScope(at: index)
+            guard tokens[index] == .startOfScope("#if"), let branches = conditionalCompilationBranches(at: index),
+                  let position = branches.firstIndex(where: { $0.startOfBranch < location && location < $0.endOfBranch }),
+                  let last = branches.last else { continue }
+            result.insert(.init(group: originalLine(at: index), branch: position, count: branches.count, isExhaustive: tokens[last.directiveIndex] == .keyword("#else")), at: 0)
+        }
+        return result
+    }
+
     func indexedEnumCasePayloads(in declaration: TypeDeclaration) -> [String: [String]]? {
         guard indexedEnumCases(in: declaration) != nil else { return nil }
         var result = [String: [String]]()
@@ -2984,7 +3060,7 @@ extension ProjectIndex {
                 return .type(moduleName.map { "\($0).\(nested.name)" } ?? nested.name, sourceFileURL: URL(fileURLWithPath: path))
             }
             if let aliases = aliasesByModule[key] {
-                guard aliases.count == 1, let alias = aliases.first, alias.genericParameters.isEmpty,
+                guard let alias = resolvedAlias(aliases), alias.genericParameters.isEmpty,
                       let target = ProjectTypeReference(alias.type), target.arguments.isEmpty,
                       let paths = typeSourceFilesByModule[key], paths.count == 1, let path = paths.first else { return .unknown }
                 let parent = declarationTypeKey(named: target.name, relativeTo: alias.name, in: module, visibleFrom: URL(fileURLWithPath: path)).name
@@ -3183,12 +3259,48 @@ extension ProjectIndex {
         return keys.allSatisfy { symbolProtocolDeclarationsByModule[$0]?.count == 1 && typesByModule[$0] == nil }
     }
 
-    func typeAlias(named name: String, visibleFrom fileURL: URL) -> SourceFileIndex.TypeAliasDeclaration? {
+    /// Resolve a branch-local alias, or require agreement over an exhaustive conditional tree.
+    /// Duplicate declarations that can coexist remain ambiguous even when their targets agree.
+    private func resolvedAlias(_ aliases: [SourceFileIndex.TypeAliasDeclaration], context: [SourceFileIndex.CompilationBranch] = []) -> SourceFileIndex.TypeAliasDeclaration? {
+        let candidates = aliases.compactMap { alias -> SourceFileIndex.TypeAliasDeclaration? in
+            var alias = alias
+            for condition in context {
+                if let branch = alias.compilationBranches?.first(where: { $0.group == condition.group }), branch.branch != condition.branch {
+                    return nil
+                }
+            }
+            alias.compilationBranches = (alias.compilationBranches ?? []).filter { branch in !context.contains(where: { $0.group == branch.group }) }
+            return alias
+        }
+        func resolve(_ candidates: [SourceFileIndex.TypeAliasDeclaration], depth: Int) -> SourceFileIndex.TypeAliasDeclaration? {
+            guard depth < 32, var first = candidates.first else { return nil }
+            if candidates.count == 1, first.compilationBranches?.isEmpty != false {
+                first.compilationBranches = nil
+                return first
+            }
+            guard let group = first.compilationBranches?.first, group.isExhaustive,
+                  candidates.allSatisfy({ $0.compilationBranches?.first?.group == group.group }) else { return nil }
+            var agreed: SourceFileIndex.TypeAliasDeclaration?
+            for branch in 0 ..< group.count {
+                let subset = candidates.filter { $0.compilationBranches?.first?.branch == branch }.map { alias -> SourceFileIndex.TypeAliasDeclaration in
+                    var alias = alias
+                    alias.compilationBranches?.removeFirst()
+                    return alias
+                }
+                guard let result = resolve(subset, depth: depth + 1), agreed == nil || agreed == result else { return nil }
+                agreed = result
+            }
+            return agreed
+        }
+        return resolve(candidates, depth: 0)
+    }
+
+    func typeAlias(named name: String, visibleFrom fileURL: URL, compilationContext: [SourceFileIndex.CompilationBranch] = [], contextFileURL: URL? = nil) -> SourceFileIndex.TypeAliasDeclaration? {
         guard let keys = symbolTypeKeys(named: name, visibleFrom: fileURL), !keys.isEmpty else { return nil }
         var result: SourceFileIndex.TypeAliasDeclaration?
         for key in keys {
-            let candidates = aliasesByModule[key] ?? []
-            guard candidates.count == 1, let declaration = candidates.first,
+            let context = typeSourceFilesByModule[key] == Set([contextFileURL?.standardizedFileURL.path].compactMap { $0 }) ? compilationContext : []
+            guard let declaration = resolvedAlias(aliasesByModule[key] ?? [], context: context),
                   result == nil || result == declaration else { return nil }
             result = declaration
         }
@@ -3276,7 +3388,7 @@ extension ProjectIndex {
         for key in keys {
             guard !visited.contains(key) else { return nil }
             if let aliases = aliasesByModule[key] {
-                guard aliases.count == 1, let alias = aliases.first,
+                guard let alias = resolvedAlias(aliases),
                       let paths = typeSourceFilesByModule[key], paths.count == 1, let path = paths.first else { return nil }
                 guard let reference = ProjectTypeReference(alias.type) else { continue }
                 let targetName = declarationTypeKey(named: reference.name, relativeTo: alias.name, in: key.moduleIdentifier, visibleFrom: URL(fileURLWithPath: path)).name
@@ -3650,7 +3762,9 @@ extension ProjectIndex {
     /// Resolve a function signature through its receiver or the caller's explicit imports.
     func functionSymbol(named name: String, receiver: FunctionCallReceiver, arguments: [String?],
                         visibleFrom fileURL: URL, ignoringLabelAt ignoredLabel: Int? = nil, accessedFrom accessURL: URL? = nil, accessedFromType accessType: String? = nil,
-                        kind: SourceFileIndex.FunctionDeclaration.Kind = .function, closureArguments: Set<Int> = []) -> FunctionSymbol?
+                        kind: SourceFileIndex.FunctionDeclaration.Kind = .function, closureArguments: Set<Int> = [],
+                        isViable: ((FunctionSymbol) -> Bool)? = nil,
+                        requirementsSatisfied: ((FunctionSymbol) -> Bool)? = nil) -> FunctionSymbol?
     {
         guard let file = files[fileURL.standardizedFileURL.path], !file.moduleIdentifiers.isEmpty else { return nil }
         let caller = accessURL ?? fileURL
@@ -3716,7 +3830,7 @@ extension ProjectIndex {
                         normalized = .instance(type: owner)
                     }
                     return symbol.declaration.matches(receiver: normalized)
-                }
+                }.filter { isViable?($0) != false }
                 guard matching.count == 1, let selected = matching.first,
                       memberIsAvailableInEveryContext(source: selected.fileURL, visibility: selected.declaration.visibility, caller: caller),
                       kind != .initializer || hasNoInheritedFunction(named: name, owner: key, sourcePath: typeSourceFilesByModule[key]?.first ?? fileURL.path, accessedFrom: caller) else { return nil }
@@ -3764,11 +3878,13 @@ extension ProjectIndex {
                         }
                     }
                 }
+                local = local.filter { isViable?($0) != false }
                 guard local.count == 1 else { return nil }
                 candidates += local
             }
         }
-        guard let first = candidates.first, first.declaration.symbolHasUnresolvedConstraints != true,
+        guard let first = candidates.first,
+              first.declaration.symbolHasUnresolvedConstraints != true || first.declaration.symbolRequirementsCoverConstraints == true && requirementsSatisfied?(first) == true,
               candidates.allSatisfy({ $0 == first }),
               first.declaration.declaringType == nil ||
               memberIsAvailableInEveryContext(source: first.fileURL, visibility: first.declaration.visibility, caller: caller) else { return nil }

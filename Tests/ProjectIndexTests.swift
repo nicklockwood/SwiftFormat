@@ -1826,6 +1826,20 @@ final class ProjectIndexTests: XCTestCase {
         XCTAssertNil(project.inheritedTypeReferences(owner: "Container", visibleFrom: url))
     }
 
+    func testGenericEqualityAffectsDeclarationFingerprint() {
+        func fingerprint(_ target: String) -> String {
+            ProjectIndex(files: [
+                "/Project/Declarations.swift": makeSourceFileIndex(from: """
+                enum First {}
+                enum Second {}
+                protocol Source { associatedtype Value }
+                func read<Input: Source, Output>(_ value: Input) -> Output where Input.Value == \(target) { fatalError() }
+                """, moduleIdentifiers: ["App"]),
+            ]).fingerprint(for: [.declarations])
+        }
+        XCTAssertNotEqual(fingerprint("First"), fingerprint("Second"))
+    }
+
     func testInheritedSpecializationAffectsDeclarationFingerprint() {
         func fingerprint(_ source: String) -> String {
             ProjectIndex(files: [

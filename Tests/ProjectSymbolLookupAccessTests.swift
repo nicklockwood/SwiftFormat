@@ -52,6 +52,17 @@ final class ProjectSymbolLookupAccessTests: XCTestCase {
             default: print("fallback")
             }
         }
+        """, """
+        enum State { case hidden }
+        enum Other { case visible }
+        protocol P {}
+        extension P { var state: Other { .visible } }
+        struct Source: P { private var state: State { .hidden } }
+        func render(_ source: Source) {
+            switch source.state {
+            case .visible: print("fallback")
+            }
+        }
         """)
     }
 
@@ -67,6 +78,17 @@ final class ProjectSymbolLookupAccessTests: XCTestCase {
             default: print("fallback")
             }
         }
+        """, """
+        enum State { case hidden }
+        enum Other { case visible }
+        protocol P {}
+        extension P { func read() -> Other { .visible } }
+        struct Source: P { private func read() -> State { .hidden } }
+        func render(_ source: Source) {
+            switch source.read() {
+            case .visible: print("fallback")
+            }
+        }
         """)
     }
 
@@ -75,6 +97,12 @@ final class ProjectSymbolLookupAccessTests: XCTestCase {
         func render(_ source: Source) {
             switch source.read() {
             default: print("fallback")
+            }
+        }
+        """, """
+        func render(_ source: Source) {
+            switch source.read() {
+            case .visible: print("fallback")
             }
         }
         """, sources: ["/Project/Source.swift": ("App", """

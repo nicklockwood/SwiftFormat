@@ -2911,16 +2911,80 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
-    func testUnspecializedQualifiedGenericCasePreservesDefault() throws {
-        try check("""
+    func testQualifiedGenericCaseBorrowsSubjectSpecialization() throws {
+        let input = """
         func render(_ state: State<Int>) {
             switch state {
             case State.loaded: showContent()
             default: showPlaceholder()
             }
         }
-        """, declarations: """
+        """
+        let output = """
+        func render(_ state: State<Int>) {
+            switch state {
+            case State.loaded: showContent()
+            case .idle: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
         enum State<Value> { case idle, loaded }
+        """)
+    }
+
+    func testInheritedGenericCallbackExpandsTheSpecializedEnum() throws {
+        let input = """
+        func render(_ model: Child<State>) {
+            model.observe { state in
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Child<State>) {
+            model.observe { state in
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        class Parent<Value> { func observe(_ callback: (Value) -> Void) {} }
+        class Child<Element>: Parent<Element> {}
+        """)
+    }
+
+    func testInheritedConformanceUsesItsOriginalAssociatedWitness() throws {
+        let input = """
+        func render(_ model: Child) {
+            switch read(model) {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """
+        let output = """
+        func render(_ model: Child) {
+            switch read(model) {
+            case .loaded: showContent()
+            case .idle, .failed: showPlaceholder()
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        class Parent: Source { typealias Output = State }
+        class Child: Parent { typealias Output = Other }
+        func read<Model: Source>(_ model: Model) -> Model.Output { fatalError() }
         """)
     }
 

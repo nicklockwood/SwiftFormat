@@ -1485,7 +1485,7 @@ final class ProjectSymbolLookupTests: XCTestCase {
         protocol Rendering {}
         extension Rendering { var idle: Other { .ready } }
         enum State: Rendering { case idle, loaded }
-        """, expected: nil)
+        """, expected: "Other")
     }
 
     func testAssociatedValueConstructorShadowsGlobalEnumValue() throws {
@@ -5032,6 +5032,213 @@ final class ProjectSymbolLookupTests: XCTestCase {
         enum Other { case unrelated }
         class Base { var State: Other.Type { Other.self } }
         func load<Value>(_ type: Value.Type) -> Value { fatalError() }
+        """, expected: nil)
+    }
+
+    func testNestedNamedInitializerCallbackReceivesExpectedType() throws {
+        try check("""
+        struct Renderer {
+            private func consume(handler: Handler<State>) {}
+            func render() { consume(handler: .init(handle: { state in observeValue(state) })) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Handler<Value> { init(handle: (Value) -> Void) {} }
+        """, expected: "State")
+    }
+
+    func testDoublyNestedInitializerCallbackReceivesExpectedType() throws {
+        try check("""
+        func render() { consume(options: .init(handler: .init(handle: { state in observeValue(state) }))) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Handler<Value> { init(handle: (Value) -> Void) {} }
+        struct Options<Value> { init(handler: Handler<Value>) {} }
+        func consume(options: Options<State>) {}
+        """, expected: "State")
+    }
+
+    func testNestedInitializerKeepsOuterOverloadAmbiguity() throws {
+        try check("""
+        func render() { consume(handler: .init(handle: { state in observeValue(state) })) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Handler<Value> { init(handle: (Value) -> Void) {} }
+        func consume(handler: Handler<State>) {}
+        func consume(handler: Handler<Other>) {}
+        """, expected: nil)
+    }
+
+    func testSpecializedGenericEnumReferenceRetainsPayloadArguments() throws {
+        try check("""
+        func render() {
+            let value = Event<State>.idle
+            if case .value(let state) = value { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Event<Value> { case idle, value(Value) }
+        """, expected: "State")
+    }
+
+    func testGenericEnumReferenceCannotIgnoreLocalTypealiasShadow() throws {
+        try check("""
+        func render() {
+            typealias Event<Value> = Other
+            observeValue(Event<State>.idle)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        enum Event<Value> { case idle, value(Value) }
+        """, expected: nil)
+    }
+
+    func testGenericEnumPayloadConstructorIsNotAnEnumValue() throws {
+        try check("""
+        func render() { observeValue(Event<State>.value) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Event<Value> { case idle, value(Value) }
+        """, expected: nil)
+    }
+
+    func testInheritedGenericPropertySubstitutesAcrossMultipleParents() throws {
+        try check("""
+        func render(_ model: Child<State>) { observeValue(model.value.first!) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        class Base<Element> { var value: Element { fatalError() } }
+        class Middle<Item>: Base<[Item]> {}
+        class Child<Value>: Middle<Value> {}
+        """, expected: "State")
+    }
+
+    func testInheritedGenericMethodSubstitutesDeclaringReceiver() throws {
+        try check("""
+        func render(_ model: Child<State>) { observeValue(model.read()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        class Base<Element> { func read() -> Element { fatalError() } }
+        class Child<Value>: Base<Value> {}
+        """, expected: "State")
+    }
+
+    func testInheritedGenericCallbackSubstitutesDeclaringReceiver() throws {
+        try check("""
+        func render(_ model: Child<State>) { model.observe { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        class Base<Element> { func observe(_ callback: (Element) -> Void) {} }
+        class Child<Value>: Base<Value> {}
+        """, expected: "State")
+    }
+
+    func testGenericAssociatedTypeAliasSuppliesCallbackParameter() throws {
+        try check("""
+        func render(_ model: Model<State>) { consume(model) { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        struct Model<Value>: Source { typealias Output = Value }
+        func consume<Input: Source>(_ model: Input, handle: (Input.Output) -> Void) {}
+        """, expected: "State")
+    }
+
+    func testInheritedAssociatedTypeAliasSubstitutesAncestorArguments() throws {
+        try check("""
+        func render(_ model: Child<State>) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output }
+        class Base<Element>: Source { typealias Output = Element }
+        class Child<Value>: Base<Value> {}
+        func read<Input: Source>(_ model: Input) -> Input.Output { fatalError() }
+        """, expected: "State")
+    }
+
+    func testAssociatedTypeInferredFromConcretePropertyWitness() throws {
+        try check("""
+        func render(_ model: Model<State>) { observeValue(read(model)) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        protocol Source { associatedtype Output; var value: Output { get } }
+        struct Model<Value>: Source { var value: Value }
+        func read<Input: Source>(_ model: Input) -> Input.Output { fatalError() }
+        """, expected: "State")
+    }
+
+    func testAssociatedTypeDoesNotGuessUnwitnessedRequirement() throws {
+        try check("""
+        func render(_ model: any Source) { observeValue(read(model)) }
+        """, declarations: """
+        enum Output { case unrelated }
+        protocol Source { associatedtype Output; var value: Output { get } }
+        func read<Input: Source>(_ model: Input) -> Input.Output { fatalError() }
+        """, expected: nil)
+    }
+
+    func testInheritedGenericOverloadsRemainAmbiguous() throws {
+        try check("""
+        func render(_ model: Child<State>) { observeValue(model.read()) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        class Base<Element> { func read(_ key: Int = 0) -> Element { fatalError() } }
+        class Child<Value>: Base<Value> { func read(_ key: String = "") -> Other { fatalError() } }
+        """, expected: nil)
+    }
+
+    func testAssociatedWitnessIgnoresSubclassAliasShadow() throws {
+        try check("""
+        func render(_ model: Child) { consume(model) { state in observeValue(state) } }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        protocol Source { associatedtype Output }
+        class Base: Source { typealias Output = State }
+        class Child: Base { typealias Output = Other }
+        func consume<Input: Source>(_ model: Input, handle: (Input.Output) -> Void) {}
+        """, expected: "State")
+    }
+
+    func testRecursiveInferredAssociatedWitnessTerminates() throws {
+        try check("""
+        func render(_ model: Loop) { observeValue(read(model)) }
+        """, declarations: """
+        protocol Source { associatedtype Output; var value: Output { get } }
+        struct Loop: Source { var value = Box<Self.Output>() }
+        struct Box<Value> { init() {} }
+        func read<Input: Source>(_ model: Input) -> Input.Output { fatalError() }
+        """, expected: nil)
+    }
+
+    func testNestedInitializerPreservesInnerOverloadAmbiguity() throws {
+        try check("""
+        func render() { consume(handler: .init(handle: { state in observeValue(state) })) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Handler {
+            init(handle: (State) -> Void) {}
+            init(handle: (Other) -> Void) {}
+        }
+        func consume(handler: Handler) {}
+        """, expected: nil)
+    }
+
+    func testNestedInitializerKeepsLocalCallableShadow() throws {
+        try check("""
+        func render() {
+            let consume: (Handler<Other>) -> Void
+            consume(.init(handle: { state in observeValue(state) }))
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Other { case unrelated }
+        struct Handler<Value> { init(handle: (Value) -> Void) {} }
+        func consume(_ handler: Handler<State>) {}
         """, expected: nil)
     }
 

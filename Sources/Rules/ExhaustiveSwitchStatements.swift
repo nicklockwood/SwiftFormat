@@ -266,7 +266,7 @@ extension Formatter {
                   let dot = index(of: .nonSpaceOrCommentOrLinebreak, before: end), tokens[dot].isOperator("."),
                   let start = index(in: range, where: { !$0.isSpaceOrCommentOrLinebreak && $0 != .keyword("let") && $0 != .keyword("var") }),
                   start < dot,
-                  var prefix = resolver.expressionType(in: start ... dot - 1)
+                  var prefix = resolver.expressionType(in: start ... dot - 1, expected: type)
             else {
                 // This may already cover an enum case; do not emit it again without proof.
                 unresolvedQualifiedPattern = true

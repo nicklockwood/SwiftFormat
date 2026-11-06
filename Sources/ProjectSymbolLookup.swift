@@ -516,14 +516,16 @@ final class ProjectSymbolLookup {
                 break
             }
             let name = "\(owner).\(nominal.name)"
-            if localTypes[name] != nil || project.hasSymbolType(named: name, visibleFrom: type.sourceFileURL ?? fileURL) ||
+            if (type.sourceFileURL == nil || type.sourceFileURL?.standardizedFileURL == fileURL.standardizedFileURL) && localTypes[name] != nil || project.hasSymbolType(named: name, visibleFrom: type.sourceFileURL ?? fileURL) ||
                 project.typeAlias(named: name, visibleFrom: type.sourceFileURL ?? fileURL) != nil
             {
                 return name
             }
-            if !nominal.name.contains(".") {
-                switch project.inheritedType(named: nominal.name, of: owner, visibleFrom: type.sourceFileURL ?? fileURL) {
-                case let .type(name): return name
+            let components = nominal.name.split(separator: ".")
+            if let root = components.first {
+                switch project.inheritedType(named: String(root), of: owner, visibleFrom: type.sourceFileURL ?? fileURL) {
+                case let .type(name):
+                    return ([name] + components.dropFirst().map(String.init)).joined(separator: ".")
                 case .unknown: return nil
                 case .absent: break
                 }
@@ -678,13 +680,68 @@ final class ProjectSymbolLookup {
         guard let ownerName = qualifiedName(for: owner),
               let nominal = ProjectTypeReference(owner.name),
               let declaration = project.typeDeclaration(named: ownerName, visibleFrom: owner.sourceFileURL ?? fileURL),
-              let member = project.propertyType(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL, accessedFromType: accessingType) else { return nil }
+              let member = project.propertySymbol(owner: ownerName, member: name, isStatic: owner.isMetatype, visibleFrom: owner.sourceFileURL ?? fileURL, accessedFrom: fileURL, accessedFromType: accessingType) else { return nil }
         let arguments = owner.genericArguments ?? nominal.arguments.compactMap {
             type(named: $0, namespace: owner.namespace, sourceFileURL: owner.sourceFileURL)
         }
         guard declaration.genericParameters.count == arguments.count else { return nil }
         let substitutions = Dictionary(uniqueKeysWithValues: zip(declaration.genericParameters, arguments))
-        return type(named: member.name, namespace: member.namespace, sourceFileURL: member.fileURL, substitutions: substitutions)
+        if let annotation = member.declaration.type {
+            return type(named: annotation, namespace: member.declaration.declaringType, sourceFileURL: member.fileURL, substitutions: substitutions)
+        }
+        guard let initializer = member.declaration.initializer else { return nil }
+        return explicitInitializerType(initializer, namespace: member.declaration.declaringType, source: member.fileURL, substitutions: substitutions)
+    }
+
+    /// An explicit constructor or payloadless enum case determines a stored value's type without
+    /// evaluating its body. Keep the initializer's lexical scope and generic arguments intact.
+    func explicitInitializerType(_ expression: String, namespace: String?, source: URL, substitutions: [String: ResolvedType]) -> ResolvedType? {
+        let expression = Formatter(tokenize(expression), options: formatter.options)
+        guard let first = expression.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
+              let last = expression.index(of: .nonSpaceOrCommentOrLinebreak, before: expression.tokens.count) else { return nil }
+        if let namespace, expression.tokens[first] != .startOfScope("["),
+           project.isDynamicMemberLookupType(named: namespace, visibleFrom: source)
+        {
+            return nil
+        }
+        if let annotation = expression.parseType(at: first),
+           let open = expression.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound),
+           expression.tokens[open] == .startOfScope("("), expression.endOfScope(at: open) == last,
+           var result = type(named: annotation.string, namespace: namespace, sourceFileURL: source, substitutions: substitutions, requiresGenericArguments: true)
+        {
+            if let kind = result.collectionKind {
+                guard expression.tokens[first] == .startOfScope("[") || initializerRootIsUnshadowed(annotation.string),
+                      !project.hasCollectionMember(named: "init", kind: kind.rawValue, visibleFrom: source) else { return nil }
+                return result
+            }
+            guard initializerRootIsUnshadowed(annotation.string), let name = qualifiedName(for: result),
+                  let initializer = project.functionSymbol(named: "init", receiver: .type(name),
+                                                           arguments: expression.parseFunctionCallArguments(startOfScope: open).map(\.label),
+                                                           visibleFrom: result.sourceFileURL ?? source, accessedFrom: source, accessedFromType: namespace, kind: .initializer) else { return nil }
+            if initializer.declaration.isFailable {
+                result.name += "?"
+            }
+            return result
+        }
+        guard let dot = expression.index(of: .operator(".", .infix), before: last),
+              expression.index(of: .nonSpaceOrCommentOrLinebreak, after: dot) == last,
+              expression.tokens[last].isIdentifier else { return nil }
+        let root = expression.tokens[first ..< dot].string
+        guard initializerRootIsUnshadowed(root),
+              let result = type(named: root, namespace: namespace, sourceFileURL: source, substitutions: substitutions, requiresGenericArguments: true),
+              unwrapped(result) == nil, let name = qualifiedName(for: result),
+              let declaration = project.typeDeclaration(named: name, visibleFrom: result.sourceFileURL ?? source),
+              declaration.enumCasePayloads?[expression.tokens[last].string] == [],
+              !project.hasProperty(owner: name, member: expression.tokens[last].string, visibleFrom: result.sourceFileURL ?? source, accessedFrom: source) else { return nil }
+        return result
+    }
+
+    /// A value or function along the qualified path can shadow a nominal initializer.
+    func initializerRootIsUnshadowed(_ spelling: String) -> Bool {
+        guard let reference = ProjectTypeReference(spelling) else { return false }
+        return reference.name.split(separator: ".").allSatisfy {
+            project.declarationCountsAreUnambiguous(for: String($0), includingAliases: true)
+        }
     }
 
     /// Structural collection information is independent of the declaration context of each argument.
@@ -1465,20 +1522,30 @@ final class ProjectSymbolLookup {
             }
             return expressionType(in: first + 1 ... last - 1, depth: depth + 1)
         }
-        guard tokens[first].isIdentifier || tokens[first] == .startOfScope("(") else { return nil }
+        guard tokens[first].isIdentifier || tokens[first] == .startOfScope("(") || tokens[first] == .startOfScope("[") else { return nil }
         let namespace = formatter.parseEnclosingType(containing: first, declarations: declarations)?.fullyQualifiedName
         let identifier = tokens[first].string
         var current: ResolvedType?
         var cursor = first
-        if tokens[first].isIdentifier,
-           bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
-           !unindexedFunctions.contains(identifier),
-           let annotation = formatter.parseType(at: first),
+        if let annotation = formatter.parseType(at: first),
            let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound),
            tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last,
-           let constructed = constructedType(named: annotation.string,
-                                             arguments: formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last },
-                                             at: first, namespace: namespace, accessingType: namespace)
+           let collection = explicitInitializerType(formatter.tokens[first ... close].string, namespace: namespace, source: fileURL, substitutions: [:]),
+           collection.collectionKind != nil,
+           bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
+           !unindexedFunctions.contains(identifier)
+        {
+            current = collection
+            cursor = close
+        } else if tokens[first].isIdentifier,
+                  bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) != true,
+                  !unindexedFunctions.contains(identifier),
+                  let annotation = formatter.parseType(at: first),
+                  let open = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: annotation.range.upperBound),
+                  tokens[open] == .startOfScope("("), let close = formatter.endOfScope(at: open), close <= last,
+                  let constructed = constructedType(named: annotation.string,
+                                                    arguments: formatter.parseFunctionCallArguments(startOfScope: open).filter { $0.valueRange.upperBound <= last },
+                                                    at: first, namespace: namespace, accessingType: namespace)
         {
             current = constructed
             cursor = close

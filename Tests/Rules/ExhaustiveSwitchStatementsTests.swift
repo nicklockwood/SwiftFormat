@@ -2764,6 +2764,37 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         ])
     }
 
+    func testInferredGenericArrayPropertyExpandsElementSwitch() throws {
+        let input = """
+        func render(_ holder: Holder<State>) {
+            for state in holder.values {
+                switch state {
+                case .loaded:
+                    showContent()
+                default:
+                    showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        func render(_ holder: Holder<State>) {
+            for state in holder.values {
+                switch state {
+                case .loaded:
+                    showContent()
+                case .idle, .failed:
+                    showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Holder<Value> { var values = [Value]() }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

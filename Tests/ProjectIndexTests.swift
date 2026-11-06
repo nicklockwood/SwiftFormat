@@ -995,6 +995,23 @@ final class ProjectIndexTests: XCTestCase {
         )
     }
 
+    func testDeclarationFingerprintIncludesInferredPropertyInitializer() {
+        let first = makeSourceFileIndex(from: """
+        enum State { case idle, loaded }
+        enum Other { case waiting, complete }
+        struct Holder { var values = [State]() }
+        """, moduleIdentifiers: ["App"])
+        let second = makeSourceFileIndex(from: """
+        enum State { case idle, loaded }
+        enum Other { case waiting, complete }
+        struct Holder { var values = [Other]() }
+        """, moduleIdentifiers: ["App"])
+        XCTAssertNotEqual(
+            ProjectIndex(files: ["/Project/Input.swift": first]).fingerprint(for: [.declarations]),
+            ProjectIndex(files: ["/Project/Input.swift": second]).fingerprint(for: [.declarations])
+        )
+    }
+
     private func conformanceRequirementStatus(
         forType typeName: String = "Loader",
         isStatic: Bool = false,

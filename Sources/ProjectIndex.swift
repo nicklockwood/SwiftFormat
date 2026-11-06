@@ -280,6 +280,7 @@ struct SourceFileIndex: Codable, Equatable {
         var name: String
         var visibility: String
         var canBeRenamed: Bool
+        var kind: String? = nil
     }
 
     struct PropertyDeclaration: Codable, Equatable {
@@ -289,6 +290,7 @@ struct SourceFileIndex: Codable, Equatable {
         var isStatic: Bool = false
         var visibility: String? = nil
         var hasUnresolvedConstraints: Bool? = nil
+        var initializer: String? = nil
     }
 
     struct TypeAliasDeclaration: Codable, Equatable {
@@ -299,7 +301,7 @@ struct SourceFileIndex: Codable, Equatable {
         var hasUnresolvedConstraints: Bool? = nil
     }
 
-    static let cacheVersion = 24
+    static let cacheVersion = 25
 
     var contentHash: String
     var moduleIdentifiers: [String]
@@ -453,6 +455,52 @@ struct ProjectIndex {
     private let typeDeclarationCountsByShortName: [String: Int]
     private let typeAliasDeclarationCountsByShortName: [String: Int]
     private let symbolDeclarationNames: Set<String>
+
+    /// All index inputs are immutable. Cache pure lookups across files without holding a lock
+    /// while resolving recursive aliases or conformances; duplicate concurrent work is harmless.
+    private final class LookupCache<Key: Hashable, Value> {
+        private let lock = NSLock()
+        private var values = [Key: Value]()
+
+        func value(for key: Key, compute: () -> Value) -> Value {
+            lock.lock()
+            if let value = values[key] {
+                lock.unlock()
+                return value
+            }
+            lock.unlock()
+            let value = compute()
+            lock.lock()
+            values[key] = .some(value)
+            lock.unlock()
+            return value
+        }
+    }
+
+    private struct MemberOwnerKey: Hashable {
+        var name: String
+        var sourcePath: String
+        var module: String?
+    }
+
+    private struct StandardMemberKey: Hashable {
+        var name: String
+        var types: [String]
+        var sourcePath: String
+    }
+
+    private struct InheritedFunctionKey: Hashable {
+        var name: String
+        var owner: TypeKey
+        var sourcePath: String
+        var callerPath: String
+    }
+
+    private typealias MemberOwner = (keys: Set<TypeKey>, constrained: Bool)
+    private let memberModuleCache = LookupCache<String, Set<String>>()
+    private let memberOwnerCache = LookupCache<MemberOwnerKey, MemberOwner?>()
+    private let standardMemberCache = LookupCache<StandardMemberKey, Bool>()
+    private let inheritedFunctionCache = LookupCache<InheritedFunctionKey, Bool>()
 
     init(files: [String: SourceFileIndex]) {
         self.files = files
@@ -611,7 +659,7 @@ struct ProjectIndex {
         var typeAliasDeclarationCountsByShortName = [String: Int]()
         var inheritedNamesByTypeName = [String: Set<String>]()
         for file in files.values {
-            for declaration in file.symbolDeclarations {
+            for declaration in file.symbolDeclarations where declaration.kind != "extension" && declaration.kind != "import" {
                 symbolDeclarationCountsByName[declaration.name, default: 0] += 1
             }
             for declaration in file.typeDeclarations {
@@ -703,7 +751,7 @@ struct ProjectIndex {
                 .sorted()
                 .joined(separator: ",")
             let properties = file.propertyDeclarations
-                .map { "\($0.declaringType).\($0.name):\($0.isStatic):\($0.type ?? ""):\($0.visibility ?? ""):\($0.hasUnresolvedConstraints == true)" }
+                .map { "\($0.declaringType).\($0.name):\($0.isStatic):\($0.type ?? ""):\($0.visibility ?? ""):\($0.hasUnresolvedConstraints == true):\($0.initializer ?? "")" }
                 .sorted().joined(separator: ",")
             let members = file.typeMembers
                 .map { members in
@@ -714,7 +762,7 @@ struct ProjectIndex {
                 .sorted()
                 .joined(separator: ",")
             let symbolDeclarations = file.symbolDeclarations
-                .map { "\($0.name):\($0.visibility):\($0.canBeRenamed)" }
+                .map { "\($0.name):\($0.visibility):\($0.canBeRenamed):\($0.kind ?? "")" }
                 .sorted()
                 .joined(separator: ",")
             let functionReferences = file.functionReferences
@@ -879,9 +927,9 @@ struct ProjectIndex {
     }
 
     /// A member's annotation must be interpreted using the imports in its declaring source file.
-    func propertyType(owner: String, member: String, isStatic: Bool, visibleFrom fileURL: URL, accessedFrom accessURL: URL? = nil, accessedFromType accessType: String? = nil) -> SymbolType? {
+    func propertySymbol(owner: String, member: String, isStatic: Bool, visibleFrom fileURL: URL, accessedFrom accessURL: URL? = nil, accessedFromType accessType: String? = nil) -> PropertySymbol? {
         guard let keys = symbolTypeKeys(named: owner, visibleFrom: fileURL), !keys.isEmpty else { return nil }
-        var result: SymbolType?
+        var result: PropertySymbol?
         for key in keys {
             guard typesByModule[key]?.count == 1,
                   let matches = memberProperties(named: member, owner: key, visibleFrom: accessURL ?? fileURL, accessingType: accessType),
@@ -889,9 +937,9 @@ struct ProjectIndex {
                   symbol.declaration.isStatic == isStatic,
                   memberIsAvailableInEveryContext(source: symbol.fileURL, visibility: symbol.declaration.visibility ?? "internal", caller: accessURL ?? fileURL,
                                                   owner: key, declaringType: symbol.declaration.declaringType),
-                  symbol.declaration.hasUnresolvedConstraints != true, let type = symbol.declaration.type,
-                  result == nil || result?.name == type && result?.fileURL == symbol.fileURL else { return nil }
-            result = SymbolType(name: type, namespace: symbol.declaration.declaringType, fileURL: symbol.fileURL)
+                  symbol.declaration.hasUnresolvedConstraints != true,
+                  result == nil || result?.declaration == symbol.declaration && result?.fileURL == symbol.fileURL else { return nil }
+            result = symbol
         }
         return result
     }
@@ -1542,7 +1590,7 @@ func makeSourceFileIndex(
                 formatter.index(of: .startOfScope("<"), in: type.keywordIndex ..< type.openBraceIndex) != nil
         }
         symbolDeclarations.append(contentsOf: symbolNames.map {
-            .init(name: $0, visibility: symbolVisibility, canBeRenamed: canBeRenamed)
+            .init(name: $0, visibility: symbolVisibility, canBeRenamed: canBeRenamed, kind: declaration.keyword)
         })
         if ["func", "init", "subscript"].contains(declaration.keyword),
            let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
@@ -1676,7 +1724,8 @@ func makeSourceFileIndex(
                 type: declaration.parsePropertyDeclaration()?.type?.string,
                 isStatic: declaration.modifiers.contains("static") || declaration.modifiers.contains("class"),
                 visibility: symbolVisibility,
-                hasUnresolvedConstraints: hasUnresolvedConstraints ? true : nil
+                hasUnresolvedConstraints: hasUnresolvedConstraints ? true : nil,
+                initializer: declaration.parsePropertyDeclaration()?.value.map { formatter.tokens[$0.expressionRange].string }
             ))
         }
 
@@ -2919,7 +2968,7 @@ extension ProjectIndex {
         var fileURL: URL
     }
 
-    private struct PropertySymbol {
+    struct PropertySymbol {
         var declaration: SourceFileIndex.PropertyDeclaration
         var fileURL: URL
     }
@@ -2929,14 +2978,16 @@ extension ProjectIndex {
     private func memberModuleContexts(visibleFrom fileURL: URL) -> [Set<String>] {
         guard let file = files[fileURL.standardizedFileURL.path] else { return [] }
         return file.moduleIdentifiers.map { module in
-            var names = (importsByModule[module] ?? []).union(["Swift"])
-            var pending = Array(names)
-            while let name = pending.popLast() {
-                for imported in memberImportsByModuleName[name] ?? [] where names.insert(imported).inserted {
-                    pending.append(imported)
+            memberModuleCache.value(for: module) {
+                var names = (importsByModule[module] ?? []).union(["Swift"])
+                var pending = Array(names)
+                while let name = pending.popLast() {
+                    for imported in memberImportsByModuleName[name] ?? [] where names.insert(imported).inserted {
+                        pending.append(imported)
+                    }
                 }
+                return Set([module]).union(names.flatMap { modulesByName[$0] ?? [] })
             }
-            return Set([module]).union(names.flatMap { modulesByName[$0] ?? [] })
         }
     }
 
@@ -2963,7 +3014,17 @@ extension ProjectIndex {
 
     /// Resolve an extension's owner in its own file, so equally named types in other modules
     /// cannot contribute members. Specialized aliases remain candidates but cannot supply a type.
-    private func memberOwner(named name: String, visibleFrom fileURL: URL, in module: String? = nil, visited: Set<TypeKey> = []) -> (keys: Set<TypeKey>, constrained: Bool)? {
+    private func memberOwner(named name: String, visibleFrom fileURL: URL, in module: String? = nil, visited: Set<TypeKey> = []) -> MemberOwner? {
+        // Cycle and depth failures depend on the ancestor set. Cache only root lookups.
+        guard visited.isEmpty else {
+            return resolveMemberOwner(named: name, visibleFrom: fileURL, in: module, visited: visited)
+        }
+        return memberOwnerCache.value(for: MemberOwnerKey(name: name, sourcePath: fileURL.standardizedFileURL.path, module: module)) {
+            resolveMemberOwner(named: name, visibleFrom: fileURL, in: module, visited: [])
+        }
+    }
+
+    private func resolveMemberOwner(named name: String, visibleFrom fileURL: URL, in module: String?, visited: Set<TypeKey>) -> MemberOwner? {
         guard visited.count < 32 else { return nil }
         guard let reference = ProjectTypeReference(name) else { return ([], true) }
         let keys: [TypeKey]?
@@ -3054,6 +3115,15 @@ extension ProjectIndex {
 
     /// Labels alone cannot select a method while inherited overloads may participate.
     private func hasNoInheritedFunction(named name: String, owner: TypeKey, sourcePath: String, accessedFrom caller: URL, visited: Set<TypeKey> = []) -> Bool {
+        guard visited.isEmpty else {
+            return resolveNoInheritedFunction(named: name, owner: owner, sourcePath: sourcePath, accessedFrom: caller, visited: visited)
+        }
+        return inheritedFunctionCache.value(for: InheritedFunctionKey(name: name, owner: owner, sourcePath: sourcePath, callerPath: caller.standardizedFileURL.path)) {
+            resolveNoInheritedFunction(named: name, owner: owner, sourcePath: sourcePath, accessedFrom: caller, visited: [])
+        }
+    }
+
+    private func resolveNoInheritedFunction(named name: String, owner: TypeKey, sourcePath: String, accessedFrom caller: URL, visited: Set<TypeKey>) -> Bool {
         guard visited.count < 32, !visited.contains(owner) else { return false }
         for module in memberModules(visibleFrom: caller) {
             for conformanceOwner in conformanceOwnersByModule[module] ?? [] {
@@ -3113,7 +3183,13 @@ extension ProjectIndex {
 
     /// Project members, including alias and protocol extensions, can override a known builtin signature.
     func hasStandardLibraryMember(named name: String, types: [String], visibleFrom fileURL: URL) -> Bool {
-        guard let file = files[fileURL.standardizedFileURL.path] else { return true }
+        standardMemberCache.value(for: StandardMemberKey(name: name, types: types, sourcePath: fileURL.standardizedFileURL.path)) {
+            resolveStandardLibraryMember(named: name, types: types, visibleFrom: fileURL)
+        }
+    }
+
+    private func resolveStandardLibraryMember(named name: String, types: [String], visibleFrom fileURL: URL) -> Bool {
+        guard files[fileURL.standardizedFileURL.path] != nil else { return true }
         let roots = Set(types + types.map { "Swift." + $0 })
         let modules = memberModules(visibleFrom: fileURL)
         var pending = Set<TypeKey>()
@@ -3408,11 +3484,27 @@ extension ProjectIndex {
             return declarations.contains(where: { $0.genericParameters.count == count }) ||
                 aliases.contains(where: { $0.genericParameters.count == count }) || protocolsByModule.contains(key)
         }
+        let direct = TypeKey(moduleIdentifier: module, name: name)
+        if accessibleTypeKey(direct, from: sourcePath) {
+            return [direct]
+        }
+        // A local nominal root shadows an imported namesake even when the requested nested
+        // declaration is absent. A value member must not turn into an unrelated imported type.
+        if let root = name.split(separator: ".").first, name.contains("."),
+           accessibleTypeKey(TypeKey(moduleIdentifier: module, name: String(root)), from: sourcePath)
+        {
+            return []
+        }
         let prefix = moduleNamesByIdentifier[module].map { $0 + "." }
         let localName = prefix.flatMap { name.hasPrefix($0) ? String(name.dropFirst($0.count)) : nil } ?? name
         let local = TypeKey(moduleIdentifier: module, name: localName)
         if accessibleTypeKey(local, from: sourcePath) {
             return [local]
+        }
+        if localName != name, let root = localName.split(separator: ".").first,
+           accessibleTypeKey(TypeKey(moduleIdentifier: module, name: String(root)), from: sourcePath)
+        {
+            return []
         }
         var matches = [[TypeKey]]()
         for imported in importedModuleNames(imports) {

@@ -4114,6 +4114,208 @@ final class ProjectSymbolLookupTests: XCTestCase {
                          sharedSources: ["Shared": ["AdapterA", "AdapterB"]], expectedCases: nil, expectUnresolved: true)
     }
 
+    func testInferredGenericArrayPropertyKeepsReceiverElementType() throws {
+        try check("""
+        func render(_ holder: Holder<State>) { observeValue(holder.values.first) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Value { case unrelated }
+        struct Holder<Value> { var values = [Value]() }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testInferredDictionaryPropertySuppliesItsValueType() throws {
+        try check("""
+        func render(_ holder: Holder, _ key: String) { observeValue(holder.values[key]) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Holder { var values = [String: State]() }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testLocalExplicitArrayConstructionSuppliesElementType() throws {
+        try check("""
+        func render() {
+            let states = [State]()
+            observeValue(states.first)
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testExplicitSetConstructionSuppliesElementType() throws {
+        try check("""
+        func render() { observeValue(Set<State>().first) }
+        """, declarations: """
+        enum State: Hashable { case idle, loaded }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testInferredGenericPropertyRetainsImportedArgumentProvenance() throws {
+        try checkModules("""
+        import Models
+        enum State { case idle, loaded }
+        func render(_ holder: Holder<State>) {
+            for state in holder.values { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case unrelated }
+        public struct Holder<Value> { public var values = [Value]() }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testInferredGenericEnumPropertySuppliesPayloadType() throws {
+        try check("""
+        func render(_ holder: Holder<State>) {
+            if case let .loaded(state) = holder.request { observeValue(state) }
+        }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Request<Value> { case idle, loaded(Value) }
+        extension Request { var isIdle: Bool { false } }
+        struct Holder<Value> { var request = Request<Value>.idle }
+        """, expected: "State")
+    }
+
+    func testInferredEnumPropertyUsesItsDeclaringModule() throws {
+        try checkModules("""
+        import Models
+        enum State { case unrelated }
+        func render(_ holder: Holder) { observeValue(holder.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Holder { public var state = State.idle }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testInferredConstructorPropertySuppliesNestedMemberType() throws {
+        try check("""
+        func render(_ holder: Holder) { observeValue(holder.model.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { init() {}; let state: State = .idle }
+        extension Model { func unused() {} }
+        struct Holder { var model = Model() }
+        """, expected: "State")
+    }
+
+    func testInferredFailableConstructorPropertyRetainsOptionality() throws {
+        try check("""
+        func render(_ holder: Holder) { observeValue(holder.model?.state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { init?() {}; let state: State = .idle }
+        struct Holder { var model = Model() }
+        """, expected: "State", expectedOptional: true)
+    }
+
+    func testGlobalValueCannotBeMistakenForInitializerEnumRoot() throws {
+        try checkModules("""
+        import Models
+        struct Holder { var state = Factory.initial }
+        func render(_ holder: Holder) { observeValue(holder.state) }
+        """, sources: ["Models": """
+        public enum Factory { case initial, loaded }
+        """], otherAppSources: ["""
+        enum Other { case unrelated }
+        struct RuntimeFactory { let initial: Other }
+        let Factory = RuntimeFactory(initial: .unrelated)
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testPropertyValueCannotBeMistakenForInitializerEnumRoot() throws {
+        try checkModules("""
+        import Models
+        struct Holder {
+            static let Factory = RuntimeFactory(initial: .unrelated)
+            var state = Holder.Factory.initial
+        }
+        func render(_ holder: Holder) { observeValue(holder.state) }
+        """, sources: ["Models": """
+        public enum Holder { public enum Factory { case initial, loaded } }
+        """], otherAppSources: ["""
+        enum Other { case unrelated }
+        struct RuntimeFactory { let initial: Other }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testFactoryCannotBeMistakenForCollectionPropertyConstructor() throws {
+        try checkModules("""
+        import Models
+        enum Other { case unrelated }
+        struct Holder { var values = StateSet(0) }
+        func StateSet(_ value: Int) -> [Other] { [] }
+        func render(_ holder: Holder) { observeValue(holder.values.first) }
+        """, sources: ["Models": """
+        public enum State: Hashable { case idle, loaded }
+        public typealias StateSet = Set<State>
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testQualifiedInheritedTypeRootTakesPrecedenceOverGlobalNamesake() throws {
+        try check("""
+        class Holder: Base { var state = Factory.State.idle }
+        func render(_ holder: Holder) { observeValue(holder.state) }
+        """, declarations: """
+        class Base { enum Factory { enum State { case idle, loaded } } }
+        enum Factory { enum State { case unrelated } }
+        """, expected: "Base.Factory.State")
+    }
+
+    func testPropertyInitializerDoesNotGuessThroughUnknownInheritedNamespace() throws {
+        try checkModules("""
+        import Models
+        class Holder: ExternalBase { var model = Models.Model(0) }
+        func render(_ holder: Holder) { observeValue(holder.model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public init(_ value: String) {}; public let state: State = .idle }
+        """], expectedCases: nil, expectUnresolved: true)
+    }
+
+    func testPayloadConstructorReferenceIsNotAnEnumValueInitializer() throws {
+        try check("""
+        func render(_ holder: Holder<State>) { observeValue(holder.make) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        enum Request<Value> { case idle, loaded(Value) }
+        struct Holder<Value> { var make = Request<Value>.loaded }
+        """, expected: nil)
+    }
+
+    func testCollectionInitializerExtensionPreventsNonfailableAssumption() throws {
+        try check("""
+        func render(_ state: State) { observeValue([State](state)?.first) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        extension Array {
+            init?(_ state: State) { self = [] }
+        }
+        """, expected: nil)
+    }
+
+    func testExtensionTargetsDoNotCountAsConstructorShadowingDeclarations() throws {
+        try check("""
+        func render() { observeValue(Model().state) }
+        """, declarations: """
+        enum State { case idle, loaded }
+        struct Model { init() {}; let state: State = .idle }
+        extension Model { func unused() {} }
+        """, expected: "State")
+    }
+
+    func testPropertyAnnotationDoesNotUseCallerLocalTypesForForeignNamespace() throws {
+        try checkModules("""
+        import Models
+        enum Model { enum State { case unrelated } }
+        func render(_ model: Models.Model) { observeValue(model.state) }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Model { public let state: State }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

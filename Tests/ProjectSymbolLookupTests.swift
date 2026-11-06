@@ -5595,6 +5595,151 @@ final class ProjectSymbolLookupTests: XCTestCase {
         """], expectedCases: nil, expectUnresolved: true)
     }
 
+    func testAliasExtensionResolvesInstancePropertyFromCanonicalOwner() throws {
+        try checkModules("""
+        import Models
+        extension Namespace.Alias {
+            func render() { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Payload { public let state: State }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testNestedTypeThroughAliasResolvesSelfInExtension() throws {
+        try checkModules("""
+        import Models
+        extension Namespace.Alias.State {
+            func render() { observeValue(self) }
+        }
+        """, sources: ["Models": """
+        public struct Payload {
+            public enum State { case idle, loaded }
+        }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAliasExtensionResolvesExplicitSelfProperty() throws {
+        try checkModules("""
+        import Models
+        extension Namespace.Alias {
+            func render() { observeValue(self.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Payload { public let state: State }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAliasExtensionResolvesStaticSelfProperty() throws {
+        try checkModules("""
+        import Models
+        extension Namespace.Alias {
+            static func render() { observeValue(Self.state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Payload { public static var state: State { .idle } }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAliasExtensionPreservesSpecializedGenericReceiver() throws {
+        try checkModules("""
+        import Models
+        extension Namespace.Alias {
+            func render() { observeValue(value) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Payload<Value> { public let value: Value }
+        public enum Namespace { public typealias Alias = Payload<State> }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testQualifiedAliasMemberKeepsDeclarationModule() throws {
+        try checkModules("""
+        import Models
+        struct Payload { enum State { case unrelated } }
+        func render(_ state: Namespace.Alias.State) { observeValue(state) }
+        """, sources: ["Models": """
+        public struct Payload { public enum State { case idle, loaded } }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testAliasExtensionKeepsLocalValueShadowing() throws {
+        try checkModules("""
+        import Models
+        enum Local { case unrelated }
+        extension Namespace.Alias {
+            func render(_ state: Local) { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Payload { public let state: State }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["unrelated"])
+    }
+
+    func testConditionalAliasMemberRemainsAmbiguous() throws {
+        try checkModules("""
+        import Models
+        func render(_ state: Namespace.Alias.State) { observeValue(state) }
+        """, sources: ["Models": """
+        public struct First { public enum State { case idle, loaded } }
+        public struct Second { public enum State { case other } }
+        public enum Namespace {
+            #if FIRST
+            public typealias Alias = First
+            #else
+            public typealias Alias = Second
+            #endif
+        }
+        """], expectedCases: nil)
+    }
+
+    func testCyclicAliasMemberDoesNotResolve() throws {
+        try checkModules("""
+        import Models
+        func render(_ state: Namespace.First.State) { observeValue(state) }
+        """, sources: ["Models": """
+        public enum Namespace {
+            public typealias First = Second
+            public typealias Second = First
+        }
+        """], expectedCases: nil)
+    }
+
+    func testAliasExtensionResolvesUnqualifiedStaticProperty() throws {
+        try checkModules("""
+        import Models
+        extension Namespace.Alias {
+            static func render() { observeValue(state) }
+        }
+        """, sources: ["Models": """
+        public enum State { case idle, loaded }
+        public struct Payload { public static var state: State { .idle } }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
+    func testQualifiedAliasMemberResolvesMultipleNestedComponents() throws {
+        try checkModules("""
+        import Models
+        func render(_ state: Namespace.Alias.Container.State) { observeValue(state) }
+        """, sources: ["Models": """
+        public struct Payload {
+            public struct Container { public enum State { case idle, loaded } }
+        }
+        public enum Namespace { public typealias Alias = Payload }
+        """], expectedCases: ["idle", "loaded"])
+    }
+
     private func checkModules(_ input: String, sources: [String: String], otherAppSources: [String] = [], inputModules: Set<String> = ["App"], sharedSources: [String: Set<String>] = [:], expectedCases: [String]?, expectUnresolved: Bool = false,
                               file: StaticString = #filePath, line: UInt = #line) throws
     {

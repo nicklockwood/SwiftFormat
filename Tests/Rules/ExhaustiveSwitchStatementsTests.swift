@@ -3081,6 +3081,98 @@ final class ExhaustiveSwitchStatementsTests: XCTestCase {
         """)
     }
 
+    func testSwitchPropertyInAliasExtensionUsesCanonicalEnum() throws {
+        let input = """
+        extension Query.Payload {
+            func render() {
+                switch state {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        extension Query.Payload {
+            func render() {
+                switch state {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        enum State { case idle, loaded, failed }
+        struct Model { let state: State }
+        enum Query { typealias Payload = Model }
+        """)
+    }
+
+    func testSwitchSelfInNestedAliasExtensionUsesCanonicalEnum() throws {
+        let input = """
+        extension Query.Payload.State {
+            func render() {
+                switch self {
+                case .loaded: showContent()
+                default: showPlaceholder()
+                }
+            }
+        }
+        """
+        let output = """
+        extension Query.Payload.State {
+            func render() {
+                switch self {
+                case .loaded: showContent()
+                case .idle, .failed: showPlaceholder()
+                }
+            }
+        }
+        """
+        try check(input, output, declarations: """
+        struct Model { enum State { case idle, loaded, failed } }
+        enum Query { typealias Payload = Model }
+        """)
+    }
+
+    func testDisagreeingAliasMemberTypesPreserveDefault() throws {
+        try check("""
+        func render(_ state: Query.Payload.State) {
+            switch state {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        struct First { enum State { case idle, loaded } }
+        struct Second { enum State { case failed, loaded } }
+        enum Query {
+            #if FIRST
+            typealias Payload = First
+            #else
+            typealias Payload = Second
+            #endif
+        }
+        """)
+    }
+
+    func testCyclicAliasMemberPreservesDefault() throws {
+        try check("""
+        func render(_ state: Query.First.State) {
+            switch state {
+            case .loaded: showContent()
+            default: showPlaceholder()
+            }
+        }
+        """, declarations: """
+        enum Query {
+            typealias First = Second
+            typealias Second = First
+        }
+        """)
+    }
+
     private func check(
         _ input: String, _ output: String? = nil,
         declarations: String = "enum State { case idle, loaded, failed }",

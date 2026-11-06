@@ -485,6 +485,26 @@ final class ProjectSymbolLookup {
               let lexical = qualifiedTypeName(for: ResolvedType(name: base, namespace: namespace, sourceFileURL: sourceFileURL)) else { return nil }
         let lexicalName = lexical.name
         let lexicalSource = lexical.sourceFileURL ?? sourceFileURL
+        // An alias can appear in the middle of a qualified path, including an extension's
+        // lexical owner. Resolve its members using the target's original declaration context.
+        if nominal.arguments.isEmpty, !nominal.hasGenericParent,
+           !project.hasSymbolType(named: lexicalName, visibleFrom: lexicalSource ?? fileURL)
+        {
+            let components = lexicalName.split(separator: ".")
+            for position in components.indices.dropFirst().reversed() {
+                let prefix = components[..<position].joined(separator: ".")
+                guard let alias = project.typeAlias(named: prefix, visibleFrom: lexicalSource ?? fileURL),
+                      alias.genericParameters.isEmpty else { continue }
+                guard let owner = type(named: prefix, namespace: nil, at: index, sourceFileURL: lexicalSource,
+                                       substitutions: substitutions, depth: depth + 1),
+                    var result = dependentMemberType(components[position...].joined(separator: "."), of: owner, depth: depth + 1)
+                else { return nil }
+                if optional {
+                    result.name += "?"
+                }
+                return result
+            }
+        }
         let builtinName = lexicalName.hasPrefix("Swift.") ? String(lexicalName.dropFirst(6)) : lexicalName
         if let kind = CollectionKind(rawValue: builtinName), ![.dictionaryKeys, .dictionaryValues].contains(kind),
            !nominal.hasGenericParent, arguments.count == (kind == .dictionary ? 2 : 1),
@@ -657,8 +677,11 @@ final class ProjectSymbolLookup {
             } else {
                 isStatic = false
             }
-            if let member = memberType(owner: ResolvedType(name: owner, namespace: nil, isMetatype: isStatic), name: name, accessingType: enclosingType) {
-                return member
+            if var receiver = type(named: owner, namespace: nil, at: index) {
+                receiver.isMetatype = isStatic
+                if let member = memberType(owner: receiver, name: name, accessingType: enclosingType) {
+                    return member
+                }
             }
             guard project.isTypeWithoutInheritance(named: owner, visibleFrom: fileURL),
                   !project.isDynamicMemberLookupType(named: owner, visibleFrom: fileURL),
@@ -703,8 +726,8 @@ final class ProjectSymbolLookup {
             }
             return result
         }
-        guard let owner = enclosingType else { return nil }
-        return memberType(owner: ResolvedType(name: owner, namespace: nil), name: name, accessingType: enclosingType)
+        guard let owner = enclosingType.flatMap({ type(named: $0, namespace: nil, at: index) }) else { return nil }
+        return memberType(owner: owner, name: name, accessingType: enclosingType)
     }
 
     func unwrapped(_ type: ResolvedType) -> ResolvedType? {
@@ -1986,7 +2009,8 @@ final class ProjectSymbolLookup {
             if identifier == "self", bindings[identifier]?.contains(where: { $0.isVisible(at: first) }) == true {
                 current = bindingType(named: identifier, at: first, depth: depth + 1)
             } else {
-                current = namespace.map { ResolvedType(name: $0, namespace: nil, isMetatype: identifier == "Self" || isStatic) }
+                current = namespace.flatMap { type(named: $0, namespace: nil, at: first) }
+                current?.isMetatype = identifier == "Self" || isStatic
             }
         } else if let enumCase = unqualifiedEnumCase(named: identifier, at: first) {
             current = enumCase.payloadTypes.isEmpty ? enumCase.type : nil

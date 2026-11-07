@@ -4329,6 +4329,39 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
+    func testNoRemoveSelfInClosureAfterParameterPackExpansion() {
+        let input = """
+        final class Counter {
+            var count = 0
+
+            func record<each Value>(_ values: repeat each Value) {
+                _ = (repeat each values)
+                DispatchQueue.main.async {
+                    self.count += 1
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
+    func testNoRemoveSelfShadowedByParameterPackIterationVariable() {
+        let input = """
+        struct Printer {
+            var value = "member"
+
+            func printAll<each Value>(_ values: repeat each Value) {
+                for value in repeat each values {
+                    print(self.value, value)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
     func testRedundantSelfNotConfusedByStaticAfterSwitch() {
         let input = """
         public final class MyClass {

@@ -3039,6 +3039,11 @@ extension Formatter {
                     if let linebreakIndex = self.index(of: .linebreak, after: index) {
                         index = linebreakIndex
                     }
+                case .keyword("repeat") where next(.nonSpaceOrCommentOrLinebreak, after: index) != .startOfScope("{"):
+                    // A pack expansion like `repeat each value`, rather than a `repeat { ... } while` loop.
+                    // Keep the previous keyword, so the `{` of `for value in repeat each values {` is
+                    // still the body of the `for` loop.
+                    break
                 case let .keyword(name) where !name.isMacro:
                     lastKeyword = name
                     lastKeywordIndex = index

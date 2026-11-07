@@ -330,6 +330,105 @@ final class PreferForLoopTests: XCTestCase {
         testFormatting(for: input, output, rule: .preferForLoop)
     }
 
+    func testDoesNotConvertForEachWithReturnInNestedForLoop() {
+        let input = """
+        items.forEach { item in
+            for tag in tags {
+                if tag == item.tag {
+                    return
+                }
+                print(tag)
+            }
+            print(item)
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop)
+    }
+
+    func testDoesNotConvertForEachWithReturnInNestedWhileLoop() {
+        let input = """
+        items.forEach { item in
+            while true {
+                if item.isReady {
+                    return
+                }
+                item.advance()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop)
+    }
+
+    func testDoesNotConvertForEachWithReturnInNestedRepeatLoop() {
+        let input = """
+        items.forEach { item in
+            repeat {
+                if item.isReady {
+                    return
+                }
+            } while item.advance()
+            print(item)
+        }
+        """
+        testFormatting(for: input, rule: .preferForLoop)
+    }
+
+    func testConvertsReturnAfterNestedLoopToContinue() {
+        let input = """
+        items.forEach { item in
+            repeat {
+                item.advance()
+            } while !item.isReady
+            while item.isBusy {
+                item.wait()
+            }
+            if item.isHidden {
+                return
+            }
+            print(item)
+        }
+        """
+        let output = """
+        for item in items {
+            repeat {
+                item.advance()
+            } while !item.isReady
+            while item.isBusy {
+                item.wait()
+            }
+            if item.isHidden {
+                continue
+            }
+            print(item)
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
+    func testConvertsReturnInSwitchToContinue() {
+        let input = """
+        items.forEach { item in
+            switch item.kind {
+            case .hidden:
+                return
+            default:
+                print(item)
+            }
+        }
+        """
+        let output = """
+        for item in items {
+            switch item.kind {
+            case .hidden:
+                continue
+            default:
+                print(item)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferForLoop)
+    }
+
     func testConvertsReturnToContinue() {
         let input = """
         let placeholderStrings = ["foo", "bar", "baaz"]

@@ -253,6 +253,43 @@ final class NoExplicitOwnershipTests: XCTestCase {
         try testProjectFormatting(for: input, output, declarations: declarations)
     }
 
+    func testDoesntRemoveEnumCasesNamedConsumingOrBorrowing() {
+        let input = """
+        enum Ownership {
+            case consuming(Int)
+            case borrowing(Int)
+        }
+
+        func swap(_ ownership: Ownership) -> Ownership {
+            switch ownership {
+            case let .consuming(value):
+                .borrowing(value)
+            case let .borrowing(value):
+                Ownership.consuming(value)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .noExplicitOwnership)
+    }
+
+    func testDoesntRemoveFunctionsNamedConsumingOrBorrowing() {
+        let input = """
+        func consuming(_ value: Int) -> Int {
+            value + 1
+        }
+
+        func borrowing(_ value: Int) -> Int {
+            value * 2
+        }
+
+        let foo = consuming(1)
+        let bar = borrowing(foo) + consuming(foo)
+        """
+
+        testFormatting(for: input, rule: .noExplicitOwnership)
+    }
+
     private func testProjectFormatting(
         for input: String,
         _ output: String,

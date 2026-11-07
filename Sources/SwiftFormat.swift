@@ -750,7 +750,9 @@ func applyRules(
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
-    let timeout = options.timeout + TimeInterval(originalTokens.count) / 1000
+    // Doubled because the timeout used to be measured in wall-clock time and only re-armed when
+    // the waiting thread noticed a new rule, which gave each rule between 1x and 2x the timeout.
+    let timeout = 2 * (options.timeout + TimeInterval(originalTokens.count) / 1000)
     var changes = [Formatter.Change]()
     var lastChanges = [Formatter.Change]()
     for iteration in 0 ..< maxIterations {
@@ -1053,22 +1055,26 @@ final class RuleProgress {
     /// How the rules have exceeded `timeout`, or nil if they are still within it.
     func timeout(after timeout: TimeInterval) -> Timeout? {
         let wallClockLimit = timeout * Self.wallClockLimitFactor
-        guard let start = queue.sync(execute: { self.start }) else {
-            return Self.seconds(since: createdUptimeNanoseconds) > wallClockLimit
-                ? .notStarted(limit: wallClockLimit) : nil
+        // Read the clocks while holding the queue, so the worker can't start another rule or
+        // start building the project index in between, which would be charged to this rule.
+        return queue.sync {
+            guard let start else {
+                return Self.seconds(since: createdUptimeNanoseconds) > wallClockLimit
+                    ? .notStarted(limit: wallClockLimit) : nil
+            }
+            if let indexing = start.indexing {
+                return Self.seconds(since: indexing.uptimeNanoseconds) > projectIndexTimeLimit
+                    ? .projectIndex(limit: projectIndexTimeLimit) : nil
+            }
+            let wallTime = Self.seconds(since: start.uptimeNanoseconds + start.excludedNanoseconds)
+            if wallTime > wallClockLimit {
+                return .rule(index: start.index)
+            }
+            let cpuTime = start.cpuTime.flatMap { startCPUTime in
+                start.clock?.time().map { $0 - startCPUTime - start.excludedCPUTime }
+            }
+            return (cpuTime ?? wallTime) > timeout ? .rule(index: start.index) : nil
         }
-        if let indexing = start.indexing {
-            return Self.seconds(since: indexing.uptimeNanoseconds) > projectIndexTimeLimit
-                ? .projectIndex(limit: projectIndexTimeLimit) : nil
-        }
-        let wallTime = Self.seconds(since: start.uptimeNanoseconds + start.excludedNanoseconds)
-        if wallTime > wallClockLimit {
-            return .rule(index: start.index)
-        }
-        let cpuTime = start.cpuTime.flatMap { startCPUTime in
-            start.clock?.time().map { $0 - startCPUTime - start.excludedCPUTime }
-        }
-        return (cpuTime ?? wallTime) > timeout ? .rule(index: start.index) : nil
     }
 
     private static func seconds(since uptimeNanoseconds: UInt64) -> TimeInterval {

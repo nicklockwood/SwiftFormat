@@ -355,7 +355,9 @@ final class SwiftFormatTests: XCTestCase {
         }
         let rule = FormatRule(help: "") { formatter in
             _ = formatter.projectIndex(requiring: [.declarations])
-            Thread.sleep(forTimeInterval: 1)
+            // Busy-wait, as the timeout counts CPU time
+            let end = DispatchTime.now() + 1
+            while DispatchTime.now() < end {}
         } examples: { nil }
         var options = FormatOptions.default
         options.timeout = 0.05
@@ -386,6 +388,28 @@ final class SwiftFormatTests: XCTestCase {
         options.timeout = 0.05
         let tokens = tokenize("let foo = 1")
         XCTAssertNoThrow(try applyRules([idleRule], to: tokens, with: options, trackChanges: false, range: nil))
+    }
+
+    func testRuleStuckInLoopUsingCPUTimesOut() {
+        // Same as `testRuleWaitingWithoutUsingCPUDoesNotTimeOut`, but the rule uses CPU time
+        // throughout, as a rule stuck in a loop would.
+        let loopingRule = FormatRule(help: "") { _ in
+            let end = DispatchTime.now() + 1
+            while DispatchTime.now() < end {}
+        } examples: { nil }
+        var options = FormatOptions.default
+        options.timeout = 0.05
+        let tokens = tokenize("let foo = 1")
+        let start = DispatchTime.now()
+        XCTAssertThrowsError(try applyRules([loopingRule], to: tokens, with: options, trackChanges: false, range: nil)) { error in
+            guard case let FormatError.writing(message) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+            XCTAssert(message.hasSuffix("rule timed out"), message)
+        }
+        // Caught by the CPU time limit, well before the rule finishes or the wall-clock backstop
+        let elapsed = TimeInterval(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000_000
+        XCTAssertLessThan(elapsed, 0.9)
     }
 
     func testRuleBlockedWithoutUsingCPUEventuallyTimesOut() {

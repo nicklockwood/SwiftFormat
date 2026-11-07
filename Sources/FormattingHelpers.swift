@@ -1458,6 +1458,21 @@ extension Formatter {
     }
 
     /// Common implementation for the `hoistTry` and `hoistAwait` rules
+    /// Hoists the keyword out of every `(` and `[` scope. A keyword moves out of one scope at a time,
+    /// so this repeats until nothing changes. Otherwise a keyword nested in more scopes than the
+    /// formatter's maximum number of iterations fails to terminate.
+    func hoistEffectKeyword(_ keyword: String, isEffectCapturingAt: (Int) -> Bool) {
+        var previousTokens: [Token]
+        repeat {
+            previousTokens = tokens
+            forEachToken(where: {
+                $0 == .startOfScope("(") || $0 == .startOfScope("[")
+            }) { i, _ in
+                hoistEffectKeyword(keyword, inScopeAt: i, isEffectCapturingAt: isEffectCapturingAt)
+            }
+        } while tokens != previousTokens
+    }
+
     /// Hoists the first keyword of the specified type out of the specified scope
     func hoistEffectKeyword(
         _ keyword: String,

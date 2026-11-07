@@ -4945,7 +4945,9 @@ extension Formatter {
             }
 
             let conditionEnd: Int
-            if let commaIndex = index(of: .delimiter(","), after: conditionStart),
+            // Search from before the condition, so a condition that starts with `(`
+            // is skipped as a scope rather than searched inside
+            if let commaIndex = index(of: .delimiter(","), after: conditionStart - 1),
                commaIndex < endIndex
             {
                 conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: commaIndex) ?? conditionStart

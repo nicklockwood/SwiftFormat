@@ -189,6 +189,9 @@ public extension FormatRule {
                 forEachValueNames = [chosenValueName]
             }
 
+            // A `return` inside a nested loop would become a `continue` of that inner loop
+            let nestedLoopBodies = formatter.loopBodies(in: closureOpenBraceIndex, closureCloseBraceIndex)
+
             // Validate that the closure body is eligible to be converted to a for loop
             for closureBodyIndex in closureOpenBraceIndex ... closureCloseBraceIndex {
                 guard !formatter.indexIsWithinNestedClosure(closureBodyIndex, startOfScopeIndex: closureOpenBraceIndex) else { continue }
@@ -207,6 +210,12 @@ public extension FormatRule {
                 // It's legal to write something like `return print("foo")` in a `forEach` as long as
                 // you're still returning a `Void` value. Since `continue print("foo")` isn't legal,
                 // we should just ignore this closure.
+                if formatter.tokens[closureBodyIndex] == .keyword("return"),
+                   nestedLoopBodies.contains(where: { $0.contains(closureBodyIndex) })
+                {
+                    return
+                }
+
                 if formatter.tokens[closureBodyIndex] == .keyword("return"),
                    let tokenAfterReturnKeyword = formatter.next(.nonSpaceOrComment, after: closureBodyIndex),
                    !(tokenAfterReturnKeyword.isLinebreak || tokenAfterReturnKeyword == .endOfScope("}"))
@@ -416,5 +425,45 @@ extension Formatter {
         default:
             return nil
         }
+    }
+}
+
+extension Formatter {
+    /// The bodies of the `for`, `while` and `repeat` loops in the given closure,
+    /// excluding loops in nested closures.
+    func loopBodies(in closureOpenBraceIndex: Int, _ closureCloseBraceIndex: Int) -> [ClosedRange<Int>] {
+        var bodies = [ClosedRange<Int>]()
+        for index in closureOpenBraceIndex + 1 ..< closureCloseBraceIndex {
+            guard !indexIsWithinNestedClosure(index, startOfScopeIndex: closureOpenBraceIndex) else { continue }
+
+            let bodyStart: Int?
+            switch tokens[index] {
+            case .keyword("for"):
+                bodyStart = self.index(of: .keyword("in"), after: index).flatMap { startOfForLoopBody(after: $0) }
+            case .keyword("while"):
+                // The `while` of a `repeat { ... } while` loop has no body of its own
+                if let previousIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+                   tokens[previousIndex] == .endOfScope("}"),
+                   let previousScopeStart = startOfScope(at: previousIndex),
+                   last(.nonSpaceOrCommentOrLinebreak, before: previousScopeStart) == .keyword("repeat")
+                {
+                    bodyStart = nil
+                } else {
+                    bodyStart = self.index(of: .startOfScope("{"), after: index)
+                }
+            case .keyword("repeat"):
+                bodyStart = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
+            default:
+                bodyStart = nil
+            }
+
+            if let bodyStart, tokens[bodyStart] == .startOfScope("{"),
+               bodyStart < closureCloseBraceIndex,
+               let bodyEnd = endOfScope(at: bodyStart)
+            {
+                bodies.append(bodyStart ... bodyEnd)
+            }
+        }
+        return bodies
     }
 }

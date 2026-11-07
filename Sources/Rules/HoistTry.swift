@@ -27,15 +27,11 @@ public extension FormatRule {
             names.insert(name)
         }
 
-        formatter.forEachToken(where: {
-            $0 == .startOfScope("(") || $0 == .startOfScope("[")
-        }) { i, _ in
-            formatter.hoistEffectKeyword("try", inScopeAt: i) { prevIndex in
-                guard case let .identifier(name) = formatter.tokens[prevIndex] else {
-                    return false
-                }
-                return name.hasPrefix("XCTAssert") || formatter.isSymbol(at: prevIndex, in: names)
+        formatter.hoistEffectKeyword("try") { prevIndex in
+            guard case let .identifier(name) = formatter.tokens[prevIndex] else {
+                return false
             }
+            return name.hasPrefix("XCTAssert") || formatter.isSymbol(at: prevIndex, in: names)
         }
     } examples: {
         """

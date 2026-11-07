@@ -89,6 +89,13 @@ extension Formatter {
             return
         }
 
+        // `try` and `await` can't appear to the right of `&&`
+        if conditions.dropFirst().contains(where: { condition in
+            tokens[condition.range].contains { [.keyword("try"), .keyword("await")].contains($0) }
+        }) {
+            return
+        }
+
         var whereClause: [Token] = [
             .space(" "),
             .keyword("where"),
@@ -102,7 +109,14 @@ extension Formatter {
                     .space(" "),
                 ])
             }
-            whereClause.append(contentsOf: tokens[condition.range])
+            // Operators with lower precedence than `&&` need parens to keep the same meaning
+            if conditions.count > 1, conditionHasLowerPrecedenceThanAnd(in: condition.range) {
+                whereClause.append(.startOfScope("("))
+                whereClause.append(contentsOf: tokens[condition.range])
+                whereClause.append(.endOfScope(")"))
+            } else {
+                whereClause.append(contentsOf: tokens[condition.range])
+            }
         }
         whereClause.append(.space(" "))
 
@@ -122,6 +136,25 @@ extension Formatter {
                 through: bodyEnd
             )
         }
+    }
+
+    /// Whether the expression contains a top-level `||` or ternary operator,
+    /// which bind less tightly than `&&`.
+    func conditionHasLowerPrecedenceThanAnd(in range: ClosedRange<Int>) -> Bool {
+        var index = range.lowerBound
+        while index <= range.upperBound {
+            switch tokens[index] {
+            case .operator("||", .infix), .operator("?", .infix):
+                return true
+            case .startOfScope:
+                guard let endIndex = endOfScope(at: index) else { return true }
+                index = endIndex
+            default:
+                break
+            }
+            index += 1
+        }
+        return false
     }
 
     /// Converts a where clause on a for loop to a nested if statement.

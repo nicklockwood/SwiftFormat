@@ -568,10 +568,12 @@ extension Formatter {
             return nil
         }
 
+        // `rhs` keeps the whitespace after the comma, which may be missing, like in `XCTAssertEqual(a,-1)`
+        let space = rhs.first?.isWhitespace == true ? "" : " "
         if let message {
-            return tokenize("#expect(\(lhs) \(operatorToken)\(rhs),\(message))")
+            return tokenize("#expect(\(lhs) \(operatorToken)\(space)\(rhs),\(message))")
         } else {
-            return tokenize("#expect(\(lhs) \(operatorToken)\(rhs))")
+            return tokenize("#expect(\(lhs) \(operatorToken)\(space)\(rhs))")
         }
     }
 

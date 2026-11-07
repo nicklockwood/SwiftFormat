@@ -1055,4 +1055,34 @@ final class PreferSwiftTestingTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "6.0")
         testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
+
+    func testConvertsComparisonWithoutSpaceAfterComma() {
+        let input = """
+        import XCTest
+
+        final class MathTests: XCTestCase {
+            func testNegation() {
+                XCTAssertEqual(negate(1),-1)
+                XCTAssertNotEqual(negate(1),-2)
+                XCTAssertEqual(negate(-1),one)
+            }
+        }
+        """
+
+        let output = """
+        import Foundation
+        import Testing
+
+        final class MathTests {
+            @Test func negation() {
+                #expect(negate(1) == -1)
+                #expect(negate(1) != -2)
+                #expect(negate(-1) == one)
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
+    }
 }

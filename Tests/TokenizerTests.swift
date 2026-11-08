@@ -2593,6 +2593,17 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testNegativeShiftOperands() {
+        let input = "x << -1\ny >> -1"
+        let output: [Token] = [
+            .identifier("x"), .space(" "), .operator("<<", .infix), .space(" "),
+            .operator("-", .prefix), .number("1", .integer), .linebreak("\n", 1),
+            .identifier("y"), .space(" "), .operator(">>", .infix), .space(" "),
+            .operator("-", .prefix), .number("1", .integer),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testTripleShift() {
         let input = "a>>>b"
         let output: [Token] = [

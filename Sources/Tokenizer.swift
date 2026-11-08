@@ -1907,6 +1907,16 @@ public func tokenize(_ source: String) -> [Token] {
         case .operator:
             stitchOperators(at: count - 1)
         case .startOfScope("<") where count >= 2:
+            if tokens[count - 2] == .startOfScope("<"),
+               characters.first?.isSpaceOrLinebreak == true,
+               let lhs = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2),
+               tokens[lhs].isLvalue
+            {
+                // Classify the left shift before reading a possible negative operand.
+                tokens[count - 1] = .operator("<", .none)
+                convertOpeningChevronToOperator(at: count - 2)
+                return
+            }
             if tokens[count - 2].isOperator,
                index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2).map({
                    ![.keyword("func"), .keyword("init")].contains(tokens[$0])

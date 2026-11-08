@@ -443,9 +443,10 @@ extension Formatter {
             case let token where isModifier(at: prevIndex) || token.isAttribute:
                 if case .identifier = token,
                    let nextToken = last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                   nextToken == .keyword("case") || nextToken.isOperator(ofType: .infix) || nextToken.isOperator(ofType: .prefix)
+                   nextToken == .keyword("case") || nextToken == .keyword("var") || nextToken == .keyword("let")
+                   || nextToken.isOperator(ofType: .infix) || nextToken.isOperator(ofType: .prefix)
                 {
-                    // Part of previous declaration
+                    // Part of previous declaration, e.g. a property named `open` without a type annotation
                     return false
                 }
 

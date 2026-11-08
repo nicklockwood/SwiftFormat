@@ -877,14 +877,14 @@ struct _Descriptors {
     let throwCapturing = OptionDescriptor(
         argumentName: "throw-capturing",
         displayName: "Throw Capturing",
-        help: "List of functions with throwing @autoclosure arguments",
+        help: "List of functions with throwing @autoclosure arguments (detected automatically when declared in the same file)",
         keyPath: \FormatOptions.throwCapturing,
         mergeWithDefaults: true
     )
     let asyncCapturing = OptionDescriptor(
         argumentName: "async-capturing",
         displayName: "Async Capturing",
-        help: "List of functions with async @autoclosure arguments",
+        help: "List of functions with async @autoclosure arguments (detected automatically when declared in the same file)",
         keyPath: \FormatOptions.asyncCapturing
     )
     let importGrouping = OptionDescriptor(

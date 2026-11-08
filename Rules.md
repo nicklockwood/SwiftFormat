@@ -1578,7 +1578,7 @@ Move inline `await` keyword(s) to start of expression.
 
 Option | Description
 --- | ---
-`--async-capturing` | List of functions with async @autoclosure arguments
+`--async-capturing` | List of functions with async @autoclosure arguments (detected automatically when declared in the same file)
 
 <details>
 <summary>Examples</summary>
@@ -1631,7 +1631,7 @@ Move inline `try` keyword(s) to start of expression.
 
 Option | Description
 --- | ---
-`--throw-capturing` | List of functions with throwing @autoclosure arguments
+`--throw-capturing` | List of functions with throwing @autoclosure arguments (detected automatically when declared in the same file)
 
 <details>
 <summary>Examples</summary>

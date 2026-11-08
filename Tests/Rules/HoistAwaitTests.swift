@@ -370,4 +370,39 @@ final class HoistAwaitTests: XCTestCase {
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
+
+    func testNoHoistAwaitOutOfClosureCaptureList() {
+        let input = """
+        let foo = { [bar = await baz()] in
+            print(bar)
+        }
+        """
+        testFormatting(for: input, rule: .hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testHoistAwaitWithinClosureCaptureList() {
+        let input = """
+        let foo = { [bar = quux(await baz())] in
+            print(bar)
+        }
+        """
+        let output = """
+        let foo = { [bar = await quux(baz())] in
+            print(bar)
+        }
+        """
+        testFormatting(for: input, output, rule: .hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testNoHoistAwaitOutOfCaptureListOfTrailingClosureAfterMacro() {
+        let input = """
+        await #expect(processExitsWith: .success) { [foo = await bar()] in
+            #expect(foo == 1)
+        }
+        """
+        testFormatting(for: input, rule: .hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
 }

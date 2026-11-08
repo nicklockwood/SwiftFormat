@@ -1827,8 +1827,19 @@ public func tokenize(_ source: String) -> [Token] {
                 return
             }
         }
+        var i = i
         if type == .prefix, prevNonSpaceToken == .endOfScope(">") {
+            // A prefix operator can't follow the end of a generic argument list, so the
+            // `<` and `>` we previously tokenized as generic brackets must actually be
+            // operators (e.g. in `x << -1 ... y >> -1`, the `<<` and `>>` were first read
+            // as two nested generic scopes). Turning them back into operators merges
+            // adjacent ones into a single token (`<` + `<` becomes `<<`), so the token
+            // array gets shorter and every index after the merge point (including `i`)
+            // shifts left. Adjust `i` by the number of removed tokens so we still update
+            // the operator we were called for.
+            let count = tokens.count
             convertClosingChevronToOperator(at: prevNonSpaceIndex, andOpeningChevron: true)
+            i -= count - tokens.count
         }
         tokens[i] = .operator(string, type)
     }

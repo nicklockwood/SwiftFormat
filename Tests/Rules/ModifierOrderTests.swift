@@ -117,6 +117,16 @@ final class ModifierOrderTests: XCTestCase {
         testFormatting(for: input, output, rule: .modifierOrder, options: options, exclude: [.noExplicitOwnership])
     }
 
+    func testLegacyConsumingModifierOrder() {
+        let input = """
+        __consuming public func close()
+        """
+        let output = """
+        public __consuming func close()
+        """
+        testFormatting(for: input, output, rule: .modifierOrder)
+    }
+
     func testNoConfusePostfixIdentifierWithKeyword() {
         let input = """
         var foo = .postfix

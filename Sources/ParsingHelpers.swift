@@ -4948,7 +4948,7 @@ extension _FormatRules {
     static let aclSetterModifiers = aclModifiers.map { "\($0)(set)" }
 
     /// Mutating modifiers
-    static let mutatingModifiers = ["borrowing", "consuming", "mutating", "nonmutating"]
+    static let mutatingModifiers = ["borrowing", "consuming", "__consuming", "mutating", "nonmutating"]
 
     /// Ownership modifiers
     static let ownershipModifiers = ["weak", "unowned", "unowned(safe)", "unowned(unsafe)"]

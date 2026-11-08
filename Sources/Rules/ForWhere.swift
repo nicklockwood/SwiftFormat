@@ -110,7 +110,7 @@ extension Formatter {
                 ])
             }
             // Operators with lower precedence than `&&` need parens to keep the same meaning
-            if conditions.count > 1, conditionHasLowerPrecedenceThanAnd(in: condition.range) {
+            if conditions.count > 1, conditionHasLowerPrecedenceThanAnd(in: condition.range.lowerBound ..< condition.range.upperBound + 1) {
                 whereClause.append(.startOfScope("("))
                 whereClause.append(contentsOf: tokens[condition.range])
                 whereClause.append(.endOfScope(")"))
@@ -136,25 +136,6 @@ extension Formatter {
                 through: bodyEnd
             )
         }
-    }
-
-    /// Whether the expression contains a top-level `||` or ternary operator,
-    /// which bind less tightly than `&&`.
-    func conditionHasLowerPrecedenceThanAnd(in range: ClosedRange<Int>) -> Bool {
-        var index = range.lowerBound
-        while index <= range.upperBound {
-            switch tokens[index] {
-            case .operator("||", .infix), .operator("?", .infix):
-                return true
-            case .startOfScope:
-                guard let endIndex = endOfScope(at: index) else { return true }
-                index = endIndex
-            default:
-                break
-            }
-            index += 1
-        }
-        return false
     }
 
     /// Converts a where clause on a for loop to a nested if statement.

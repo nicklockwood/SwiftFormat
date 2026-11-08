@@ -88,6 +88,38 @@ final class AndOperatorTests: XCTestCase {
         testFormatting(for: input, rule: .andOperator)
     }
 
+    func testReplaceIfAndBeforeOrInLaterCondition() {
+        let input = """
+        if foo && bar, baz || quux {}
+        """
+        let output = """
+        if foo, bar, baz || quux {}
+        """
+        testFormatting(for: input, output, rule: .andOperator)
+    }
+
+    func testReplaceIfAndWithOrInParens() {
+        let input = """
+        if foo && (bar || baz) {}
+        """
+        let output = """
+        if foo, (bar || baz) {}
+        """
+        testFormatting(for: input, output, rule: .andOperator, exclude: [.redundantParens])
+    }
+
+    func testReplaceIfAndFollowedByTernaryAfterBody() {
+        let input = """
+        if foo && bar {}
+        let baz = quux ? 1 : 2
+        """
+        let output = """
+        if foo, bar {}
+        let baz = quux ? 1 : 2
+        """
+        testFormatting(for: input, output, rule: .andOperator)
+    }
+
     func testIfAndReplacedInFunction() {
         let input = """
         func someFunc() { if bar && baz {} }

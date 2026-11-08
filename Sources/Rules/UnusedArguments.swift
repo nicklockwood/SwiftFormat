@@ -38,7 +38,10 @@ public extension FormatRule {
             // An argument named in a lifetime attribute is used, even if the body doesn't reference it
             let startOfAttributes = formatter.startOfModifiers(at: i, includingAttributes: true)
             for attributeIndex in startOfAttributes ..< i where ["@_lifetime", "@lifetime"].contains(formatter.tokens[attributeIndex].string) {
-                guard let endOfAttribute = formatter.endOfAttribute(at: attributeIndex) else { continue }
+                // An attribute without arguments ends at its own index
+                guard let endOfAttribute = formatter.endOfAttribute(at: attributeIndex),
+                      endOfAttribute > attributeIndex
+                else { continue }
                 for index in attributeIndex + 1 ... endOfAttribute {
                     if case .identifier = formatter.tokens[index],
                        let nameIndex = argNames.firstIndex(of: formatter.tokens[index].unescaped())

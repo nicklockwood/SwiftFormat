@@ -2120,4 +2120,16 @@ final class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .unusedArguments, exclude: [.noExplicitOwnership])
     }
+
+    func testLifetimeAttributeWithoutArguments() {
+        let input = """
+        @_lifetime
+        func foo(bar: Int) {}
+        """
+        let output = """
+        @_lifetime
+        func foo(bar _: Int) {}
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
 }

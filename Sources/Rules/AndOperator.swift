@@ -33,13 +33,9 @@ public extension FormatRule {
                 switch formatter.tokens[index] {
                 case .operator("&&", .infix):
                     let endOfGroup = formatter.index(of: .delimiter(","), after: index) ?? endIndex
-                    var nextOpIndex = index
-                    while let next = formatter.index(of: .operator, after: nextOpIndex) {
-                        if [.operator("||", .infix), .operator("?", .infix)].contains(formatter.tokens[next]) {
-                            index = endOfGroup
-                            continue outer
-                        }
-                        nextOpIndex = next
+                    if formatter.conditionHasLowerPrecedenceThanAnd(in: index + 1 ..< endOfGroup) {
+                        index = endOfGroup
+                        continue outer
                     }
                     if let chevronIndex,
                        formatter.index(of: .operator(">", .infix), in: index ..< endIndex) != nil
@@ -71,7 +67,7 @@ public extension FormatRule {
                     }
                 case .operator("<", .infix):
                     chevronIndex = index
-                case .operator("||", .infix), .operator("?", .infix), .operator("=", .infix), .keyword("try"):
+                case _ where formatter.hasLowerPrecedenceThanAnd(at: index), .keyword("try"):
                     index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? endIndex

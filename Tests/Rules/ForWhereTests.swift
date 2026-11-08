@@ -274,6 +274,108 @@ final class ForWhereTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.andOperator, .forWhere])
     }
 
+    func testWrapsOrConditionInParensWhenJoiningWithAndOperator() {
+        let input = """
+        for child in children {
+            if child.isVisible || child.isPinned, child.isEnabled {
+                render(child)
+            }
+        }
+        """
+        let output = """
+        for child in children where (child.isVisible || child.isPinned) && child.isEnabled {
+            render(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere)
+    }
+
+    func testWrapsTrailingOrConditionInParensWhenJoiningWithAndOperator() {
+        let input = """
+        for child in children {
+            if child.isEnabled, child.id == 1 || child.id == 2 {
+                render(child)
+            }
+        }
+        """
+        let output = """
+        for child in children where child.isEnabled && (child.id == 1 || child.id == 2) {
+            render(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere)
+    }
+
+    func testWrapsTernaryConditionInParensWhenJoiningWithAndOperator() {
+        let input = """
+        for child in children {
+            if child.isEnabled, child.isLarge ? showLarge : showSmall {
+                render(child)
+            }
+        }
+        """
+        let output = """
+        for child in children where child.isEnabled && (child.isLarge ? showLarge : showSmall) {
+            render(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere)
+    }
+
+    func testJoinsParenthesizedOrConditionWithAndOperator() {
+        let input = """
+        for child in children {
+            if (child.isVisible || child.isPinned), child.isEnabled {
+                render(child)
+            }
+        }
+        """
+        let output = """
+        for child in children where (child.isVisible || child.isPinned) && child.isEnabled {
+            render(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere)
+    }
+
+    func testDoesNotWrapSingleOrCondition() {
+        let input = """
+        for child in children {
+            if child.isVisible || child.isPinned {
+                render(child)
+            }
+        }
+        """
+        let output = """
+        for child in children where child.isVisible || child.isPinned {
+            render(child)
+        }
+        """
+        testFormatting(for: input, output, rule: .forWhere)
+    }
+
+    func testDoesNotJoinConditionsWhenLaterConditionUsesTry() {
+        let input = """
+        for child in children {
+            if child.isEnabled, try child.validate() {
+                render(child)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .forWhere)
+    }
+
+    func testDoesNotJoinConditionsWhenLaterConditionUsesAwait() {
+        let input = """
+        for child in children {
+            if child.isEnabled, await child.isReady() {
+                render(child)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .forWhere)
+    }
+
     func testAdjustsIndentationInNestedScope() {
         let input = """
         func renderChildren() {

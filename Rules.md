@@ -3736,6 +3736,21 @@ Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder.
   }
 ```
 
+```diff
+  extension View {
++   @ViewBuilder
+    func highlighted(_ enabled: Bool) -> some View {
+-     Group {
+        if enabled {
+          self.bold()
+        } else {
+          self
+        }
+-     }
+    }
+  }
+```
+
 </details>
 <br/>
 

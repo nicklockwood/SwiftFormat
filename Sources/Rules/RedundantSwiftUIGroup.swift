@@ -18,6 +18,9 @@ public extension FormatRule {
             let bodyScope: ClosedRange<Int>?
             let isBodyMember: Bool
             let isInsideViewType: Bool
+            let parentType = declaration.parentType
+            let isViewProtocolExtension = parentType?.keyword == "extension"
+                && ["View", "ViewModifier"].contains(parentType?.name ?? "")
 
             // Parse the declaration to get body scope and check if it's a body member
             if declaration.keyword == "var" || declaration.keyword == "let",
@@ -29,7 +32,7 @@ public extension FormatRule {
                 let isViewType = formatter.isViewType(declaration.parentType)
                 let isViewModifierType = formatter.isViewModifierType(declaration.parentType)
                 isBodyMember = property.identifier == "body" && isViewType
-                isInsideViewType = isViewType || isViewModifierType
+                isInsideViewType = isViewType || isViewModifierType || isViewProtocolExtension
             } else if declaration.keyword == "func",
                       let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
             {
@@ -39,7 +42,7 @@ public extension FormatRule {
                 let isViewType = formatter.isViewType(declaration.parentType)
                 let isViewModifierType = formatter.isViewModifierType(declaration.parentType)
                 isBodyMember = function.name == "body" && isViewModifierType
-                isInsideViewType = isViewType || isViewModifierType
+                isInsideViewType = isViewType || isViewModifierType || isViewProtocolExtension
             } else {
                 return
             }
@@ -116,6 +119,21 @@ public extension FormatRule {
                 Text(status)
         -     }
               .padding(.horizontal, 8)
+            }
+          }
+        ```
+
+        ```diff
+          extension View {
+        +   @ViewBuilder
+            func highlighted(_ enabled: Bool) -> some View {
+        -     Group {
+                if enabled {
+                  self.bold()
+                } else {
+                  self
+                }
+        -     }
             }
           }
         ```

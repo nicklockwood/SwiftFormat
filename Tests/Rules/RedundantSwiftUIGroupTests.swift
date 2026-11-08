@@ -574,6 +574,149 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSwiftUIGroup)
     }
 
+    func testRemoveGroupsInViewExtensionFunctions() {
+        let input = """
+        extension View {
+            /// Applies the entrance animation.
+            @MainActor
+            public func applyAnimation(store: Store?, context: Context) -> some View {
+                Group {
+                    if let store, let index = context.sectionIndex {
+                        modifier(AnimationModifier(
+                            store: store,
+                            index: index
+                        ))
+                    } else {
+                        self
+                    }
+                }
+            }
+
+            public func applyAnimation(params: Params?) -> some View {
+                Group {
+                    if let params {
+                        modifier(AnimationModifier(params: params))
+                    } else {
+                        self
+                    }
+                }
+            }
+        }
+        """
+        let output = """
+        extension View {
+            /// Applies the entrance animation.
+            @ViewBuilder
+            @MainActor
+            public func applyAnimation(store: Store?, context: Context) -> some View {
+                if let store, let index = context.sectionIndex {
+                    modifier(AnimationModifier(
+                        store: store,
+                        index: index
+                    ))
+                } else {
+                    self
+                }
+            }
+
+            @ViewBuilder
+            public func applyAnimation(params: Params?) -> some View {
+                if let params {
+                    modifier(AnimationModifier(params: params))
+                } else {
+                    self
+                }
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testRemoveGroupInConstrainedViewExtensionWithExistingBuilder() {
+        let input = """
+        extension View where Self: Equatable {
+            @ViewBuilder
+            var decorated: some View {
+                Group {
+                    if isHighlighted {
+                        bold()
+                    } else {
+                        self
+                    }
+                }
+            }
+        }
+        """
+        let output = """
+        extension View where Self: Equatable {
+            @ViewBuilder
+            var decorated: some View {
+                if isHighlighted {
+                    bold()
+                } else {
+                    self
+                }
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testRemoveGroupInViewModifierExtension() {
+        let input = """
+        extension ViewModifier {
+            func decorated(content: Content) -> some View {
+                Group {
+                    content
+                }
+            }
+        }
+        """
+        let output = """
+        extension ViewModifier {
+            func decorated(content: Content) -> some View {
+                content
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testKeepGroupWithConditionalAndModifiersInViewExtension() {
+        let input = """
+        extension View {
+            func decorated(_ condition: Bool) -> some View {
+                Group {
+                    if condition {
+                        bold()
+                    } else {
+                        self
+                    }
+                }
+                .padding()
+            }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testKeepGroupInUnrelatedExtension() {
+        let input = """
+        extension MyView {
+            func decorated(_ condition: Bool) -> some View {
+                Group {
+                    if condition {
+                        Text("foo")
+                    } else {
+                        Text("bar")
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSwiftUIGroup)
+    }
+
     func testRemoveGroupInNestedView() {
         let input = """
         struct OuterView: View {

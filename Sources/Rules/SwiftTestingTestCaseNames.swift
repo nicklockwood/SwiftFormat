@@ -80,6 +80,13 @@ extension Formatter {
             // Remove any existing backticks from the name, since raw identifiers can't contain backticks
             displayName = displayName.replacingOccurrences(of: "`", with: "")
 
+            // Unescape quotes. A raw identifier can't contain a backslash, so a display name
+            // with another escape sequence or an interpolation is kept as it is.
+            displayName = displayName
+                .replacingOccurrences(of: "\\\"", with: "\"")
+                .replacingOccurrences(of: "\\'", with: "'")
+            guard !displayName.contains("\\") else { return }
+
             let newName = "`\(displayName)`"
             updateDeclarationName(forDeclarationAt: keywordIndex, to: newName)
             removeMacroDisplayNameString(forDeclarationAt: keywordIndex, macroName: macroName)

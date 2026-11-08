@@ -356,6 +356,59 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
                        options: FormatOptions(swiftVersion: "6.2"))
     }
 
+    func testUsesDisplayNameWithEscapedQuotesForRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("Keys stay distinct (\\"a\\" vs \\'b\\')")
+            func keysStayDistinct() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `Keys stay distinct ("a" vs 'b')`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testKeepsDisplayNameWithOtherEscapesOrInterpolation() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("Splits lines on \\n")
+            func splitsLines() {
+                #expect(true)
+            }
+
+            @Test("Parses \\(Self.example)")
+            func parsesExample() {
+                #expect(true)
+            }
+
+            @Test("Keeps a \\\\ in a path")
+            func keepsBackslash() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
     func testUsesDisplayNameForRawIdentifierWithExistingRawIdentifier() {
         let input = """
         import Testing

@@ -13,6 +13,7 @@ public extension FormatRule {
         help: "Add a MARK comment before top-level types and extensions.",
         runOnceOnly: true,
         disabledByDefault: true,
+        orderAfter: [.redundantSwiftVersionCheck],
         options: ["mark-types", "type-mark", "mark-extensions", "extension-mark", "grouped-extension"],
         sharedOptions: ["line-after-marks", "linebreaks"]
     ) { formatter in

@@ -55,10 +55,11 @@ public extension FormatRule {
                     endIndex += formatter.replaceCommentBody(at: startIndex, isDocComment: isDocComment, stripLeadingStars: &stripLeadingStars)
                 }
 
-                // Replace ending delimiter
-                if let i = formatter.index(of: .nonSpace, before: endIndex, if: {
-                    $0.isLinebreak
-                }) {
+                // Replace ending delimiter. Indentation before it that goes past the
+                // comment's own indent is a whitespace-only comment body.
+                if let i = formatter.index(before: endIndex, where: {
+                    !$0.isSpace && !($0.isCommentBody && $0.string.allSatisfy(\.isWhitespace))
+                }), formatter.tokens[i].isLinebreak {
                     let range = i ... endIndex
                     formatter.removeTokens(in: range)
                     endIndex -= range.count

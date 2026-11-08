@@ -208,6 +208,40 @@ final class BlockCommentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
 
+    func testBlockDocCommentWithOverIndentedEndDelimiter() {
+        let input = """
+        struct Foo {
+            /**
+             Does a thing.
+              */
+            func bar() {}
+        }
+        """
+        let output = """
+        struct Foo {
+            /// Does a thing.
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .blockComments)
+    }
+
+    func testBlockCommentWithOverIndentedEndDelimiter() {
+        let input = """
+        /*
+         foo
+
+            */
+        let bar = 1
+        """
+        let output = """
+        // foo
+        //
+        let bar = 1
+        """
+        testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
+    }
+
     func testLongBlockCommentsWithoutPerLineMarkersFullyConverted() {
         let input = """
         /*

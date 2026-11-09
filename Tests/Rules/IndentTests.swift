@@ -3038,6 +3038,107 @@ final class IndentTests: XCTestCase {
                        exclude: [.wrapArguments, .wrapMultilineStatementBraces])
     }
 
+    func testIndentMemberChainsAfterMultilineExpressions() {
+        let input = """
+        func f() {
+            let a = Foo(
+                x: 1
+            )
+                .load(2)
+            let b = [
+                1,
+                2,
+            ]
+                .map { $0 }
+            let c = Foo(
+                x: 1
+            ) { $0 }
+                .load(2)
+            let d = Foo(
+                x: 1
+            ) {
+                $0
+            }
+                .load(2)
+        }
+        """
+        let output = """
+        func f() {
+            let a = Foo(
+                x: 1
+            )
+            .load(2)
+            let b = [
+                1,
+                2,
+            ]
+            .map { $0 }
+            let c = Foo(
+                x: 1
+            ) { $0 }
+                .load(2)
+            let d = Foo(
+                x: 1
+            ) {
+                $0
+            }
+            .load(2)
+        }
+        """
+        testFormatting(for: input, output, rule: .indent)
+    }
+
+    func testIndentMemberChainsAfterMultilineExpressionsWithXcodeIndentation() {
+        let input = """
+        func f() {
+            let a = Foo(
+                x: 1
+            )
+                .load(2)
+            let b = [
+                1,
+                2,
+            ]
+                .map { $0 }
+            let c = Foo(
+                x: 1
+            ) { $0 }
+                .load(2)
+            let d = Foo(
+                x: 1
+            ) {
+                $0
+            }
+                .load(2)
+        }
+        """
+        let output = """
+        func f() {
+            let a = Foo(
+                x: 1
+            )
+            .load(2)
+            let b = [
+                1,
+                2,
+            ]
+                .map { $0 }
+            let c = Foo(
+                x: 1
+            ) { $0 }
+                .load(2)
+            let d = Foo(
+                x: 1
+            ) {
+                $0
+            }
+            .load(2)
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
     func testIndentChainedPropertiesAfterFunctionCall() {
         let input = """
         let foo = Foo(

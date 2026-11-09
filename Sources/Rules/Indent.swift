@@ -947,6 +947,47 @@ public extension FormatRule {
         + case baz: break
           }
         ```
+
+        **Member chains**
+
+        By default, a member chain on a new line is aligned with the previous line
+        when that line's code consists only of closing parentheses, brackets or braces.
+        If there is other code on that line, such as an inline trailing closure,
+        the member chain is indented one level:
+
+        ```swift
+        let a = Foo(
+            x: 1
+        )
+        .load(2)
+
+        let b = [
+            1,
+            2,
+        ]
+        .map { $0 }
+
+        let c = Foo(
+            x: 1
+        ) { $0 }
+            .load(2)
+        ```
+
+        Wrapping the trailing closure puts its closing brace on a separate line,
+        so the member chain is aligned with that brace:
+
+        ```swift
+        let d = Foo(
+            x: 1
+        ) {
+            $0
+        }
+        .load(2)
+        ```
+
+        With `--xcode-indentation enabled`, the member chain after the standalone `]`
+        in the array example is indented one level. Chains after a standalone `)`
+        or `}` remain aligned with that line, as shown above.
         """
     }
 }

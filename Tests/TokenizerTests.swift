@@ -2631,6 +2631,53 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testShiftsByNegativeIntegersOnSeparateLines() {
+        let input = """
+        x << -1
+        y >> -1
+        """
+        let output: [Token] = [
+            .identifier("x"),
+            .space(" "),
+            .operator("<<", .infix),
+            .space(" "),
+            .operator("-", .prefix),
+            .number("1", .integer),
+            .linebreak("\n", 1),
+            .identifier("y"),
+            .space(" "),
+            .operator(">>", .infix),
+            .space(" "),
+            .operator("-", .prefix),
+            .number("1", .integer),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testShiftsByNegativeIntegersInArgumentList() {
+        let input = "f(x << -1, y >> -1)"
+        let output: [Token] = [
+            .identifier("f"),
+            .startOfScope("("),
+            .identifier("x"),
+            .space(" "),
+            .operator("<<", .infix),
+            .space(" "),
+            .operator("-", .prefix),
+            .number("1", .integer),
+            .delimiter(","),
+            .space(" "),
+            .identifier("y"),
+            .space(" "),
+            .operator(">>", .infix),
+            .space(" "),
+            .operator("-", .prefix),
+            .number("1", .integer),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testBitshiftThatLooksLikeAGeneric() {
         let input = "a<b, b<c, d>>e"
         let output: [Token] = [

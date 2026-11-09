@@ -5068,4 +5068,42 @@ final class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testPropertyNamedOpenWithoutTypeIsNotAModifierOfNextDeclaration() {
+        let input = """
+        struct Foo: View {
+            @Environment(\\.openAction) private var open
+
+            var model: Model
+
+            var body: some View {
+                Text("")
+            }
+        }
+        """
+
+        let output = """
+        struct Foo: View {
+
+            // MARK: Internal
+
+            var model: Model
+
+            var body: some View {
+                Text("")
+            }
+
+            // MARK: Private
+
+            @Environment(\\.openAction) private var open
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

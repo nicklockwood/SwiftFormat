@@ -1631,13 +1631,19 @@ public func tokenize(_ source: String) -> [Token] {
         assert(tokens[i] == .endOfScope(">"))
         tokens[i] = .operator(">", .none)
         stitchOperators(at: i)
+        // The most recently closed scope comes first, and is the one closed by this
+        // chevron. Later entries can be earlier generics that are still valid, such
+        // as `Baz<Qux>` in `f(a < x, Baz<Qux>.x > y)`, so they must not be popped.
+        var scopeIndex: Int?
+        if andOpeningChevron, !closedGenericScopeIndexes.isEmpty {
+            scopeIndex = closedGenericScopeIndexes.removeFirst()
+        }
         if let previousIndex = index(of: .nonSpaceOrComment, before: i),
            tokens[previousIndex] == .endOfScope(">")
         {
             convertClosingChevronToOperator(at: previousIndex, andOpeningChevron: true)
         }
-        if andOpeningChevron, let scopeIndex = closedGenericScopeIndexes.last {
-            closedGenericScopeIndexes.removeLast()
+        if let scopeIndex {
             convertOpeningChevronToOperator(at: scopeIndex)
         }
     }

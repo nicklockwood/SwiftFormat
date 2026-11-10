@@ -541,6 +541,113 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testUnchangedCacheIsNotRewritten() throws {
+        for mode in ["auto", "disabled"] {
+            try withTmpDirectory([
+                "Package.swift": """
+                // Package marker
+                """,
+                "Other.swift": """
+                public struct Foo {}
+                """,
+                "Input.swift": """
+                extension Foo {
+                    public func bar() {}
+                }
+                """,
+            ]) { directory in
+                let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+                let arguments = "Input.swift --rules redundantPublic --project-index \(mode) --cache \(cacheURL.path) --quiet"
+                CLI.print = { _, _ in }
+                XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+                // Warm the cache after any formatting changes in the first run.
+                XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+                let contents = try Data(contentsOf: cacheURL)
+                let timestamp = Date(timeIntervalSince1970: 1_000_000)
+                try FileManager.default.setAttributes([.modificationDate: timestamp], ofItemAtPath: cacheURL.path)
+
+                XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+
+                XCTAssertEqual(try Data(contentsOf: cacheURL), contents)
+                XCTAssertEqual(
+                    try FileManager.default.attributesOfItem(atPath: cacheURL.path)[.modificationDate] as? Date,
+                    timestamp
+                )
+                let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: contents) as? [String: Any])
+                XCTAssertNil(cache["isDirty"])
+            }
+        }
+    }
+
+    func testCacheVersionChangesAreSavedWithoutFormattingUpdates() throws {
+        try withTmpDirectory([
+            "Input.swift": """
+            func foo() {
+            print(1)
+            }
+            """,
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+            for key in ["swiftFormatVersion", "projectIndexVersion"] {
+                var cache: [String: Any] = [
+                    "swiftFormatVersion": swiftFormatVersion,
+                    "projectIndexVersion": SourceFileIndex.cacheVersion,
+                    "formatting": [:],
+                    "projectIndexDependencies": [:],
+                    "sourceIndexes": [:],
+                ]
+                cache[key] = key == "swiftFormatVersion" ? "old" : 0
+                try JSONSerialization.data(withJSONObject: cache).write(to: cacheURL)
+
+                XCTAssertEqual(CLI.run(
+                    in: directory.path,
+                    with: "Input.swift --dry-run --rules indent --project-index disabled --cache \(cacheURL.path) --quiet"
+                ), .ok)
+
+                cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any])
+                XCTAssertEqual(cache["swiftFormatVersion"] as? String, swiftFormatVersion)
+                XCTAssertEqual(cache["projectIndexVersion"] as? Int, SourceFileIndex.cacheVersion)
+                XCTAssertEqual((cache["formatting"] as? [String: Any])?.count, 0)
+            }
+        }
+    }
+
+    func testChangedProjectIndexIsSaved() throws {
+        try withTmpDirectory([
+            "Package.swift": """
+            // Package marker
+            """,
+            "Input.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+            "Other.swift": """
+            public struct Foo {}
+            """,
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let arguments = "Input.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            let previous = try Data(contentsOf: cacheURL)
+            let updatedSource = """
+            struct Foo {}
+            """
+            try updatedSource.write(to: directory.appendingPathComponent("Other.swift"), atomically: true, encoding: .utf8)
+
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+
+            let contents = try Data(contentsOf: cacheURL)
+            XCTAssertNotEqual(contents, previous)
+            let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: contents) as? [String: Any])
+            let indexes = try XCTUnwrap(cache["sourceIndexes"] as? [String: [String: Any]])
+            let index = try XCTUnwrap(indexes.first { $0.key.hasSuffix("/Other.swift") }?.value)
+            XCTAssertEqual(index["contentHash"] as? String, computeHash(updatedSource))
+        }
+    }
+
     func testHashIsFasterThanFormatting() throws {
         let sourceFile = URL(fileURLWithPath: #file)
         let source = try String(contentsOf: sourceFile, encoding: .utf8)

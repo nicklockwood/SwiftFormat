@@ -2678,6 +2678,53 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testLeftShiftByImplicitMemberFollowedByGreaterThan() {
+        let input = """
+        x << .foo
+        y > .bar
+        """
+        let output: [Token] = [
+            .identifier("x"),
+            .space(" "),
+            .operator("<<", .infix),
+            .space(" "),
+            .operator(".", .prefix),
+            .identifier("foo"),
+            .linebreak("\n", 1),
+            .identifier("y"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .operator(".", .prefix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testLeftShiftAssignByImplicitMemberFollowedByGreaterThan() {
+        let input = "f(x <<= .foo, y > .bar)"
+        let output: [Token] = [
+            .identifier("f"),
+            .startOfScope("("),
+            .identifier("x"),
+            .space(" "),
+            .operator("<<=", .infix),
+            .space(" "),
+            .operator(".", .prefix),
+            .identifier("foo"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("y"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .operator(".", .prefix),
+            .identifier("bar"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testBitshiftThatLooksLikeAGeneric() {
         let input = "a<b, b<c, d>>e"
         let output: [Token] = [

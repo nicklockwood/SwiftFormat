@@ -2034,6 +2034,11 @@ public func tokenize(_ source: String) -> [Token] {
                     default:
                         // Not a generic scope
                         convertOpeningChevronToOperator(at: scopeIndex)
+                        if scopeIndex > 0, tokens[scopeIndex - 1] == .startOfScope("<") {
+                            // A generic argument list can't start with `<`, so the preceding
+                            // chevron is part of the same operator (e.g. `<<` or `<<=`)
+                            convertOpeningChevronToOperator(at: scopeIndex - 1)
+                        }
                     }
                 case .delimiter(":") where scopeIndexStack.count > 1 &&
                     [.endOfScope("case"), .operator("?", .infix)].contains(tokens[scopeIndexStack[scopeIndexStack.count - 2]]):

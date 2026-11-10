@@ -96,10 +96,10 @@ final class SourceFileIndexAccess {
         self.builder = builder
     }
 
-    func get(preferredIndex: SourceFileIndex? = nil) -> SourceFileIndex? {
+    func get() -> SourceFileIndex? {
         wasRequested = true
         if index == nil {
-            index = preferredIndex ?? builder()
+            index = builder()
         }
         return index
     }
@@ -341,7 +341,7 @@ struct ProjectIndex {
         var matches: [Match]
     }
 
-    struct MemberNamesByType: Equatable {
+    struct MemberNamesByType: Codable, Equatable {
         static let empty = MemberNamesByType()
 
         var instance = [String: Set<String>]()
@@ -363,38 +363,169 @@ struct ProjectIndex {
         case unknown
     }
 
-    private struct TypeKey: Hashable {
+    private struct TypeKey: Codable, Hashable {
         var moduleIdentifier: String
         var name: String
     }
 
-    let files: [String: SourceFileIndex]
-    let fingerprint: String
-    private let declarationsFingerprint: String
-    private let functionReferencesFingerprint: String
-    private let symbolReferencesFingerprint: String
-    private let typeVisibilities: [TypeKey: Set<String>]
-    private let typesByModule: [TypeKey: [SourceFileIndex.TypeDeclaration]]
-    private let protocolsByModule: Set<TypeKey>
-    private let protocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]]
-    private let conformancesByModule: [TypeKey: Set<String>]
-    private let staticPropertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
-    private let inheritedClassNamesByModule: [String: Set<String>]
-    private let inheritedClassNames: Set<String>
-    private let inheritedNamesByTypeName: [String: Set<String>]
-    private let typeAndProtocolCountsByModule: [TypeKey: Int]
-    private let functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
-    private let functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
-    private let memberNamesByModule: [String: MemberNamesByType]
-    private let dynamicMemberLookupTypesByModule: [String: Set<String>]
-    private let noncopyableTypesByModule: [String: Set<String>]
-    private let symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]]
-    private let symbolDeclarationCountsByName: [String: Int]
-    private let typeDeclarationCountsByShortName: [String: Int]
-    private let symbolDeclarationNames: Set<String>
+    struct File: Codable, Equatable {
+        var contentHash: String
+        var moduleIdentifiers: [String]
+        var includesFunctionReferences: Bool
+        var includesSymbolReferences: Bool
+
+        init(_ index: SourceFileIndex) {
+            contentHash = index.contentHash
+            moduleIdentifiers = index.moduleIdentifiers
+            includesFunctionReferences = index.includesFunctionReferences
+            includesSymbolReferences = index.includesSymbolReferences
+        }
+    }
+
+    struct Fingerprints: Codable, Equatable {
+        var declarations: String
+        var functionReferences: String
+        var symbolReferences: String
+        var all: String
+    }
+
+    let files: [String: File]
+    let fingerprints: Fingerprints
+    var fingerprint: String {
+        fingerprints.all
+    }
+
+    private struct TypesTable: Codable {
+        var typeVisibilities: [TypeKey: Set<String>]
+        var typesByModule: [TypeKey: [SourceFileIndex.TypeDeclaration]]
+        var protocolsByModule: Set<TypeKey>
+        var protocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]]
+        var conformancesByModule: [TypeKey: Set<String>]
+        var inheritedClassNamesByModule: [String: Set<String>]
+        var inheritedClassNames: Set<String>
+        var inheritedNamesByTypeName: [String: Set<String>]
+        var typeAndProtocolCountsByModule: [TypeKey: Int]
+        var dynamicMemberLookupTypesByModule: [String: Set<String>]
+        var noncopyableTypesByModule: [String: Set<String>]
+        var protocolNames: Set<String>
+        var conformancesByFile: [String: [SourceFileIndex.TypeConformance]]
+    }
+
+    private let types: ProjectIndexTable<TypesTable>
+    private var typeVisibilities: [TypeKey: Set<String>] {
+        types.value.typeVisibilities
+    }
+
+    private var typesByModule: [TypeKey: [SourceFileIndex.TypeDeclaration]] {
+        types.value.typesByModule
+    }
+
+    private var protocolsByModule: Set<TypeKey> {
+        types.value.protocolsByModule
+    }
+
+    private var protocolDeclarationsByModule: [TypeKey: [SourceFileIndex.ProtocolDeclaration]] {
+        types.value.protocolDeclarationsByModule
+    }
+
+    private var conformancesByModule: [TypeKey: Set<String>] {
+        types.value.conformancesByModule
+    }
+
+    private var inheritedClassNamesByModule: [String: Set<String>] {
+        types.value.inheritedClassNamesByModule
+    }
+
+    private var inheritedClassNames: Set<String> {
+        types.value.inheritedClassNames
+    }
+
+    private var inheritedNamesByTypeName: [String: Set<String>] {
+        types.value.inheritedNamesByTypeName
+    }
+
+    private var typeAndProtocolCountsByModule: [TypeKey: Int] {
+        types.value.typeAndProtocolCountsByModule
+    }
+
+    private var dynamicMemberLookupTypesByModule: [String: Set<String>] {
+        types.value.dynamicMemberLookupTypesByModule
+    }
+
+    private var noncopyableTypesByModule: [String: Set<String>] {
+        types.value.noncopyableTypesByModule
+    }
+
+    private struct FunctionsTable: Codable {
+        var functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]]
+        var staticPropertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]]
+        var propertiesByFile: [String: [SourceFileIndex.PropertyDeclaration]]
+    }
+
+    private let functions: ProjectIndexTable<FunctionsTable>
+    private var functionDeclarationsByModule: [String: [String: [SourceFileIndex.FunctionDeclaration]]] {
+        functions.value.functionDeclarationsByModule
+    }
+
+    private var staticPropertiesByModule: [TypeKey: [SourceFileIndex.PropertyDeclaration]] {
+        functions.value.staticPropertiesByModule
+    }
+
+    private struct MembersTable: Codable {
+        var memberNamesByModule: [String: MemberNamesByType]
+    }
+
+    private let members: ProjectIndexTable<MembersTable>
+    private var memberNamesByModule: [String: MemberNamesByType] {
+        members.value.memberNamesByModule
+    }
+
+    private struct NamesTable: Codable {
+        var symbolDeclarationCountsByName: [String: Int]
+        var typeDeclarationCountsByShortName: [String: Int]
+        var symbolDeclarationNames: Set<String>
+    }
+
+    private let names: ProjectIndexTable<NamesTable>
+    private var symbolDeclarationCountsByName: [String: Int] {
+        names.value.symbolDeclarationCountsByName
+    }
+
+    private var typeDeclarationCountsByShortName: [String: Int] {
+        names.value.typeDeclarationCountsByShortName
+    }
+
+    private var symbolDeclarationNames: Set<String> {
+        names.value.symbolDeclarationNames
+    }
+
+    private struct SymbolsTable: Codable {
+        var symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]]
+    }
+
+    private let symbols: ProjectIndexTable<SymbolsTable>
+    private var symbolDeclarationsByModule: [String: [SourceFileIndex.SymbolDeclaration]] {
+        symbols.value.symbolDeclarationsByModule
+    }
+
+    private struct FunctionReferencesTable: Codable {
+        var functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]]
+        var referencesByFile: [String: [SourceFileIndex.FunctionReference]]
+    }
+
+    private let functionReferences: ProjectIndexTable<FunctionReferencesTable>
+    private var functionReferencesByModule: [String: [String: [SourceFileIndex.FunctionReference]]] {
+        functionReferences.value.functionReferencesByModule
+    }
+
+    private struct SymbolReferencesTable: Codable {
+        var referencesByFile: [String: [String]]
+    }
+
+    private let symbolReferences: ProjectIndexTable<SymbolReferencesTable>
 
     init(files: [String: SourceFileIndex]) {
-        self.files = files
+        self.files = files.mapValues(File.init)
         var typeVisibilities = [TypeKey: Set<String>]()
         var inheritedClassNamesByModule = [String: Set<String>]()
         var typeAndProtocolCountsByModule = [TypeKey: Int]()
@@ -511,27 +642,44 @@ struct ProjectIndex {
                     .formUnion(declaration.inheritedProtocols.inheritedNamesToResolve)
             }
         }
-        self.typesByModule = typesByModule
-        self.protocolsByModule = protocolsByModule
-        self.protocolDeclarationsByModule = protocolDeclarationsByModule
-        self.conformancesByModule = conformancesByModule
-        self.staticPropertiesByModule = staticPropertiesByModule
-        self.typeVisibilities = typeVisibilities
-        self.inheritedClassNamesByModule = inheritedClassNamesByModule
-        inheritedClassNames = inheritedClassNamesByModule.values.reduce(into: []) {
-            $0.formUnion($1)
-        }
-        self.inheritedNamesByTypeName = inheritedNamesByTypeName
-        self.typeAndProtocolCountsByModule = typeAndProtocolCountsByModule
-        self.functionDeclarationsByModule = functionDeclarationsByModule
-        self.functionReferencesByModule = functionReferencesByModule
-        self.memberNamesByModule = memberNamesByModule
-        self.dynamicMemberLookupTypesByModule = dynamicMemberLookupTypesByModule
-        self.noncopyableTypesByModule = noncopyableTypesByModule
-        self.symbolDeclarationsByModule = symbolDeclarationsByModule
-        self.symbolDeclarationCountsByName = symbolDeclarationCountsByName
-        self.typeDeclarationCountsByShortName = typeDeclarationCountsByShortName
-        symbolDeclarationNames = Set(symbolDeclarationCountsByName.keys)
+        types = ProjectIndexTable(value: .init(
+            typeVisibilities: typeVisibilities,
+            typesByModule: typesByModule,
+            protocolsByModule: protocolsByModule,
+            protocolDeclarationsByModule: protocolDeclarationsByModule,
+            conformancesByModule: conformancesByModule,
+            inheritedClassNamesByModule: inheritedClassNamesByModule,
+            inheritedClassNames: inheritedClassNamesByModule.values.reduce(into: []) { $0.formUnion($1) },
+            inheritedNamesByTypeName: inheritedNamesByTypeName,
+            typeAndProtocolCountsByModule: typeAndProtocolCountsByModule,
+            dynamicMemberLookupTypesByModule: dynamicMemberLookupTypesByModule,
+            noncopyableTypesByModule: noncopyableTypesByModule,
+            protocolNames: Set(files.values.flatMap { $0.protocolDeclarations.map(\.name.unqualifiedTypeName) }),
+            conformancesByFile: files.mapValues(\.typeConformances)
+        ))
+        functions = ProjectIndexTable(value: .init(
+            functionDeclarationsByModule: functionDeclarationsByModule,
+            staticPropertiesByModule: staticPropertiesByModule,
+            propertiesByFile: files.mapValues(\.propertyDeclarations)
+        ))
+        members = ProjectIndexTable(value: .init(
+            memberNamesByModule: memberNamesByModule
+        ))
+        names = ProjectIndexTable(value: .init(
+            symbolDeclarationCountsByName: symbolDeclarationCountsByName,
+            typeDeclarationCountsByShortName: typeDeclarationCountsByShortName,
+            symbolDeclarationNames: Set(symbolDeclarationCountsByName.keys)
+        ))
+        symbols = ProjectIndexTable(value: .init(
+            symbolDeclarationsByModule: symbolDeclarationsByModule
+        ))
+        functionReferences = ProjectIndexTable(value: .init(
+            functionReferencesByModule: functionReferencesByModule,
+            referencesByFile: files.mapValues(\.functionReferences)
+        ))
+        symbolReferences = ProjectIndexTable(value: .init(
+            referencesByFile: files.mapValues(\.symbolReferences)
+        ))
         let descriptions = files.keys.sorted().compactMap { path -> (String, String, String)? in
             guard let file = files[path] else { return nil }
             let types = file.typeDeclarations
@@ -597,16 +745,54 @@ struct ProjectIndex {
             let symbolReferences = file.symbolReferences.sorted().joined(separator: ",")
             return (declarations, functionReferences, symbolReferences)
         }
-        declarationsFingerprint = computeHash(descriptions.map(\.0).joined(separator: ";"))
-        functionReferencesFingerprint = computeHash(
+        let declarationsFingerprint = computeHash(descriptions.map(\.0).joined(separator: ";"))
+        let functionReferencesFingerprint = computeHash(
             descriptions.map { "\($0.0):\($0.1)" }.joined(separator: ";")
         )
-        symbolReferencesFingerprint = computeHash(
+        let symbolReferencesFingerprint = computeHash(
             descriptions.map { "\($0.0):\($0.2)" }.joined(separator: ";")
         )
-        fingerprint = computeHash(
+        let fingerprint = computeHash(
             descriptions.map { "\($0.0):\($0.1):\($0.2)" }.joined(separator: ";")
         )
+        fingerprints = Fingerprints(
+            declarations: declarationsFingerprint,
+            functionReferences: functionReferencesFingerprint,
+            symbolReferences: symbolReferencesFingerprint,
+            all: fingerprint
+        )
+    }
+
+    init(snapshot: ProjectIndexSnapshot, directory: URL, rebuild: @escaping () -> ProjectIndex) {
+        files = snapshot.files
+        fingerprints = snapshot.fingerprints
+        types = ProjectIndexTable(url: directory.appendingPathComponent("types.json")) { rebuild().types.value }
+        functions = ProjectIndexTable(url: directory.appendingPathComponent("functions.json")) { rebuild().functions.value }
+        members = ProjectIndexTable(url: directory.appendingPathComponent("members.json")) { rebuild().members.value }
+        names = ProjectIndexTable(url: directory.appendingPathComponent("names.json")) { rebuild().names.value }
+        symbols = ProjectIndexTable(url: directory.appendingPathComponent("symbols.json")) { rebuild().symbols.value }
+        functionReferences = ProjectIndexTable(url: directory.appendingPathComponent("functionReferences.json")) { rebuild().functionReferences.value }
+        symbolReferences = ProjectIndexTable(url: directory.appendingPathComponent("symbolReferences.json")) { rebuild().symbolReferences.value }
+    }
+
+    func writeTables(to directory: URL) throws {
+        try types.write(to: directory.appendingPathComponent("types.json"))
+        try functions.write(to: directory.appendingPathComponent("functions.json"))
+        try members.write(to: directory.appendingPathComponent("members.json"))
+        try names.write(to: directory.appendingPathComponent("names.json"))
+        try symbols.write(to: directory.appendingPathComponent("symbols.json"))
+        try functionReferences.write(to: directory.appendingPathComponent("functionReferences.json"))
+        try symbolReferences.write(to: directory.appendingPathComponent("symbolReferences.json"))
+    }
+
+    func propertyDeclarations(visibleFrom fileURL: URL? = nil) -> [SourceFileIndex.PropertyDeclaration] {
+        let modules = fileURL.map { Set(files[$0.standardizedFileURL.path]?.moduleIdentifiers ?? []) }
+        return functions.value.propertiesByFile.flatMap { path, declarations -> [SourceFileIndex.PropertyDeclaration] in
+            if let modules, modules.isDisjoint(with: files[path]?.moduleIdentifiers ?? []) {
+                return []
+            }
+            return declarations
+        }
     }
 
     func fingerprint(for features: Set<ProjectContextFeature>) -> String {
@@ -614,11 +800,11 @@ struct ProjectIndex {
         case (true, true):
             return fingerprint
         case (true, false):
-            return functionReferencesFingerprint
+            return fingerprints.functionReferences
         case (false, true):
-            return symbolReferencesFingerprint
+            return fingerprints.symbolReferences
         case (false, false):
-            return declarationsFingerprint
+            return fingerprints.declarations
         }
     }
 
@@ -644,7 +830,7 @@ struct ProjectIndex {
                   candidate.includesSymbolReferences,
                   visibility != .internal || !moduleIdentifiers.isDisjoint(with: candidate.moduleIdentifiers)
             else { return false }
-            return !variants.isDisjoint(with: candidate.symbolReferences)
+            return !variants.isDisjoint(with: symbolReferences.value.referencesByFile[candidatePath] ?? [])
         }
     }
 
@@ -660,7 +846,7 @@ struct ProjectIndex {
         let path = fileURL.standardizedFileURL.path
         let references: [SourceFileIndex.FunctionReference]
         if visibility <= .fileprivate {
-            references = files[path]?.functionReferences.filter { $0.name == name } ?? []
+            references = (functionReferences.value.referencesByFile[path] ?? []).filter { $0.name == name }
         } else {
             guard let moduleIdentifiers = files[path]?.moduleIdentifiers else { return false }
             references = moduleIdentifiers.flatMap {
@@ -755,9 +941,7 @@ struct ProjectIndex {
               !moduleIdentifiers.isEmpty
         else { return .unknown }
         // Methods in an extension of a project protocol may be default implementations of its requirements.
-        guard !files.values.contains(where: { file in
-            file.protocolDeclarations.contains { $0.name.unqualifiedTypeName == typeName.unqualifiedTypeName }
-        }) else { return .unknown }
+        guard !types.value.protocolNames.contains(typeName.unqualifiedTypeName) else { return .unknown }
         var visitedNames = Set<String>()
         var pendingNames = inheritedNamesByTypeName[typeName.unqualifiedTypeName] ?? []
         var status = ConformanceRequirementStatus.notRequired
@@ -794,7 +978,7 @@ struct ProjectIndex {
     func requiresExplicitSendable(forType typeName: String, visibleFrom fileURL: URL) -> Bool {
         let path = fileURL.standardizedFileURL.path
         guard let file = files[path], !file.moduleIdentifiers.isEmpty else { return false }
-        let sameFileConformances = file.typeConformances.filter { $0.typeName == typeName }
+        let sameFileConformances = (types.value.conformancesByFile[path] ?? []).filter { $0.typeName == typeName }
             .flatMap(\.conformances.inheritedNamesToResolve)
         return file.moduleIdentifiers.contains { module in
             var pending = (conformancesByModule[TypeKey(moduleIdentifier: module, name: typeName)] ?? [])
@@ -1947,6 +2131,24 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Se
             return path.hasPrefix(rootPath + "/") ? (path, [rootPath]) : nil
         })
     }
+}
+
+/// Include workspace files and every referenced project, including projects outside the source root.
+func projectIndexConfigurationHashes(for roots: Set<ProjectRoot>) -> [String: String] {
+    var urls = Set<URL>()
+    for root in roots where root.kind == .xcodeProject {
+        for project in xcodeProjectURLs(in: root.url) {
+            urls.insert(project.appendingPathComponent("project.pbxproj"))
+        }
+        for url in (try? FileManager.default.contentsOfDirectory(at: root.url, includingPropertiesForKeys: nil)) ?? []
+            where url.pathExtension == "xcworkspace"
+        {
+            urls.insert(url.appendingPathComponent("contents.xcworkspacedata"))
+        }
+    }
+    return Dictionary(uniqueKeysWithValues: urls.map { url in
+        (url.standardizedFileURL.path, (try? String(contentsOf: url)).map(computeHash) ?? "missing")
+    })
 }
 
 private func xcodeProjectURLs(in rootURL: URL) -> [URL] {

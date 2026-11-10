@@ -154,10 +154,7 @@ extension Formatter {
         } else {
             return false
         }
-        let modules = Set(project.files[fileURL.standardizedFileURL.path]?.moduleIdentifiers ?? [])
-        let properties = project.files.values
-            .filter { !modules.isDisjoint(with: $0.moduleIdentifiers) }
-            .flatMap(\.propertyDeclarations)
+        let properties = project.propertyDeclarations(visibleFrom: fileURL)
         var resultType = element
         for token in tokens[range].dropFirst() where token.isIdentifier {
             let matches = properties.filter {

@@ -2725,6 +2725,58 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testComparisonBeforeGenericTypeMemberInTuple() {
+        let input = "(lhs < rhs, MemoryLayout<T>.size > 8)"
+        let output: [Token] = [
+            .startOfScope("("),
+            .identifier("lhs"),
+            .space(" "),
+            .operator("<", .infix),
+            .space(" "),
+            .identifier("rhs"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("MemoryLayout"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .operator(".", .infix),
+            .identifier("size"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .number("8", .integer),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testLeftShiftBeforeGenericTypeMemberInTuple() {
+        let input = "(x << 1, MemoryLayout<T>.size > y)"
+        let output: [Token] = [
+            .startOfScope("("),
+            .identifier("x"),
+            .space(" "),
+            .operator("<<", .infix),
+            .space(" "),
+            .number("1", .integer),
+            .delimiter(","),
+            .space(" "),
+            .identifier("MemoryLayout"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .operator(".", .infix),
+            .identifier("size"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .identifier("y"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testBitshiftThatLooksLikeAGeneric() {
         let input = "a<b, b<c, d>>e"
         let output: [Token] = [

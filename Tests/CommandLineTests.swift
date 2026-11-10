@@ -684,6 +684,7 @@ final class CommandLineTests: XCTestCase {
                 invalid JSON
                 """,
             ] {
+                try? FileManager.default.removeItem(at: projectIndexTablesURL(for: cacheURL))
                 try contents.write(to: indexURL, atomically: true, encoding: .utf8)
                 XCTAssertEqual(CLI.run(
                     in: directory.path,
@@ -920,6 +921,36 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testProjectIndexSnapshotBypassesSourceSummaryCache() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}",
+            "Sources/App/Extension.swift": """
+            extension Foo {
+                public func bar() {}
+            }
+            """,
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            let sourceCacheURL = projectIndexCacheURL(for: cacheURL)
+            let arguments = "Sources/App/Extension.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            let tablesURL = projectIndexTablesURL(for: cacheURL)
+            let urls = try XCTUnwrap(FileManager.default.enumerator(at: tablesURL, includingPropertiesForKeys: nil))
+                .allObjects.compactMap { $0 as? URL }.filter { $0.pathExtension == "json" }
+            let originalTables = try urls.map { try Data(contentsOf: $0) }
+            // Force formatting to run, while retaining the validated query tables.
+            try FileManager.default.removeItem(at: cacheURL)
+            try Data("corrupt source summaries".utf8).write(to: sourceCacheURL)
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            XCTAssertEqual(try String(contentsOf: sourceCacheURL), "corrupt source summaries")
+            XCTAssertEqual(try urls.map { try Data(contentsOf: $0) }, originalTables)
+            XCTAssertTrue(try String(contentsOf: directory.appendingPathComponent("Sources/App/Extension.swift"))
+                .contains("public func bar"))
+        }
+    }
+
     func testProjectIndexReusesCachedSourceSummaryForUnchangedFile() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",
@@ -950,6 +981,7 @@ final class CommandLineTests: XCTestCase {
             sourceIndexes[typeKey] = sourceIndex
             cache["sourceIndexes"] = sourceIndexes
             try JSONSerialization.data(withJSONObject: cache).write(to: projectIndexCacheURL(for: cacheURL))
+            try FileManager.default.removeItem(at: projectIndexTablesURL(for: cacheURL))
 
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
             XCTAssertEqual(try String(contentsOf: extensionURL), """

@@ -5662,9 +5662,7 @@ extension Formatter {
                 : staticMemberBindingType(named: tokens[receiver].string, at: equals, bindings: bindings)
             guard let owner else { return nil }
             let project = project()
-            let modules = Set(project.files[fileURL.standardizedFileURL.path]?.moduleIdentifiers ?? [])
-            let properties = project.files.values.filter { !modules.isDisjoint(with: $0.moduleIdentifiers) }
-                .flatMap(\.propertyDeclarations).filter { !$0.isStatic && $0.declaringType == owner && $0.name == tokens[name].string }
+            let properties = project.propertyDeclarations(visibleFrom: fileURL).filter { !$0.isStatic && $0.declaringType == owner && $0.name == tokens[name].string }
             guard properties.count == 1 else { return nil }
             return properties.first?.type
         }

@@ -24,14 +24,19 @@ public extension FormatRule {
         let indexedProject = sharedProjectIndex.flatMap { index in
             index.files[filePath]?.includesFunctionReferences == true ? index : nil
         }
-        let sourceFileIndex = formatter.sourceFileIndex.flatMap { index in
-            index.includesFunctionReferences ? index : nil
-        } ?? makeSourceFileIndex(
-            from: sourceCode(for: formatter.tokens),
-            moduleIdentifiers: ["SwiftFormat.CurrentFile"],
-            includeSymbolReferences: false
-        )
-        let projectIndex = indexedProject ?? ProjectIndex(files: [filePath: sourceFileIndex])
+        let projectIndex: ProjectIndex
+        if let indexedProject {
+            projectIndex = indexedProject
+        } else {
+            let sourceFileIndex = formatter.sourceFileIndex.flatMap { index in
+                index.includesFunctionReferences ? index : nil
+            } ?? makeSourceFileIndex(
+                from: sourceCode(for: formatter.tokens),
+                moduleIdentifiers: ["SwiftFormat.CurrentFile"],
+                includeSymbolReferences: false
+            )
+            projectIndex = ProjectIndex(files: [filePath: sourceFileIndex])
+        }
         let candidates = overloadCandidates.filter { candidate in
             // Without a project index, the protocol or superclass may be declared in another file.
             let mayBeRequired = indexedProject.map {

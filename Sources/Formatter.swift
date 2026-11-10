@@ -68,17 +68,7 @@ public final class Formatter: NSObject {
     }
 
     var sourceFileIndex: SourceFileIndex? {
-        let indexedFile: SourceFileIndex?
-        if let currentFileURL,
-           let projectIndex = context.projectIndexAccess.lastIndex,
-           let sourceFileIndex = projectIndex.files[currentFileURL.standardizedFileURL.path],
-           sourceFileIndex.includesFunctionReferences
-        {
-            indexedFile = sourceFileIndex
-        } else {
-            indexedFile = nil
-        }
-        return context.sourceFileIndexAccess.get(preferredIndex: indexedFile)
+        context.sourceFileIndexAccess.get()
     }
 
     /// Excludes shared project indexing from the per-file rule timeout.

@@ -794,7 +794,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 let cacheDirectory = defaultCacheDirectory()
                 if let contents = try? manager.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) {
                     for cacheURL in contents {
-                        let formattingCacheURL = cacheURL.pathExtension == "index" ? cacheURL.deletingPathExtension() : cacheURL
+                        let formattingCacheURL = ["index", "index-tables"].contains(cacheURL.pathExtension) ? cacheURL.deletingPathExtension() : cacheURL
                         guard formattingCacheURL.lastPathComponent == defaultCacheFileName ||
                             (formattingCacheURL.lastPathComponent.hasPrefix(projectCacheFilePrefix) && formattingCacheURL.pathExtension == "cache")
                         else { continue }
@@ -1509,11 +1509,16 @@ func processInput(_ inputURLs: [URL],
     }
 
     let projectIndexCache = ProjectIndexCache()
+    let projectIndexSnapshotCache = ProjectIndexSnapshotCache(
+        cacheURL: cacheURLsByRoot.values.sorted { $0.path < $1.path }.first,
+        roots: projectRoots
+    )
+    let indexBuildLock = NSLock()
+    var projectSources: [String: String]?
+    var projectSourceHashes: [String: String]?
     var discoveredProjectFiles: [(URL, ProjectRoot)]?
     var moduleIdentifiersByRoot: [ProjectRoot: [String: Set<String>]]?
-    let projectIndexProvider: ProjectIndexProvider? = projectIndexMode == .auto ? ProjectIndexProvider { features in
-        let requiresFunctionReferences = features.contains(.functionReferences)
-        let requiresSymbolReferences = features.contains(.symbolReferences)
+    let projectIndexProvider: ProjectIndexProvider? = projectIndexMode == .auto ? ProjectIndexProvider { [projectIndexSnapshotCache] features in
         let discoveredFiles: [(URL, ProjectRoot)]
         if let cached = discoveredProjectFiles {
             discoveredFiles = cached
@@ -1533,53 +1538,94 @@ func processInput(_ inputURLs: [URL],
             discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
             discoveredProjectFiles = discoveredFiles
         }
-        let modulesByRoot: [ProjectRoot: [String: Set<String>]]
-        if let cached = moduleIdentifiersByRoot {
-            modulesByRoot = cached
-        } else {
-            let filesByRoot = Dictionary(grouping: discoveredFiles, by: \.1)
-            modulesByRoot = filesByRoot.mapValues { files in
-                moduleIdentifiers(for: files.map(\.0), in: files[0].1)
+        // Hash sources once for both snapshot validation and rebuilding. Keep their contents so a
+        // lazy table recovery cannot observe a partially formatted project.
+        if projectSources == nil {
+            let lock = NSLock()
+            var sources = [String: String]()
+            var hashes = [String: String]()
+            DispatchQueue.concurrentPerform(iterations: discoveredFiles.count) { i in
+                let url = discoveredFiles[i].0
+                guard let source = inputSourceSnapshots[url.path] ?? (try? String(contentsOf: url)) else { return }
+                let hash = computeHash(source)
+                lock.lock()
+                sources[url.path] = source
+                hashes[url.path] = hash
+                lock.unlock()
             }
-            moduleIdentifiersByRoot = modulesByRoot
+            projectSources = sources
+            projectSourceHashes = hashes
         }
-        let indexLock = NSLock()
-        var indexedFiles = [(String, SourceFileIndex)]()
-        DispatchQueue.concurrentPerform(iterations: discoveredFiles.count) { index in
-            let (fileURL, root) = discoveredFiles[index]
-            let path = fileURL.standardizedFileURL.path
-            guard let source = inputSourceSnapshots[path] ?? (try? String(contentsOf: fileURL)) else { return }
-            let sourceHash = computeHash(source)
-            let rootCacheURL = cacheURL(for: root)
-            let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
-            let modules = modulesByRoot[root]?[fileURL.path] ?? []
-            let includeFunctionReferences = requiresFunctionReferences || localFunctionReferencePaths.contains(path)
-            let sourceIndex: SourceFileIndex
-            if let rootCacheURL,
-               let key,
-               let cached = projectIndexCache.index(for: key, cacheURL: rootCacheURL),
-               cached.contentHash == sourceHash,
-               cached.moduleIdentifiers == modules.sorted(),
-               !includeFunctionReferences || cached.includesFunctionReferences,
-               !requiresSymbolReferences || cached.includesSymbolReferences
-            {
-                sourceIndex = cached
+        let sources = projectSources!
+        let sourceHashes = projectSourceHashes!
+        let configurationHashes = projectIndexConfigurationHashes(for: projectRoots)
+        let rebuild: (Set<ProjectContextFeature>) -> ProjectIndex = { [weak projectIndexSnapshotCache] requiredFeatures in
+            indexBuildLock.lock()
+            defer { indexBuildLock.unlock() }
+            let requiresFunctionReferences = requiredFeatures.contains(.functionReferences)
+            let requiresSymbolReferences = requiredFeatures.contains(.symbolReferences)
+            let modulesByRoot: [ProjectRoot: [String: Set<String>]]
+            if let cached = moduleIdentifiersByRoot {
+                modulesByRoot = cached
             } else {
-                sourceIndex = makeSourceFileIndex(
-                    from: source,
-                    moduleIdentifiers: modules,
-                    includeFunctionReferences: includeFunctionReferences,
-                    includeSymbolReferences: requiresSymbolReferences
-                )
+                let filesByRoot = Dictionary(grouping: discoveredFiles, by: \.1)
+                modulesByRoot = filesByRoot.mapValues { files in
+                    moduleIdentifiers(for: files.map(\.0), in: files[0].1)
+                }
+                moduleIdentifiersByRoot = modulesByRoot
             }
-            indexLock.lock()
-            indexedFiles.append((path, sourceIndex))
-            indexLock.unlock()
-            if let rootCacheURL, let key {
-                projectIndexCache.setIndex(sourceIndex, for: key, cacheURL: rootCacheURL)
+            let indexLock = NSLock()
+            var indexedFiles = [(String, SourceFileIndex)]()
+            DispatchQueue.concurrentPerform(iterations: discoveredFiles.count) { index in
+                let (fileURL, root) = discoveredFiles[index]
+                let path = fileURL.standardizedFileURL.path
+                guard let source = sources[path] else { return }
+                let sourceHash = sourceHashes[path]!
+                let rootCacheURL = cacheURL(for: root)
+                let key = rootCacheURL.map { cacheKey(for: fileURL, cacheURL: $0) }
+                let modules = modulesByRoot[root]?[fileURL.path] ?? []
+                let includeFunctionReferences = requiresFunctionReferences || localFunctionReferencePaths.contains(path)
+                let sourceIndex: SourceFileIndex
+                if let rootCacheURL,
+                   let key,
+                   let cached = projectIndexCache.index(for: key, cacheURL: rootCacheURL),
+                   cached.contentHash == sourceHash,
+                   cached.moduleIdentifiers == modules.sorted(),
+                   !includeFunctionReferences || cached.includesFunctionReferences,
+                   !requiresSymbolReferences || cached.includesSymbolReferences
+                {
+                    sourceIndex = cached
+                } else {
+                    sourceIndex = makeSourceFileIndex(
+                        from: source,
+                        moduleIdentifiers: modules,
+                        includeFunctionReferences: includeFunctionReferences,
+                        includeSymbolReferences: requiresSymbolReferences
+                    )
+                }
+                indexLock.lock()
+                indexedFiles.append((path, sourceIndex))
+                indexLock.unlock()
+                if let rootCacheURL, let key {
+                    projectIndexCache.setIndex(sourceIndex, for: key, cacheURL: rootCacheURL)
+                }
             }
+            let index = ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
+            projectIndexSnapshotCache?.record(index, features: requiredFeatures, configurationHashes: configurationHashes)
+            return index
         }
-        return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
+        if sourceHashes.count == discoveredFiles.count,
+           let cached = projectIndexSnapshotCache.index(
+               sourceHashes: sourceHashes,
+               configurationHashes: configurationHashes,
+               features: features,
+               localFunctionReferencePaths: localFunctionReferencePaths,
+               rebuild: rebuild
+           )
+        {
+            return cached
+        }
+        return rebuild(features)
     } : nil
 
     // Format files
@@ -1976,6 +2022,11 @@ func processInput(_ inputURLs: [URL],
         }
         for (cacheURL, cache) in projectIndexCache.snapshot() {
             saveCache(cache, to: projectIndexCacheURL(for: cacheURL))
+        }
+        do {
+            try projectIndexSnapshotCache.save()
+        } catch {
+            errors.append(FormatError.writing("Failed to write project index cache tables: \(error)"))
         }
     }
     // Save newly created snapshots

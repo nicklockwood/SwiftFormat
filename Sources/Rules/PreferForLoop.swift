@@ -331,7 +331,7 @@ extension Formatter {
         in project: ProjectIndex
     ) -> [SourceFileIndex.PropertyDeclaration] {
         guard !types.isEmpty else { return [] }
-        return project.files.values.flatMap(\.propertyDeclarations).filter { property in
+        return project.propertyDeclarations().filter { property in
             !property.isStatic && property.type.map { types.contains(baseTypeName(of: $0)) } == true
         }
     }

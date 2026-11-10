@@ -793,9 +793,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 setDefaultCacheLocation()
                 let cacheDirectory = defaultCacheDirectory()
                 if let contents = try? manager.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) {
-                    for cacheURL in contents where cacheURL.lastPathComponent == defaultCacheFileName ||
-                        (cacheURL.lastPathComponent.hasPrefix(projectCacheFilePrefix) && cacheURL.pathExtension == "cache")
-                    {
+                    for cacheURL in contents {
+                        let formattingCacheURL = cacheURL.pathExtension == "index" ? cacheURL.deletingPathExtension() : cacheURL
+                        guard formattingCacheURL.lastPathComponent == defaultCacheFileName ||
+                            (formattingCacheURL.lastPathComponent.hasPrefix(projectCacheFilePrefix) && formattingCacheURL.pathExtension == "cache")
+                        else { continue }
                         do {
                             try manager.removeItem(at: cacheURL)
                         } catch {
@@ -1104,11 +1106,11 @@ func computeHash(_ source: String) -> String {
 }
 
 private struct SwiftFormatCache: Codable {
+    var cacheVersion = 1
     var swiftFormatVersion = version
     var projectIndexVersion = SourceFileIndex.cacheVersion
     var formatting = [String: [String: String]]()
     var projectIndexDependencies = [String: [String: ProjectIndexDependency]]()
-    var sourceIndexes = [String: SourceFileIndex]()
     var isDirty = false
 
     init(isDirty: Bool = false) {
@@ -1118,7 +1120,7 @@ private struct SwiftFormatCache: Codable {
     private var configurationsByPath: [String: Set<String>]?
 
     private enum CodingKeys: String, CodingKey {
-        case swiftFormatVersion, projectIndexVersion, formatting, projectIndexDependencies, sourceIndexes
+        case cacheVersion, swiftFormatVersion, projectIndexVersion, formatting, projectIndexDependencies
     }
 
     mutating func setFormattingHash(
@@ -1163,27 +1165,59 @@ private struct SwiftFormatCache: Codable {
     }
 }
 
-private final class ProjectIndexCacheUpdates {
+/// Loads source summaries only when a rule requests an index, and saves them independently of formatting hashes.
+private final class ProjectIndexCache {
+    struct Cache: Codable {
+        var projectIndexVersion = SourceFileIndex.cacheVersion
+        var sourceIndexes = [String: SourceFileIndex]()
+        var isDirty = false
+
+        private enum CodingKeys: String, CodingKey {
+            case projectIndexVersion, sourceIndexes
+        }
+    }
+
     private let lock = NSLock()
-    private var values = [URL: [String: SourceFileIndex]]()
+    private var values = [URL: Cache]()
+
+    /// Called with the lock held so concurrent formatting workers decode each cache only once.
+    private func loadCache(at cacheURL: URL) {
+        guard values[cacheURL] == nil else { return }
+        var cache = (try? Data(contentsOf: projectIndexCacheURL(for: cacheURL)))
+            .flatMap { try? JSONDecoder().decode(Cache.self, from: $0) } ?? Cache()
+        if cache.projectIndexVersion != SourceFileIndex.cacheVersion {
+            cache = Cache()
+            cache.isDirty = true
+        }
+        values[cacheURL] = cache
+    }
 
     func index(for key: String, cacheURL: URL) -> SourceFileIndex? {
         lock.lock()
         defer { lock.unlock() }
-        return values[cacheURL]?[key]
+        loadCache(at: cacheURL)
+        return values[cacheURL]?.sourceIndexes[key]
     }
 
     func setIndex(_ index: SourceFileIndex, for key: String, cacheURL: URL) {
         lock.lock()
-        values[cacheURL, default: [:]][key] = index
-        lock.unlock()
+        defer { lock.unlock() }
+        loadCache(at: cacheURL)
+        if values[cacheURL]?.sourceIndexes[key] != index {
+            values[cacheURL]?.sourceIndexes[key] = index
+            values[cacheURL]?.isDirty = true
+        }
     }
 
-    func snapshot() -> [URL: [String: SourceFileIndex]] {
+    func snapshot() -> [URL: Cache] {
         lock.lock()
         defer { lock.unlock() }
-        return values
+        return values.filter(\.value.isDirty)
     }
+}
+
+func projectIndexCacheURL(for cacheURL: URL) -> URL {
+    cacheURL.appendingPathExtension("index")
 }
 
 enum CacheLocation {
@@ -1355,6 +1389,9 @@ func processInput(_ inputURLs: [URL],
     for cacheURL in Set(cacheURLsByRoot.values) {
         var cache = (try? Data(contentsOf: cacheURL))
             .flatMap { try? JSONDecoder().decode(SwiftFormatCache.self, from: $0) } ?? SwiftFormatCache(isDirty: true)
+        if cache.cacheVersion != 1 {
+            cache = SwiftFormatCache(isDirty: true)
+        }
         if cache.swiftFormatVersion != version {
             cache.isDirty = true
             cache.swiftFormatVersion = version
@@ -1363,7 +1400,8 @@ func processInput(_ inputURLs: [URL],
         if cache.projectIndexVersion != SourceFileIndex.cacheVersion {
             cache.isDirty = true
             cache.projectIndexVersion = SourceFileIndex.cacheVersion
-            cache.sourceIndexes.removeAll()
+            cache.formatting.removeAll()
+            cache.projectIndexDependencies.removeAll()
         }
         caches[cacheURL] = cache
     }
@@ -1470,7 +1508,7 @@ func processInput(_ inputURLs: [URL],
         }
     }
 
-    let projectIndexCacheUpdates = ProjectIndexCacheUpdates()
+    let projectIndexCache = ProjectIndexCache()
     var discoveredProjectFiles: [(URL, ProjectRoot)]?
     var moduleIdentifiersByRoot: [ProjectRoot: [String: Set<String>]]?
     let projectIndexProvider: ProjectIndexProvider? = projectIndexMode == .auto ? ProjectIndexProvider { features in
@@ -1519,8 +1557,7 @@ func processInput(_ inputURLs: [URL],
             let sourceIndex: SourceFileIndex
             if let rootCacheURL,
                let key,
-               let cached = projectIndexCacheUpdates.index(for: key, cacheURL: rootCacheURL) ??
-               caches[rootCacheURL]?.sourceIndexes[key],
+               let cached = projectIndexCache.index(for: key, cacheURL: rootCacheURL),
                cached.contentHash == sourceHash,
                cached.moduleIdentifiers == modules.sorted(),
                !includeFunctionReferences || cached.includesFunctionReferences,
@@ -1539,7 +1576,7 @@ func processInput(_ inputURLs: [URL],
             indexedFiles.append((path, sourceIndex))
             indexLock.unlock()
             if let rootCacheURL, let key {
-                projectIndexCacheUpdates.setIndex(sourceIndex, for: key, cacheURL: rootCacheURL)
+                projectIndexCache.setIndex(sourceIndex, for: key, cacheURL: rootCacheURL)
             }
         }
         return ProjectIndex(files: Dictionary(uniqueKeysWithValues: indexedFiles))
@@ -1632,18 +1669,16 @@ func processInput(_ inputURLs: [URL],
                     }
                 }
             }
-            let sourceFileIndexAccess = SourceFileIndexAccess(index: {
-                guard requiresLocalFunctionReferences,
-                      let fileCacheURL,
-                      let cacheKey,
-                      let cached = projectIndexCacheUpdates.index(for: cacheKey, cacheURL: fileCacheURL) ??
-                      caches[fileCacheURL]?.sourceIndexes[cacheKey],
-                      cached.contentHash == computeHash(input),
-                      cached.includesFunctionReferences
-                else { return nil }
-                return cached
-            }()) {
+            let sourceFileIndexAccess = SourceFileIndexAccess {
                 guard requiresLocalFunctionReferences else { return nil }
+                if let fileCacheURL,
+                   let cacheKey,
+                   let cached = projectIndexCache.index(for: cacheKey, cacheURL: fileCacheURL),
+                   cached.contentHash == computeHash(input),
+                   cached.includesFunctionReferences
+                {
+                    return cached
+                }
                 return makeSourceFileIndex(
                     from: input,
                     moduleIdentifiers: [],
@@ -1811,7 +1846,7 @@ func processInput(_ inputURLs: [URL],
                             projectIndexDependency: projectIndexDependency
                         )
                         if let updatedLocalSourceIndex {
-                            projectIndexCacheUpdates.setIndex(
+                            projectIndexCache.setIndex(
                                 updatedLocalSourceIndex,
                                 for: cacheKey,
                                 cacheURL: fileCacheURL
@@ -1843,7 +1878,9 @@ func processInput(_ inputURLs: [URL],
                             configurationHash: cacheValue.0,
                             projectIndexDependency: projectIndexDependency
                         )
-                        if outputURL == inputURL {
+                        if outputURL == inputURL,
+                           updatedLocalSourceIndex != nil || projectIndexAccess.lastIndex != nil
+                        {
                             let sourceIndex = updatedLocalSourceIndex ?? makeSourceFileIndex(
                                 from: output,
                                 moduleIdentifiers: Set(
@@ -1854,7 +1891,7 @@ func processInput(_ inputURLs: [URL],
                                 includeSymbolReferences: projectIndexDependency?
                                     .features.contains(.symbolReferences) == true
                             )
-                            projectIndexCacheUpdates.setIndex(
+                            projectIndexCache.setIndex(
                                 sourceIndex,
                                 for: cacheKey,
                                 cacheURL: fileCacheURL
@@ -1919,15 +1956,9 @@ func processInput(_ inputURLs: [URL],
             errors.append(FormatError.writing("\(errorCount) file\(errorCount == 1 ? "" : "s") could not be formatted"))
         }
     }
-    for (cacheURL, indexes) in projectIndexCacheUpdates.snapshot() {
-        for (key, index) in indexes where caches[cacheURL]?.sourceIndexes[key] != index {
-            caches[cacheURL, default: SwiftFormatCache()].sourceIndexes[key] = index
-            caches[cacheURL]?.isDirty = true
-        }
-    }
-    // Save cache
+    // Save formatting hashes and source summaries independently, and only when changed.
     if outputFlags.filesChecked > 0 {
-        for (cacheURL, cache) in caches where cache.isDirty {
+        func saveCache(_ cache: some Encodable, to cacheURL: URL) {
             let cacheDirectory = cacheURL.deletingLastPathComponent()
             do {
                 let data = try JSONEncoder().encode(cache)
@@ -1939,6 +1970,12 @@ func processInput(_ inputURLs: [URL],
                     errors.append(FormatError.reading("Specified cache file directory does not exist: \(cacheDirectory.path)"))
                 }
             }
+        }
+        for (cacheURL, cache) in caches where cache.isDirty {
+            saveCache(cache, to: cacheURL)
+        }
+        for (cacheURL, cache) in projectIndexCache.snapshot() {
+            saveCache(cache, to: projectIndexCacheURL(for: cacheURL))
         }
     }
     // Save newly created snapshots

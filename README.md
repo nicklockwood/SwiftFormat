@@ -905,9 +905,9 @@ SwiftFormat uses a cache file to avoid reformatting files that haven't changed. 
 
 By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftformat` on macOS, or `/tmp/com.charcoaldesign.swiftformat` on Linux. Use the command-line option `--cache ignore` to ignore the cached version and re-apply formatting to all files. Alternatively, you can use `--cache clear` to delete the cache (or you can just manually delete the cache file).
 
-The cache is shared between all projects. It stores formatting-cache entries and, when [project indexing](#project-indexing) is enabled, summaries of source declarations rather than complete file contents. If you do start experiencing slowdown due to the cache growing too large, you might want to consider using a separate cache file for each project.
+The default cache is stored separately for each project. Formatting records are stored in the cache file; source summaries used by [project indexing](#project-indexing) are stored alongside it with an additional `.index` extension. Source summaries are loaded only when a rule requests an index, and each cache file is saved only when its contents change. Older combined caches are rebuilt automatically. `--cache clear` removes both types of default cache files.
 
-You can specify a custom cache file location by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
+You can specify a custom cache file location by passing a path as the `--cache` option value. For example, `--cache project.cache` stores formatting records in `project.cache` and any source summaries in `project.cache.index`. You might want to store these files inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
 
 
 Project indexing

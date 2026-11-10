@@ -632,6 +632,68 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testCachePrunesPreviousConfigurationsOnlyForSelectedFile() throws {
+        try withTmpDirectory([
+            "Package.swift": "// Package marker",
+            "Sources/App/Type.swift": "public struct Foo {}",
+            "Sources/App/First.swift": """
+            extension Foo {
+                public func first() {}
+            }
+            """,
+            "Sources/App/Second.swift": """
+            extension Foo {
+                public func second() {}
+            }
+            """,
+        ]) { directory in
+            let cacheURL = directory.appendingPathComponent("swiftformat.cache")
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/First.swift Sources/App/Second.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            var cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            var formatting = try XCTUnwrap(cache["formatting"] as? [String: [String: String]])
+            let firstConfiguration = try XCTUnwrap(formatting.first {
+                $0.value.keys.contains { $0.hasSuffix("/First.swift") }
+            })
+            let firstPath = try XCTUnwrap(firstConfiguration.value.keys.first)
+            let secondPath = try XCTUnwrap(formatting.values.flatMap(\.keys).first { $0.hasSuffix("/Second.swift") })
+            var dependencies = try XCTUnwrap(cache["projectIndexDependencies"] as? [String: [String: Any]])
+            XCTAssertEqual(dependencies.count, 2)
+
+            // A decoded cache may contain more than one previous configuration for a file.
+            formatting["stale-configuration"] = firstConfiguration.value
+            dependencies["stale-configuration"] = dependencies[firstConfiguration.key]
+            cache["formatting"] = formatting
+            cache["projectIndexDependencies"] = dependencies
+            try JSONSerialization.data(withJSONObject: cache).write(to: cacheURL)
+
+            XCTAssertEqual(CLI.run(
+                in: directory.path,
+                with: "Sources/App/First.swift --rules indent --indent 2 --cache \(cacheURL.path) --quiet"
+            ), .ok)
+
+            cache = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+            )
+            formatting = try XCTUnwrap(cache["formatting"] as? [String: [String: String]])
+            dependencies = try XCTUnwrap(cache["projectIndexDependencies"] as? [String: [String: Any]])
+            XCTAssertEqual(formatting.values.flatMap(\.keys).sorted(), [firstPath, secondPath].sorted())
+            XCTAssertNil(formatting[firstConfiguration.key])
+            XCTAssertNil(formatting["stale-configuration"])
+            XCTAssertEqual(dependencies.values.flatMap(\.keys), [secondPath])
+            XCTAssertEqual(Set(cache.keys), [
+                "swiftFormatVersion", "projectIndexVersion", "formatting", "projectIndexDependencies", "sourceIndexes",
+            ])
+        }
+    }
+
     func testProjectIndexReusesCachedSourceSummaryForUnchangedFile() throws {
         try withTmpDirectory([
             "Package.swift": "// Package marker",

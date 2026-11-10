@@ -1110,13 +1110,30 @@ private struct SwiftFormatCache: Codable {
     var projectIndexDependencies = [String: [String: ProjectIndexDependency]]()
     var sourceIndexes = [String: SourceFileIndex]()
 
+    private var configurationsByPath: [String: Set<String>]?
+
+    private enum CodingKeys: String, CodingKey {
+        case swiftFormatVersion, projectIndexVersion, formatting, projectIndexDependencies, sourceIndexes
+    }
+
     mutating func setFormattingHash(
         _ contentHash: String,
         for path: String,
         configurationHash: String,
         projectIndexDependency: ProjectIndexDependency?
     ) {
-        for hash in Array(formatting.keys) where hash != configurationHash {
+        // File header replacements can give each file a different configuration. Index the
+        // stored configurations once so updating each file doesn't scan the entire cache.
+        if configurationsByPath == nil {
+            var configurations = [String: Set<String>]()
+            for (hash, files) in formatting {
+                for path in files.keys {
+                    configurations[path, default: []].insert(hash)
+                }
+            }
+            configurationsByPath = configurations
+        }
+        for hash in configurationsByPath?[path] ?? [] where hash != configurationHash {
             formatting[hash]?[path] = nil
             projectIndexDependencies[hash]?[path] = nil
             if formatting[hash]?.isEmpty == true {
@@ -1131,6 +1148,7 @@ private struct SwiftFormatCache: Codable {
         if projectIndexDependencies[configurationHash]?.isEmpty == true {
             projectIndexDependencies[configurationHash] = nil
         }
+        configurationsByPath?[path] = [configurationHash]
     }
 }
 

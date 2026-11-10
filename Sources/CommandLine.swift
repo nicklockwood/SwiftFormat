@@ -1109,6 +1109,11 @@ private struct SwiftFormatCache: Codable {
     var formatting = [String: [String: String]]()
     var projectIndexDependencies = [String: [String: ProjectIndexDependency]]()
     var sourceIndexes = [String: SourceFileIndex]()
+    var isDirty = false
+
+    init(isDirty: Bool = false) {
+        self.isDirty = isDirty
+    }
 
     private var configurationsByPath: [String: Set<String>]?
 
@@ -1134,6 +1139,7 @@ private struct SwiftFormatCache: Codable {
             configurationsByPath = configurations
         }
         for hash in configurationsByPath?[path] ?? [] where hash != configurationHash {
+            isDirty = true
             formatting[hash]?[path] = nil
             projectIndexDependencies[hash]?[path] = nil
             if formatting[hash]?.isEmpty == true {
@@ -1142,6 +1148,11 @@ private struct SwiftFormatCache: Codable {
             if projectIndexDependencies[hash]?.isEmpty == true {
                 projectIndexDependencies[hash] = nil
             }
+        }
+        if formatting[configurationHash]?[path] != contentHash ||
+            projectIndexDependencies[configurationHash]?[path] != projectIndexDependency
+        {
+            isDirty = true
         }
         formatting[configurationHash, default: [:]][path] = contentHash
         projectIndexDependencies[configurationHash, default: [:]][path] = projectIndexDependency
@@ -1343,12 +1354,14 @@ func processInput(_ inputURLs: [URL],
     var caches = [URL: SwiftFormatCache]()
     for cacheURL in Set(cacheURLsByRoot.values) {
         var cache = (try? Data(contentsOf: cacheURL))
-            .flatMap { try? JSONDecoder().decode(SwiftFormatCache.self, from: $0) } ?? SwiftFormatCache()
+            .flatMap { try? JSONDecoder().decode(SwiftFormatCache.self, from: $0) } ?? SwiftFormatCache(isDirty: true)
         if cache.swiftFormatVersion != version {
+            cache.isDirty = true
             cache.swiftFormatVersion = version
             cache.formatting.removeAll()
         }
         if cache.projectIndexVersion != SourceFileIndex.cacheVersion {
+            cache.isDirty = true
             cache.projectIndexVersion = SourceFileIndex.cacheVersion
             cache.sourceIndexes.removeAll()
         }
@@ -1907,11 +1920,14 @@ func processInput(_ inputURLs: [URL],
         }
     }
     for (cacheURL, indexes) in projectIndexCacheUpdates.snapshot() {
-        caches[cacheURL, default: SwiftFormatCache()].sourceIndexes.merge(indexes) { _, updated in updated }
+        for (key, index) in indexes where caches[cacheURL]?.sourceIndexes[key] != index {
+            caches[cacheURL, default: SwiftFormatCache()].sourceIndexes[key] = index
+            caches[cacheURL]?.isDirty = true
+        }
     }
     // Save cache
     if outputFlags.filesChecked > 0 {
-        for (cacheURL, cache) in caches {
+        for (cacheURL, cache) in caches where cache.isDirty {
             let cacheDirectory = cacheURL.deletingLastPathComponent()
             do {
                 let data = try JSONEncoder().encode(cache)

@@ -642,6 +642,19 @@ final class NestedIfTests: XCTestCase {
         testFormatting(for: input, output, rule: .nestedIf)
     }
 
+    func testPreservesTrailingCommentAfterSingleLineNestedIf() {
+        let input = """
+        if isValid {
+            if isEnabled { performAction() } // End validation.
+        }
+        """
+        let output = """
+        if isValid, isEnabled { performAction() // End validation.
+        }
+        """
+        testFormatting(for: input, output, rule: .nestedIf)
+    }
+
     func testMergesIfConditionsThatRedeclareBinding() {
         let input = """
         if let value = firstValue {

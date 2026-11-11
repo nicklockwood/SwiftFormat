@@ -559,6 +559,51 @@ final class UnusedArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
+    func testRemoveDuplicateUnderscoreFunctionArgument() {
+        let input = """
+        func parser(_ _: XMLParser, foundCharacters string: String) {
+            print(string)
+        }
+        """
+        let output = """
+        func parser(_: XMLParser, foundCharacters string: String) {
+            print(string)
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+        testFormatting(for: input, output, rule: .unusedArguments,
+                       options: FormatOptions(stripUnusedArguments: .unnamedOnly))
+    }
+
+    func testRemoveDuplicateUnderscoresAlongsideUnusedArguments() {
+        let input = """
+        func foo(_ _: Int, bar _: Int, _ unused: Int, baz: Int, _ _: String, used: Int) {
+            print(used)
+        }
+        """
+        let output = """
+        func foo(_: Int, bar _: Int, _: Int, baz _: Int, _: String, used: Int) {
+            print(used)
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testPreserveCommentBetweenUnderscoreArgumentLabels() {
+        let input = """
+        func foo(_ /* unused */ _: Int) {}
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testPreserveDuplicateUnderscoreFunctionArgumentWithClosureOnly() {
+        let input = """
+        func foo(_ _: Int) {}
+        """
+        testFormatting(for: input, rule: .unusedArguments,
+                       options: FormatOptions(stripUnusedArguments: .closureOnly))
+    }
+
     func testUnusedInoutFunctionArgumentIsNotMangled() {
         let input = """
         func foo(_ foo: inout Foo) {}

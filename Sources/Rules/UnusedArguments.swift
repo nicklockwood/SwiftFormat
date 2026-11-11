@@ -52,7 +52,15 @@ public extension FormatRule {
                 }
             }
 
-            for argument in arguments.reversed() {
+            // Also simplify arguments already written as `_ _:`, preserving any intervening comments.
+            arguments += declaration.arguments.filter { argument in
+                guard argument.internalLabel == nil, argument.externalLabel == nil,
+                      let externalLabelIndex = argument.externalLabelIndex
+                else { return false }
+                return formatter.index(of: .comment, in: externalLabelIndex + 1 ..< argument.internalLabelIndex) == nil
+            }
+
+            for argument in arguments.sorted(by: { $0.internalLabelIndex > $1.internalLabelIndex }) {
                 // In subscripts and operators, external function labels are unnecessary
                 if isOperator {
                     // Convert `_ name:` to just `_:`

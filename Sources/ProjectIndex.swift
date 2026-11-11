@@ -763,6 +763,91 @@ struct ProjectIndex {
         )
     }
 
+    init(partitions: [String: ProjectIndex]) {
+        let ordered = partitions.keys.sorted().map { partitions[$0]! }
+        files = ordered.reduce(into: [:]) { $0.merge($1.files) { _, new in new } }
+        func fingerprint(_ keyPath: KeyPath<Fingerprints, String>) -> String {
+            computeHash(partitions.keys.sorted().map { "\($0):\(partitions[$0]!.fingerprints[keyPath: keyPath])" }.joined(separator: ";"))
+        }
+        fingerprints = Fingerprints(declarations: fingerprint(\.declarations), functionReferences: fingerprint(\.functionReferences), symbolReferences: fingerprint(\.symbolReferences), all: fingerprint(\.all))
+        types = ProjectIndexTable(load: {
+            var result = ProjectIndex(files: [:]).types.value
+            for partition in ordered {
+                let table = partition.types.value
+                result.typeVisibilities.merge(table.typeVisibilities) { $0.union($1) }
+                result.typesByModule.merge(table.typesByModule, uniquingKeysWith: +)
+                result.protocolsByModule.formUnion(table.protocolsByModule)
+                result.protocolDeclarationsByModule.merge(table.protocolDeclarationsByModule, uniquingKeysWith: +)
+                result.conformancesByModule.merge(table.conformancesByModule) { $0.union($1) }
+                result.inheritedClassNamesByModule.merge(table.inheritedClassNamesByModule) { $0.union($1) }
+                result.inheritedClassNames.formUnion(table.inheritedClassNames)
+                result.inheritedNamesByTypeName.merge(table.inheritedNamesByTypeName) { $0.union($1) }
+                result.typeAndProtocolCountsByModule.merge(table.typeAndProtocolCountsByModule, uniquingKeysWith: +)
+                result.dynamicMemberLookupTypesByModule.merge(table.dynamicMemberLookupTypesByModule) { $0.union($1) }
+                result.noncopyableTypesByModule.merge(table.noncopyableTypesByModule) { $0.union($1) }
+                result.protocolNames.formUnion(table.protocolNames)
+                result.conformancesByFile.merge(table.conformancesByFile, uniquingKeysWith: +)
+            }
+            return result
+        })
+        functions = ProjectIndexTable(load: {
+            var result = ProjectIndex(files: [:]).functions.value
+            for partition in ordered {
+                let table = partition.functions.value
+                result.functionDeclarationsByModule.merge(table.functionDeclarationsByModule) { $0.merging($1, uniquingKeysWith: +) }
+                result.staticPropertiesByModule.merge(table.staticPropertiesByModule, uniquingKeysWith: +)
+                result.propertiesByFile.merge(table.propertiesByFile, uniquingKeysWith: +)
+            }
+            return result
+        })
+        members = ProjectIndexTable(load: {
+            var result = ProjectIndex(files: [:]).members.value
+            for partition in ordered {
+                let table = partition.members.value
+                for (module, members) in table.memberNamesByModule {
+                    result.memberNamesByModule[module, default: .empty].instance.merge(members.instance) { $0.union($1) }
+                    result.memberNamesByModule[module, default: .empty].staticOrClass.merge(members.staticOrClass) { $0.union($1) }
+                }
+            }
+            return result
+        })
+        names = ProjectIndexTable(load: {
+            var result = ProjectIndex(files: [:]).names.value
+            for partition in ordered {
+                let table = partition.names.value
+                result.symbolDeclarationCountsByName.merge(table.symbolDeclarationCountsByName, uniquingKeysWith: +)
+                result.typeDeclarationCountsByShortName.merge(table.typeDeclarationCountsByShortName, uniquingKeysWith: +)
+                result.symbolDeclarationNames.formUnion(table.symbolDeclarationNames)
+            }
+            return result
+        })
+        symbols = ProjectIndexTable(load: {
+            var result = ProjectIndex(files: [:]).symbols.value
+            for partition in ordered {
+                let table = partition.symbols.value
+                result.symbolDeclarationsByModule.merge(table.symbolDeclarationsByModule, uniquingKeysWith: +)
+            }
+            return result
+        })
+        functionReferences = ProjectIndexTable(load: {
+            var result = ProjectIndex(files: [:]).functionReferences.value
+            for partition in ordered {
+                let table = partition.functionReferences.value
+                result.functionReferencesByModule.merge(table.functionReferencesByModule) { $0.merging($1, uniquingKeysWith: +) }
+                result.referencesByFile.merge(table.referencesByFile, uniquingKeysWith: +)
+            }
+            return result
+        })
+        symbolReferences = ProjectIndexTable(load: {
+            var result = ProjectIndex(files: [:]).symbolReferences.value
+            for partition in ordered {
+                let table = partition.symbolReferences.value
+                result.referencesByFile.merge(table.referencesByFile, uniquingKeysWith: +)
+            }
+            return result
+        })
+    }
+
     init(snapshot: ProjectIndexSnapshot, directory: URL, rebuild: @escaping () -> ProjectIndex) {
         files = snapshot.files
         fingerprints = snapshot.fingerprints
@@ -774,6 +859,8 @@ struct ProjectIndex {
         functionReferences = ProjectIndexTable(url: directory.appendingPathComponent("functionReferences.json")) { rebuild().functionReferences.value }
         symbolReferences = ProjectIndexTable(url: directory.appendingPathComponent("symbolReferences.json")) { rebuild().symbolReferences.value }
     }
+
+    static let tableNames = ["types", "functions", "members", "names", "symbols", "functionReferences", "symbolReferences"]
 
     func writeTables(to directory: URL) throws {
         try types.write(to: directory.appendingPathComponent("types.json"))

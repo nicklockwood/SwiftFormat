@@ -79,12 +79,24 @@ private func withTmpDirectory(_ files: [String: String], fn: (URL) throws -> Voi
 }
 
 private func readSourceIndexes(at url: URL) throws -> [String: SourceFileIndex] {
-    struct Cache: Decodable {
-        let sourceIndexes: [String: SourceFileIndex]
+    struct Cache: Decodable { let sourceIndexes: [String: SourceFileIndex] }
+    var result = [String: SourceFileIndex]()
+    let manager = FileManager.default
+    let tables = projectIndexTablesURL(for: url)
+    for context in (try? manager.contentsOfDirectory(at: tables, includingPropertiesForKeys: nil)) ?? [] {
+        let manifest = try JSONDecoder().decode(ProjectIndexSnapshotCache.Manifest.self, from: Data(contentsOf: context.appendingPathComponent("manifest.json")))
+        for snapshot in manifest.partitions.values {
+            let sources = try JSONDecoder().decode([String: SourceFileIndex].self, from: Data(contentsOf: context.appendingPathComponent(snapshot.generation).appendingPathComponent("sources.json")))
+            for (path, index) in sources {
+                let prefix = path.commonPrefix(with: url.deletingLastPathComponent().path)
+                result[String(path.dropFirst(prefix.count))] = index
+            }
+        }
     }
-    let indexURL = projectIndexCacheURL(for: url)
-    guard FileManager.default.fileExists(atPath: indexURL.path) else { return [:] }
-    return try JSONDecoder().decode(Cache.self, from: Data(contentsOf: indexURL)).sourceIndexes
+    for file in (try? manager.contentsOfDirectory(at: projectIndexFilesURL(for: url), includingPropertiesForKeys: nil)) ?? [] {
+        try result.merge(JSONDecoder().decode(Cache.self, from: Data(contentsOf: file)).sourceIndexes) { _, local in local }
+    }
+    return result
 }
 
 private struct TestSnapshot: Decodable {
@@ -692,8 +704,7 @@ final class CommandLineTests: XCTestCase {
                 ), .ok)
                 let indexes = try readSourceIndexes(at: cacheURL)
                 XCTAssertTrue(indexes.keys.contains { $0.hasSuffix("/Type.swift") })
-                let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: indexURL)) as? [String: Any])
-                XCTAssertEqual(cache["projectIndexVersion"] as? Int, SourceFileIndex.cacheVersion)
+                XCTAssertFalse(FileManager.default.fileExists(atPath: indexURL.path))
             }
         }
     }
@@ -750,7 +761,7 @@ final class CommandLineTests: XCTestCase {
             let arguments = "Input.swift --rules redundantPublic --cache \(cacheURL.path) --quiet"
             CLI.print = { _, _ in }
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
-            let previous = try Data(contentsOf: projectIndexCacheURL(for: cacheURL))
+            let previous = try readSourceIndexes(at: cacheURL)
             let updatedSource = """
             struct Foo {}
             """
@@ -758,12 +769,10 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
 
-            let contents = try Data(contentsOf: projectIndexCacheURL(for: cacheURL))
-            XCTAssertNotEqual(contents, previous)
-            let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: contents) as? [String: Any])
-            let indexes = try XCTUnwrap(cache["sourceIndexes"] as? [String: [String: Any]])
+            let indexes = try readSourceIndexes(at: cacheURL)
+            XCTAssertNotEqual(indexes, previous)
             let index = try XCTUnwrap(indexes.first { $0.key.hasSuffix("/Other.swift") }?.value)
-            XCTAssertEqual(index["contentHash"] as? String, computeHash(updatedSource))
+            XCTAssertEqual(index.contentHash, computeHash(updatedSource))
         }
     }
 
@@ -968,10 +977,8 @@ final class CommandLineTests: XCTestCase {
 
             XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
 
-            var cache = try XCTUnwrap(
-                JSONSerialization.jsonObject(with: Data(contentsOf: projectIndexCacheURL(for: cacheURL))) as? [String: Any]
-            )
-            var sourceIndexes = try XCTUnwrap(cache["sourceIndexes"] as? [String: Any])
+            var sourceIndexes = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(readSourceIndexes(at: cacheURL))) as? [String: Any])
+            var cache: [String: Any] = ["projectIndexVersion": SourceFileIndex.cacheVersion]
             let typeKey = try XCTUnwrap(sourceIndexes.keys.first(where: { $0.hasSuffix("/Type.swift") }))
             var sourceIndex = try XCTUnwrap(sourceIndexes[typeKey] as? [String: Any])
             XCTAssertNil(sourceIndex["schemaVersion"])
@@ -1099,7 +1106,11 @@ final class CommandLineTests: XCTestCase {
                     in: directory.path,
                     with: "\(arguments) --rules redundantPublic"
                 ), .ok)
-                XCTAssertEqual(try readSourceIndexes(at: cacheURL), completeIndexes)
+                let refreshedIndexes = try readSourceIndexes(at: cacheURL)
+                XCTAssertTrue(refreshedIndexes.values.allSatisfy(\.includesFunctionReferences))
+                XCTAssertEqual(Set(refreshedIndexes.keys), Set(completeIndexes.keys))
+                XCTAssertEqual(CLI.run(in: directory.path, with: "\(arguments) --rules redundantPublic"), .ok)
+                XCTAssertEqual(try readSourceIndexes(at: cacheURL), refreshedIndexes)
             }
         }
     }
@@ -1393,12 +1404,56 @@ final class CommandLineTests: XCTestCase {
             ), .ok)
             XCTAssertEqual(try String(contentsOf: inputURL), input)
 
-            let cache = try XCTUnwrap(
-                JSONSerialization.jsonObject(with: Data(contentsOf: projectIndexCacheURL(for: cacheURL))) as? [String: Any]
-            )
-            let sourceIndexes = try XCTUnwrap(cache["sourceIndexes"] as? [String: Any])
+            let sourceIndexes = try readSourceIndexes(at: cacheURL)
             XCTAssertEqual(sourceIndexes.count, 1)
             XCTAssertTrue(try XCTUnwrap(readSourceIndexes(at: cacheURL).values.first).includesFunctionReferences)
+        }
+    }
+
+    func testFileLocalIndexDoesNotReadOrRewriteLegacyCache() throws {
+        let input = """
+        private struct Example {
+            func foo(bar _: Int, baz _: Int) -> Int { 5 }
+            func foo(bar: Int) -> Int { foo(bar: bar, baz: 0) }
+            func test() { let callback = foo(bar:); _ = callback }
+        }
+        """
+        try withTmpDirectory(["A.swift": input, "B.swift": input]) { directory in
+            let cacheURL = directory.appendingPathComponent("cache")
+            let legacyURL = projectIndexCacheURL(for: cacheURL)
+            try Data("invalid legacy cache".utf8).write(to: legacyURL)
+            let arguments = ". --rules redundantOverload --overload-visibility file --cache \(cacheURL.path) --quiet"
+            CLI.print = { _, _ in }
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            let files = try FileManager.default.contentsOfDirectory(at: projectIndexFilesURL(for: cacheURL), includingPropertiesForKeys: nil)
+            XCTAssertEqual(files.count, 2)
+            let contents = try Dictionary(uniqueKeysWithValues: files.map { try ($0, Data(contentsOf: $0)) })
+            let timestamp = Date(timeIntervalSince1970: 1_000_000)
+            for file in files {
+                try FileManager.default.setAttributes([.modificationDate: timestamp], ofItemAtPath: file.path)
+            }
+            try (input + "\n// Changed\n").write(to: directory.appendingPathComponent("A.swift"), atomically: true, encoding: .utf8)
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            let unchanged = try files.filter { try Data(contentsOf: $0) == contents[$0] }
+            XCTAssertEqual(unchanged.count, 1)
+            XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: XCTUnwrap(unchanged.first).path)[.modificationDate] as? Date, timestamp)
+            XCTAssertEqual(try String(contentsOf: legacyURL), "invalid legacy cache")
+            XCTAssertFalse(FileManager.default.fileExists(atPath: projectIndexTablesURL(for: cacheURL).path))
+        }
+    }
+
+    func testClearCacheRemovesAllDefaultIndexFormats() throws {
+        try withTmpDirectory([
+            "swiftformat.cache": "legacy",
+            "swiftformat-project.cache": "formatting",
+            "swiftformat-project.cache.index": "summaries",
+            "swiftformat-project.cache.index-tables/context/table.json": "tables",
+            "swiftformat-project.cache.index-files/file.json": "local",
+            "unrelated.cache": "keep",
+            "custom.cache.index-files/file.json": "keep",
+        ]) { directory in
+            XCTAssertTrue(clearCache(in: directory).isEmpty)
+            XCTAssertEqual(try Set(FileManager.default.contentsOfDirectory(atPath: directory.path)), ["unrelated.cache", "custom.cache.index-files"])
         }
     }
 
@@ -1825,10 +1880,7 @@ final class CommandLineTests: XCTestCase {
             }
             """)
 
-            let originalCache = try XCTUnwrap(
-                JSONSerialization.jsonObject(with: Data(contentsOf: projectIndexCacheURL(for: cacheURL))) as? [String: Any]
-            )
-            let originalIndexes = try XCTUnwrap(originalCache["sourceIndexes"] as? [String: NSDictionary])
+            let originalIndexes = try readSourceIndexes(at: cacheURL)
 
             try "struct Foo {}".write(to: typeURL, atomically: true, encoding: .utf8)
 
@@ -1839,16 +1891,15 @@ final class CommandLineTests: XCTestCase {
             }
             """)
 
-            let updatedCache = try XCTUnwrap(
-                JSONSerialization.jsonObject(with: Data(contentsOf: projectIndexCacheURL(for: cacheURL))) as? [String: Any]
-            )
-            let updatedIndexes = try XCTUnwrap(updatedCache["sourceIndexes"] as? [String: NSDictionary])
+            // Persist the new source snapshot after formatting changed the extension itself.
+            XCTAssertEqual(CLI.run(in: directory.path, with: arguments), .ok)
+            let updatedIndexes = try readSourceIndexes(at: cacheURL)
             XCTAssertEqual(Set(updatedIndexes.keys), Set(originalIndexes.keys))
             let packageKey = try XCTUnwrap(originalIndexes.keys.first(where: { $0.hasSuffix("/Package.swift") }))
             XCTAssertEqual(updatedIndexes[packageKey], originalIndexes[packageKey])
             for fileURL in [typeURL, extensionURL] {
                 let key = try XCTUnwrap(updatedIndexes.keys.first(where: { $0.hasSuffix("/" + fileURL.lastPathComponent) }))
-                XCTAssertEqual(updatedIndexes[key]?["contentHash"] as? String, try computeHash(String(contentsOf: fileURL)))
+                XCTAssertEqual(updatedIndexes[key]?.contentHash, try computeHash(String(contentsOf: fileURL)))
             }
         }
     }

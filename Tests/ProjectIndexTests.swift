@@ -27,80 +27,188 @@ private func withProjectIndexTmpDirectory(
 }
 
 final class ProjectIndexTests: XCTestCase {
-    func testSnapshotRoundTripAndLazyRecovery() throws {
+    func testIncrementalSnapshotsReuseUnchangedPartitions() throws {
         try withProjectIndexTmpDirectory(["marker": ""]) { directory in
-            let fileURL = directory.appendingPathComponent("File.swift")
-            let source = """
-            struct Example {
-                var value: Int
-                func perform() {}
-            }
-            let callback = Example.perform
-            """
-            let original = ProjectIndex(files: [fileURL.path: makeSourceFileIndex(
-                from: source, moduleIdentifiers: ["App"],
-                includeFunctionReferences: true, includeSymbolReferences: true
-            )])
             let cacheURL = directory.appendingPathComponent("cache")
-            let writer = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
-            let features: Set<ProjectContextFeature> = [.declarations, .functionReferences, .symbolReferences]
-            writer.record(original, features: features, configurationHashes: [:])
-            try writer.save()
-            let tableRoot = projectIndexTablesURL(for: cacheURL)
-            let paths = try XCTUnwrap(FileManager.default.enumerator(at: tableRoot, includingPropertiesForKeys: nil))
-                .allObjects.compactMap { $0 as? URL }
-            let typesURL = try XCTUnwrap(paths.first { $0.lastPathComponent == "types.json" })
-            // An unrelated corrupt table must not trigger eager recovery.
-            try Data("invalid".utf8).write(to: typesURL)
-            var rebuilds = 0
-            let reader = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
-            let restored = try XCTUnwrap(reader.index(
-                sourceHashes: original.files.mapValues(\.contentHash), configurationHashes: [:],
-                features: features, localFunctionReferencePaths: []
-            ) { _ in
-                rebuilds += 1
-                return original
-            })
-            XCTAssertEqual(restored.fingerprints, original.fingerprints)
-            XCTAssertEqual(restored.propertyDeclarations(), original.propertyDeclarations())
-            XCTAssertEqual(restored.memberNamesByType(visibleFrom: fileURL), original.memberNamesByType(visibleFrom: fileURL))
-            XCTAssertEqual(restored.containsSymbolDeclaration(named: "Example"), original.containsSymbolDeclaration(named: "Example"))
-            XCTAssertEqual(restored.declarationNames(upTo: .public, visibleFrom: fileURL), original.declarationNames(upTo: .public, visibleFrom: fileURL))
-            XCTAssertEqual(restored.containsFunctionReference(named: "perform", argumentLabels: [], declaringType: "Example", declaringTypeKind: "struct", visibility: .internal, visibleFrom: fileURL), original.containsFunctionReference(named: "perform", argumentLabels: [], declaringType: "Example", declaringTypeKind: "struct", visibility: .internal, visibleFrom: fileURL))
-            XCTAssertEqual(rebuilds, 0)
-            XCTAssertTrue(restored.isInternalType(named: "Example", from: fileURL))
-            XCTAssertTrue(restored.containsType(named: "Example", visibleFrom: fileURL))
-            XCTAssertEqual(rebuilds, 1)
+            let context = projectIndexTablesURL(for: cacheURL).appendingPathComponent(computeHash(""))
+            func manifest() throws -> ProjectIndexSnapshotCache.Manifest {
+                try JSONDecoder().decode(ProjectIndexSnapshotCache.Manifest.self, from: Data(contentsOf: context.appendingPathComponent("manifest.json")))
+            }
+            var sources = [String: String]()
+            for i in 0 ..< 64 {
+                sources[directory.appendingPathComponent("File\(i).swift").path] = """
+                struct Type\(i) {
+                    func value() -> Int { 1 }
+                }
+                """
+            }
+            let file = directory.appendingPathComponent("File0.swift")
+            var legacyReads = 0
+            var moduleReads = 0
+            func load() -> (ProjectIndex, ProjectIndexSnapshotCache) {
+                let cache = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
+                let index = cache.index(sources: sources, hashes: sources.mapValues(computeHash), configuration: [:], features: [.declarations], localReferences: [], modules: {
+                    moduleReads += 1
+                    return sources.mapValues { _ in ["App"] }
+                }, legacy: { _ in
+                    legacyReads += 1
+                    return nil
+                })
+                return (index, cache)
+            }
+            let (original, writer) = load()
+            XCTAssertTrue(try writer.save())
+            let first = try manifest()
+            let partition = try XCTUnwrap(first.partitions.first { $0.value.files[file.path] != nil })
+            let tables = try ProjectIndex.tableNames.map { try Data(contentsOf: context.appendingPathComponent(partition.value.generation).appendingPathComponent($0 + ".json")) }
+            legacyReads = 0
+            moduleReads = 0
+            let (warm, reader) = load()
+            XCTAssertEqual(warm.fingerprints, original.fingerprints)
+            XCTAssertFalse(try reader.save())
+
+            sources[file.path] = """
+            struct Type0 {
+                func value() -> Int { 2 }
+            }
+            """
+            let (body, bodyCache) = load()
+            XCTAssertEqual(body.fingerprints, original.fingerprints)
+            XCTAssertTrue(try bodyCache.save())
+            let afterBody = try manifest()
+            XCTAssertEqual(first.partitions.filter { $0.value.generation != afterBody.partitions[$0.key]?.generation }.count, 1)
+            let generation = try XCTUnwrap(afterBody.partitions[partition.key]?.generation)
+            XCTAssertEqual(try ProjectIndex.tableNames.map { try Data(contentsOf: context.appendingPathComponent(generation).appendingPathComponent($0 + ".json")) }, tables)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: context.appendingPathComponent(partition.value.generation).path))
+
+            sources[file.path] = """
+            public struct Type0 {}
+            """
+            let (changed, changedCache) = load()
+            XCTAssertNotEqual(changed.fingerprints, original.fingerprints)
+            XCTAssertFalse(changed.isInternalType(named: "Type0", from: file))
+            try changedCache.save()
+            XCTAssertEqual(moduleReads, 0)
+            XCTAssertEqual(legacyReads, 0)
+
+            let added = directory.appendingPathComponent("Added.swift").path
+            sources[added] = """
+            public struct Type1 {}
+            """
+            let (addition, additionCache) = load()
+            XCTAssertFalse(addition.isInternalType(named: "Type1", from: file))
+            try additionCache.save()
+            sources[added] = nil
+            let (deletion, deletionCache) = load()
+            XCTAssertTrue(deletion.isInternalType(named: "Type1", from: file))
+            try deletionCache.save()
+            XCTAssertEqual(legacyReads, 0)
+            XCTAssertEqual(try manifest().partitions.values.flatMap(\.files.keys).count, sources.count)
         }
     }
 
-    func testSnapshotInvalidation() throws {
+    func testIncrementalSnapshotRecoveryAndFeatureUpgrade() throws {
         try withProjectIndexTmpDirectory(["marker": ""]) { directory in
-            let fileURL = directory.appendingPathComponent("File.swift")
-            let original = ProjectIndex(files: [fileURL.path: makeSourceFileIndex(
-                from: "struct Example {}", moduleIdentifiers: ["App"],
-                includeFunctionReferences: false, includeSymbolReferences: false
-            )])
             let cacheURL = directory.appendingPathComponent("cache")
-            let writer = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
-            writer.record(original, features: [.declarations], configurationHashes: ["project": "old"])
-            try writer.save()
-            let reader = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
-            func restore(_ hashes: [String: String], config: String = "old", features: Set<ProjectContextFeature> = [.declarations]) -> ProjectIndex? {
-                reader.index(sourceHashes: hashes, configurationHashes: ["project": config], features: features,
-                             localFunctionReferencePaths: [])
-                { _ in
-                    XCTFail("Invalid snapshots should be rejected before querying")
-                    return original
-                }
+            let file = directory.appendingPathComponent("File.swift")
+            let source = """
+            struct Example {
+                var value: Int
             }
-            let hashes = original.files.mapValues(\.contentHash)
-            XCTAssertNotNil(restore(hashes))
-            XCTAssertNil(restore([:]))
-            XCTAssertNil(restore([fileURL.path: "changed"]))
-            XCTAssertNil(restore(hashes.merging(["new.swift": "added"]) { $1 }))
-            XCTAssertNil(restore(hashes, config: "changed"))
-            XCTAssertNil(restore(hashes, features: [.symbolReferences]))
+            func perform() {}
+            let callback = perform
+            """
+            let sources = [file.path: source]
+            var moduleReads = 0
+            func load(_ features: Set<ProjectContextFeature>, configuration: String = "old") -> (ProjectIndex, ProjectIndexSnapshotCache) {
+                let cache = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
+                let index = cache.index(sources: sources, hashes: sources.mapValues(computeHash), configuration: ["project": configuration], features: features, localReferences: [], modules: {
+                    moduleReads += 1
+                    return [file.path: ["App"]]
+                }, legacy: { _ in nil })
+                return (index, cache)
+            }
+            let (_, writer) = load([.declarations])
+            try writer.save()
+            let (upgraded, upgradeCache) = load([.declarations, .functionReferences, .symbolReferences])
+            XCTAssertTrue(upgraded.files[file.path]?.includesFunctionReferences == true)
+            XCTAssertTrue(upgraded.containsFunctionReference(named: "perform", argumentLabels: [], declaringType: nil, declaringTypeKind: nil, visibility: .internal, visibleFrom: file))
+            try upgradeCache.save()
+            let context = projectIndexTablesURL(for: cacheURL).appendingPathComponent(computeHash(""))
+            let manifest = try JSONDecoder().decode(ProjectIndexSnapshotCache.Manifest.self, from: Data(contentsOf: context.appendingPathComponent("manifest.json")))
+            let generation = try XCTUnwrap(manifest.partitions.values.first?.generation)
+            let partition = context.appendingPathComponent(generation)
+            try Data("invalid".utf8).write(to: partition.appendingPathComponent("types.json"))
+            try Data("invalid".utf8).write(to: partition.appendingPathComponent("sources.json"))
+            let (restored, reader) = load([.declarations])
+            XCTAssertEqual(restored.propertyDeclarations(), upgraded.propertyDeclarations())
+            // Neither validating the manifest nor reading a different table repairs the corrupt type table.
+            XCTAssertFalse(try reader.save())
+            DispatchQueue.concurrentPerform(iterations: 20) { _ in
+                XCTAssertTrue(restored.isInternalType(named: "Example", from: file))
+            }
+            XCTAssertTrue(try reader.save())
+            XCTAssertEqual(restored.fingerprints, upgraded.fingerprints)
+            XCTAssertEqual(moduleReads, 1)
+            let (changed, changedCache) = load([.declarations], configuration: "changed")
+            XCTAssertTrue(changed.containsType(named: "Example", visibleFrom: file))
+            XCTAssertTrue(try changedCache.save())
+            XCTAssertEqual(moduleReads, 2)
+        }
+    }
+
+    func testIncrementalSnapshotMigratesPreviousQueryTables() throws {
+        try withProjectIndexTmpDirectory(["marker": ""]) { directory in
+            let cacheURL = directory.appendingPathComponent("cache")
+            let file = directory.appendingPathComponent("File.swift")
+            let source = """
+            struct Example {}
+            """
+            let summary = makeSourceFileIndex(from: source, moduleIdentifiers: ["App"], includeFunctionReferences: false, includeSymbolReferences: false)
+            let original = ProjectIndex(files: [file.path: summary])
+            let context = projectIndexTablesURL(for: cacheURL).appendingPathComponent(computeHash(""))
+            let generation = UUID().uuidString
+            let oldDirectory = context.appendingPathComponent(generation)
+            try FileManager.default.createDirectory(at: oldDirectory, withIntermediateDirectories: true)
+            try original.writeTables(to: oldDirectory)
+            let legacy = ProjectIndexSnapshot(generation: generation, features: [.declarations], configurationHashes: [:], files: original.files, fingerprints: original.fingerprints)
+            try JSONEncoder().encode(legacy).write(to: context.appendingPathComponent("manifest.json"))
+            var reads = 0
+            let cache = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
+            let index = cache.index(sources: [file.path: source], hashes: [file.path: computeHash(source)], configuration: [:], features: [.declarations], localReferences: [], modules: { [file.path: ["App"]] }, legacy: { _ in
+                reads += 1
+                return summary
+            })
+            XCTAssertTrue(index.isInternalType(named: "Example", from: file))
+            XCTAssertEqual(reads, 1)
+            XCTAssertTrue(try cache.save())
+            XCTAssertFalse(FileManager.default.fileExists(atPath: oldDirectory.path))
+            let manifest = try JSONDecoder().decode(ProjectIndexSnapshotCache.Manifest.self, from: Data(contentsOf: context.appendingPathComponent("manifest.json")))
+            XCTAssertEqual(manifest.version, 2)
+            XCTAssertEqual(manifest.partitions.count, 1)
+        }
+    }
+
+    func testIncrementalSnapshotUpgradesFeaturesBeforeSaving() throws {
+        try withProjectIndexTmpDirectory(["marker": ""]) { directory in
+            let cacheURL = directory.appendingPathComponent("cache")
+            let file = directory.appendingPathComponent("File.swift")
+            let sources = [file.path: """
+            struct Example {}
+            func perform() {}
+            let callback = perform
+            """]
+            let cache = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
+            func index(_ features: Set<ProjectContextFeature>) -> ProjectIndex {
+                cache.index(sources: sources, hashes: sources.mapValues(computeHash), configuration: [:], features: features, localReferences: [], modules: { [file.path: ["App"]] }, legacy: { _ in nil })
+            }
+            let earlier = index([.declarations])
+            let upgraded = index([.declarations, .functionReferences])
+            XCTAssertTrue(upgraded.files[file.path]?.includesFunctionReferences == true)
+            XCTAssertTrue(earlier.isInternalType(named: "Example", from: file))
+            try cache.save()
+            XCTAssertTrue(index([.declarations, .functionReferences]).containsFunctionReference(named: "perform", argumentLabels: [], declaringType: nil, declaringTypeKind: nil, visibility: .internal, visibleFrom: file))
+            XCTAssertFalse(try cache.save())
         }
     }
 

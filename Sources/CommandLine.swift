@@ -1585,7 +1585,7 @@ func processInput(_ inputURLs: [URL],
                     discoveredFilesByPath[path] = (fileURL, root)
                 }
             }
-            discoveredFiles = discoveredFilesByPath.values.sorted { $0.0.path < $1.0.path }
+            discoveredFiles = discoveredFilesByPath.keys.sorted().map { discoveredFilesByPath[$0]! }
             discoveredProjectFiles = discoveredFiles
         }
         // Hash sources once for both snapshot validation and rebuilding. Keep their contents so a

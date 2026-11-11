@@ -2147,7 +2147,7 @@ func discoverSourceFiles(in root: ProjectRoot) -> [URL] {
             filesByPath[fileURL.path] = fileURL
         }
     }
-    return filesByPath.values.sorted { $0.path < $1.path }
+    return filesByPath.keys.sorted().map { filesByPath[$0]! }
 }
 
 private func discoverSourceFiles(beneath rootURL: URL, visitedDirectories: inout Set<String>) -> [URL] {
@@ -2179,7 +2179,7 @@ private func discoverSourceFiles(beneath rootURL: URL, visitedDirectories: inout
             files.append(url.standardizedFileURL)
         }
     }
-    return files.sorted { $0.path < $1.path }
+    return files
 }
 
 /// Provides conservative module identities from conventional project layout or Xcode target membership.

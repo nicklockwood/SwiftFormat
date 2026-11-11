@@ -501,6 +501,31 @@ final class YodaConditionsTests: XCTestCase {
         testFormatting(for: input, rule: .yodaConditions)
     }
 
+    func testNoSwapMacroExpansionWithLiteralArgument() {
+        let input = """
+        let isHome = #URL("https://example.com") == url
+        if #m(1) < x {}
+        """
+        testFormatting(for: input, rule: .yodaConditions)
+    }
+
+    func testNoSwapMacroExpansionWithLiteralArguments() {
+        let input = """
+        let isRed = #colorLiteral(red: 1, green: 0, blue: 0, alpha: 1) == color
+        """
+        testFormatting(for: input, rule: .yodaConditions)
+    }
+
+    func testSwapLiteralComparedToMacroExpansion() {
+        let input = """
+        if 5 == #m(foo) {}
+        """
+        let output = """
+        if #m(foo) == 5 {}
+        """
+        testFormatting(for: input, output, rule: .yodaConditions)
+    }
+
     // yodaSwap = literalsOnly
 
     func testNoSwapYodaDotMember() {

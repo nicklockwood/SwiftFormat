@@ -1497,6 +1497,9 @@ extension Formatter {
              .endOfScope("]"), .endOfScope(")"), .endOfScope(">"), .endOfScope("}"),
              .endOfScope where prevToken.isStringDelimiter:
             return true
+        case let .keyword(name) where name.isMacro:
+            // Freestanding macro expansion, e.g. `#URL("...")`
+            return string == "("
         default:
             return false
         }

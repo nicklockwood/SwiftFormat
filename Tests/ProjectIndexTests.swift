@@ -60,7 +60,8 @@ final class ProjectIndexTests: XCTestCase {
             XCTAssertTrue(try writer.save())
             let first = try manifest()
             let partition = try XCTUnwrap(first.partitions.first { $0.value.files[file.path] != nil })
-            let tables = try ProjectIndex.tableNames.map { try Data(contentsOf: context.appendingPathComponent(partition.value.generation).appendingPathComponent($0 + ".json")) }
+            let tableNames = ProjectIndex.tableNames + [ProjectIndex.typeVisibilityTableName(for: "App")]
+            let tables = try tableNames.map { try Data(contentsOf: context.appendingPathComponent(partition.value.generation).appendingPathComponent($0 + ".json")) }
             legacyReads = 0
             moduleReads = 0
             let (warm, reader) = load()
@@ -78,7 +79,7 @@ final class ProjectIndexTests: XCTestCase {
             let afterBody = try manifest()
             XCTAssertEqual(first.partitions.filter { $0.value.generation != afterBody.partitions[$0.key]?.generation }.count, 1)
             let generation = try XCTUnwrap(afterBody.partitions[partition.key]?.generation)
-            XCTAssertEqual(try ProjectIndex.tableNames.map { try Data(contentsOf: context.appendingPathComponent(generation).appendingPathComponent($0 + ".json")) }, tables)
+            XCTAssertEqual(try tableNames.map { try Data(contentsOf: context.appendingPathComponent(generation).appendingPathComponent($0 + ".json")) }, tables)
             XCTAssertFalse(FileManager.default.fileExists(atPath: context.appendingPathComponent(partition.value.generation).path))
 
             sources[file.path] = """
@@ -139,6 +140,7 @@ final class ProjectIndexTests: XCTestCase {
             let generation = try XCTUnwrap(manifest.partitions.values.first?.generation)
             let partition = context.appendingPathComponent(generation)
             try Data("invalid".utf8).write(to: partition.appendingPathComponent("types.json"))
+            try Data("invalid".utf8).write(to: partition.appendingPathComponent(ProjectIndex.typeVisibilityTableName(for: "App") + ".json"))
             try Data("invalid".utf8).write(to: partition.appendingPathComponent("sources.json"))
             let (restored, reader) = load([.declarations])
             XCTAssertEqual(restored.propertyDeclarations(), upgraded.propertyDeclarations())
@@ -154,6 +156,72 @@ final class ProjectIndexTests: XCTestCase {
             XCTAssertTrue(changed.containsType(named: "Example", visibleFrom: file))
             XCTAssertTrue(try changedCache.save())
             XCTAssertEqual(moduleReads, 2)
+        }
+    }
+
+    func testTypeLookupsLoadOnlyTheirModules() throws {
+        try withProjectIndexTmpDirectory(["marker": ""]) { directory in
+            let app = directory.appendingPathComponent("App.swift")
+            let other = directory.appendingPathComponent("Other.swift")
+            let shared = directory.appendingPathComponent("Shared.swift")
+            let original = ProjectIndex(files: [
+                app.path: makeSourceFileIndex(from: """
+                struct Example {}
+                """, moduleIdentifiers: ["App"]),
+                other.path: makeSourceFileIndex(from: """
+                public struct Example {}
+                """, moduleIdentifiers: ["Other"]),
+                shared.path: makeSourceFileIndex(from: """
+                struct Shared {}
+                """, moduleIdentifiers: ["App", "Other"]),
+            ])
+            try original.writeTables(to: directory)
+            for name in ["types", ProjectIndex.typeVisibilityTableName(for: "Other")] {
+                try Data("invalid".utf8).write(to: directory.appendingPathComponent(name + ".json"))
+            }
+            var rebuilds = 0
+            let snapshot = ProjectIndexSnapshot(generation: UUID().uuidString, features: [.declarations], configurationHashes: [:], files: original.files, fingerprints: original.fingerprints)
+            let index = ProjectIndex(snapshot: snapshot, directory: directory) {
+                rebuilds += 1
+                return original
+            }
+            XCTAssertTrue(index.isInternalType(named: "Example", from: app))
+            XCTAssertTrue(index.containsType(named: "Example", visibleFrom: app))
+            XCTAssertFalse(index.containsType(named: "Missing", visibleFrom: app))
+            XCTAssertEqual(rebuilds, 0)
+            // Membership in multiple targets requires agreement from all of them.
+            XCTAssertFalse(index.isInternalType(named: "Example", from: shared))
+            XCTAssertTrue(index.containsType(named: "Example", visibleFrom: shared))
+            XCTAssertTrue(index.isInternalType(named: "Shared", from: shared))
+            XCTAssertEqual(rebuilds, 1)
+        }
+    }
+
+    func testTypeLookupsUpgradeCacheWithoutModuleTables() throws {
+        try withProjectIndexTmpDirectory(["marker": ""]) { directory in
+            let cacheURL = directory.appendingPathComponent("cache")
+            let file = directory.appendingPathComponent("File.swift")
+            let sources = [file.path: """
+            struct Example {}
+            """]
+            func load() -> (ProjectIndex, ProjectIndexSnapshotCache) {
+                let cache = ProjectIndexSnapshotCache(cacheURL: cacheURL, roots: [])
+                return (cache.index(sources: sources, hashes: sources.mapValues(computeHash), configuration: [:], features: [.declarations], localReferences: [], modules: { [file.path: ["App"]] }, legacy: { _ in nil }), cache)
+            }
+            let (original, writer) = load()
+            try writer.save()
+            let context = projectIndexTablesURL(for: cacheURL).appendingPathComponent(computeHash(""))
+            let manifest = try JSONDecoder().decode(ProjectIndexSnapshotCache.Manifest.self, from: Data(contentsOf: context.appendingPathComponent("manifest.json")))
+            let generation = try XCTUnwrap(manifest.partitions.values.first?.generation)
+            try FileManager.default.removeItem(at: context.appendingPathComponent(generation).appendingPathComponent(ProjectIndex.typeVisibilityTableName(for: "App") + ".json"))
+            let (migrated, migration) = load()
+            XCTAssertFalse(try migration.save())
+            XCTAssertTrue(migrated.isInternalType(named: "Example", from: file))
+            XCTAssertEqual(migrated.fingerprints, original.fingerprints)
+            XCTAssertTrue(try migration.save())
+            let (warm, reader) = load()
+            XCTAssertTrue(warm.isInternalType(named: "Example", from: file))
+            XCTAssertFalse(try reader.save())
         }
     }
 

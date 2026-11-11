@@ -1410,6 +1410,42 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testPreparedInputsPreserveNestedOptionsAndOutputPaths() throws {
+        let input = """
+        func foo() {
+         print(1)
+        }
+        """
+        try withTmpDirectory([
+            "Input/.swiftformat": "--indent 2\n--exclude Ignored.swift",
+            "Input/A.swift": input,
+            "Input/Ignored.swift": "invalid source {",
+            "Input/Nested/.swiftformat": "--indent 3",
+            "Input/Nested/B.swift": input,
+        ]) { directory in
+            var configurations = [String]()
+            CLI.print = { message, _ in
+                if message.contains("Reading config file") {
+                    configurations.append(message)
+                }
+            }
+            XCTAssertEqual(CLI.run(in: directory.path, with: "Input --output Output --rules indent --cache ignore"), .ok)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Input/A.swift")), input)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Output/A.swift")), """
+            func foo() {
+              print(1)
+            }
+            """)
+            XCTAssertEqual(try String(contentsOf: directory.appendingPathComponent("Output/Nested/B.swift")), """
+            func foo() {
+               print(1)
+            }
+            """)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("Output/Ignored.swift").path))
+            XCTAssertEqual(configurations.count, 2)
+        }
+    }
+
     func testFileLocalIndexDoesNotReadOrRewriteLegacyCache() throws {
         let input = """
         private struct Example {

@@ -1559,7 +1559,8 @@ func makeSourceFileIndex(
     from source: String,
     moduleIdentifiers: Set<String>,
     includeFunctionReferences: Bool = true,
-    includeSymbolReferences: Bool = true
+    includeSymbolReferences: Bool = true,
+    contentHash: String? = nil
 ) -> SourceFileIndex {
     let formatter = Formatter(tokenize(source))
     var typeDeclarations = [SourceFileIndex.TypeDeclaration]()
@@ -1767,7 +1768,7 @@ func makeSourceFileIndex(
     }
     formatter.clearDerivedCaches()
     return SourceFileIndex(
-        contentHash: computeHash(source),
+        contentHash: contentHash ?? computeHash(source),
         moduleIdentifiers: moduleIdentifiers,
         typeDeclarations: typeDeclarations,
         classInheritances: classInheritances,
@@ -2140,15 +2141,19 @@ func discoverSourceFiles(in root: ProjectRoot) -> [URL] {
         sourceRoots.append(contentsOf: xcodeProjectURLs(in: root.url).map { $0.deletingLastPathComponent() })
     }
     var filesByPath = [String: URL]()
-    for sourceRoot in Set(sourceRoots.map(\.standardizedFileURL)) {
-        for fileURL in discoverSourceFiles(beneath: sourceRoot) {
+    var visitedDirectories = Set<String>()
+    for sourceRoot in Set(sourceRoots.map(\.standardizedFileURL)).sorted(by: { $0.path.count < $1.path.count }) {
+        for fileURL in discoverSourceFiles(beneath: sourceRoot, visitedDirectories: &visitedDirectories) {
             filesByPath[fileURL.path] = fileURL
         }
     }
     return filesByPath.values.sorted { $0.path < $1.path }
 }
 
-private func discoverSourceFiles(beneath rootURL: URL) -> [URL] {
+private func discoverSourceFiles(beneath rootURL: URL, visitedDirectories: inout Set<String>) -> [URL] {
+    // Workspaces often reference projects inside a source tree already visited above.
+    // Only skip directories actually traversed, retaining explicitly referenced excluded/symlink roots.
+    guard visitedDirectories.insert(rootURL.path).inserted else { return [] }
     let manager = FileManager.default
     let skippedDirectories: Set = [
         ".build", ".git", ".swiftpm", "DerivedData",
@@ -2167,6 +2172,8 @@ private func discoverSourceFiles(beneath rootURL: URL) -> [URL] {
         if values.isDirectory == true {
             if skippedDirectories.contains(url.lastPathComponent) || values.isSymbolicLink == true {
                 enumerator.skipDescendants()
+            } else {
+                visitedDirectories.insert(url.standardizedFileURL.path)
             }
         } else if values.isRegularFile == true, url.pathExtension == "swift" {
             files.append(url.standardizedFileURL)

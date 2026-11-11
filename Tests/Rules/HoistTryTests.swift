@@ -699,4 +699,36 @@ final class HoistTryTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .hoistTry)
     }
+
+    func testNoHoistTryOutOfClosureCaptureList() {
+        let input = """
+        let foo = { [bar = try baz()] in
+            print(bar)
+        }
+        """
+        testFormatting(for: input, rule: .hoistTry)
+    }
+
+    func testHoistTryWithinClosureCaptureList() {
+        let input = """
+        let foo = { [bar = quux(try baz())] in
+            print(bar)
+        }
+        """
+        let output = """
+        let foo = { [bar = try quux(baz())] in
+            print(bar)
+        }
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
+
+    func testNoHoistTryOutOfCaptureListOfTrailingClosureAfterMacro() {
+        let input = """
+        await #expect(processExitsWith: .success) { [foo = try bar()] in
+            #expect(foo == 1)
+        }
+        """
+        testFormatting(for: input, rule: .hoistTry)
+    }
 }

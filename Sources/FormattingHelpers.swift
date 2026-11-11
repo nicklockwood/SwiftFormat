@@ -1651,6 +1651,15 @@ extension Formatter {
             return
         }
 
+        // A closure capture list isn't an expression, so the keyword can't be moved in front of it.
+        // This doesn't use `isStartOfClosure`, which misses a trailing closure after a macro.
+        if tokens[scopeStart] == .startOfScope("["),
+           let closureStart = index(of: .startOfScope("{"), before: scopeStart),
+           parseClosureArguments(at: closureStart)?.captureListRange?.lowerBound == scopeStart
+        {
+            return
+        }
+
         var insertIndex = scopeStart
         loop: while let i = index(of: .nonSpaceOrComment, before: insertIndex) {
             let prevToken = tokens[insertIndex]

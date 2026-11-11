@@ -469,6 +469,44 @@ final class YodaConditionsTests: XCTestCase {
         testFormatting(for: input, rule: .yodaConditions)
     }
 
+    func testYodaConditionWithMacroTrailingClosure() {
+        let input = """
+        let a = 5 == #m { 1 }
+        let b = 5 == #m(1) { $0 }
+        let c = 5 == #m<Int>(1) { $0 }
+        let d = 5 == #m(1) { $0 }.count
+        """
+        let output = """
+        let a = #m { 1 } == 5
+        let b = #m(1) { $0 } == 5
+        let c = #m<Int>(1) { $0 } == 5
+        let d = #m(1) { $0 }.count == 5
+        """
+        testFormatting(for: input, output, rule: .yodaConditions)
+    }
+
+    func testYodaConditionBeforeMacroWithoutTrailingClosure() {
+        let input = """
+        if 5 == #m(1) {
+            print(x)
+        }
+
+        while 5 == #m {
+            print(x)
+        }
+        """
+        let output = """
+        if #m(1) == 5 {
+            print(x)
+        }
+
+        while #m == 5 {
+            print(x)
+        }
+        """
+        testFormatting(for: input, output, rule: .yodaConditions)
+    }
+
     func testYodaConditionWithLinebreakAfterOperator() {
         let input = """
         let isDefault = 5 ==

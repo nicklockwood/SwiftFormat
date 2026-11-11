@@ -190,6 +190,33 @@ public extension Formatter {
     }
 
     /// Returns the end of the expression at the specified index, optionally stopping at any of the specified tokens
+    /// Whether the `{` at the given index is a trailing closure of a freestanding macro,
+    /// e.g. `#m { ... }`, `#m(x) { ... }` or `#m<T>(x) { ... }`
+    func isMacroTrailingClosure(at i: Int) -> Bool {
+        guard token(at: i) == .startOfScope("{"), !isConditionalStatement(at: i),
+              var prevIndex = index(of: .nonSpaceOrComment, before: i)
+        else {
+            return false
+        }
+        if tokens[prevIndex] == .endOfScope(")") {
+            guard let startIndex = index(of: .startOfScope("("), before: prevIndex),
+                  let prev = index(of: .nonSpaceOrComment, before: startIndex)
+            else {
+                return false
+            }
+            prevIndex = prev
+        }
+        if tokens[prevIndex] == .endOfScope(">") {
+            guard let startIndex = index(of: .startOfScope("<"), before: prevIndex),
+                  let prev = index(of: .nonSpaceOrComment, before: startIndex)
+            else {
+                return false
+            }
+            prevIndex = prev
+        }
+        return tokens[prevIndex].isMacro
+    }
+
     func endOfExpression(at index: Int, upTo delimiters: [Token]) -> Int? {
         var index: Int? = index
         if token(at: index!)?.isEndOfScope == true {
@@ -219,7 +246,7 @@ public extension Formatter {
                 wasOperator = false
             case .startOfScope("<"),
                  .startOfScope where wasOperator,
-                 .startOfScope("{") where isStartOfClosure(at: i),
+                 .startOfScope("{") where isStartOfClosure(at: i) || isMacroTrailingClosure(at: i),
                  .startOfScope("(") where isSubscriptOrFunctionCall(at: i) ||
                      last(.nonSpaceOrComment, before: i)?.isMacro == true,
                  .startOfScope("[") where isSubscriptOrFunctionCall(at: i):

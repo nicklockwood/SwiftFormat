@@ -262,7 +262,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
                 let options = options
                 queue.async(group: group) {
                     let outputURL = outputURL.map {
-                        URL(fileURLWithPath: $0.path + url.path[inputURL.path.endIndex ..< url.path.endIndex])
+                        $0.appendingPathComponent(url.lastPathComponent)
                     }
                     enumerate(inputURL: url, outputURL: outputURL, options: options)
                 }

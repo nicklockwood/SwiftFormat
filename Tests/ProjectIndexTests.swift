@@ -1433,6 +1433,29 @@ final class ProjectIndexTests: XCTestCase {
         }
     }
 
+    func testWorkspaceDiscoveryRetainsExplicitlyReferencedSkippedDirectories() throws {
+        try withProjectIndexTmpDirectory([
+            "Example.xcworkspace/contents.xcworkspacedata": """
+            <Workspace version="1.0">
+                <FileRef location="group:.build/Vendor/Vendor.xcodeproj"></FileRef>
+                <FileRef location="group:Nested/Nested.xcodeproj"></FileRef>
+            </Workspace>
+            """,
+            ".build/Vendor/Vendor.xcodeproj/project.pbxproj": "{}",
+            ".build/Vendor/Vendor.swift": """
+            struct Vendor {}
+            """,
+            "Nested/Nested.xcodeproj/project.pbxproj": "{}",
+            "Nested/Nested.swift": """
+            struct Nested {}
+            """,
+        ]) { directory in
+            let files = discoverSourceFiles(in: ProjectRoot(url: directory, kind: .xcodeProject))
+            XCTAssertEqual(Set(files), Set([".build/Vendor/Vendor.swift", "Nested/Nested.swift"].map { directory.appendingPathComponent($0) }))
+            XCTAssertEqual(files.count, 2)
+        }
+    }
+
     func testXcodeWorkspaceDiscoversProjectsInNestedGroups() throws {
         try withProjectIndexTmpDirectory([
             "Example.xcworkspace/contents.xcworkspacedata": """

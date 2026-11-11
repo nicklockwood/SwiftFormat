@@ -190,25 +190,6 @@ public extension Formatter {
     }
 
     /// Returns the end of the expression at the specified index, optionally stopping at any of the specified tokens
-    /// Whether the `{` at the given index is a trailing closure of a freestanding macro,
-    /// e.g. `#m { ... }`, `#m(x) { ... }` or `#m<T>(x) { ... }`
-    func isMacroTrailingClosure(at i: Int) -> Bool {
-        guard token(at: i) == .startOfScope("{"), !isConditionalStatement(at: i),
-              var prevIndex = index(of: .nonSpaceOrComment, before: i)
-        else {
-            return false
-        }
-        // Skip the arguments and generic arguments of the macro, if any
-        for (end, start) in [(")", "("), (">", "<")] where tokens[prevIndex] == .endOfScope(end) {
-            if let startIndex = index(of: .startOfScope(start), before: prevIndex),
-               let prev = index(of: .nonSpaceOrComment, before: startIndex)
-            {
-                prevIndex = prev
-            }
-        }
-        return tokens[prevIndex].isMacro
-    }
-
     func endOfExpression(at index: Int, upTo delimiters: [Token]) -> Int? {
         var index: Int? = index
         if token(at: index!)?.isEndOfScope == true {
@@ -238,7 +219,7 @@ public extension Formatter {
                 wasOperator = false
             case .startOfScope("<"),
                  .startOfScope where wasOperator,
-                 .startOfScope("{") where isStartOfClosure(at: i) || isMacroTrailingClosure(at: i),
+                 .startOfScope("{") where isStartOfClosure(at: i),
                  .startOfScope("(") where isSubscriptOrFunctionCall(at: i) ||
                      last(.nonSpaceOrComment, before: i)?.isMacro == true,
                  .startOfScope("[") where isSubscriptOrFunctionCall(at: i):
@@ -805,6 +786,9 @@ extension Formatter {
                 prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) ?? prev
             }
             switch tokens[prev] {
+            case let token where token.isMacro:
+                // Trailing closure of a macro with arguments, e.g. `#m(x) { ... }`
+                return true
             case .identifier:
                 prevIndex = prev
             case .operator("?", .postfix), .operator("!", .postfix):
@@ -822,6 +806,9 @@ extension Formatter {
                 guard let startIndex = index(of: .startOfScope("<"), before: prev) else {
                     fatalError("Expected <", at: prev - 1)
                     return false
+                }
+                if last(.nonSpaceOrComment, before: startIndex)?.isMacro == true {
+                    return true
                 }
                 guard let prevIndex = index(of: .nonSpaceOrComment, before: startIndex, if: {
                     $0.isIdentifier
@@ -880,6 +867,9 @@ extension Formatter {
             default:
                 return true
             }
+        case let token where token.isMacro:
+            // Trailing closure of a macro without arguments, e.g. `#m { ... }`
+            return true
         case .keyword, .endOfScope("]"), .endOfScope(">"):
             return false
         default:

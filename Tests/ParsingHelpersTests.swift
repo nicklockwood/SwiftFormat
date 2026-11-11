@@ -717,6 +717,22 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 5))
     }
 
+    func testMacroTrailingClosure() throws {
+        for input in ["#m { 1 }", "#m(1) { $0 }", "#m<Int>(1) { $0 }", "#m<Int> { 1 }"] {
+            let formatter = Formatter(tokenize(input))
+            let braceIndex = try XCTUnwrap(formatter.index(of: .startOfScope("{"), after: -1))
+            XCTAssert(formatter.isStartOfClosure(at: braceIndex), input)
+        }
+    }
+
+    func testBraceAfterMacroInConditionNotTreatedAsClosure() throws {
+        for input in ["if #m(1) {}", "while #m {}", "guard #m else {}"] {
+            let formatter = Formatter(tokenize(input))
+            let braceIndex = try XCTUnwrap(formatter.index(of: .startOfScope("{"), after: -1))
+            XCTAssertFalse(formatter.isStartOfClosure(at: braceIndex), input)
+        }
+    }
+
     func testBraceAfterTypedThrows() {
         let formatter = Formatter(tokenize("""
         do throws(Foo) {} catch {}

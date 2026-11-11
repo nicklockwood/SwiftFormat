@@ -786,6 +786,9 @@ extension Formatter {
                 prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) ?? prev
             }
             switch tokens[prev] {
+            case let token where token.isMacro:
+                // Trailing closure of a macro with arguments, e.g. `#m(x) { ... }`
+                return true
             case .identifier:
                 prevIndex = prev
             case .operator("?", .postfix), .operator("!", .postfix):
@@ -803,6 +806,9 @@ extension Formatter {
                 guard let startIndex = index(of: .startOfScope("<"), before: prev) else {
                     fatalError("Expected <", at: prev - 1)
                     return false
+                }
+                if last(.nonSpaceOrComment, before: startIndex)?.isMacro == true {
+                    return true
                 }
                 guard let prevIndex = index(of: .nonSpaceOrComment, before: startIndex, if: {
                     $0.isIdentifier
@@ -861,6 +867,9 @@ extension Formatter {
             default:
                 return true
             }
+        case let token where token.isMacro:
+            // Trailing closure of a macro without arguments, e.g. `#m { ... }`
+            return true
         case .keyword, .endOfScope("]"), .endOfScope(">"):
             return false
         default:

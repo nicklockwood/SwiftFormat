@@ -198,21 +198,13 @@ public extension Formatter {
         else {
             return false
         }
-        if tokens[prevIndex] == .endOfScope(")") {
-            guard let startIndex = index(of: .startOfScope("("), before: prevIndex),
-                  let prev = index(of: .nonSpaceOrComment, before: startIndex)
-            else {
-                return false
+        // Skip the arguments and generic arguments of the macro, if any
+        for (end, start) in [(")", "("), (">", "<")] where tokens[prevIndex] == .endOfScope(end) {
+            if let startIndex = index(of: .startOfScope(start), before: prevIndex),
+               let prev = index(of: .nonSpaceOrComment, before: startIndex)
+            {
+                prevIndex = prev
             }
-            prevIndex = prev
-        }
-        if tokens[prevIndex] == .endOfScope(">") {
-            guard let startIndex = index(of: .startOfScope("<"), before: prevIndex),
-                  let prev = index(of: .nonSpaceOrComment, before: startIndex)
-            else {
-                return false
-            }
-            prevIndex = prev
         }
         return tokens[prevIndex].isMacro
     }

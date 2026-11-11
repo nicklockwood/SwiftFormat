@@ -2183,7 +2183,7 @@ private func discoverSourceFiles(beneath rootURL: URL, visitedDirectories: inout
 }
 
 /// Provides conservative module identities from conventional project layout or Xcode target membership.
-func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Set<String>] {
+func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot, cache: ProjectModuleCache? = nil) -> [String: Set<String>] {
     let rootPath = root.url.standardizedFileURL.path
 
     switch root.kind {
@@ -2203,16 +2203,16 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot) -> [String: Se
         var targetsByFile = [String: Set<String>]()
         for projectURL in projectURLs {
             let projectFileURL = projectURL.appendingPathComponent("project.pbxproj")
-            let sourceRoot = projectURL.deletingLastPathComponent()
-            guard let contents = try? String(contentsOf: projectFileURL),
-                  let project = XcodeProject(
-                      contents: contents,
-                      sourceRoot: sourceRoot,
-                      sourceFiles: fileURLs
-                  )
-            else { continue }
+            guard let contents = try? String(contentsOf: projectFileURL) else { continue }
+            let project: XcodeProject?
+            if let cache {
+                project = cache.project(at: projectURL, contents: contents)
+            } else {
+                project = XcodeProject(contents: contents, sourceRoot: projectURL.deletingLastPathComponent())
+            }
+            guard let project else { continue }
             let projectIdentifier = projectURL.standardizedFileURL.path
-            for (filePath, targetIDs) in project.targetIDsByFile {
+            for (filePath, targetIDs) in project.targetIDs(for: fileURLs) {
                 targetsByFile[filePath, default: []].formUnion(targetIDs.map {
                     "\(projectIdentifier):\($0)"
                 })
@@ -2337,10 +2337,23 @@ private extension Dictionary where Value == Set<String> {
     }
 }
 
-private struct XcodeProject {
-    var targetIDsByFile: [String: Set<String>]
+/// Parsed target membership, independent of the current set of source files.
+struct XcodeProject: Codable {
+    struct MembershipException: Codable {
+        var path: String
+        var targetID: String
+    }
 
-    init?(contents: String, sourceRoot: URL, sourceFiles: [URL]) {
+    struct SynchronizedGroup: Codable {
+        var path: String
+        var targetIDs: Set<String>
+        var exceptions: [MembershipException]
+    }
+
+    var targetIDsByFile: [String: Set<String>]
+    var synchronizedGroups = [SynchronizedGroup]()
+
+    init?(contents: String, sourceRoot: URL) {
         var parser = OpenStepPropertyListParser(contents)
         guard case let .dictionary(root) = parser.parse(),
               case let .dictionary(objects)? = root["objects"]
@@ -2474,7 +2487,7 @@ private struct XcodeProject {
                   let groupURL = groupURL(for: groupID)
             else { continue }
             let groupPath = groupURL.standardizedFileURL.path
-            var targetMembershipExceptions = [(path: String, targetID: String)]()
+            var targetMembershipExceptions = [MembershipException]()
             for exceptionID in strings("exceptions", in: group) {
                 guard let exception = dictionary(for: exceptionID) else { continue }
                 let targetID: String?
@@ -2490,15 +2503,27 @@ private struct XcodeProject {
                 }
                 guard let targetID else { continue }
                 targetMembershipExceptions.append(contentsOf:
-                    strings("membershipExceptions", in: exception).map { ($0, targetID) })
+                    strings("membershipExceptions", in: exception).map { MembershipException(path: $0, targetID: targetID) })
             }
 
+            synchronizedGroups.append(SynchronizedGroup(
+                path: groupPath,
+                targetIDs: targetsBySynchronizedGroup[groupID] ?? [],
+                exceptions: targetMembershipExceptions
+            ))
+        }
+        targetIDsByFile = result
+    }
+
+    func targetIDs(for sourceFiles: [URL]) -> [String: Set<String>] {
+        var result = targetIDsByFile
+        for group in synchronizedGroups {
             for fileURL in sourceFiles {
                 let filePath = fileURL.standardizedFileURL.path
-                guard filePath.hasPrefix(groupPath + "/") else { continue }
-                let relativePath = String(filePath.dropFirst(groupPath.count + 1))
-                var targetIDs = targetsBySynchronizedGroup[groupID] ?? []
-                for exception in targetMembershipExceptions where
+                guard filePath.hasPrefix(group.path + "/") else { continue }
+                let relativePath = String(filePath.dropFirst(group.path.count + 1))
+                var targetIDs = group.targetIDs
+                for exception in group.exceptions where
                     relativePath == exception.path || relativePath.hasPrefix(exception.path + "/")
                 {
                     if targetIDs.contains(exception.targetID) {
@@ -2510,7 +2535,7 @@ private struct XcodeProject {
                 result[filePath, default: []].formUnion(targetIDs)
             }
         }
-        targetIDsByFile = result
+        return result
     }
 }
 

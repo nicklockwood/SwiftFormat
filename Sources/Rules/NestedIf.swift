@@ -221,6 +221,7 @@ extension Formatter {
         through upperBound: Int
     ) {
         guard oldIndent != newIndent,
+              lowerBound < upperBound,
               let linebreakIndex = tokens[lowerBound ... upperBound].lastIndex(where: \.isLinebreak),
               linebreakIndex > lowerBound
         else {

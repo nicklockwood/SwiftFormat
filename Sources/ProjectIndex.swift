@@ -412,9 +412,8 @@ struct ProjectIndex {
     }
 
     private let types: ProjectIndexTable<TypesTable>
-    private var typeVisibilities: [TypeKey: Set<String>] {
-        types.value.typeVisibilities
-    }
+    /// These narrow queries do not need inheritance, protocol or conformance data.
+    private let typeVisibilitiesByModule: [String: ProjectIndexTable<[String: Set<String>]>]
 
     private var typesByModule: [TypeKey: [SourceFileIndex.TypeDeclaration]] {
         types.value.typesByModule
@@ -642,6 +641,12 @@ struct ProjectIndex {
                     .formUnion(declaration.inheritedProtocols.inheritedNamesToResolve)
             }
         }
+        let modules = Set(files.values.flatMap(\.moduleIdentifiers))
+        let visibilities = Dictionary(grouping: typeVisibilities, by: { $0.key.moduleIdentifier })
+        typeVisibilitiesByModule = Dictionary(uniqueKeysWithValues: modules.map { module in
+            (module, ProjectIndexTable(value: Dictionary(uniqueKeysWithValues:
+                (visibilities[module] ?? []).map { ($0.key.name, $0.value) })))
+        })
         types = ProjectIndexTable(value: .init(
             typeVisibilities: typeVisibilities,
             typesByModule: typesByModule,
@@ -770,6 +775,15 @@ struct ProjectIndex {
             computeHash(partitions.keys.sorted().map { "\($0):\(partitions[$0]!.fingerprints[keyPath: keyPath])" }.joined(separator: ";"))
         }
         fingerprints = Fingerprints(declarations: fingerprint(\.declarations), functionReferences: fingerprint(\.functionReferences), symbolReferences: fingerprint(\.symbolReferences), all: fingerprint(\.all))
+        let modules = Set(ordered.flatMap(\.typeVisibilitiesByModule.keys))
+        typeVisibilitiesByModule = Dictionary(uniqueKeysWithValues: modules.map { module in
+            let tables = ordered.compactMap { $0.typeVisibilitiesByModule[module] }
+            return (module, ProjectIndexTable(load: {
+                tables.reduce(into: [:]) { result, table in
+                    result.merge(table.value) { $0.union($1) }
+                }
+            }))
+        })
         types = ProjectIndexTable(load: {
             var result = ProjectIndex(files: [:]).types.value
             for partition in ordered {
@@ -851,6 +865,13 @@ struct ProjectIndex {
     init(snapshot: ProjectIndexSnapshot, directory: URL, rebuild: @escaping () -> ProjectIndex) {
         files = snapshot.files
         fingerprints = snapshot.fingerprints
+        let modules = Set(snapshot.files.values.flatMap(\.moduleIdentifiers))
+        typeVisibilitiesByModule = Dictionary(uniqueKeysWithValues: modules.map { module in
+            let url = directory.appendingPathComponent(Self.typeVisibilityTableName(for: module) + ".json")
+            return (module, ProjectIndexTable(url: url) {
+                rebuild().typeVisibilitiesByModule[module]?.value ?? [:]
+            })
+        })
         types = ProjectIndexTable(url: directory.appendingPathComponent("types.json")) { rebuild().types.value }
         functions = ProjectIndexTable(url: directory.appendingPathComponent("functions.json")) { rebuild().functions.value }
         members = ProjectIndexTable(url: directory.appendingPathComponent("members.json")) { rebuild().members.value }
@@ -862,7 +883,18 @@ struct ProjectIndex {
 
     static let tableNames = ["types", "functions", "members", "names", "symbols", "functionReferences", "symbolReferences"]
 
+    static func typeVisibilityTableName(for module: String) -> String {
+        "typeVisibilities-" + computeHash(module)
+    }
+
+    var persistedTableNames: [String] {
+        Self.tableNames + typeVisibilitiesByModule.keys.sorted().map(Self.typeVisibilityTableName)
+    }
+
     func writeTables(to directory: URL) throws {
+        for (module, table) in typeVisibilitiesByModule {
+            try table.write(to: directory.appendingPathComponent(Self.typeVisibilityTableName(for: module) + ".json"))
+        }
         try types.write(to: directory.appendingPathComponent("types.json"))
         try functions.write(to: directory.appendingPathComponent("functions.json"))
         try members.write(to: directory.appendingPathComponent("members.json"))
@@ -967,8 +999,7 @@ struct ProjectIndex {
             return false
         }
         return moduleIdentifiers.allSatisfy { moduleIdentifier in
-            let key = TypeKey(moduleIdentifier: moduleIdentifier, name: name)
-            return typeVisibilities[key] == [Visibility.internal.rawValue]
+            typeVisibilitiesByModule[moduleIdentifier]?.value[name] == [Visibility.internal.rawValue]
         }
     }
 
@@ -979,7 +1010,7 @@ struct ProjectIndex {
               !moduleIdentifiers.isEmpty
         else { return false }
         return moduleIdentifiers.allSatisfy { moduleIdentifier in
-            typeVisibilities[TypeKey(moduleIdentifier: moduleIdentifier, name: name)] != nil
+            typeVisibilitiesByModule[moduleIdentifier]?.value[name] != nil
         }
     }
 

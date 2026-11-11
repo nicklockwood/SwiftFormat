@@ -203,7 +203,7 @@ final class ProjectIndexSnapshotCache {
                 partitions[key] = index
                 if let old, let oldURL, old.fingerprints == index.fingerprints,
                    Set(old.files.keys) == Set(index.files.keys), old.features == manifest.partitions[key]?.features,
-                   (try? FileManager.default.contentsOfDirectory(atPath: oldURL.path).count) == ProjectIndex.tableNames.count + 1
+                   (try? FileManager.default.contentsOfDirectory(atPath: oldURL.path).count) == index.persistedTableNames.count + 1
                 {
                     pending[key]?.reuse = oldURL
                 }
@@ -237,7 +237,7 @@ final class ProjectIndexSnapshotCache {
             created.append(destination)
             try manager.createDirectory(at: destination, withIntermediateDirectories: true)
             if let reuse = update.reuse {
-                for name in ProjectIndex.tableNames {
+                for name in update.index.persistedTableNames {
                     let source = reuse.appendingPathComponent(name + ".json")
                     let target = destination.appendingPathComponent(name + ".json")
                     do { try manager.linkItem(at: source, to: target) }

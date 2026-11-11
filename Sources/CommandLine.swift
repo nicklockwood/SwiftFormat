@@ -1355,6 +1355,52 @@ func processInput(_ inputURLs: [URL],
                   reporter: Reporter?,
                   logger: Logger? = nil) -> (OutputFlags, [Error])
 {
+    // Logging skipped files
+    var outputFlags: OutputFlags = (0, 0, 0, 0)
+    let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
+        print("Skipping \(inputURL.path)", as: .info)
+        print("-- ignored", as: .warning)
+        return {}
+    } : { _, _, _ in
+        { outputFlags.filesSkipped += 1 }
+    }
+    // Resolve paths, output destinations, directory configuration and file metadata once.
+    var inputFiles = [(input: URL, output: URL, options: Options)]()
+    let enumerationErrors = enumerateFiles(
+        withInputURLs: inputURLs, outputURL: outputURL, options: options,
+        concurrent: !verbose, logger: logger, skipped: skippedHandler
+    ) { input, output, options in
+        { inputFiles.append((input, output, options)) }
+    }
+    guard enumerationErrors.isEmpty else { return (outputFlags, enumerationErrors) }
+
+    func processFiles(_ handler: @escaping (Int, URL, URL, Options) throws -> () throws -> Void) -> [Error] {
+        let lock = NSLock()
+        var completions = [() throws -> Void]()
+        func process(_ index: Int) {
+            let file = inputFiles[index]
+            let completion: () throws -> Void
+            do { completion = try handler(index, file.input, file.output, file.options) }
+            catch { completion = { throw error } }
+            lock.lock()
+            completions.append(completion)
+            lock.unlock()
+        }
+        if verbose {
+            for index in inputFiles.indices {
+                process(index)
+            }
+        } else {
+            DispatchQueue.concurrentPerform(iterations: inputFiles.count, execute: process)
+        }
+        var errors = [Error]()
+        for completion in completions {
+            do { try completion() }
+            catch { errors.append(error) }
+        }
+        return errors
+    }
+
     // Discover and load snapshots before formatting, so an invalid snapshot can't result in partial changes.
     var snapshotURLByInputURL = [URL: URL]()
     var snapshotStates = [URL: SnapshotState]()
@@ -1363,20 +1409,9 @@ func processInput(_ inputURLs: [URL],
     case let .explicit(snapshotURL):
         snapshotURLs = [snapshotURL.standardizedFileURL]
     case let .discover(defaultURL):
-        var inputFileURLs = [URL]()
-        let discoveryErrors = enumerateFiles(
-            withInputURLs: inputURLs,
-            options: options,
-            concurrent: !verbose,
-            logger: logger
-        ) { inputURL, _, _ in
-            { inputFileURLs.append(inputURL.standardizedFileURL) }
-        }
-        guard discoveryErrors.isEmpty else {
-            return ((0, 0, 0, 0), discoveryErrors)
-        }
         var discoveredSnapshotURLs = Set<URL>()
-        for inputURL in inputFileURLs {
+        for file in inputFiles {
+            let inputURL = file.input.standardizedFileURL
             let encounteredURLs = encounteredSnapshotURLs(for: inputURL)
             discoveredSnapshotURLs.formUnion(encounteredURLs)
             if let snapshotURL = encounteredURLs.first ?? defaultURL?.standardizedFileURL {
@@ -1445,15 +1480,6 @@ func processInput(_ inputURLs: [URL],
         return path
     }
 
-    // Logging skipped files
-    var outputFlags: OutputFlags = (0, 0, 0, 0)
-    let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
-        print("Skipping \(inputURL.path)", as: .info)
-        print("-- ignored", as: .warning)
-        return {}
-    } : { _, _, _ in
-        { outputFlags.filesSkipped += 1 }
-    }
     // Swift version
     var shownWarnings = Set<String>()
     var showedConfigurationWarnings = false
@@ -1500,25 +1526,24 @@ func processInput(_ inputURLs: [URL],
     // Preserve the original contents of files being formatted. A project index may be requested
     // after another formatting worker has finished, so it must not read a partially updated project.
     var inputSourceSnapshots = [String: String]()
+    var inputSourceHashes = [String: String]()
     var localFunctionReferencePaths = Set<String>()
     if projectIndexMode == .auto {
-        let snapshotErrors = enumerateFiles(
-            withInputURLs: inputURLs,
-            options: options,
-            concurrent: !verbose,
-            logger: Logger(print: print)
-        ) { inputURL, _, options in
+        let snapshotErrors = processFiles { index, inputURL, _, options in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("Failed to read file \(inputURL.path)")
             }
             var options = try applyOverrides(to: options, for: inputURL)
-            try options.addFilterArguments(path: inputURL.path, source: input)
+            try options.addFilterArguments(path: inputURL.path, source: input, logger: logger)
             let rules = options.rules ?? defaultRules
             let requiresLocalFunctionReferences = inputURL.pathExtension == "swift" &&
                 rules.contains(FormatRule.redundantOverload.name) &&
                 (options.formatOptions ?? .default).overloadVisibility == .file
             let path = inputURL.standardizedFileURL.path
+            let hash = computeHash(input)
             return {
+                inputSourceHashes[path] = hash
+                inputFiles[index].options = options
                 inputSourceSnapshots[path] = input
                 if requiresLocalFunctionReferences {
                     localFunctionReferencePaths.insert(path)
@@ -1568,7 +1593,7 @@ func processInput(_ inputURLs: [URL],
             DispatchQueue.concurrentPerform(iterations: discoveredFiles.count) { i in
                 let url = discoveredFiles[i].0
                 guard let source = inputSourceSnapshots[url.path] ?? (try? String(contentsOf: url)) else { return }
-                let hash = computeHash(source)
+                let hash = inputSourceHashes[url.path] ?? computeHash(source)
                 lock.lock()
                 sources[url.path] = source
                 hashes[url.path] = hash
@@ -1623,7 +1648,16 @@ func processInput(_ inputURLs: [URL],
         } else {
             inputSnapshotKey = nil
         }
-        let inputHash = snapshotURL == nil ? nil : computeHash(input)
+        var originalHash = inputSourceHashes[inputURL.path]
+        func originalSourceHash() -> String {
+            if let originalHash {
+                return originalHash
+            }
+            let hash = computeHash(input)
+            originalHash = hash
+            return hash
+        }
+        let inputHash = snapshotURL == nil ? nil : originalSourceHash()
         if let snapshotURL,
            let inputSnapshotKey,
            snapshotStates[snapshotURL]?.isCreating == true
@@ -1644,8 +1678,11 @@ func processInput(_ inputURLs: [URL],
             return { outputFlags.filesSkipped += 1 }
         }
         // Override options
-        var options = try applyOverrides(to: options, for: inputURL)
-        try options.addFilterArguments(path: inputURL.path, source: input, logger: logger)
+        var options = options
+        if projectIndexMode != .auto {
+            options = try applyOverrides(to: options, for: inputURL)
+            try options.addFilterArguments(path: inputURL.path, source: input, logger: logger)
+        }
         let formatOptions = options.formatOptions ?? .default
         let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
         // Check cache
@@ -1668,7 +1705,7 @@ func processInput(_ inputURLs: [URL],
                let configurationHash,
                let cachedHash = caches[fileCacheURL]?.formatting[configurationHash]?[cacheKey]
             {
-                sourceHash = computeHash(input)
+                sourceHash = originalSourceHash()
                 if cachedHash == sourceHash {
                     let dependency = caches[fileCacheURL]?
                         .projectIndexDependencies[configurationHash]?[cacheKey]
@@ -1686,7 +1723,7 @@ func processInput(_ inputURLs: [URL],
                 if let fileCacheURL,
                    let cacheKey,
                    let cached = projectIndexCache.index(for: cacheKey, cacheURL: fileCacheURL),
-                   cached.contentHash == computeHash(input),
+                   cached.contentHash == originalSourceHash(),
                    cached.includesFunctionReferences
                 {
                     return cached
@@ -1695,7 +1732,8 @@ func processInput(_ inputURLs: [URL],
                     from: input,
                     moduleIdentifiers: [],
                     includeFunctionReferences: true,
-                    includeSymbolReferences: false
+                    includeSymbolReferences: false,
+                    contentHash: originalSourceHash()
                 )
             }
             let output: String
@@ -1822,7 +1860,7 @@ func processInput(_ inputURLs: [URL],
             }
             let cacheValue = configurationHash.map {
                 // Only bother computing this if cache is enabled
-                ($0, sourceHash ?? computeHash(output))
+                ($0, updatedLocalSourceIndex?.contentHash ?? sourceHash ?? (output == input ? originalSourceHash() : computeHash(output)))
             }
             let projectIndexDependency = cachedProjectIndexDependency ?? projectIndexAccess.dependency
             if outputURL.path.components(separatedBy: "/").contains("stdout") {
@@ -1928,15 +1966,9 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    var errors = enumerateFiles(
-        withInputURLs: inputURLs,
-        outputURL: outputURL,
-        options: options,
-        concurrent: !verbose,
-        logger: logger,
-        skipped: skippedHandler,
-        handler: fileHandler
-    )
+    var errors = processFiles { _, input, output, options in
+        try fileHandler(input, output, options)
+    }
     if verbose {
         var errorCount = errors.count
         errors = errors.filter { error in

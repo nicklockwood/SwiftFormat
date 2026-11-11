@@ -168,7 +168,8 @@ final class ProjectIndexSnapshotCache {
                         from: sources[path]!,
                         moduleIdentifiers: assignments[path] ?? [],
                         includeFunctionReferences: requested.contains(.functionReferences) || localReferences.contains(path),
-                        includeSymbolReferences: requested.contains(.symbolReferences)
+                        includeSymbolReferences: requested.contains(.symbolReferences),
+                        contentHash: hashes[path]
                     )
                     summaryLock.lock()
                     summaries[path] = summary

@@ -1560,6 +1560,10 @@ func processInput(_ inputURLs: [URL],
         cacheURL: cacheURLsByRoot.values.sorted { $0.path < $1.path }.first,
         roots: projectRoots
     )
+    let projectModuleCache = ProjectModuleCache(
+        cacheURL: cacheURLsByRoot.values.sorted { $0.path < $1.path }.first,
+        roots: projectRoots
+    )
     var projectSources: [String: String]?
     var projectSourceHashes: [String: String]?
     var discoveredProjectFiles: [(URL, ProjectRoot)]?
@@ -1609,7 +1613,7 @@ func processInput(_ inputURLs: [URL],
         return projectIndexSnapshotCache.index(sources: sources, hashes: sourceHashes, configuration: configurationHashes, features: features, localReferences: localFunctionReferencePaths, modules: {
             if moduleIdentifiersByRoot == nil {
                 let filesByRoot = Dictionary(grouping: discoveredFiles, by: \.1)
-                moduleIdentifiersByRoot = filesByRoot.mapValues { moduleIdentifiers(for: $0.map(\.0), in: $0[0].1) }
+                moduleIdentifiersByRoot = filesByRoot.mapValues { moduleIdentifiers(for: $0.map(\.0), in: $0[0].1, cache: projectModuleCache) }
             }
             return moduleIdentifiersByRoot!.values.reduce(into: [:]) { $0.merge($1) { $0.union($1) } }
         }, legacy: { path in
@@ -2008,6 +2012,7 @@ func processInput(_ inputURLs: [URL],
         }
         do {
             try projectIndexCache.save()
+            try projectModuleCache.save()
             if try projectIndexSnapshotCache.save() {
                 // The partitioned snapshot now owns the source summaries. Retire the legacy monolith.
                 for cacheURL in Set(cacheURLsByRoot.values) {

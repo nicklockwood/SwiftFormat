@@ -82,8 +82,7 @@ final class ProjectIndexSnapshotCache {
     private var dirty = false
 
     init(cacheURL: URL?, roots: Set<ProjectRoot>) {
-        let context = roots.map { "\($0.kind):\($0.url.standardizedFileURL.path)" }.sorted().joined(separator: "\n")
-        directory = cacheURL.map { projectIndexTablesURL(for: $0).appendingPathComponent(computeHash(context)) }
+        directory = cacheURL.map { projectIndexContextDirectory(cacheURL: $0, roots: roots) }
     }
 
     private func loadManifest() {
@@ -266,4 +265,68 @@ final class ProjectIndexSnapshotCache {
 
 func projectIndexTablesURL(for cacheURL: URL) -> URL {
     cacheURL.appendingPathExtension("index-tables")
+}
+
+private func projectIndexContextDirectory(cacheURL: URL, roots: Set<ProjectRoot>) -> URL {
+    let context = roots.map { "\($0.kind):\($0.url.standardizedFileURL.path)" }.sorted().joined(separator: "\n")
+    return projectIndexTablesURL(for: cacheURL).appendingPathComponent(computeHash(context))
+}
+
+/// Cache parsed project structure so adding a source file only reevaluates synchronized groups.
+/// Loaded only when module membership is needed, and invalidated by the project file contents.
+final class ProjectModuleCache {
+    private struct Entry: Codable {
+        var contentHash: String
+        var project: XcodeProject
+    }
+
+    private struct Cache: Codable {
+        var version = 1
+        var formatterVersion = swiftFormatVersion
+        var projects = [String: Entry]()
+    }
+
+    private let url: URL?
+    private let lock = NSLock()
+    private var cache = Cache()
+    private var didLoad = false
+    private var dirty = false
+
+    init(cacheURL: URL?, roots: Set<ProjectRoot>) {
+        url = cacheURL.map {
+            projectIndexContextDirectory(cacheURL: $0, roots: roots).appendingPathComponent("modules.json")
+        }
+    }
+
+    func project(at projectURL: URL, contents: String) -> XcodeProject? {
+        lock.lock()
+        defer { lock.unlock() }
+        if !didLoad {
+            didLoad = true
+            if let url, let data = try? Data(contentsOf: url),
+               let stored = try? JSONDecoder().decode(Cache.self, from: data),
+               stored.version == 1, stored.formatterVersion == swiftFormatVersion
+            {
+                cache = stored
+            }
+        }
+        let path = projectURL.standardizedFileURL.path
+        let hash = computeHash(contents)
+        if let entry = cache.projects[path], entry.contentHash == hash {
+            return entry.project
+        }
+        let project = XcodeProject(contents: contents, sourceRoot: projectURL.deletingLastPathComponent())
+        cache.projects[path] = project.map { Entry(contentHash: hash, project: $0) }
+        dirty = true
+        return project
+    }
+
+    func save() throws {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let url, dirty else { return }
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try JSONEncoder().encode(cache).write(to: url, options: .atomic)
+        dirty = false
+    }
 }

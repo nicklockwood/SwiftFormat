@@ -1364,6 +1364,46 @@ final class ProjectIndexTests: XCTestCase {
                 identifiers[directory.appendingPathComponent("Shared/Shared.swift").path],
                 ["\(projectPath):APP_TARGET", "\(projectPath):TEST_TARGET"]
             )
+
+            let cacheURL = directory.appendingPathComponent("cache")
+            let cache = ProjectModuleCache(cacheURL: cacheURL, roots: [root])
+            try cache.save()
+            XCTAssertFalse(FileManager.default.fileExists(atPath: projectIndexTablesURL(for: cacheURL).path))
+            XCTAssertEqual(moduleIdentifiers(for: fileURLs, in: root, cache: cache), identifiers)
+            try cache.save()
+            let context = try XCTUnwrap(FileManager.default.contentsOfDirectory(
+                at: projectIndexTablesURL(for: cacheURL), includingPropertiesForKeys: nil
+            ).first)
+            let modelURL = context.appendingPathComponent("modules.json")
+            let timestamp = Date(timeIntervalSince1970: 1_000_000)
+            try FileManager.default.setAttributes([.modificationDate: timestamp], ofItemAtPath: modelURL.path)
+            let reloaded = ProjectModuleCache(cacheURL: cacheURL, roots: [root])
+            XCTAssertEqual(moduleIdentifiers(for: fileURLs, in: root, cache: reloaded), identifiers)
+            try reloaded.save()
+            XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: modelURL.path)[.modificationDate] as? Date, timestamp)
+
+            // A corrupt or incompatible model is disposable and is rebuilt from the project.
+            let stored = try Data(contentsOf: modelURL)
+            var incompatible = try XCTUnwrap(JSONSerialization.jsonObject(with: stored) as? [String: Any])
+            incompatible["version"] = 0
+            for data in try [Data("invalid".utf8), JSONSerialization.data(withJSONObject: incompatible)] {
+                try data.write(to: modelURL)
+                let recovered = ProjectModuleCache(cacheURL: cacheURL, roots: [root])
+                XCTAssertEqual(moduleIdentifiers(for: fileURLs, in: root, cache: recovered), identifiers)
+                try recovered.save()
+                let rebuilt = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: modelURL)) as? [String: Any])
+                XCTAssertEqual(rebuilt["version"] as? Int, 1)
+                XCTAssertEqual(rebuilt["formatterVersion"] as? String, swiftFormatVersion)
+            }
+
+            let projectURL = directory.appendingPathComponent("Example.xcodeproj/project.pbxproj")
+            let contents = try String(contentsOf: projectURL)
+            try contents.replacingOccurrences(of: "files = (APP_BUILD, SHARED_APP_BUILD,)", with: "files = (APP_BUILD,)")
+                .write(to: projectURL, atomically: true, encoding: .utf8)
+            let updated = moduleIdentifiers(for: fileURLs, in: root, cache: reloaded)
+            XCTAssertEqual(updated[directory.appendingPathComponent("Shared/Shared.swift").path], ["\(projectPath):TEST_TARGET"])
+            try "invalid".write(to: projectURL, atomically: true, encoding: .utf8)
+            XCTAssertTrue(moduleIdentifiers(for: fileURLs, in: root, cache: reloaded).isEmpty)
         }
     }
 
@@ -1379,7 +1419,7 @@ final class ProjectIndexTests: XCTestCase {
                 objects = {
                     APP_EXCEPTIONS = {
                         isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-                        membershipExceptions = (Excluded.swift,);
+                        membershipExceptions = (Excluded.swift, ExcludedFolder,);
                         target = APP_TARGET;
                     };
                     TEST_EXCEPTIONS = {
@@ -1430,6 +1470,26 @@ final class ProjectIndexTests: XCTestCase {
             XCTAssertEqual(identifiers[directory.appendingPathComponent("Sync/Excluded.swift").path], [])
             XCTAssertEqual(identifiers[directory.appendingPathComponent("Sync/Shared.swift").path], [app, tests])
             XCTAssertEqual(identifiers[directory.appendingPathComponent("Sync/PhaseOnly.swift").path], [app, tests])
+
+            let cacheURL = directory.appendingPathComponent("cache")
+            let cache = ProjectModuleCache(cacheURL: cacheURL, roots: [root])
+            XCTAssertEqual(moduleIdentifiers(for: discoverSourceFiles(in: root), in: root, cache: cache), identifiers)
+            try cache.save()
+            let added = directory.appendingPathComponent("Sync/Added.swift")
+            let excluded = directory.appendingPathComponent("Sync/ExcludedFolder/Added.swift")
+            try FileManager.default.createDirectory(at: excluded.deletingLastPathComponent(), withIntermediateDirectories: true)
+            for file in [added, excluded] {
+                try """
+                struct Added {}
+                """.write(to: file, atomically: true, encoding: .utf8)
+            }
+            let reloaded = ProjectModuleCache(cacheURL: cacheURL, roots: [root])
+            let updated = moduleIdentifiers(for: discoverSourceFiles(in: root), in: root, cache: reloaded)
+            XCTAssertEqual(updated[added.path], [app])
+            XCTAssertEqual(updated[excluded.path], [])
+            for (path, targets) in identifiers {
+                XCTAssertEqual(updated[path], targets)
+            }
         }
     }
 

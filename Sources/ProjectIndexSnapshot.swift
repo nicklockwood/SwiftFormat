@@ -15,6 +15,10 @@ final class ProjectIndexTable<Value: Codable> {
     private var storedValue: Value?
     private var load: (() -> Value)?
 
+    init(load: @escaping () -> Value) {
+        self.load = load
+    }
+
     init(value: Value) {
         storedValue = value
         load = nil
@@ -54,102 +58,208 @@ struct ProjectIndexSnapshot: Codable {
     var fingerprints: ProjectIndex.Fingerprints
 }
 
-/// The manifest is small enough to validate without decoding any query tables or source summaries.
-/// Each generation is immutable; the manifest is published only after every table has been written.
+/// Source summaries and query tables are partitioned by path, so an edit rebuilds only a fraction
+/// of the index. Each instance serves one formatting run with fixed input sources. Immutable generations are published together through an atomic manifest update.
 final class ProjectIndexSnapshotCache {
-    private let lock = NSLock()
+    struct Manifest: Codable {
+        var version = 2
+        var partitions: [String: ProjectIndexSnapshot]
+    }
+
+    private struct Update {
+        var index: ProjectIndex
+        var sources: [String: SourceFileIndex]
+        var reuse: URL?
+    }
+
+    private let lock = NSRecursiveLock()
     private let directory: URL?
-    private var snapshot: ProjectIndexSnapshot?
-    private var didLoadSnapshot = false
-    private var restoredIndex: ProjectIndex?
-    private var pending: (ProjectIndex, Set<ProjectContextFeature>, [String: String])?
+    private var previous: Manifest?
+    private var legacySnapshot: ProjectIndexSnapshot?
+    private var didLoad = false
+    private var manifest = Manifest(partitions: [:])
+    private var pending = [String: Update]()
+    private var dirty = false
 
     init(cacheURL: URL?, roots: Set<ProjectRoot>) {
         let context = roots.map { "\($0.kind):\($0.url.standardizedFileURL.path)" }.sorted().joined(separator: "\n")
         directory = cacheURL.map { projectIndexTablesURL(for: $0).appendingPathComponent(computeHash(context)) }
     }
 
+    private func loadManifest() {
+        guard !didLoad else { return }
+        didLoad = true
+        guard let directory,
+              let data = try? Data(contentsOf: directory.appendingPathComponent("manifest.json")) else { return }
+        if let stored = try? JSONDecoder().decode(Manifest.self, from: data), stored.version == 2 {
+            previous = stored
+        } else {
+            legacySnapshot = try? JSONDecoder().decode(ProjectIndexSnapshot.self, from: data)
+        }
+    }
+
     func index(
-        sourceHashes: [String: String],
-        configurationHashes: [String: String],
+        sources: [String: String],
+        hashes: [String: String],
+        configuration: [String: String],
         features: Set<ProjectContextFeature>,
-        localFunctionReferencePaths: Set<String>,
-        rebuild: @escaping (Set<ProjectContextFeature>) -> ProjectIndex
-    ) -> ProjectIndex? {
+        localReferences: Set<String>,
+        modules: () -> [String: Set<String>],
+        legacy: @escaping (String) -> SourceFileIndex?
+    ) -> ProjectIndex {
         lock.lock()
         defer { lock.unlock() }
-        guard let directory else { return nil }
-        if !didLoadSnapshot {
-            snapshot = (try? Data(contentsOf: directory.appendingPathComponent("manifest.json")))
-                .flatMap { try? JSONDecoder().decode(ProjectIndexSnapshot.self, from: $0) }
-            didLoadSnapshot = true
+        loadManifest()
+        let grouped = Dictionary(grouping: sources.keys) { path in
+            String(computeHash(path).utf8.reduce(0) { ($0 * 31 + Int($1)) % 32 })
         }
-        guard let snapshot,
-              snapshot.version == 1,
-              snapshot.sourceIndexVersion == SourceFileIndex.cacheVersion,
-              snapshot.formatterVersion == swiftFormatVersion,
-              UUID(uuidString: snapshot.generation) != nil,
-              features.isSubset(of: snapshot.features),
-              snapshot.configurationHashes == configurationHashes,
-              snapshot.files.mapValues(\.contentHash) == sourceHashes,
-              localFunctionReferencePaths.allSatisfy({ snapshot.files[$0]?.includesFunctionReferences == true })
-        else { return nil }
-        if let restoredIndex {
-            return restoredIndex
+        let compatible = previous?.partitions.values.allSatisfy {
+            $0.version == 1 && $0.sourceIndexVersion == SourceFileIndex.cacheVersion && $0.formatterVersion == swiftFormatVersion && $0.configurationHashes == configuration && UUID(uuidString: $0.generation) != nil
+        } == true
+        let oldFiles = compatible ? previous!.partitions.values.reduce(into: [String: ProjectIndex.File]()) { $0.merge($1.files) { _, new in new } } : [:]
+        let needsModules = sources.keys.contains { oldFiles[$0] == nil }
+        let assignments = needsModules ? modules() : oldFiles.mapValues { Set($0.moduleIdentifiers) }
+        var partitions = [String: ProjectIndex]()
+        for (key, paths) in grouped {
+            let old = compatible ? previous?.partitions[key] : nil
+            let oldURL = old.flatMap { snapshot in directory.map { $0.appendingPathComponent(snapshot.generation) } }
+            let requested = features.union(old?.features ?? []).union([.declarations])
+            let partitionHashes = Dictionary(uniqueKeysWithValues: paths.map { ($0, hashes[$0]!) })
+            func matches(_ snapshot: ProjectIndexSnapshot) -> Bool {
+                requested.isSubset(of: snapshot.features) && snapshot.configurationHashes == configuration &&
+                    snapshot.files.mapValues(\.contentHash) == partitionHashes &&
+                    paths.allSatisfy { path in
+                        snapshot.files[path]?.moduleIdentifiers == (assignments[path] ?? []).sorted() &&
+                            (!localReferences.contains(path) || snapshot.files[path]?.includesFunctionReferences == true)
+                    }
+            }
+            // The fallback captures the exact input snapshot, even if formatting subsequently writes files.
+            let rebuild: () -> ProjectIndex = {
+                self.lock.lock()
+                defer { self.lock.unlock() }
+                if let update = self.pending[key],
+                   let snapshot = self.manifest.partitions[key],
+                   matches(snapshot)
+                {
+                    return update.index
+                }
+                let cached = self.pending[key]?.sources ?? oldURL.flatMap { try? Data(contentsOf: $0.appendingPathComponent("sources.json")) }
+                    .flatMap { try? JSONDecoder().decode([String: SourceFileIndex].self, from: $0) } ?? [:]
+                var summaries = [String: SourceFileIndex]()
+                var uncachedPaths = [String]()
+                for path in paths {
+                    let modules = assignments[path] ?? []
+                    let functions = requested.contains(.functionReferences) || localReferences.contains(path)
+                    let symbols = requested.contains(.symbolReferences)
+                    let candidate = cached[path] ?? (self.previous == nil ? legacy(path) : nil)
+                    if let candidate, candidate.contentHash == hashes[path], candidate.moduleIdentifiers == modules.sorted(),
+                       !functions || candidate.includesFunctionReferences, !symbols || candidate.includesSymbolReferences
+                    {
+                        summaries[path] = candidate
+                    } else {
+                        uncachedPaths.append(path)
+                    }
+                }
+                // Preserve parallel parsing for cold caches and feature upgrades. A normal edit
+                // reparses just one source and avoids dispatching work for the cached summaries.
+                let summaryLock = NSLock()
+                func parse(_ path: String) {
+                    let summary = makeSourceFileIndex(
+                        from: sources[path]!,
+                        moduleIdentifiers: assignments[path] ?? [],
+                        includeFunctionReferences: requested.contains(.functionReferences) || localReferences.contains(path),
+                        includeSymbolReferences: requested.contains(.symbolReferences)
+                    )
+                    summaryLock.lock()
+                    summaries[path] = summary
+                    summaryLock.unlock()
+                }
+                if uncachedPaths.count == 1 {
+                    parse(uncachedPaths[0])
+                } else {
+                    DispatchQueue.concurrentPerform(iterations: uncachedPaths.count) { parse(uncachedPaths[$0]) }
+                }
+                let index = ProjectIndex(files: summaries)
+                var available = requested
+                if index.files.values.allSatisfy(\.includesFunctionReferences) {
+                    available.insert(.functionReferences)
+                }
+                if index.files.values.allSatisfy(\.includesSymbolReferences) {
+                    available.insert(.symbolReferences)
+                }
+                self.manifest.partitions[key] = ProjectIndexSnapshot(generation: UUID().uuidString, features: available, configurationHashes: configuration, files: index.files, fingerprints: index.fingerprints)
+                self.pending[key] = Update(index: index, sources: summaries, reuse: nil)
+                self.dirty = true
+                return index
+            }
+            if let update = pending[key], let snapshot = manifest.partitions[key], matches(snapshot) {
+                partitions[key] = update.index
+            } else if let old, let oldURL, matches(old) {
+                manifest.partitions[key] = old
+                let provider = ProjectIndexProvider { _ in rebuild() }
+                partitions[key] = ProjectIndex(snapshot: old, directory: oldURL, rebuild: { provider.index(requiring: [.declarations])! })
+            } else {
+                let index = rebuild()
+                partitions[key] = index
+                if let old, let oldURL, old.fingerprints == index.fingerprints,
+                   Set(old.files.keys) == Set(index.files.keys), old.features == manifest.partitions[key]?.features,
+                   (try? FileManager.default.contentsOfDirectory(atPath: oldURL.path).count) == ProjectIndex.tableNames.count + 1
+                {
+                    pending[key]?.reuse = oldURL
+                }
+            }
         }
-        let fallback = ProjectIndexProvider { rebuild($0) }
-        let index = ProjectIndex(
-            snapshot: snapshot,
-            directory: directory.appendingPathComponent(snapshot.generation),
-            rebuild: { fallback.index(requiring: snapshot.features)! }
-        )
-        restoredIndex = index
-        return index
+        if Set(previous?.partitions.keys.map { $0 } ?? []) != Set(grouped.keys) {
+            dirty = true
+        }
+        manifest.partitions = manifest.partitions.filter { grouped[$0.key] != nil }
+        return ProjectIndex(partitions: partitions)
     }
 
-    func record(_ index: ProjectIndex, features: Set<ProjectContextFeature>, configurationHashes: [String: String]) {
-        guard directory != nil else { return }
+    @discardableResult
+    func save() throws -> Bool {
         lock.lock()
         defer { lock.unlock() }
-        var features = features.union([.declarations])
-        if index.files.values.allSatisfy(\.includesFunctionReferences) {
-            features.insert(.functionReferences)
-        }
-        if index.files.values.allSatisfy(\.includesSymbolReferences) {
-            features.insert(.symbolReferences)
-        }
-        pending = (index, features, configurationHashes)
-    }
-
-    func save() throws {
-        lock.lock()
-        let update = pending
-        lock.unlock()
-        guard let directory, let (index, features, configurationHashes) = update else { return }
+        guard let directory, dirty else { return false }
         let manager = FileManager.default
-        let manifestURL = directory.appendingPathComponent("manifest.json")
-        let previous = (try? Data(contentsOf: manifestURL))
-            .flatMap { try? JSONDecoder().decode(ProjectIndexSnapshot.self, from: $0) }
-        let generation = UUID().uuidString
-        let generationURL = directory.appendingPathComponent(generation)
-        try manager.createDirectory(at: generationURL, withIntermediateDirectories: true)
+        var created = [URL]()
         var published = false
         defer {
             if !published {
-                try? manager.removeItem(at: generationURL)
+                for url in created {
+                    try? manager.removeItem(at: url)
+                }
             }
         }
-        try index.writeTables(to: generationURL)
-        let manifest = ProjectIndexSnapshot(
-            generation: generation, features: features, configurationHashes: configurationHashes,
-            files: index.files, fingerprints: index.fingerprints
-        )
-        try JSONEncoder().encode(manifest).write(to: manifestURL, options: .atomic)
-        published = true
-        // Readers of the previous generation can recover through their validated-source fallback.
-        if let previous, UUID(uuidString: previous.generation) != nil {
-            try? manager.removeItem(at: directory.appendingPathComponent(previous.generation))
+        for (key, update) in pending {
+            guard let snapshot = manifest.partitions[key] else { continue }
+            let destination = directory.appendingPathComponent(snapshot.generation)
+            created.append(destination)
+            try manager.createDirectory(at: destination, withIntermediateDirectories: true)
+            if let reuse = update.reuse {
+                for name in ProjectIndex.tableNames {
+                    let source = reuse.appendingPathComponent(name + ".json")
+                    let target = destination.appendingPathComponent(name + ".json")
+                    do { try manager.linkItem(at: source, to: target) }
+                    catch { try manager.copyItem(at: source, to: target) }
+                }
+            } else {
+                try update.index.writeTables(to: destination)
+            }
+            try JSONEncoder().encode(update.sources).write(to: destination.appendingPathComponent("sources.json"), options: .atomic)
         }
+        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(manifest).write(to: directory.appendingPathComponent("manifest.json"), options: .atomic)
+        published = true
+        let retained = Set(manifest.partitions.values.map(\.generation))
+        for old in (previous?.partitions.values.map { $0 } ?? []) + (legacySnapshot.map { [$0] } ?? []) where UUID(uuidString: old.generation) != nil && !retained.contains(old.generation) {
+            try? manager.removeItem(at: directory.appendingPathComponent(old.generation))
+        }
+        previous = manifest
+        pending.removeAll()
+        legacySnapshot = nil
+        dirty = false
+        return true
     }
 }
 

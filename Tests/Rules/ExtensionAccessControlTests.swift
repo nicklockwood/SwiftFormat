@@ -541,6 +541,7 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(for: input, rule: .extensionAccessControl, exclude: [.emptyExtensions])
     }
+
     private func testProjectFormatting(
         for input: String,
         _ output: String? = nil,

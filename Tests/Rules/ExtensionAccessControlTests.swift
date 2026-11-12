@@ -610,4 +610,40 @@ final class ExtensionAccessControlTests: XCTestCase {
         """
         try testProjectFormatting(for: input, output, otherFile: otherFile)
     }
+
+    func testHoistsPublicOntoExtensionOfTypeUnknownToProjectIndex() throws {
+        let input = """
+        extension Foo {
+            public func bar() {}
+        }
+        """
+        let output = """
+        public extension Foo {
+            func bar() {}
+        }
+        """
+        let otherFile = """
+        struct Bar {}
+        """
+        try testProjectFormatting(for: input, output, otherFile: otherFile)
+    }
+
+    func testProjectIndexTypeVisibility() {
+        let fileURL = URL(fileURLWithPath: "/Project/Sources/App/Input.swift")
+        let projectIndex = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: """
+            public struct Foo {
+                struct Bar {}
+            }
+            package struct Baz {}
+            """, moduleIdentifiers: ["App"]),
+        ])
+        XCTAssertEqual(projectIndex.typeVisibility(named: "Foo", from: fileURL), .public)
+        XCTAssertEqual(projectIndex.typeVisibility(named: "Foo.Bar", from: fileURL), .internal)
+        XCTAssertEqual(projectIndex.typeVisibility(named: "Baz", from: fileURL), .package)
+        XCTAssertNil(projectIndex.typeVisibility(named: "Qux", from: fileURL))
+        XCTAssertNil(projectIndex.typeVisibility(
+            named: "Foo", from: URL(fileURLWithPath: "/Elsewhere/Other.swift")
+        ))
+    }
 }

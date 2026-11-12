@@ -2219,10 +2219,16 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot, cache: Project
 
     switch root.kind {
     case .swiftPackage:
+        // Targets with a custom `path:` (such as `path: "Sources"`) don't follow the `Sources/<Target>` layout.
+        // Longest paths first, so a nested target path wins over an enclosing one.
+        let targetPaths = swiftPackageTargetPaths(in: root.url).sorted { $0.count > $1.count }
         return Dictionary(uniqueKeysWithValues: fileURLs.compactMap { fileURL in
             let filePath = fileURL.standardizedFileURL.path
             guard filePath.hasPrefix(rootPath + "/") else { return nil }
             let relativePath = String(filePath.dropFirst(rootPath.count + 1))
+            if let targetPath = targetPaths.first(where: { relativePath.hasPrefix($0 + "/") }) {
+                return (filePath, ["\(rootPath):path:\(targetPath)"])
+            }
             let components = relativePath.split(separator: "/").map(String.init)
             guard components.count >= 3, ["Sources", "Tests"].contains(components[0]) else {
                 return nil
@@ -2258,9 +2264,39 @@ func moduleIdentifiers(for fileURLs: [URL], in root: ProjectRoot, cache: Project
     }
 }
 
+/// The custom `path:` of each target declared in the package manifest at `rootURL`, relative to the root.
+/// Only `path:` arguments of target declarations are read, so local package dependencies are ignored.
+/// A target whose arguments can't be read this way keeps the conventional `Sources/<Target>` layout.
+func swiftPackageTargetPaths(in rootURL: URL) -> [String] {
+    let manifestURL = rootURL.appendingPathComponent("Package.swift")
+    guard let manifest = try? String(contentsOf: manifestURL) else { return [] }
+    let pattern = #"\.(?:target|executableTarget|testTarget|macro|plugin|systemLibrary)\s*\([^)]*?\bpath\s*:\s*"([^"\\]+)""#
+    guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+    let range = NSRange(manifest.startIndex..., in: manifest)
+    var paths = Set<String>()
+    for match in regex.matches(in: manifest, range: range) {
+        guard let pathRange = Range(match.range(at: 1), in: manifest) else { continue }
+        var path = String(manifest[pathRange])
+        while path.hasPrefix("./") {
+            path.removeFirst(2)
+        }
+        while path.hasSuffix("/") {
+            path.removeLast()
+        }
+        guard !path.isEmpty, path != ".", !path.hasPrefix("/"),
+              !path.split(separator: "/").contains("..") else { continue }
+        paths.insert(path)
+    }
+    return paths.sorted()
+}
+
 /// Include workspace files and every referenced project, including projects outside the source root.
 func projectIndexConfigurationHashes(for roots: Set<ProjectRoot>) -> [String: String] {
     var urls = Set<URL>()
+    // Target paths in the package manifest decide which module a file belongs to.
+    for root in roots where root.kind == .swiftPackage {
+        urls.insert(root.url.appendingPathComponent("Package.swift"))
+    }
     for root in roots where root.kind == .xcodeProject {
         for project in xcodeProjectURLs(in: root.url) {
             urls.insert(project.appendingPathComponent("project.pbxproj"))

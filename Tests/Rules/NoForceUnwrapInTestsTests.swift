@@ -4,6 +4,53 @@
 import XCTest
 
 final class NoForceUnwrapInTestsTests: XCTestCase {
+    func testNestedForceUnwrapsInAssignmentSubscript() {
+        let input = """
+        import Testing
+
+        @Test func link() {
+            source[Range(sourceText.range(of: "@alice")!, in: source)!].link = URL(string: "https://example.com/@alice")!
+        }
+        """
+        let output = """
+        import Testing
+
+        @Test func link() throws {
+            source[Range(try #require(sourceText.range(of: "@alice")), in: source)!].link = try #require(URL(string: "https://example.com/@alice"))
+        }
+        """
+        let hoistedOutput = """
+        import Testing
+
+        @Test func link() throws {
+            try source[Range(#require(sourceText.range(of: "@alice")), in: source)!].link = try #require(URL(string: "https://example.com/@alice"))
+        }
+        """
+        testFormatting(for: input, [output, hoistedOutput], rules: [.noForceUnwrapInTests])
+    }
+
+    func testForceUnwrapInsideExistingRequireUnchanged() {
+        let input = """
+        import Testing
+
+        @Test func something() throws {
+            let value = try #require(makeValue(optional!))
+        }
+        """
+        testFormatting(for: input, rule: .noForceUnwrapInTests)
+    }
+
+    func testForceUnwrapContainingExistingRequireUnchanged() {
+        let input = """
+        import Testing
+
+        @Test func something() throws {
+            let value = try makeValue(#require(optional))!
+        }
+        """
+        testFormatting(for: input, rule: .noForceUnwrapInTests)
+    }
+
     func testSimpleForceUnwrapInXCTest() {
         let input = """
         import XCTest

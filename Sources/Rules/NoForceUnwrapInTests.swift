@@ -78,6 +78,12 @@ public extension FormatRule {
                     continue
                 }
 
+                // Nested #require expansions are not supported. Preserve unwraps that
+                // would wrap an existing #require or introduce one inside another.
+                if testFramework == .swiftTesting, !formatter.canInsertRequire(in: expressionRange.range) {
+                    continue
+                }
+
                 // A key path like `\.[id: 0]!` can't contain `try`, so its force unwraps can't be converted
                 if formatter.tokens[expressionRange.lowerBound] == .operator("\\", .prefix) {
                     continue
@@ -287,6 +293,21 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether wrapping this expression would avoid nesting #require macros.
+    func canInsertRequire(in range: ClosedRange<Int>) -> Bool {
+        guard !tokens[range].contains(.keyword("#require")) else { return false }
+        var index = range.lowerBound
+        while let scope = startOfScope(at: index) {
+            if tokens[scope] == .startOfScope("("),
+               last(.nonSpaceOrCommentOrLinebreak, before: scope) == .keyword("#require")
+            {
+                return false
+            }
+            index = scope
+        }
+        return true
+    }
+
     /// Parses the expression range containing the given force unwrap index
     func parseExpressionRangeContainingForceUnwrap(_ forceUnwrapIndex: Int) -> AutoUpdatingRange? {
         // Parse the expression containing this force unwrap operator

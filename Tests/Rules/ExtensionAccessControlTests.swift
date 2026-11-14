@@ -541,4 +541,109 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(for: input, rule: .extensionAccessControl, exclude: [.emptyExtensions])
     }
+
+    private func testProjectFormatting(
+        for input: String,
+        _ output: String? = nil,
+        otherFile: String,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws {
+        _ = FormatRules.all
+        let inputURL = URL(fileURLWithPath: "/Project/Sources/App/Input.swift")
+        let otherURL = URL(fileURLWithPath: "/Project/Sources/App/Other.swift")
+        let projectIndex = ProjectIndex(files: [
+            inputURL.path: makeSourceFileIndex(from: input, moduleIdentifiers: ["App"]),
+            otherURL.path: makeSourceFileIndex(from: otherFile, moduleIdentifiers: ["App"]),
+        ])
+        let result = try applyRules(
+            [.extensionAccessControl],
+            to: tokenize(input),
+            with: .default,
+            trackChanges: false,
+            range: nil,
+            context: FormattingContext(currentFileURL: inputURL, projectIndex: projectIndex)
+        )
+        XCTAssertEqual(sourceCode(for: result.tokens), output ?? input, file: file, line: line)
+    }
+
+    func testDoesNotHoistPublicOntoExtensionOfInternalTypeDeclaredInOtherFile() throws {
+        let input = """
+        extension Rope._Node {
+            public func count() -> Int { 0 }
+        }
+        """
+        let otherFile = """
+        public struct Rope {
+            internal struct _Node {}
+        }
+        """
+        try testProjectFormatting(for: input, otherFile: otherFile)
+    }
+
+    func testDoesNotHoistPublicOntoExtensionOfPackageTypeDeclaredInOtherFile() throws {
+        let input = """
+        extension Foo {
+            public func bar() {}
+            public func baz() {}
+        }
+        """
+        let otherFile = """
+        package struct Foo {}
+        """
+        try testProjectFormatting(for: input, otherFile: otherFile)
+    }
+
+    func testHoistsPublicOntoExtensionOfPublicTypeDeclaredInOtherFile() throws {
+        let input = """
+        extension Foo {
+            public func bar() {}
+        }
+        """
+        let output = """
+        public extension Foo {
+            func bar() {}
+        }
+        """
+        let otherFile = """
+        public struct Foo {}
+        """
+        try testProjectFormatting(for: input, output, otherFile: otherFile)
+    }
+
+    func testHoistsPublicOntoExtensionOfTypeUnknownToProjectIndex() throws {
+        let input = """
+        extension Foo {
+            public func bar() {}
+        }
+        """
+        let output = """
+        public extension Foo {
+            func bar() {}
+        }
+        """
+        let otherFile = """
+        struct Bar {}
+        """
+        try testProjectFormatting(for: input, output, otherFile: otherFile)
+    }
+
+    func testProjectIndexTypeVisibility() {
+        let fileURL = URL(fileURLWithPath: "/Project/Sources/App/Input.swift")
+        let projectIndex = ProjectIndex(files: [
+            fileURL.path: makeSourceFileIndex(from: """
+            public struct Foo {
+                struct Bar {}
+            }
+            package struct Baz {}
+            """, moduleIdentifiers: ["App"]),
+        ])
+        XCTAssertEqual(projectIndex.typeVisibility(named: "Foo", from: fileURL), .public)
+        XCTAssertEqual(projectIndex.typeVisibility(named: "Foo.Bar", from: fileURL), .internal)
+        XCTAssertEqual(projectIndex.typeVisibility(named: "Baz", from: fileURL), .package)
+        XCTAssertNil(projectIndex.typeVisibility(named: "Qux", from: fileURL))
+        XCTAssertNil(projectIndex.typeVisibility(
+            named: "Foo", from: URL(fileURLWithPath: "/Elsewhere/Other.swift")
+        ))
+    }
 }

@@ -73,9 +73,12 @@ public extension FormatRule {
                    !(memberVisibility == .internal && visibilityKeyword == nil)
                 {
                     // Cannot make extension with greater visibility than type being extended,
-                    // e.g. a `fileprivate extension` of a `private` type doesn't compile
+                    // e.g. a `fileprivate extension` of a `private` type doesn't compile.
+                    // Types declared in other files of the module are looked up in the project index.
                     if let extendedTypeName = extensionDeclaration.name,
-                       let typeVisibility = typeVisibilityByName[extendedTypeName],
+                       let typeVisibility = typeVisibilityByName[extendedTypeName] ?? formatter.currentFileURL.flatMap({
+                           formatter.projectIndex(requiring: [.declarations])?.typeVisibility(named: extendedTypeName, from: $0)
+                       }),
                        typeVisibility < memberVisibility
                     {
                         return

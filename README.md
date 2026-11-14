@@ -1082,6 +1082,11 @@ FAQ
 > A. If you run SwiftFormat using the `--verbose` option, it will tell you which rules were applied to each file. You can then selectively disable certain rules using the `--disable` argument (see below).
 
 
+*Q. Why are chained calls sometimes indented differently?*
+
+> A. By default, a chain aligns with a preceding line containing only closing parentheses, brackets or braces. Other code on that line, such as an inline trailing closure, causes an extra level of indentation. See the [`indent` rule's examples](https://github.com/nicklockwood/SwiftFormat/blob/develop/Rules.md#indent), including how `--xcode-indentation` affects this behavior.
+
+
 *Q. People on my team have different SwiftFormat versions installed. How can we ensure consistent formatting?
 
 > A. You can specify a `--min-version` argument in your project's .swiftformat` file to fail the build if developers attempt to use an older SwiftFormat version.

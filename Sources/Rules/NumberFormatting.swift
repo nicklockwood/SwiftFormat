@@ -12,10 +12,11 @@ public extension FormatRule {
     /// Standardize formatting of numeric literals
     static let numberFormatting = FormatRule(
         help: """
-        Use consistent grouping for numeric literals. Groups will be separated by `_`
-        delimiters to improve readability. For each numeric type you can specify a group
-        size (the number of digits in each group) and a threshold (the minimum number of
-        digits in a number before grouping is applied).
+        Use consistent grouping and letter case for numeric literals. Groups will be
+        separated by `_` delimiters to improve readability. For each numeric type you
+        can specify a group size (the number of digits in each group) and a threshold
+        (the minimum number of digits in a number before grouping is applied). The case
+        of letters in hex literals and of the exponent marker is also normalized.
         """,
         options: ["decimal-grouping", "binary-grouping", "octal-grouping", "hex-grouping",
                   "fraction-grouping", "exponent-grouping", "hex-literal-case", "exponent-case"]

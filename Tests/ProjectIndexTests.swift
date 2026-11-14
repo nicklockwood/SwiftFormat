@@ -1629,6 +1629,68 @@ final class ProjectIndexTests: XCTestCase {
         }
     }
 
+    func testSwiftPackageModuleIdentifiersUseCustomTargetPaths() throws {
+        try withProjectIndexTmpDirectory([
+            "Package.swift": """
+            // swift-tools-version:5.9
+            import PackageDescription
+            let package = Package(
+                name: "Example",
+                dependencies: [.package(path: "../Shared")],
+                targets: [
+                    .target(name: "Example", path: "Sources", exclude: ["Info.plist"]),
+                    .executableTarget(name: "Tool", dependencies: ["Example"], path: "./Tool/"),
+                    .testTarget(name: "ExampleTests", dependencies: ["Example"]),
+                ]
+            )
+            """,
+            "Sources/Formatter.swift": "struct Formatter {}",
+            "Sources/Rules/Rule.swift": "struct Rule {}",
+            "Tool/main.swift": "print(1)",
+            "Tests/ExampleTests/FormatterTests.swift": "struct FormatterTests {}",
+            "Scripts/build.swift": "print(1)",
+        ]) { directory in
+            let root = ProjectRoot(url: directory, kind: .swiftPackage)
+            let identifiers = moduleIdentifiers(for: discoverSourceFiles(in: root), in: root)
+            func module(_ path: String) -> Set<String>? {
+                identifiers[directory.appendingPathComponent(path).standardizedFileURL.path]
+            }
+            let rootPath = directory.standardizedFileURL.path
+
+            // Files directly under a custom target path and in its subdirectories share one module
+            XCTAssertEqual(module("Sources/Formatter.swift"), ["\(rootPath):path:Sources"])
+            XCTAssertEqual(module("Sources/Rules/Rule.swift"), ["\(rootPath):path:Sources"])
+            XCTAssertEqual(module("Tool/main.swift"), ["\(rootPath):path:Tool"])
+            // Targets without a custom path keep the conventional layout
+            XCTAssertEqual(module("Tests/ExampleTests/FormatterTests.swift"), ["\(rootPath):Tests:ExampleTests"])
+            XCTAssertNil(module("Scripts/build.swift"))
+        }
+    }
+
+    func testSwiftPackageTargetPathsIgnorePackageDependencies() throws {
+        try withProjectIndexTmpDirectory([
+            "Package.swift": """
+            let package = Package(
+                name: "Example",
+                dependencies: [.package(path: "Vendor/Shared"), .package(path: "../Other")],
+                targets: [.target(name: "Example")]
+            )
+            """,
+        ]) { directory in
+            XCTAssertEqual(swiftPackageTargetPaths(in: directory), [])
+        }
+    }
+
+    func testProjectIndexConfigurationHashesIncludePackageManifest() throws {
+        try withProjectIndexTmpDirectory([
+            "Package.swift": "// manifest",
+        ]) { directory in
+            let root = ProjectRoot(url: directory, kind: .swiftPackage)
+            let manifestPath = directory.appendingPathComponent("Package.swift").standardizedFileURL.path
+            XCTAssertEqual(projectIndexConfigurationHashes(for: [root])[manifestPath], computeHash("// manifest"))
+        }
+    }
+
     func testSourceFileIndexExtractsTypeMemberNames() {
         let source = """
         class Foo {

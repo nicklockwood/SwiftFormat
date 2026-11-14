@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
 
 # Base image and static SDK have to be updated together.
-FROM --platform=$BUILDPLATFORM swift:6.0.3 AS builder
+FROM --platform=$BUILDPLATFORM swift:6.3.2 AS builder
 WORKDIR /workspace
 RUN swift sdk install \
-	https://download.swift.org/swift-6.0.3-release/static-sdk/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE_static-linux-0.0.1.artifactbundle.tar.gz \
-	--checksum 67f765e0030e661a7450f7e4877cfe008db4f57f177d5a08a6e26fd661cdd0bd
+	https://download.swift.org/swift-6.3.2-release/static-sdk/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE_static-linux-0.1.0.artifactbundle.tar.gz \
+	--checksum 3fd798bef6f4408f1ea5a6f94ce4d4052830c4326ab85ebc04f983f01b3da407
 
 COPY . /workspace
 ARG TARGETPLATFORM

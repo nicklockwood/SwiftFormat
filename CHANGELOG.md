@@ -1,5 +1,28 @@
 # Change Log
 
+## [0.64.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.7) (2026-11-14)
+
+- Added `--prefer-us-spelling` and `--preserve-iff` options to `commonTypos`
+- Fixed `hoistTry` and `hoistAwait` failing to terminate with deeply nested expressions
+- Fixed crashes when tokenizing shifts by negative integers
+- Fixed comparisons before generic type members and `<<` before implicit members being mistaken for generic argument lists
+- Fixed `unusedArguments` crashing on lifetime attributes without arguments and leaving duplicate underscores in unnamed parameters
+- Fixed `nestedIf` crashing when merging conditions with trailing comments
+- Fixed `preferKeyPath` producing invalid code inside Swift Testing's `#expect` and `#require` macros
+- Fixed `noForceUnwrapInTests` introducing nested `#require` macros
+- Fixed `forWhere` changing operator precedence when joining conditions containing `&&`
+- Fixed `preferForLoop` converting closures with returns inside nested loops
+- Fixed `redundantSelf` treating parameter pack expansions as repeat loops
+- Fixed `noExplicitOwnership` removing `consuming` and `borrowing` used as names
+- Fixed `singlePropertyPerLine` splitting value generic parameters
+- Fixed `yodaConditions` treating macro arguments as constants
+- Fixed `preferSwiftTesting` removing spaces after comparison operators
+- Fixed `blockComments` leaving empty comment lines before over-indented closing delimiters
+- Fixed spaces around `&` and `->` in types wrapped over multiple lines
+- Improved parsing of `__consuming` modifiers and properties named `open`
+- Documented member-chain indentation and clarified letter-case options in `numberFormatting` help
+- Updated the Swift toolchain and static SDK used for Linux release builds
+
 ## [0.64.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.64.6) (2026-11-06)
 
 - Fixed parsing of value generic parameters, negative integer arguments, integer constraints, and inline-array types

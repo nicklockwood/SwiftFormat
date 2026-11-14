@@ -867,6 +867,72 @@ final class ProjectIndexTests: XCTestCase {
         ])
     }
 
+    func testProjectIndexProviderBuildsOutsideRequestingThread() {
+        DispatchQueue.concurrentPerform(iterations: 2) { _ in
+            let requestingThread = Thread.current
+            let provider = ProjectIndexProvider { _ in
+                XCTAssertNotEqual(Thread.current, requestingThread)
+                return ProjectIndex(files: [:])
+            }
+            XCTAssertNotNil(provider.index(requiring: [.declarations]))
+        }
+    }
+
+    func testConcurrentProjectIndexFeatureRequestsAreSatisfied() {
+        let file = "/Project/File.swift"
+        let source = """
+        struct Example {}
+        """
+        let lock = NSLock()
+        var builds = [Set<ProjectContextFeature>]()
+        let requests: [Set<ProjectContextFeature>] = [
+            [.declarations],
+            [.declarations, .functionReferences],
+            [.declarations, .functionReferences, .symbolReferences],
+        ]
+        let provider = ProjectIndexProvider { features in
+            lock.lock()
+            builds.append(features)
+            lock.unlock()
+            let summary = makeSourceFileIndex(
+                from: source,
+                moduleIdentifiers: ["App"],
+                includeFunctionReferences: features.contains(.functionReferences),
+                includeSymbolReferences: features.contains(.symbolReferences)
+            )
+            return ProjectIndex(files: [file: summary])
+        }
+        DispatchQueue.concurrentPerform(iterations: 30) { iteration in
+            let features = requests[iteration % requests.count]
+            let index = provider.index(requiring: features)
+            XCTAssertNotNil(index)
+            if features.contains(.functionReferences) {
+                XCTAssertTrue(index?.files[file]?.includesFunctionReferences == true)
+            }
+            if features.contains(.symbolReferences) {
+                XCTAssertTrue(index?.files[file]?.includesSymbolReferences == true)
+            }
+        }
+        XCTAssertEqual(builds.last, requests.last)
+        XCTAssertLessThanOrEqual(builds.count, requests.count)
+        for (previous, next) in zip(builds, builds.dropFirst()) {
+            XCTAssertTrue(previous.isStrictSubset(of: next))
+        }
+    }
+
+    func testProjectIndexProviderCachesUnavailableIndex() {
+        var builds = 0
+        let provider = ProjectIndexProvider { _ in
+            builds += 1
+            return nil
+        }
+        XCTAssertNil(provider.index(requiring: [.declarations]))
+        XCTAssertNil(provider.index(requiring: [.declarations]))
+        XCTAssertEqual(builds, 1)
+        XCTAssertNil(provider.index(requiring: [.functionReferences]))
+        XCTAssertEqual(builds, 2)
+    }
+
     func testParameterTypesAffectDeclarationFingerprint() throws {
         let first = """
         func consume(_ value: First) {}

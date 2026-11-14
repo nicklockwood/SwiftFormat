@@ -28,6 +28,9 @@ final class ProjectIndexProvider {
     typealias Builder = (Set<ProjectContextFeature>) -> ProjectIndex?
 
     private let condition = NSCondition()
+    // Builds must leave the caller's concurrentPerform context, otherwise nested parallel
+    // source reads and parsing can be serialized while the other formatting workers wait.
+    private let buildQueue = DispatchQueue(label: "com.charcoaldesign.swiftformat.project-index", qos: .userInteractive)
     private let builder: Builder
     private var index: ProjectIndex?
     private var availableFeatures = Set<ProjectContextFeature>()
@@ -39,26 +42,24 @@ final class ProjectIndexProvider {
 
     func index(requiring features: Set<ProjectContextFeature>) -> ProjectIndex? {
         condition.lock()
-        while isBuilding {
+        defer { condition.unlock() }
+        while isBuilding || !features.isSubset(of: availableFeatures) {
+            if !isBuilding {
+                isBuilding = true
+                let requestedFeatures = availableFeatures.union(features)
+                buildQueue.async {
+                    let index = self.builder(requestedFeatures)
+
+                    self.condition.lock()
+                    self.index = index
+                    self.availableFeatures = requestedFeatures
+                    self.isBuilding = false
+                    self.condition.broadcast()
+                    self.condition.unlock()
+                }
+            }
             condition.wait()
         }
-        if features.isSubset(of: availableFeatures) {
-            let index = index
-            condition.unlock()
-            return index
-        }
-        isBuilding = true
-        let requestedFeatures = availableFeatures.union(features)
-        condition.unlock()
-
-        let index = builder(requestedFeatures)
-
-        condition.lock()
-        self.index = index
-        availableFeatures = requestedFeatures
-        isBuilding = false
-        condition.broadcast()
-        condition.unlock()
         return index
     }
 }

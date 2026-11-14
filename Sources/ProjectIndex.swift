@@ -1003,6 +1003,23 @@ struct ProjectIndex {
         }
     }
 
+    /// The most restrictive declared visibility of the given type in the modules containing the current file,
+    /// or `nil` if the type isn't declared in every one of them.
+    func typeVisibility(named name: String, from fileURL: URL) -> Visibility? {
+        let path = fileURL.standardizedFileURL.path
+        guard let moduleIdentifiers = files[path]?.moduleIdentifiers, !moduleIdentifiers.isEmpty else {
+            return nil
+        }
+        var result: Visibility?
+        for moduleIdentifier in moduleIdentifiers {
+            guard let visibilities = typeVisibilitiesByModule[moduleIdentifier]?.value[name],
+                  let visibility = visibilities.compactMap(Visibility.init(rawValue:)).min()
+            else { return nil }
+            result = min(result ?? visibility, visibility)
+        }
+        return result
+    }
+
     /// Whether the given type is declared in every module containing the current file.
     func containsType(named name: String, visibleFrom fileURL: URL) -> Bool {
         let path = fileURL.standardizedFileURL.path

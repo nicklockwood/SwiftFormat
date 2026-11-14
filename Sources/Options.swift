@@ -162,6 +162,15 @@ public enum WrapEffects: String, CaseIterable {
     case never
 }
 
+/// Wrapping behavior for the `where` keyword of a generic where clause
+public enum WrapWhereClause: String, CaseIterable {
+    case preserve
+    /// `where` is wrapped to its own line if the declaration spans multiple lines
+    case ifMultiline = "if-multiline"
+    /// `where` is never wrapped, and is always included on the same line as the rest of the declaration
+    case never
+}
+
 /// Whether constructor type names should be written explicitly.
 public enum InitTypes: String, CaseIterable {
     /// Keep constructor type names explicit.
@@ -970,6 +979,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapParameters: WrapMode
     public var wrapCollections: WrapMode
     public var wrapTypealiases: WrapMode
+    public var wrapGenericRequirements: WrapMode
+    public var wrapWhereClause: WrapWhereClause
     public var wrapEnumCases: WrapEnumCases
     public var wrapSingleLineEnumCases: Bool
     public var closingParenPosition: ClosingParenPosition
@@ -1150,6 +1161,8 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapParameters: WrapMode = .default,
                 wrapCollections: WrapMode = .preserve,
                 wrapTypealiases: WrapMode = .preserve,
+                wrapGenericRequirements: WrapMode = .preserve,
+                wrapWhereClause: WrapWhereClause = .preserve,
                 wrapEnumCases: WrapEnumCases = .always,
                 wrapSingleLineEnumCases: Bool = false,
                 closingParenPosition: ClosingParenPosition = .balanced,
@@ -1326,6 +1339,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
         self.wrapTypealiases = wrapTypealiases
+        self.wrapGenericRequirements = wrapGenericRequirements
+        self.wrapWhereClause = wrapWhereClause
         self.wrapEnumCases = wrapEnumCases
         self.wrapSingleLineEnumCases = wrapSingleLineEnumCases
         self.closingParenPosition = closingParenPosition

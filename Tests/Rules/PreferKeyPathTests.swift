@@ -384,4 +384,37 @@ final class PreferKeyPathTests: XCTestCase {
         """
         testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
     }
+
+    func testNoKeyPathInsideSwiftTestingExpectations() {
+        let input = """
+        @Test func values() throws {
+            #expect(values.allSatisfy { $0.isFinite })
+            #expect(!values.contains(where: { $0.isNaN }))
+            try #require(values.allSatisfy { $0.isFinite })
+        }
+        """
+        testFormatting(for: input, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
+
+    func testKeyPathOutsideSwiftTestingExpectations() {
+        let input = """
+        @Test func values() {
+            let allFinite = values.allSatisfy { $0.isFinite }
+            #expect(allFinite)
+            #expect(throws: Never.self) {
+                _ = values.map { $0.isFinite }
+            }
+        }
+        """
+        let output = """
+        @Test func values() {
+            let allFinite = values.allSatisfy(\\.isFinite)
+            #expect(allFinite)
+            #expect(throws: Never.self) {
+                _ = values.map(\\.isFinite)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferKeyPath, options: FormatOptions(swiftVersion: "5.2"))
+    }
 }

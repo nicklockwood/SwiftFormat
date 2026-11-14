@@ -40,6 +40,7 @@ public extension FormatRule {
             }
             guard case let .identifier(name) = prevToken,
                   ["map", "flatMap", "compactMap", "allSatisfy", "filter", "contains"].contains(name),
+                  !formatter.isInsideSwiftTestingExpectation(at: i),
                   let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                       $0 == .identifier("$0")
                   }),
@@ -133,6 +134,23 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether the index is inside the arguments of a Swift Testing `#expect` or `#require` macro.
+    /// These macros pass call arguments to the call through closure parameters, so a key path
+    /// argument to a `rethrows` function such as `allSatisfy` no longer compiles without `try`.
+    func isInsideSwiftTestingExpectation(at index: Int) -> Bool {
+        var index = index
+        while let scope = startOfScope(at: index) {
+            if tokens[scope] == .startOfScope("("),
+               let macro = last(.nonSpaceOrCommentOrLinebreak, before: scope),
+               [.keyword("#expect"), .keyword("#require")].contains(macro)
+            {
+                return true
+            }
+            index = scope
+        }
+        return false
+    }
+
     func keyPathResultIsCompatible(
         in range: ClosedRange<Int>,
         receiverType: String,

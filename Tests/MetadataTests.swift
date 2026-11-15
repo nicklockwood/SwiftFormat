@@ -279,6 +279,7 @@ final class MetadataTests: XCTestCase {
                             Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
                             Descriptors.listWrapThreshold, Descriptors.assetLiteralWidth, Descriptors.wrapReturnType,
                             Descriptors.wrapEffects, Descriptors.wrapConditions, Descriptors.wrapTypealiases,
+                            Descriptors.wrapGenericRequirements, Descriptors.wrapWhereClause,
                             Descriptors.wrapTernaryOperators, Descriptors.wrapStringInterpolation,
                             Descriptors.allowPartialWrapping,
                         ]

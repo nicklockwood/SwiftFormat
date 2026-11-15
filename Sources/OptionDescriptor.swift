@@ -734,6 +734,18 @@ struct _Descriptors {
         help: "Typealias wrapping:",
         keyPath: \.wrapTypealiases
     )
+    let wrapGenericRequirements = OptionDescriptor(
+        argumentName: "wrap-generic-requirements",
+        displayName: "Wrap Generic Requirements",
+        help: "Generic where clause requirement wrapping:",
+        keyPath: \.wrapGenericRequirements
+    )
+    let wrapWhereClause = OptionDescriptor(
+        argumentName: "wrap-where-clause",
+        displayName: "Wrap Where Clause",
+        help: "Generic where clause keyword wrapping:",
+        keyPath: \.wrapWhereClause
+    )
     let wrapReturnType = OptionDescriptor(
         argumentName: "wrap-return-type",
         displayName: "Wrap Return Type",

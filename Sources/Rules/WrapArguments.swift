@@ -14,7 +14,8 @@ public extension FormatRule {
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: [.wrap],
         options: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren",
-                  "wrap-return-type", "wrap-conditions", "wrap-type-aliases", "wrap-effects", "wrap-string-interpolation", "allow-partial-wrapping"],
+                  "wrap-return-type", "wrap-conditions", "wrap-type-aliases", "wrap-generic-requirements",
+                  "wrap-where-clause", "wrap-effects", "wrap-string-interpolation", "allow-partial-wrapping"],
         sharedOptions: ["indent", "trim-whitespace", "linebreaks",
                         "tab-width", "max-width", "list-wrap-threshold", "smart-tabs", "asset-literals", "wrap-ternary"]
     ) { formatter in
@@ -76,6 +77,24 @@ public extension FormatRule {
             baz,
         +   quuz
         + ]
+        ```
+
+        `--wrap-generic-requirements before-first`:
+
+        ```diff
+        - extension Foo where Bar: Baaz, Quux: Quuz {}
+        + extension Foo where
+        +     Bar: Baaz,
+        +     Quux: Quuz {}
+        ```
+
+        `--wrap-where-clause if-multiline`:
+
+        ```diff
+        - extension Foo: Bar where Baaz: Quux,
+        + extension Foo: Bar
+        +     where Baaz: Quux,
+              Quuz: Corge {}
         ```
         """
     }

@@ -4926,6 +4926,8 @@ Option | Description
 `--wrap-return-type` | Function return type wrapping: "preserve" (default), "if-multiline" or "never"
 `--wrap-conditions` | Conditional expression wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
 `--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
+`--wrap-generic-requirements` | Generic where clause requirement wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
+`--wrap-where-clause` | Generic where clause keyword wrapping: "preserve" (default), "if-multiline" or "never"
 `--wrap-effects` | Function effects (throws, async) wrapping: "preserve" (default), "if-multiline" or "never"
 `--wrap-string-interpolation` | Wrap string interpolation if it exceeds max width: "true" or "false" (default)
 `--allow-partial-wrapping` | Allow partial argument wrapping: "true" (default) or "false"
@@ -4987,6 +4989,24 @@ provided for `--wrap-parameters`, the value for `--wrap-arguments` will be used.
     baz,
 +   quuz
 + ]
+```
+
+`--wrap-generic-requirements before-first`:
+
+```diff
+- extension Foo where Bar: Baaz, Quux: Quuz {}
++ extension Foo where
++     Bar: Baaz,
++     Quux: Quuz {}
+```
+
+`--wrap-where-clause if-multiline`:
+
+```diff
+- extension Foo: Bar where Baaz: Quux,
++ extension Foo: Bar
++     where Baaz: Quux,
+      Quuz: Corge {}
 ```
 
 </details>

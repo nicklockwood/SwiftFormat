@@ -930,6 +930,9 @@ extension Formatter {
             }
         }
 
+        // -- wrapwhereclause, wrapgenericrequirements
+        wrapGenericWhereClauses()
+
         // --wrapternary
         forEach(.operator("?", .infix)) { conditionIndex, _ in
             guard options.wrapTernaryOperators != .default,
@@ -1292,6 +1295,106 @@ extension Formatter {
 
             return true
         }
+    }
+
+    /// Wraps each declaration's generic `where` clause, following the
+    /// `--wrap-where-clause` and `--wrap-generic-requirements` options.
+    func wrapGenericWhereClauses() {
+        let whereMode = options.wrapWhereClause
+        let requirementsMode = options.wrapGenericRequirements
+        let wrapsRequirements = requirementsMode == .beforeFirst || requirementsMode == .afterFirst
+        guard whereMode != .preserve || wrapsRequirements else { return }
+
+        let wrapThreshold = options.listWrapThreshold ?? options.maxWidth
+        func isOverWidth(_ length: Int) -> Bool {
+            wrapThreshold > 0 && length > wrapThreshold
+        }
+
+        func isFirstOnLine(_ index: Int) -> Bool {
+            last(.nonSpaceOrComment, before: index)?.isLinebreak == true
+        }
+
+        // Moves the token at the given index onto a new line. Returns the difference in tokens.
+        func wrapLine(before index: Int, indent: String) -> Int {
+            insertSpace(indent, at: index)
+            insertLinebreak(at: index)
+            // Remove the space now orphaned at the end of the previous line
+            guard tokens[index - 1].isSpace else { return 2 }
+            removeToken(at: index - 1)
+            return 1
+        }
+
+        parseDeclarations().forEachRecursiveDeclaration { declaration in
+            guard var whereIndex = genericWhereClauseIndex(of: declaration) else { return }
+
+            let genericTypes = parseGenericTypes(from: whereIndex).types
+            var requirementIndices = genericTypes.flatMap(\.conformances).map(\.sourceRange.lowerBound).sorted()
+            guard let lastRequirementIndex = requirementIndices.last else { return }
+
+            let indent = currentIndentForLine(at: declaration.keywordIndex) + options.indent
+
+            // `where` moves to its own line before the requirements are wrapped,
+            // since the requirements may then fit on the same line as `where`.
+            if whereMode == .ifMultiline, !isFirstOnLine(whereIndex),
+               !onSameLine(declaration.keywordIndex, lastRequirementIndex) || isOverWidth(lineLength(at: whereIndex))
+            {
+                let delta = wrapLine(before: whereIndex, indent: indent)
+                whereIndex += delta
+                requirementIndices = requirementIndices.map { $0 + delta }
+            }
+
+            if wrapsRequirements, let firstRequirementIndex = requirementIndices.first {
+                var isClauseOverWidth = ([whereIndex] + requirementIndices).contains { isOverWidth(lineLength(at: $0)) }
+
+                // `where` can only move back to the previous line if the requirements wrap
+                if whereMode == .never, isFirstOnLine(whereIndex),
+                   let previousIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: whereIndex),
+                   isOverWidth(lineLength(at: previousIndex) + 1 + lineLength(from: whereIndex, upTo: endOfLine(at: whereIndex)))
+                {
+                    isClauseOverWidth = true
+                }
+
+                // Requirements that already share wrapped lines stay grouped, like partially wrapped arguments
+                let isFirstRequirementWrapped = isFirstOnLine(firstRequirementIndex)
+                let keepsGrouping = options.allowPartialWrapping && !isClauseOverWidth
+                    && (requirementsMode == .afterFirst || isFirstRequirementWrapped)
+
+                // Wrap if the clause is over the width limit, or if it is already
+                // wrapped in some way so that it ends up wrapped consistently.
+                if isClauseOverWidth || requirementIndices.contains(where: isFirstOnLine), !keepsGrouping {
+                    // Work backwards so the remaining requirement indices stay valid
+                    let indicesToWrap = requirementsMode == .beforeFirst ? requirementIndices : Array(requirementIndices.dropFirst())
+                    for requirementIndex in indicesToWrap.reversed() where !isFirstOnLine(requirementIndex) {
+                        _ = wrapLine(before: requirementIndex, indent: indent)
+                    }
+                }
+
+                // With `afterFirst`, the first requirement stays on the same line as `where`
+                if requirementsMode == .afterFirst, isFirstRequirementWrapped {
+                    unwrapLine(before: firstRequirementIndex, preservingComments: true)
+                }
+            }
+
+            // `where` moves back after the requirements are wrapped, since it may only fit then
+            if whereMode == .never, isFirstOnLine(whereIndex) {
+                unwrapLine(before: whereIndex, preservingComments: true)
+            }
+        }
+    }
+
+    /// The index of the `where` keyword starting the given declaration's generic where clause, if it has one
+    func genericWhereClauseIndex(of declaration: Declaration) -> Int? {
+        let keywordIndex = declaration.keywordIndex
+        if tokens[keywordIndex].isFunctionDeclarationKeyword {
+            return parseFunctionDeclaration(keywordIndex: keywordIndex)?.whereClauseRange?.lowerBound
+        }
+        if let typeDeclaration = declaration.asTypeDeclaration {
+            return index(of: .keyword("where"), in: keywordIndex ..< typeDeclaration.openBraceIndex)
+        }
+        if declaration.keyword == "associatedtype" {
+            return index(of: .keyword("where"), in: keywordIndex ... declaration.range.upperBound)
+        }
+        return nil
     }
 
     /// Returns the index where the `wrap` rule should add the next linebreak in the line at the selected index.

@@ -78,16 +78,7 @@ public extension FormatRule {
                     return
                 }
             default:
-                guard let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                    $0 == .endOfScope("}")
-                }), let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex) else {
-                    return
-                }
-                if !formatter.isStartOfClosure(at: startIndex), !["func", "rethrows"]
-                    .contains(formatter.lastSignificantKeyword(at: startIndex, excluding: ["where", "throws"]) ?? "")
-                {
-                    return
-                }
+                guard formatter.isAtEndOfReturnScope(at: i) else { return }
             }
             // Don't remove return if it's followed by more code
             guard let endIndex = formatter.endOfScope(at: i),
@@ -234,6 +225,43 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether a bare return reaches the end of its function or closure without skipping work.
+    func isAtEndOfReturnScope(at returnIndex: Int) -> Bool {
+        // A switch case must retain its sole statement, even when it is a bare return.
+        guard let immediateScope = startOfScope(at: returnIndex),
+              tokens[immediateScope] == .startOfScope("{")
+        else { return false }
+        var currentIndex = returnIndex
+        while let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) {
+            switch tokens[nextIndex] {
+            case .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"):
+                guard let ifIndex = index(of: .startOfScope("#if"), before: nextIndex),
+                      let branches = conditionalCompilationBranches(at: ifIndex),
+                      let endIndex = branches.last?.endOfBranch
+                else { return false }
+                currentIndex = endIndex
+            case .endOfScope("}"):
+                guard let scope = startOfScope(at: nextIndex) else { return false }
+                // Preserve the existing closure return-type inference checks for direct returns.
+                // Nested returns in closures need additional inference analysis.
+                if isStartOfClosure(at: scope) {
+                    return scope == immediateScope
+                }
+                let keyword = lastSignificantKeyword(at: scope, excluding: ["where", "throws"])
+                if ["func", "rethrows"].contains(keyword ?? "") {
+                    return scope == immediateScope || isBodyOfVoidFunction(at: scope)
+                }
+                // Only cross scopes whose normal completion continues after the closing brace.
+                // Loops repeat, and catch/else clauses or subsequent statements stop the scan.
+                guard ["do", "switch"].contains(keyword ?? "") else { return false }
+                currentIndex = nextIndex
+            default:
+                return false
+            }
+        }
+        return false
+    }
+
     /// Whether the closure starting at the given index is the argument to a `flatMap`
     /// call and has an inferred (rather than explicit) return type. An explicit return
     /// type pins the closure's type, so removing `return` from its body remains safe.

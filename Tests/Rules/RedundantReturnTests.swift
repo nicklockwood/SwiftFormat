@@ -10,6 +10,283 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantReturnTests: XCTestCase {
+    func testBareReturnInTrailingDoInConditionalSwitchCase() {
+        let input = """
+        func export() throws {
+            switch format {
+            default:
+                #if canImport(ModelIO)
+                    do {
+                        try write()
+                        return
+                    }
+                #else
+                    throw ExportError.unsupported
+                #endif
+            }
+        }
+        """
+        let output = """
+        func export() throws {
+            switch format {
+            default:
+                #if canImport(ModelIO)
+                    do {
+                        try write()
+                    }
+                #else
+                    throw ExportError.unsupported
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn)
+    }
+
+    func testBareReturnInDoBeforeMoreWorkIsPreserved() {
+        let input = """
+        func export() {
+            do {
+                write()
+                return
+            }
+            finish()
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnInDoWithCatchIsPreserved() {
+        let input = """
+        func export() throws {
+            do {
+                try write()
+                return
+            } catch {
+                throw error
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnInDoBeforeWorkAfterSwitchIsPreserved() {
+        let input = """
+        func export() {
+            switch format {
+            default:
+                do {
+                    write()
+                    return
+                }
+            }
+            finish()
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnInDoInLoopIsPreserved() {
+        let input = """
+        func export() {
+            for item in items {
+                do {
+                    write(item)
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnBeforeUnconditionalWorkAfterIfdefIsPreserved() {
+        let input = """
+        func export() {
+            #if FEATURE
+                do {
+                    write()
+                    return
+                }
+            #else
+                fallback()
+            #endif
+            finish()
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnBeforeWorkAfterIfdefInSwitchCaseIsPreserved() {
+        let input = """
+        func export() {
+            switch format {
+            default:
+                #if FEATURE
+                    do {
+                        write()
+                        return
+                    }
+                #endif
+                finish()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnBeforeWorkAfterNestedIfdefIsPreserved() {
+        let input = """
+        func export() {
+            #if FEATURE
+                #if DETAIL
+                    do {
+                        write()
+                        return
+                    }
+                #else
+                    fallback()
+                #endif
+                finish()
+            #else
+                unsupported()
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnBeforeIndependentIfdefIsPreserved() {
+        let input = """
+        func export() {
+            #if FEATURE
+                do {
+                    write()
+                    return
+                }
+            #endif
+            #if DETAIL
+                finish()
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnBeforeSeparateMutuallyExclusiveIfdefsIsPreserved() {
+        let input = """
+        func export() {
+            #if FEATURE
+                do {
+                    write()
+                    return
+                }
+            #endif
+            #if !FEATURE
+                fallback()
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testBareReturnsInMutuallyExclusiveIfdefBranches() {
+        let input = """
+        func export() {
+            #if FIRST
+                do {
+                    first()
+                    return
+                }
+            #elseif SECOND
+                do {
+                    second()
+                    return
+                }
+            #else
+                do {
+                    fallback()
+                    return
+                }
+            #endif
+        }
+        """
+        let output = """
+        func export() {
+            #if FIRST
+                do {
+                    first()
+                }
+            #elseif SECOND
+                do {
+                    second()
+                }
+            #else
+                do {
+                    fallback()
+                }
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn)
+    }
+
+    func testBareReturnInNestedTrailingIfdefs() {
+        let input = """
+        func export() {
+            #if FEATURE
+                #if DETAIL
+                    do {
+                        write()
+                        return
+                    }
+                #elseif OTHER
+                    other()
+                #else
+                    fallback()
+                #endif
+            #else
+                unsupported()
+            #endif
+        }
+        """
+        let output = """
+        func export() {
+            #if FEATURE
+                #if DETAIL
+                    do {
+                        write()
+                    }
+                #elseif OTHER
+                    other()
+                #else
+                    fallback()
+                #endif
+            #else
+                unsupported()
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn)
+    }
+
+    func testBareReturnInRuntimeConditionalBeforeMoreWorkIsPreserved() {
+        let input = """
+        func export() {
+            if supported {
+                do {
+                    write()
+                    return
+                }
+            } else {
+                fallback()
+            }
+            finish()
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
     func testRemoveRedundantReturnInClosure() {
         let input = """
         foo(with: { return 5 })

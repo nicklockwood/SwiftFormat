@@ -882,7 +882,7 @@ struct _Descriptors {
     let selfRequired = OptionDescriptor(
         argumentName: "self-required",
         displayName: "Self Required",
-        help: "Comma-delimited list of functions / types with @autoclosure arguments",
+        help: "Comma-delimited list of functions / types with @autoclosure arguments or where self is required in the type body. Supports * wildcards",
         keyPath: \FormatOptions.selfRequired,
         mergeWithDefaults: true
     )

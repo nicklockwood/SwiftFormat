@@ -1150,6 +1150,84 @@ final class RedundantSelfTests: XCTestCase {
                        exclude: [.propertyTypes])
     }
 
+    func testNoRemoveSelfInFunctionMatchingSelfRequiredWildcard() {
+        let input = """
+        class Foo {
+            let foo = 1
+            func testFoo() {
+                logEvent(self.foo)
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["log*"])
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
+    func testNoRemoveSelfInExtensionOfSelfRequiredType() {
+        let input = """
+        private extension SomeType {
+            var analyticsName: String {
+                self.title
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["SomeType"])
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
+    func testNoRemoveSelfInExtensionOfTypeMatchingSelfRequiredWildcard() {
+        let input = """
+        extension MyFeatureState.ObservableState {
+            var analyticsName: String {
+                self.title
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["*.ObservableState"])
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
+    func testNoRemoveSelfInNestedTypeMatchingSelfRequiredWildcard() {
+        let input = """
+        struct MyFeatureState {
+            var count: Int
+
+            var doubled: Int {
+                count * 2
+            }
+
+            struct ObservableState {
+                var title: String
+
+                var analyticsName: String {
+                    self.title
+                }
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["*.ObservableState"])
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
+    func testRemoveSelfInExtensionOfTypeNotMatchingSelfRequiredWildcard() {
+        let input = """
+        extension MyFeatureState.Action {
+            var analyticsName: String {
+                self.title
+            }
+        }
+        """
+        let output = """
+        extension MyFeatureState.Action {
+            var analyticsName: String {
+                title
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["*.ObservableState"])
+        testFormatting(for: input, output, rule: .redundantSelf, options: options)
+    }
+
     func testSelfRemovedFromSwitchCaseWhere() {
         let input = """
         class Foo {

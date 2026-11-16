@@ -3655,7 +3655,7 @@ preserving `self` in their string interpolations. Names passed to
 
 `--self-required` also accepts type names, which preserve `self` within that
 type and its extensions (e.g. for `@dynamicMemberLookup` types declared in
-another module). Names can include `*` wildcards, like `*.ObservableState`.
+another module). Names can include `*` wildcards.
 
 There is also an option to always use explicit `self` but *only* inside `init`,
 by using `--self init-only`:

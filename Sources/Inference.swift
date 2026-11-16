@@ -831,7 +831,7 @@ private struct Inference {
                     else {
                         return // error
                     }
-                    // TODO: Add usingDynamicLookup logic from the main rule
+                    // TODO: Add typeBodyRequiresExplicitSelf logic from the main rule
                     index = scopeStart + 1
                     typeStack.append(name)
                     processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,

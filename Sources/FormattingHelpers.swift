@@ -2799,7 +2799,7 @@ extension Formatter {
                          closureStack: inout [(allowsImplicitSelf: Bool, selfCapture: String?)],
                          membersByType: inout [String: Set<String>],
                          classMembersByType: inout [String: Set<String>],
-                         usingDynamicLookup: Bool,
+                         typeBodyRequiresExplicitSelf: Bool,
                          classOrStatic: Bool,
                          isTypeRoot: Bool,
                          isInit: Bool)
@@ -2908,7 +2908,7 @@ extension Formatter {
                                 processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            let removeSelf = explicitSelf != .insert && !usingDynamicLookup && (
+                            let removeSelf = explicitSelf != .insert && !typeBodyRequiresExplicitSelf && (
                                 (staticSelf && classOrStatic) || (!staticSelf && !inClosureDisallowingImplicitSelf)
                             )
                             processDeclaredVariables(at: &i, names: &localNames,
@@ -2975,7 +2975,7 @@ extension Formatter {
                     processFunction(at: &index, localNames: localNames, members: members,
                                     typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                     classMembersByType: &classMembersByType,
-                                    usingDynamicLookup: usingDynamicLookup,
+                                    typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf,
                                     classOrStatic: effectiveClassOrStatic)
                     classOrStatic = false
                     continue
@@ -3009,29 +3009,28 @@ extension Formatter {
                     else {
                         return
                     }
-                    var usingDynamicLookup = modifiersForDeclaration(
+                    var typeBodyRequiresExplicitSelf = modifiersForDeclaration(
                         at: index,
                         contains: "@dynamicMemberLookup"
                     )
-                    if usingDynamicLookup {
+                    if typeBodyRequiresExplicitSelf {
                         scopeStack[scopeStack.count - 1].dynamicMemberTypes.insert(name)
                     } else if [token.string, lastKeyword].contains("extension"),
                               scopeStack.last!.dynamicMemberTypes.contains(name) ||
                               isAdditionalDynamicMemberType(name)
                     {
-                        usingDynamicLookup = true
+                        typeBodyRequiresExplicitSelf = true
                     }
-                    // Types in `--self-required` are treated like `@dynamicMemberLookup` types
                     let qualifiedName = (typeStack.map(\.name) + [name]).joined(separator: ".")
                     if !staticSelf, selfRequired.containsMatch(for: qualifiedName) {
-                        usingDynamicLookup = true
+                        typeBodyRequiresExplicitSelf = true
                     }
                     index = scopeStart + 1
                     typeStack.append((name: name, keyword: keyword))
                     processBody(at: &index, localNames: ["init"], members: [],
                                 typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                                typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                                 isTypeRoot: true, isInit: false)
                     index -= 1
                     typeStack.removeLast()
@@ -3057,7 +3056,7 @@ extension Formatter {
                     case "if", "while", "guard", "for":
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        let removeSelf = explicitSelf != .insert && !usingDynamicLookup && (
+                        let removeSelf = explicitSelf != .insert && !typeBodyRequiresExplicitSelf && (
                             (staticSelf && classOrStatic) || (!staticSelf && !inClosureDisallowingImplicitSelf)
                         )
                         // For guard, collect declared variable names separately
@@ -3114,7 +3113,7 @@ extension Formatter {
                         processBody(at: &index, localNames: bodyLocalNames, members: members,
                                     typeStack: &typeStack, closureStack: &closureStack,
                                     membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                    usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                                    typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                                     isTypeRoot: false, isInit: isInit)
                         index -= 1
                         lastKeyword = ""
@@ -3141,7 +3140,7 @@ extension Formatter {
                     processBody(at: &index, localNames: localNames, members: members,
                                 typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                                typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                                 isTypeRoot: false, isInit: isInit)
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
@@ -3179,7 +3178,7 @@ extension Formatter {
                     processBody(at: &index, localNames: localNames, members: members,
                                 typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                                typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                                 isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where isWhereClause && scopeStack.count == 1:
@@ -3195,7 +3194,7 @@ extension Formatter {
                             processBody(at: &index, localNames: localNames, members: members,
                                         typeStack: &typeStack, closureStack: &closureStack,
                                         membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                        usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                                        typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                                         isTypeRoot: false, isInit: isInit)
                             index -= 1
                         case .endOfScope("}"):
@@ -3216,7 +3215,7 @@ extension Formatter {
                     processBody(at: &index, localNames: localNames, members: members,
                                 typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                                typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                                 isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
@@ -3242,7 +3241,7 @@ extension Formatter {
                                          typeStack: &typeStack, closureStack: &closureStack,
                                          membersByType: &membersByType,
                                          classMembersByType: &classMembersByType,
-                                         usingDynamicLookup: usingDynamicLookup,
+                                         typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf,
                                          classOrStatic: classOrStatic)
                     } else {
                         index = (endOfScope(at: index) ?? index) + 1
@@ -3394,14 +3393,14 @@ extension Formatter {
                     processBody(at: &index, localNames: closureLocalNames, members: members,
                                 typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                usingDynamicLookup: usingDynamicLookup, classOrStatic: staticSelf ? false : classOrStatic,
+                                typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: staticSelf ? false : classOrStatic,
                                 isTypeRoot: false, isInit: isInit)
                     index -= 1
                     closureStack.removeLast()
                 case .startOfScope:
                     index = endOfScope(at: index) ?? (tokens.count - 1)
                 case .identifier(selfKeyword):
-                    guard isEnabled(at: index), explicitSelf != .insert, !isTypeRoot, !usingDynamicLookup, !staticSelf || classOrStatic,
+                    guard isEnabled(at: index), explicitSelf != .insert, !isTypeRoot, !typeBodyRequiresExplicitSelf, !staticSelf || classOrStatic,
                           let dotIndex = self.index(of: .nonSpaceOrLinebreak, after: index, if: {
                               $0 == .operator(".", .infix)
                           }),
@@ -3538,7 +3537,7 @@ extension Formatter {
                               closureStack: inout [(allowsImplicitSelf: Bool, selfCapture: String?)],
                               membersByType: inout [String: Set<String>],
                               classMembersByType: inout [String: Set<String>],
-                              usingDynamicLookup: Bool,
+                              typeBodyRequiresExplicitSelf: Bool,
                               classOrStatic: Bool)
         {
             assert(tokens[index] == .startOfScope("{"))
@@ -3598,7 +3597,7 @@ extension Formatter {
                 processBody(at: &index, localNames: localNames, members: members,
                             typeStack: &typeStack, closureStack: &closureStack,
                             membersByType: &membersByType, classMembersByType: &classMembersByType,
-                            usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                            typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                             isTypeRoot: false, isInit: false)
                 index -= 1
             }
@@ -3613,7 +3612,7 @@ extension Formatter {
                 processBody(at: &index, localNames: localNames, members: members,
                             typeStack: &typeStack, closureStack: &closureStack,
                             membersByType: &membersByType, classMembersByType: &classMembersByType,
-                            usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                            typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf, classOrStatic: classOrStatic,
                             isTypeRoot: false, isInit: false)
             }
         }
@@ -3622,7 +3621,7 @@ extension Formatter {
                              closureStack: inout [(allowsImplicitSelf: Bool, selfCapture: String?)],
                              membersByType: inout [String: Set<String>],
                              classMembersByType: inout [String: Set<String>],
-                             usingDynamicLookup: Bool,
+                             typeBodyRequiresExplicitSelf: Bool,
                              classOrStatic: Bool)
         {
             let funcKeywordIndex = index
@@ -3707,7 +3706,7 @@ extension Formatter {
                 processAccessors({ $0.isSubscriptAccessorKeyword }, for: "", at: &index, localNames: localNames,
                                  members: members, typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                  classMembersByType: &classMembersByType,
-                                 usingDynamicLookup: usingDynamicLookup,
+                                 typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf,
                                  classOrStatic: classOrStatic)
             } else {
                 index = bodyStartIndex + 1
@@ -3718,7 +3717,7 @@ extension Formatter {
                             closureStack: &closureStack,
                             membersByType: &membersByType,
                             classMembersByType: &classMembersByType,
-                            usingDynamicLookup: usingDynamicLookup,
+                            typeBodyRequiresExplicitSelf: typeBodyRequiresExplicitSelf,
                             classOrStatic: classOrStatic,
                             isTypeRoot: false,
                             isInit: startToken == .keyword("init"))
@@ -3732,7 +3731,7 @@ extension Formatter {
         processBody(at: &index, localNames: [], members: [], typeStack: &typeStack,
                     closureStack: &closureStack, membersByType: &membersByType,
                     classMembersByType: &classMembersByType,
-                    usingDynamicLookup: false, classOrStatic: false,
+                    typeBodyRequiresExplicitSelf: false, classOrStatic: false,
                     isTypeRoot: false, isInit: false)
     }
 

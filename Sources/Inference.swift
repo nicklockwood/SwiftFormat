@@ -909,7 +909,7 @@ private struct Inference {
                     formatter.updateEnablement(at: index)
                 case .startOfScope("("):
                     if case let .identifier(fn)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                       selfRequired.contains(fn)
+                       selfRequired.containsMatch(for: fn)
                     {
                         index = formatter.index(of: .endOfScope(")"), after: index) ?? index
                         break
@@ -1037,7 +1037,7 @@ private struct Inference {
                           }),
                           let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex),
                           let name = formatter.token(at: nextIndex)?.unescaped(),
-                          !localNames.contains(name), !selfRequired.contains(name),
+                          !localNames.contains(name), !selfRequired.containsMatch(for: name),
                           !_FormatRules.globalSwiftFunctions.contains(name)
                     else {
                         break

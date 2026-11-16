@@ -268,9 +268,7 @@ extension Formatter {
             return false
         }
         let staticSelf = selfKeyword == "Self"
-        let exclusionList = exclude
-            .union(_FormatRules.globalSwiftFunctions)
-            .union(staticSelf ? [] : selfRequired)
+        let exclusionList = exclude.union(_FormatRules.globalSwiftFunctions)
         guard !isAdditionalSelfRequired(i),
               let dotIndex = index(of: .nonSpaceOrLinebreak, after: i, if: {
                   $0 == .operator(".", .infix)
@@ -281,6 +279,7 @@ extension Formatter {
               let token = token(at: nextIndex), token.isIdentifier,
               case let name = token.unescaped(), (include.map { $0.contains(name) } ?? true),
               !isSymbol(at: nextIndex, in: exclusionList),
+              staticSelf || !selfRequired.containsMatch(for: name),
               !backticksRequired(at: nextIndex, ignoreLeadingDot: true)
         else {
             return false
@@ -292,7 +291,7 @@ extension Formatter {
                 break
             case .startOfScope("("):
                 if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeStart),
-                   isSymbol(at: prevIndex, in: staticSelf ? [] : selfRequired) || isAttribute(at: prevIndex)
+                   (!staticSelf && selfRequired.containsMatch(for: tokens[prevIndex].unescaped())) || isAttribute(at: prevIndex)
                 {
                     return false
                 }
@@ -354,7 +353,7 @@ extension Formatter {
         guard tokens[typeIndex].isIdentifier else {
             return false
         }
-        return options.selfRequired.contains(tokens[typeIndex].unescaped())
+        return options.selfRequired.containsMatch(for: tokens[typeIndex].unescaped())
     }
 
     /// gather declared variable names, starting at index after let/var keyword
@@ -3022,6 +3021,11 @@ extension Formatter {
                     {
                         usingDynamicLookup = true
                     }
+                    // Types in `--self-required` are treated like `@dynamicMemberLookup` types
+                    let qualifiedName = (typeStack.map(\.name) + [name]).joined(separator: ".")
+                    if !staticSelf, selfRequired.containsMatch(for: qualifiedName) {
+                        usingDynamicLookup = true
+                    }
                     index = scopeStart + 1
                     typeStack.append((name: name, keyword: keyword))
                     processBody(at: &index, localNames: ["init"], members: [],
@@ -4312,5 +4316,31 @@ extension Formatter {
     /// Whether a contextual type qualifier can be omitted under the selected style.
     func shouldOmitTypeQualifier(_ typeName: String, isInitializer: Bool) -> Bool {
         !isInitializer || (options.initTypes != .always && typeName.count >= options.initTypeMinLength)
+    }
+}
+
+extension Set<String> {
+    /// Whether the set contains the given name, or a pattern with `*` wildcards that matches it
+    func containsMatch(for name: String) -> Bool {
+        contains(name) || contains { $0.contains("*") && name.matchesWildcard($0) }
+    }
+}
+
+extension String {
+    /// Whether the string matches the given pattern, where `*` matches any sequence of characters
+    func matchesWildcard(_ pattern: String) -> Bool {
+        let parts = pattern.components(separatedBy: "*")
+        guard let prefix = parts.first, let suffix = parts.last, parts.count > 1 else {
+            return self == pattern
+        }
+        guard count >= prefix.count + suffix.count, hasPrefix(prefix), hasSuffix(suffix) else {
+            return false
+        }
+        var remainder = dropFirst(prefix.count).dropLast(suffix.count)
+        for part in parts.dropFirst().dropLast() where !part.isEmpty {
+            guard let range = remainder.range(of: part) else { return false }
+            remainder = remainder[range.upperBound...]
+        }
+        return true
     }
 }

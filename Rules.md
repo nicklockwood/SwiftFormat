@@ -3622,7 +3622,7 @@ Insert/remove explicit `self` where applicable.
 Option | Description
 --- | ---
 `--self` | Explicit self: "insert", "remove" (default) or "init-only"
-`--self-required` | Comma-delimited list of functions / types with @autoclosure arguments
+`--self-required` | Comma-delimited list of functions / types where self is required. Supports * wildcards
 
 <details>
 <summary>Examples</summary>
@@ -3652,6 +3652,10 @@ The default `--self-required` list includes the `Logger` methods `notice`,
 `info`, `debug`, `error`, `warning`, `fault`, `log`, `trace`, and `critical`,
 preserving `self` in their string interpolations. Names passed to
 `--self-required` extend this list without replacing the defaults.
+
+`--self-required` also accepts type names, which preserve `self` within that
+type and its extensions (e.g. for `@dynamicMemberLookup` types declared in
+another module). Names can include `*` wildcards, like `*.ObservableState`.
 
 There is also an option to always use explicit `self` but *only* inside `init`,
 by using `--self init-only`:

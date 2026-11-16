@@ -179,7 +179,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
 
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
-    // Files are handed to an operation queue rather than gated with a semaphore, as blocking pool threads
+    // Work is handed to an operation queue rather than gated with a semaphore, as blocking pool threads
     // while waiting for a slot could starve the threads that `applyRules` needs to run the rules.
     let fileQueue: OperationQueue? = concurrent ? maxConcurrentFiles.map { maxConcurrentFiles in
         let fileQueue = OperationQueue()
@@ -188,6 +188,20 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
         fileQueue.maxConcurrentOperationCount = max(1, maxConcurrentFiles)
         return fileQueue
     } : nil
+
+    // Schedules discovery and file handling, so that `maxConcurrentFiles` bounds both. Operations only
+    // enqueue their children and never wait for them, so a full queue can't deadlock.
+    func schedule(_ block: @escaping () -> Void) {
+        guard let fileQueue else {
+            queue.async(group: group, execute: block)
+            return
+        }
+        group.enter()
+        fileQueue.addOperation {
+            block()
+            group.leave()
+        }
+    }
 
     func resolveInputURL(_ inputURL: URL, options: Options) -> (URL, URLResourceValues, Options)? {
         let fileOptions = options.fileOptions ?? .default
@@ -256,21 +270,10 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
 
                 var options = options
                 options.formatOptions?.fileInfo = fileInfo
-                let process = {
-                    do {
-                        try onComplete(handler(inputURL, outputURL ?? inputURL, options))
-                    } catch {
-                        onComplete { throw error }
-                    }
-                }
-                if let fileQueue {
-                    group.enter()
-                    fileQueue.addOperation {
-                        process()
-                        group.leave()
-                    }
-                } else {
-                    process()
+                do {
+                    try onComplete(handler(inputURL, outputURL ?? inputURL, options))
+                } catch {
+                    onComplete { throw error }
                 }
             }
         } else if resourceValues.isDirectory == true {
@@ -292,7 +295,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
             }
             for url in files where !url.path.hasPrefix(".") && !fileOptions.shouldSkipBuildDirectory(url) {
                 let options = options
-                queue.async(group: group) {
+                schedule {
                     let outputURL = outputURL.map {
                         $0.appendingPathComponent(url.lastPathComponent)
                     }
@@ -303,7 +306,7 @@ public func enumerateFiles(withInputURLs inputURLs: [URL],
     }
 
     for inputURL in inputURLs {
-        queue.async(group: group) {
+        schedule {
             var options = baseOptions
             var inputURL = inputURL
             if options.formatOptions == nil {

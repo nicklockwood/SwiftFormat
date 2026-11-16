@@ -525,6 +525,32 @@ final class SwiftFormatTests: XCTestCase {
         XCTAssertLessThanOrEqual(maxRunning, 2)
     }
 
+    func testMaxConcurrentFilesLimitsDiscovery() {
+        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().appendingPathComponent("Rules")
+        let options = Options(fileOptions: FileOptions(excludedGlobs: expandGlobs("*Wrap*", in: inputURL.path)))
+        let lock = NSLock()
+        var running = 0, maxRunning = 0, skippedCount = 0
+        func track(_ isSkipped: Bool) -> () -> Void {
+            lock.lock()
+            running += 1
+            skippedCount += isSkipped ? 1 : 0
+            maxRunning = max(maxRunning, running)
+            lock.unlock()
+            Thread.sleep(forTimeInterval: 0.001)
+            lock.lock()
+            running -= 1
+            lock.unlock()
+            return {}
+        }
+        let errors = enumerateFiles(
+            withInputURLs: [inputURL], options: options, maxConcurrentFiles: 1,
+            skipped: { _, _, _ in track(true) }
+        ) { _, _, _ in track(false) }
+        XCTAssertEqual(errors.count, 0)
+        XCTAssertGreaterThan(skippedCount, 1)
+        XCTAssertEqual(maxRunning, 1)
+    }
+
     func testMaxConcurrentFilesReturnsHandlerErrors() {
         let inputURL = URL(fileURLWithPath: #file)
         let errors = enumerateFiles(withInputURLs: [inputURL], maxConcurrentFiles: 1) { _, _, _ in

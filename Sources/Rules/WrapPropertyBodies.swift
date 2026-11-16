@@ -12,6 +12,7 @@ public extension FormatRule {
     /// Wrap single-line property bodies onto multiple lines.
     static let wrapPropertyBodies = FormatRule(
         help: "Wrap single-line property bodies onto multiple lines.",
+        disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         formatter.forEach(.keyword("var")) { varIndex, _ in

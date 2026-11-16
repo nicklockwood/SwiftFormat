@@ -12,6 +12,7 @@ public extension FormatRule {
     /// Wrap single-line function, init, and subscript bodies onto multiple lines.
     static let wrapFunctionBodies = FormatRule(
         help: "Wrap single-line function, init, and subscript bodies onto multiple lines.",
+        disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         formatter.forEach(.keyword) { keywordIndex, keyword in

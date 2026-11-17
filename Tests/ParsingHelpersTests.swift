@@ -1042,6 +1042,22 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: false), 4)
     }
 
+    func testModifiersForDeclarationWithQualifiedGenericAttribute() throws {
+        let input = """
+        @MainActor @Testing.Test("Example") @Example.Builder<String>
+        func example() {}
+        """
+        let formatter = Formatter(tokenize(input))
+        let funcIndex = try XCTUnwrap(formatter.index(of: .keyword("func"), after: -1))
+        var modifiers = [String]()
+        _ = formatter.modifiersForDeclaration(at: funcIndex) { _, name in
+            modifiers.append(name)
+            return false
+        }
+        XCTAssertEqual(modifiers, ["@Example.Builder<String>", "@Testing.Test(\"Example\")", "@MainActor"])
+        XCTAssertEqual(formatter.startOfModifiers(at: funcIndex, includingAttributes: true), 0)
+    }
+
     func testModifiersForDeclarationWithModuleSelector() {
         let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
         var allModifiers = [String]()

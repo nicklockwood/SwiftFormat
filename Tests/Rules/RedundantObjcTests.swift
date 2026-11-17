@@ -63,7 +63,7 @@ final class RedundantObjcTests: XCTestCase {
 
     func testRenamedObjcNotRemoved() {
         let input = """
-        @IBOutlet @objc(uiLabel) var label: UILabel!
+        @objc(uiLabel) @IBOutlet var label: UILabel!
         """
         testFormatting(for: input, rule: .redundantObjc)
     }

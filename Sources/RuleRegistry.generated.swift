@@ -15,6 +15,7 @@ let ruleRegistry: [String: FormatRule] = [
     "anyObjectProtocol": .anyObjectProtocol,
     "applicationMain": .applicationMain,
     "assertionFailures": .assertionFailures,
+    "attributeOrder": .attributeOrder,
     "blankLineAfterImports": .blankLineAfterImports,
     "blankLineAfterSwitchCase": .blankLineAfterSwitchCase,
     "blankLinesAfterGuardStatements": .blankLinesAfterGuardStatements,

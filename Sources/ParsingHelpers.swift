@@ -477,7 +477,7 @@ extension Formatter {
                     || _FormatRules.allModifiers.contains(identifierToken.string)
                     || identifierToken == .endOfScope(">")
                     || (identifierToken.isIdentifier
-                        && self.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex, if: { $0.isOperator("::") }) != nil)
+                        && startOfAttribute(at: identifierIndex) != nil)
                 else {
                     return false
                 }
@@ -489,7 +489,8 @@ extension Formatter {
                 prevIndex = startIndex
             case .endOfScope(">"):
                 guard let startIndex = self.index(of: .startOfScope("<"), before: prevIndex),
-                      last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: { $0.isAttribute }) != nil
+                      let nameIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
+                      startOfAttribute(at: nameIndex) != nil
                 else {
                     return false
                 }
@@ -5138,6 +5139,26 @@ extension _FormatRules {
         ["async"],
         ["convenience"],
     ]
+
+    /// Fill in omitted defaults while preserving the relative order of explicitly listed names.
+    static func mergePreferredOrder(_ preferredOrder: [String], with defaultGroups: [[String]]) -> [String] {
+        var priorities = [String: Int]()
+        for (priority, group) in defaultGroups.enumerated() {
+            for name in group {
+                priorities[name] = priority
+            }
+        }
+
+        var order = preferredOrder
+        for (priority, group) in defaultGroups.enumerated() {
+            let missing = group.filter { !order.contains($0) }
+            guard !missing.isEmpty else { continue }
+            let insertionPoint = order.firstIndex(where: { group.contains($0) }) ??
+                order.firstIndex(where: { (priorities[$0] ?? 0) > priority }) ?? order.endIndex
+            order.insert(contentsOf: missing, at: insertionPoint)
+        }
+        return order
+    }
 
     /// Global swift functions
     static let globalSwiftFunctions = [

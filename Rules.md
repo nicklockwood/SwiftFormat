@@ -7,6 +7,7 @@
 * [anyObjectProtocol](#anyObjectProtocol)
 * [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
+* [attributeOrder](#attributeOrder)
 * [blankLineAfterImports](#blankLineAfterImports)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
@@ -339,6 +340,45 @@ and `precondition(false, ...)` to `preconditionFailure(...)`.
 - precondition(false, "message")
 + preconditionFailure("message")
 ```
+
+</details>
+<br/>
+
+## attributeOrder
+
+Use consistent ordering for declaration attributes.
+
+Option | Description
+--- | ---
+`--attribute-order` | Comma-delimited attribute names in preferred order, without @. Omitted defaults are inserted automatically
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- @objc
+- @discardableResult
+- @available(iOS 15, *)
++ @available(iOS 15, *)
++ @discardableResult
++ @objc
+  func update() -> Bool { true }
+```
+
+The default order is:
+`available`, `backDeployed`, `main`, `propertyWrapper`, `resultBuilder`, `dynamicCallable`, `dynamicMemberLookup`, `frozen`, `inlinable`, `usableFromInline`, `discardableResult`, `warn_unqualified_access`, `preconcurrency`, `MainActor`, `objcMembers`, `nonobjc`, `objc`, `IBDesignable`, `IBInspectable`, `IBAction`, `IBSegueAction`, `IBOutlet`, `NSManaged`, `NSCopying`, `GKInspectable`.
+
+Use `--attribute-order available,MainActor,Test` to set a preferred order.
+Omitted defaults are inserted using their default positions, as with `--modifier-order`.
+Include custom attribute names without `@`. Qualified names must match exactly.
+An empty list uses the default order.
+
+Attributes not in the preferred order (including unlisted macros and property wrappers)
+are preserved as boundaries: attributes aren't moved across them. Comments also prevent
+reordering. Repeated attributes retain their relative order.
+
+Arguments move with their attribute and don't affect ordering. Existing spacing between
+attributes is preserved; use `wrapAttributes` to configure their placement.
 
 </details>
 <br/>

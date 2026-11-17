@@ -1058,6 +1058,21 @@ struct _Descriptors {
             }
         }
     )
+    let attributeOrder = OptionDescriptor(
+        argumentName: "attribute-order",
+        displayName: "Attribute Order",
+        help: "Comma-delimited attribute names in preferred order, without @. Omitted defaults are inserted automatically",
+        keyPath: \FormatOptions.attributeOrder,
+        validate: { name in
+            let components = name.replacingOccurrences(of: "::", with: ".").components(separatedBy: ".")
+            guard components.allSatisfy({
+                let tokens = tokenize($0)
+                return tokens.count == 1 && tokens[0].isIdentifierOrKeyword && !tokens[0].isAttribute
+            }) else {
+                throw FormatError.options("'\(name)' is not a valid attribute name (omit @ and arguments)")
+            }
+        }
+    )
     let shortOptionals = OptionDescriptor(
         argumentName: "short-optionals",
         displayName: "Short Optional Syntax",

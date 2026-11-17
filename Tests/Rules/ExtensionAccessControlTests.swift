@@ -135,8 +135,8 @@ final class ExtensionAccessControlTests: XCTestCase {
             func bar() -> Int { 10 }
 
             /// Doc comment
-            @discardableResult
             @available(iOS 10.0, *)
+            @discardableResult
             func baz() -> Int { 10 }
 
             @objc func quux() {}
@@ -150,8 +150,8 @@ final class ExtensionAccessControlTests: XCTestCase {
             public func bar() -> Int { 10 }
 
             /// Doc comment
-            @discardableResult
             @available(iOS 10.0, *)
+            @discardableResult
             public func baz() -> Int { 10 }
 
             @objc public func quux() {}

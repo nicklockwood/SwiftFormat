@@ -1020,6 +1020,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var noSpaceOperators: Set<String>
     public var noWrapOperators: Set<String>
     public var modifierOrder: [String]
+    public var attributeOrder: [String]
     public var shortOptionals: OptionalsMode
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
@@ -1206,6 +1207,7 @@ public struct FormatOptions: CustomStringConvertible {
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
                 modifierOrder: [String] = [],
+                attributeOrder: [String] = [],
                 shortOptionals: OptionalsMode = .preserveStructInits,
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
@@ -1380,6 +1382,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.noSpaceOperators = noSpaceOperators
         self.noWrapOperators = noWrapOperators
         self.modifierOrder = modifierOrder
+        self.attributeOrder = attributeOrder
         self.shortOptionals = shortOptionals
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes

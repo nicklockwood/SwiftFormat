@@ -237,6 +237,8 @@ func printHelp(as type: CLI.OutputType) {
     --reporter         Report format: \(Reporters.help)
     --lenient          Suppress errors for unformatted code in --lint mode
     --strict           Emit errors for unformatted code when formatting
+    --max-concurrent-files
+                       Maximum number of files to format concurrently (default: automatic)
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
     --color            Colored output: "auto" (default), "always" or "never"
@@ -464,6 +466,15 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Verbose
         verbose = (args["verbose"] != nil)
+
+        // Max concurrent files
+        var maxConcurrentFiles: Int?
+        if let value = args["max-concurrent-files"] {
+            guard let count = Int(value), count > 0 else {
+                throw FormatError.options("--max-concurrent-files option expects a positive integer")
+            }
+            maxConcurrentFiles = count
+        }
 
         // Lenient
         lenient = (args["lenient"] != nil)
@@ -962,6 +973,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   overrides: overrides,
                                                   lineRange: lineRange,
                                                   verbose: verbose,
+                                                  maxConcurrentFiles: maxConcurrentFiles,
                                                   dryrun: dryrun,
                                                   lint: lint,
                                                   lenient: lenient,
@@ -1340,12 +1352,32 @@ func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, line
     return tokens
 }
 
+/// Calls `body` once for each index in `0 ..< iterations`, concurrently. If `maxConcurrency` is nil,
+/// the number of concurrent calls is left to the system (roughly one per core).
+func concurrentPerform(iterations: Int, maxConcurrency: Int?, execute body: @escaping (Int) -> Void) {
+    guard let maxConcurrency else {
+        DispatchQueue.concurrentPerform(iterations: iterations, execute: body)
+        return
+    }
+    // Uses an operation queue rather than gating `concurrentPerform` with a semaphore, as blocking
+    // pool threads while waiting for a slot could starve the threads that `applyRules` runs rules on.
+    let queue = OperationQueue()
+    queue.name = "swiftformat.files"
+    queue.qualityOfService = .userInitiated
+    queue.maxConcurrentOperationCount = maxConcurrency
+    for index in 0 ..< iterations {
+        queue.addOperation { body(index) }
+    }
+    queue.waitUntilAllOperationsAreFinished()
+}
+
 func processInput(_ inputURLs: [URL],
                   andWriteToOutput outputURL: URL?,
                   options: Options,
                   overrides: [String: String],
                   lineRange: ClosedRange<Int>?,
                   verbose: Bool,
+                  maxConcurrentFiles: Int? = nil,
                   dryrun: Bool,
                   lint: Bool,
                   lenient _: Bool,
@@ -1368,7 +1400,7 @@ func processInput(_ inputURLs: [URL],
     var inputFiles = [(input: URL, output: URL, options: Options)]()
     let enumerationErrors = enumerateFiles(
         withInputURLs: inputURLs, outputURL: outputURL, options: options,
-        concurrent: !verbose, logger: logger, skipped: skippedHandler
+        concurrent: !verbose, maxConcurrentFiles: maxConcurrentFiles, logger: logger, skipped: skippedHandler
     ) { input, output, options in
         { inputFiles.append((input, output, options)) }
     }
@@ -1391,7 +1423,7 @@ func processInput(_ inputURLs: [URL],
                 process(index)
             }
         } else {
-            DispatchQueue.concurrentPerform(iterations: inputFiles.count, execute: process)
+            concurrentPerform(iterations: inputFiles.count, maxConcurrency: maxConcurrentFiles, execute: process)
         }
         var errors = [Error]()
         for completion in completions {

@@ -1181,6 +1181,7 @@ let commandLineArguments = [
     "lint",
     "lenient",
     "strict",
+    "max-concurrent-files",
     "verbose",
     "quiet",
     "color",

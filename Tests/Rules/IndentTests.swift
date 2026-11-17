@@ -4524,6 +4524,22 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent)
     }
 
+    func testIndentMultilineStringWithWrappedChainInInterpolation() {
+        let input = """
+        func foo() {
+            \"\""
+                bar
+                \\(
+                    baz.map { $0 }
+                        .joined()
+                )
+                quux
+            \"\""
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
     func testIndentMultilineStringWithMultilineNestedInterpolation() {
         let input = """
         func foo() {

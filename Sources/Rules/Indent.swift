@@ -582,6 +582,7 @@ public extension FormatRule {
                 if linewrapStack.last == true {
                     if !linewrapped {
                         indentStack.removeLast()
+                        stringBodyIndentStack.removeLast()
                         linewrapStack[linewrapStack.count - 1] = false
                         indent = indentStack.last!
                     } else {

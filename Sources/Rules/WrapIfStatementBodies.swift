@@ -11,6 +11,7 @@ import Foundation
 public extension FormatRule {
     static let wrapIfStatementBodies = FormatRule(
         help: "Wrap the bodies of if statements onto a new line.",
+        disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent", "wrap-string-interpolation"]
     ) { formatter in
         formatter.forEachToken(where: { [.keyword("if"), .keyword("else")].contains($0) }) { i, _ in

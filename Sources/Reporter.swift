@@ -70,6 +70,7 @@ final class DefaultReporter: Reporter {
 enum Reporters {
     static let all: [Reporter.Type] = [
         JSONReporter.self,
+        CodeClimateReporter.self,
         GithubActionsLogReporter.self,
         XMLReporter.self,
         SARIFReporter.self,

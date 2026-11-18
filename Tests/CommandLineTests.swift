@@ -4333,6 +4333,72 @@ final class CommandLineTests: XCTestCase {
         XCTAssert(output.contains("\"rule_id\" : \"emptyBraces\""))
     }
 
+    func testCodeClimateReporterEndToEnd() throws {
+        _ = try createTestFile("Sources/foo.swift", contents: """
+        import Foundation
+
+        func foo() {
+        }
+
+        func bar() {
+        }
+
+        """)
+        var output: String?
+        CLI.print = { message, type in
+            if type == .raw {
+                output = message
+            }
+        }
+        let result = processArguments([
+            "", "--lint", "--rules", "emptyBraces", "--cache", "ignore",
+            "--reporter", "codeclimate", ".",
+        ], environment: ["PWD": temporaryDirectory.path], in: temporaryDirectory.path)
+        XCTAssertEqual(result, .lintFailure)
+
+        let data = try Data(XCTUnwrap(output).utf8)
+        let issues = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [[String: Any]])
+        XCTAssertEqual(issues.count, 2)
+        var lines = Set<Int>()
+        var fingerprints = Set<String>()
+        for issue in issues {
+            XCTAssertEqual(issue["type"] as? String, "issue")
+            XCTAssertEqual(issue["check_name"] as? String, "SwiftFormat/emptyBraces")
+            XCTAssertEqual(issue["description"] as? String, FormatRule.emptyBraces.help)
+            XCTAssertEqual(issue["categories"] as? [String], ["Style"])
+            XCTAssertEqual(issue["severity"] as? String, "minor")
+            let location = try XCTUnwrap(issue["location"] as? [String: Any])
+            XCTAssertEqual(location["path"] as? String, "Sources/foo.swift")
+            let range = try XCTUnwrap(location["lines"] as? [String: Int])
+            let begin = try XCTUnwrap(range["begin"])
+            XCTAssertEqual(range["end"], begin)
+            lines.insert(begin)
+            let fingerprint = try XCTUnwrap(issue["fingerprint"] as? String)
+            XCTAssertFalse(fingerprint.isEmpty)
+            fingerprints.insert(fingerprint)
+        }
+        XCTAssertEqual(lines, [3, 6])
+        XCTAssertEqual(fingerprints.count, 2)
+    }
+
+    func testCodeClimateReporterWritesEmptyReportForCleanInput() throws {
+        let file = try createTestFile("foo.swift", contents: """
+        func foo() {}
+
+        """)
+        let outputURL = temporaryDirectory.appendingPathComponent("report.json")
+        CLI.print = { _, _ in }
+        let result = processArguments([
+            "", "--lint", "--rules", "emptyBraces", "--cache", "ignore",
+            "--reporter", "codeclimate", "--report", outputURL.path, file.path,
+        ], in: temporaryDirectory.path)
+        XCTAssertEqual(result, .ok)
+
+        let data = try Data(contentsOf: outputURL)
+        let issues = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [Any])
+        XCTAssertTrue(issues.isEmpty)
+    }
+
     func testGithubActionsLogReporterEndToEnd() throws {
         try withTmpFiles([
             "foo.swift": "func foo() {\n}\n",

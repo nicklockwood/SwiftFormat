@@ -34,13 +34,17 @@ public extension FormatRule {
         `\(_FormatRules.defaultAttributeOrder.joined(separator: "`, `"))`.
 
         Use `--attribute-order available,MainActor,Test` to set a preferred order.
-        Omitted defaults are inserted using their default positions, as with `--modifier-order`.
-        Include custom attribute names without `@`. Qualified names must match exactly.
-        An empty list uses the default order.
+        The `@` prefix is optional, and qualified names must match exactly.
 
-        Attributes not in the preferred order (including unlisted macros and property wrappers)
-        are preserved as boundaries: attributes aren't moved across them. Comments also prevent
-        reordering. Repeated attributes retain their relative order.
+        Use `--attribute-order MainActor,*` to put `@MainActor` before all other attributes,
+        or `--attribute-order *,MainActor` to put it after them. The `*` matches every
+        unlisted attribute, including built-in attributes, macros, and property wrappers.
+        Attributes matched by `*` keep their relative order.
+
+        Without `*`, omitted defaults are inserted as with `--modifier-order`. Attributes
+        outside the resulting order act as boundaries, so other attributes cannot move
+        across them. Comments also prevent reordering. Repeated attributes retain their
+        relative order.
 
         Arguments move with their attribute and don't affect ordering. Existing spacing between
         attributes is preserved; use `wrapAttributes` to configure their placement.
@@ -53,7 +57,11 @@ extension Formatter {
     var preferredAttributeOrder: [String] {
         let defaults = _FormatRules.defaultAttributeOrder
         guard !options.attributeOrder.isEmpty else { return defaults }
-        return _FormatRules.mergePreferredOrder(options.attributeOrder, with: defaults.map { [$0] })
+        let order = options.attributeOrder.map(_FormatRules.attributeOrderName)
+        if order.contains("*") {
+            return order
+        }
+        return _FormatRules.mergePreferredOrder(order, with: defaults.map { [$0] })
     }
 
     /// Sort attributes within declaration prefixes, leaving type attributes alone.
@@ -108,11 +116,15 @@ extension Formatter {
         let name = tokens[index ... end]
             .prefix(while: { !$0.isStartOfScope })
             .filter { !$0.isSpaceOrLinebreak }.string.dropFirst()
-        return order.firstIndex(of: String(name))
+        return order.firstIndex(of: String(name)) ?? order.firstIndex(of: "*")
     }
 }
 
 extension _FormatRules {
+    static func attributeOrderName(_ name: String) -> String {
+        name.hasPrefix("@") ? String(name.dropFirst()) : name
+    }
+
     static let defaultAttributeOrder = [
         // Availability and declaration roles.
         "available", "backDeployed", "main", "propertyWrapper", "resultBuilder",

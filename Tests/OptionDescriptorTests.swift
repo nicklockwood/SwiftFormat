@@ -335,13 +335,15 @@ final class OptionDescriptorTests: XCTestCase {
     func testAttributeOrder() throws {
         let descriptor = Descriptors.attributeOrder
         var options = FormatOptions()
-        try descriptor.toOptions("available, MainActor, Testing.Test, Testing::Suite", &options)
-        XCTAssertEqual(options.attributeOrder, ["available", "MainActor", "Testing.Test", "Testing::Suite"])
-        XCTAssertEqual(descriptor.fromOptions(options), "available,MainActor,Testing.Test,Testing::Suite")
+        try descriptor.toOptions("available, @MainActor, *, @Testing.Test, Testing::Suite", &options)
+        XCTAssertEqual(options.attributeOrder, ["available", "MainActor", "*", "Testing.Test", "Testing::Suite"])
+        XCTAssertEqual(descriptor.fromOptions(options), "available,MainActor,*,Testing.Test,Testing::Suite")
         XCTAssertTrue(descriptor.validateArgument(""))
         XCTAssertFalse(descriptor.validateArgument("Test,Test"))
-        XCTAssertFalse(descriptor.validateArgument("@Test"))
-        XCTAssertFalse(descriptor.validateArgument("Test()"))
+        XCTAssertFalse(descriptor.validateArgument("Test,@Test"))
+        XCTAssertFalse(descriptor.validateArgument("*,*"))
+        XCTAssertFalse(descriptor.validateArgument("@*"))
+        XCTAssertFalse(descriptor.validateArgument("@Test()"))
         XCTAssertFalse(descriptor.validateArgument("Testing..Test"))
     }
 

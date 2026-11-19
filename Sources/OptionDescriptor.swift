@@ -1061,17 +1061,27 @@ struct _Descriptors {
     let attributeOrder = OptionDescriptor(
         argumentName: "attribute-order",
         displayName: "Attribute Order",
-        help: "Comma-delimited attribute names in preferred order, without @. Omitted defaults are inserted automatically",
+        help: "Comma-delimited attribute names in preferred order, with optional @. Use * for all unlisted attributes",
         keyPath: \FormatOptions.attributeOrder,
-        validate: { name in
-            let components = name.replacingOccurrences(of: "::", with: ".").components(separatedBy: ".")
-            guard components.allSatisfy({
-                let tokens = tokenize($0)
-                return tokens.count == 1 && tokens[0].isIdentifierOrKeyword && !tokens[0].isAttribute
-            }) else {
-                throw FormatError.options("'\(name)' is not a valid attribute name (omit @ and arguments)")
+        type: .array,
+        fromArgument: { argument in
+            var seen = Set<String>()
+            return try parseCommaDelimitedList(argument).map { entry in
+                let name = _FormatRules.attributeOrderName(entry)
+                let components = name.replacingOccurrences(of: "::", with: ".").components(separatedBy: ".")
+                guard entry == "*" || components.allSatisfy({
+                    let tokens = tokenize($0)
+                    return tokens.count == 1 && tokens[0].isIdentifierOrKeyword && !tokens[0].isAttribute
+                }) else {
+                    throw FormatError.options("'\(entry)' is not a valid attribute name (omit arguments)")
+                }
+                guard seen.insert(name).inserted else {
+                    throw FormatError.options("Duplicate value '\(entry)'")
+                }
+                return name
             }
-        }
+        },
+        toArgument: { $0.joined(separator: ",") }
     )
     let shortOptionals = OptionDescriptor(
         argumentName: "short-optionals",

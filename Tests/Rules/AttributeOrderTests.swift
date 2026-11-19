@@ -131,6 +131,36 @@ final class AttributeOrderTests: XCTestCase {
         testFormatting(for: input, output, rule: .attributeOrder, options: options)
     }
 
+    func testNamedAttributeBeforeWildcard() {
+        let input = """
+        @CustomMacro("Custom") @available(iOS 15, *) @MainActor @objc
+        func update() {}
+        """
+        let output = """
+        @MainActor @CustomMacro("Custom") @available(iOS 15, *) @objc
+        func update() {}
+        """
+        let options = FormatOptions(attributeOrder: ["@MainActor", "*"])
+        testFormatting(for: input, output, rule: .attributeOrder, options: options)
+    }
+
+    func testNamedAttributesAfterWildcardPreserveWrapperOrder() {
+        let input = """
+        struct Example {
+            @MainActor @Outer("Example") @available(iOS 15, *) @Inner
+            var value: Int
+        }
+        """
+        let output = """
+        struct Example {
+            @Outer("Example") @Inner @MainActor @available(iOS 15, *)
+            var value: Int
+        }
+        """
+        let options = FormatOptions(attributeOrder: ["*", "MainActor", "available"])
+        testFormatting(for: input, output, rule: .attributeOrder, options: options)
+    }
+
     func testMultilineMacroArgumentsMoveIntact() {
         let input = """
         @MainActor

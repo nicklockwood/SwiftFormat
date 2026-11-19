@@ -1653,8 +1653,14 @@ Option | Description
 
 Convert if case chains matching the same value to switch statements or expressions.
 
+Option | Description
+--- | ---
+`--exhaustive-only` | Convert only exhaustive if case chains: "true" (default) or "false"
+
 <details>
 <summary>Examples</summary>
+
+`--exhaustive-only true`:
 
 ```diff
 - if case let .success(value) = result {
@@ -1666,6 +1672,8 @@ Convert if case chains matching the same value to switch statements or expressio
       handle(fallback)
   }
 ```
+
+`--exhaustive-only false`:
 
 ```diff
 - if case let .success(value) = result {

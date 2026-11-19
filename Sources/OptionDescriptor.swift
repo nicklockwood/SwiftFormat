@@ -1546,6 +1546,12 @@ struct _Descriptors {
         trueValues: ["after-property"],
         falseValues: ["always"]
     )
+    let exhaustiveOnly = OptionDescriptor(
+        argumentName: "exhaustive-only",
+        displayName: "Exhaustive Only",
+        help: "Convert only exhaustive if case chains:",
+        keyPath: \.exhaustiveOnly
+    )
     let initCoderNil = OptionDescriptor(
         argumentName: "init-coder-nil",
         displayName: "Return nil in init?(coder)",

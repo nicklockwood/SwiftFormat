@@ -12,6 +12,7 @@ public extension FormatRule {
     static let ifCase = FormatRule(
         help: "Convert if case chains matching the same value to switch statements or expressions.",
         disabledByDefault: true,
+        options: ["exhaustive-only"],
         sharedOptions: ["linebreaks", "indent", "indent-case", "wrap-string-interpolation"]
     ) { formatter in
         formatter.forEach(.keyword("if")) { ifIndex, _ in
@@ -19,6 +20,8 @@ public extension FormatRule {
         }
     } examples: {
         """
+        `--exhaustive-only true`:
+
         ```diff
         - if case let .success(value) = result {
         + switch result {
@@ -29,6 +32,8 @@ public extension FormatRule {
               handle(fallback)
           }
         ```
+
+        `--exhaustive-only false`:
 
         ```diff
         - if case let .success(value) = result {
@@ -118,7 +123,12 @@ extension Formatter {
 
     func convertIfCaseToSwitch(at ifIndex: Int) {
         guard var branches = ifCaseBranches(at: ifIndex) else { return }
-        if let defaultBranch = addIfCaseDefaultReturnBranch(at: ifIndex, branches: branches) {
+        let defaultBranch = branches.last?.pattern != nil
+            ? addIfCaseDefaultReturnBranch(at: ifIndex, branches: branches) : nil
+        if options.exhaustiveOnly, branches.last?.pattern != nil, defaultBranch == nil {
+            return
+        }
+        if let defaultBranch {
             branches.append(defaultBranch)
         }
         let needsBreak = branches.last?.pattern != nil || branches.contains {

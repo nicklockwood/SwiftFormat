@@ -1091,6 +1091,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var excludedDeclarationTypes: Set<String>
     public var conditionalAssignmentOnlyAfterNewProperties: Bool
     public var typeDelimiterSpacing: DelimiterSpacing
+    public var exhaustiveOnly: Bool
     public var initCoderNil: Bool
     public var dateFormat: DateFormat
     public var timeZone: FormatTimeZone
@@ -1277,6 +1278,7 @@ public struct FormatOptions: CustomStringConvertible {
                 excludedDeclarationTypes: Set<String> = [],
                 conditionalAssignmentOnlyAfterNewProperties: Bool = true,
                 typeDelimiterSpacing: DelimiterSpacing = .spaceAfter,
+                exhaustiveOnly: Bool = true,
                 initCoderNil: Bool = false,
                 dateFormat: DateFormat = .system,
                 timeZone: FormatTimeZone = .system,
@@ -1451,6 +1453,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.excludedDeclarationTypes = excludedDeclarationTypes
         self.conditionalAssignmentOnlyAfterNewProperties = conditionalAssignmentOnlyAfterNewProperties
         self.typeDelimiterSpacing = typeDelimiterSpacing
+        self.exhaustiveOnly = exhaustiveOnly
         self.initCoderNil = initCoderNil
         self.dateFormat = dateFormat
         self.timeZone = timeZone

@@ -1549,7 +1549,7 @@ struct _Descriptors {
     let exhaustiveOnly = OptionDescriptor(
         argumentName: "exhaustive-only",
         displayName: "Exhaustive Only",
-        help: "Convert only exhaustive if case chains:",
+        help: "Convert only exhaustive if case statements:",
         keyPath: \.exhaustiveOnly
     )
     let initCoderNil = OptionDescriptor(

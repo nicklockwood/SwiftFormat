@@ -1651,11 +1651,11 @@ Option | Description
 
 ## ifCase
 
-Convert if case chains matching the same value to switch statements or expressions.
+Convert if case statements matching the same value to switch statements or expressions.
 
 Option | Description
 --- | ---
-`--exhaustive-only` | Convert only exhaustive if case chains: "true" (default) or "false"
+`--exhaustive-only` | Convert only exhaustive if case statements: "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>

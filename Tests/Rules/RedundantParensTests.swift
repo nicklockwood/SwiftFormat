@@ -840,6 +840,141 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, rule: .redundantParens, options: options)
     }
 
+    func testRedundantParensRemovedAroundOptionalAnyReturnTypeInSwift64() {
+        let input = """
+        func foo() -> (any Foo)? { nil }
+        func bar(_ bar: (any Bar)?) async throws -> (any Bar)? { bar }
+        func baaz(
+            baaz: Baaz
+        ) -> (some Baaz)? {
+            baaz
+        }
+
+        let quux: () -> (any Quux)?
+        let closure = { (foo: (any Foo)?) -> (any Foo)? in foo }
+        subscript(index: Int) -> (any Foo<Bar>)? { nil }
+        """
+        let output = """
+        func foo() -> any Foo? { nil }
+        func bar(_ bar: any Bar?) async throws -> any Bar? { bar }
+        func baaz(
+            baaz: Baaz
+        ) -> some Baaz? {
+            baaz
+        }
+
+        let quux: () -> any Quux?
+        let closure = { (foo: any Foo?) -> any Foo? in foo }
+        subscript(index: Int) -> any Foo<Bar>? { nil }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantParens, options: options,
+                       exclude: [.wrapFunctionBodies, .trailingCommas, .unusedArguments])
+    }
+
+    func testParensNotRemovedAroundOptionalAnyReturnTypeBeforeSwift64() {
+        let input = """
+        func foo() -> (any Foo)? { nil }
+        weak var bar: (any Bar)!
+        """
+        let options = FormatOptions(swiftVersion: "6.3")
+        testFormatting(for: input, rule: .redundantParens, options: options,
+                       exclude: [.wrapFunctionBodies])
+    }
+
+    func testRedundantParensRemovedAroundImplicitlyUnwrappedAnyTypeInSwift64() {
+        let input = """
+        weak var foo: (any Foo)!
+        func bar() -> (any Bar)! { nil }
+        """
+        let output = """
+        weak var foo: any Foo!
+        func bar() -> any Bar! { nil }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantParens, options: options,
+                       exclude: [.wrapFunctionBodies])
+    }
+
+    func testRedundantParensRemovedAroundOptionalAnyTypeInCastInSwift64() {
+        let input = """
+        let foo = bar as (any Foo)?
+        let baaz = bar as? (any Foo)?
+        let quux = bar as! (any Foo)?
+        if bar is (any Foo)? {}
+        """
+        let output = """
+        let foo = bar as any Foo?
+        let baaz = bar as? any Foo?
+        let quux = bar as! any Foo?
+        if bar is any Foo? {}
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantParens, options: options)
+    }
+
+    func testRedundantParensRemovedAroundOptionalAnyTypeAfterParameterModifierInSwift64() {
+        let input = """
+        func foo(
+            a: inout (any Foo)?,
+            b: borrowing (any Foo)?,
+            c: consuming (any Foo)?,
+            d: sending (any Foo)?,
+            e: isolated (any Actor)? = #isolation
+        ) {}
+        """
+        let output = """
+        func foo(
+            a: inout any Foo?,
+            b: borrowing any Foo?,
+            c: consuming any Foo?,
+            d: sending any Foo?,
+            e: isolated any Actor? = #isolation
+        ) {}
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantParens, options: options,
+                       exclude: [.trailingCommas, .unusedArguments, .noExplicitOwnership])
+    }
+
+    func testRedundantParensRemovedAroundNestedOptionalAnyTypeInSwift64() {
+        let input = """
+        let foo: (any Foo)??
+        let bar: [String: (any Bar)?]
+        let baaz: (Int?, (any Baaz)?) -> Void
+        let quux: (any Quux.Type)?
+        """
+        let output = """
+        let foo: any Foo??
+        let bar: [String: any Bar?]
+        let baaz: (Int?, any Baaz?) -> Void
+        let quux: any Quux.Type?
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantParens, options: options)
+    }
+
+    func testParensNotRemovedAroundOptionalAnyTypeWithMemberAccessInSwift64() {
+        let input = """
+        let foo: (any Foo)?.Type
+        let bar = (any Foo)?.self
+        let baaz = (any Foo)?.none
+        let quux = (any Foo)?(nil)
+        let fooBar = (any Foo)??
+            .none
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, rule: .redundantParens, options: options)
+    }
+
+    func testParensNotRemovedAroundOptionalAnyTypeWithTrailingCommentInSwift64() {
+        let input = """
+        let foo: (any Foo /* comment */ )?
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, rule: .redundantParens, options: options)
+    }
+
     func testRequiredParensNotRemovedAroundAnyTypeSelf() {
         let input = """
         let foo = (any Foo).self

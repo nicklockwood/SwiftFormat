@@ -804,10 +804,12 @@ public struct ParsedExpression: CustomStringConvertible {
 
     /// Any error detected during parsing
     public var error: Expression.Error? {
-        if case let .error(error, _) = root {
+        switch root {
+        case let .error(error, _):
             return error
+        default:
+            return nil
         }
-        return nil
     }
 }
 
@@ -851,10 +853,12 @@ private enum Subexpression: CustomStringConvertible {
     var description: String {
         func arguments(_ args: [Subexpression]) -> String {
             return args.map {
-                if case .symbol(.infix(","), _, _) = $0 {
+                switch $0 {
+                case .symbol(.infix(","), _, _):
                     return "(\($0))"
+                default:
+                    return $0.description
                 }
-                return $0.description
             }.joined(separator: ", ")
         }
         switch self {
@@ -1138,10 +1142,12 @@ private extension UnicodeScalarView {
     mutating func parseNumericLiteral() -> Subexpression? {
         func scanInteger() -> String? {
             return scanCharacters {
-                if case "0" ... "9" = $0 {
+                switch $0 {
+                case "0" ... "9":
                     return true
+                default:
+                    return false
                 }
-                return false
             }
         }
 

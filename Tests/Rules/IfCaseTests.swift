@@ -10,6 +10,35 @@ import XCTest
 @testable import SwiftFormat
 
 final class IfCaseTests: XCTestCase {
+    func testEnabledByDefault() throws {
+        XCTAssertTrue(FormatRules.default.contains(.ifCase))
+        let exhaustive = """
+        if case .loading = state {
+            showSpinner()
+        } else {
+            hideSpinner()
+        }
+
+        """
+        let output = """
+        switch state {
+        case .loading:
+            showSpinner()
+        default:
+            hideSpinner()
+        }
+
+        """
+        let nonExhaustive = """
+        if case .loading = state {
+            showSpinner()
+        }
+
+        """
+        XCTAssertEqual(try format(exhaustive, rules: FormatRules.default).output, output)
+        XCTAssertEqual(try format(nonExhaustive, rules: FormatRules.default).output, nonExhaustive)
+    }
+
     func testSingleIfCase() {
         let input = """
         if case let .success(value) = result {
@@ -24,7 +53,16 @@ final class IfCaseTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
+    }
+
+    func testSingleIfCaseExhaustiveOnly() {
+        let input = """
+        if case let .success(value) = result {
+            print(value)
+        }
+        """
+        testFormatting(for: input, rule: .ifCase)
     }
 
     func testIfCaseElse() {
@@ -64,7 +102,7 @@ final class IfCaseTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testElseIfCaseWithElse() {
@@ -186,7 +224,7 @@ final class IfCaseTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testPreservesBodyComments() {
@@ -225,7 +263,7 @@ final class IfCaseTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testOptionalPatternAndFunctionSubject() {
@@ -242,7 +280,7 @@ final class IfCaseTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testNestedIfCase() {
@@ -267,7 +305,7 @@ final class IfCaseTests: XCTestCase {
         }
         """
         let outputWithSpacing = output.replacingOccurrences(of: "\n    }\ndefault:", with: "\n    }\n\ndefault:")
-        testFormatting(for: input, [output, outputWithSpacing], rules: [.ifCase])
+        testFormatting(for: input, [output, outputWithSpacing], rules: [.ifCase], options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testConsecutiveIfCases() {
@@ -295,7 +333,7 @@ final class IfCaseTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testIndentedCases() {
@@ -346,7 +384,7 @@ final class IfCaseTests: XCTestCase {
             process(state)
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testLabeledBreakInLoop() {
@@ -367,7 +405,7 @@ final class IfCaseTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testBreakInNestedLoop() {
@@ -389,7 +427,7 @@ final class IfCaseTests: XCTestCase {
         }
         """
         let outputWithSpacing = output.replacingOccurrences(of: "\n    }\ndefault:", with: "\n    }\n\ndefault:")
-        testFormatting(for: input, [output, outputWithSpacing], rules: [.ifCase])
+        testFormatting(for: input, [output, outputWithSpacing], rules: [.ifCase], options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testDoesNotConvertBooleanCondition() {
@@ -649,7 +687,7 @@ final class IfCaseTests: XCTestCase {
             return fallback
         })
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testExplicitReturnDisablesResultBuilderInNestedClosure() {
@@ -678,7 +716,7 @@ final class IfCaseTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testReturnInNestedClosureDoesNotDisableResultBuilder() {
@@ -809,7 +847,7 @@ final class IfCaseTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testTrailingReturnInComputedPropertyWithRedundantReturn() {
@@ -943,7 +981,7 @@ final class IfCaseTests: XCTestCase {
             return false
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testDoesNotAbsorbReturnWhenOnlySomeCasesReturn() {
@@ -970,7 +1008,7 @@ final class IfCaseTests: XCTestCase {
             return false
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testDoesNotAbsorbReturnWhenBranchOnlyConditionallyReturns() {
@@ -998,7 +1036,7 @@ final class IfCaseTests: XCTestCase {
         }
         """
         let outputWithSpacing = output.replacingOccurrences(of: "\n    default:", with: "\n\n    default:")
-        testFormatting(for: input, [output, outputWithSpacing], rules: [.ifCase])
+        testFormatting(for: input, [output, outputWithSpacing], rules: [.ifCase], options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testDoesNotAbsorbReturnFollowedByAnotherStatement() {
@@ -1023,7 +1061,7 @@ final class IfCaseTests: XCTestCase {
             log(state)
         }
         """
-        testFormatting(for: input, output, rule: .ifCase)
+        testFormatting(for: input, output, rule: .ifCase, options: FormatOptions(exhaustiveOnly: false))
     }
 
     func testTrailingReturnInSubscriptWithRedundantReturn() {

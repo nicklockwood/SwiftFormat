@@ -36,6 +36,7 @@
 * [hoistAwait](#hoistAwait)
 * [hoistPatternLet](#hoistPatternLet)
 * [hoistTry](#hoistTry)
+* [ifCase](#ifCase)
 * [implicitMemberExpressions](#implicitMemberExpressions)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
@@ -132,7 +133,6 @@
 * [commonTypos](#commonTypos)
 * [emptyExtensions](#emptyExtensions)
 * [forWhere](#forWhere)
-* [ifCase](#ifCase)
 * [ifExpressions](#ifExpressions)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
@@ -1651,10 +1651,16 @@ Option | Description
 
 ## ifCase
 
-Convert if case chains matching the same value to switch statements or expressions.
+Convert if case statements to switch statements or expressions.
+
+Option | Description
+--- | ---
+`--exhaustive-only` | Convert only exhaustive if case statements: "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>
+
+`--exhaustive-only true`:
 
 ```diff
 - if case let .success(value) = result {
@@ -1666,6 +1672,8 @@ Convert if case chains matching the same value to switch statements or expressio
       handle(fallback)
   }
 ```
+
+`--exhaustive-only false`:
 
 ```diff
 - if case let .success(value) = result {

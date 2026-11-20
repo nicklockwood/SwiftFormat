@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let ifCase = FormatRule(
-        help: "Convert if case statements matching the same value to switch statements or expressions.",
+        help: "Convert if case statements to switch statements or expressions.",
         options: ["exhaustive-only"],
         sharedOptions: ["linebreaks", "indent", "indent-case", "wrap-string-interpolation"]
     ) { formatter in

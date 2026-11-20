@@ -1651,7 +1651,7 @@ Option | Description
 
 ## ifCase
 
-Convert if case statements matching the same value to switch statements or expressions.
+Convert if case statements to switch statements or expressions.
 
 Option | Description
 --- | ---

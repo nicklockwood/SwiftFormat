@@ -63,17 +63,21 @@ enum XMLNode {
     }
 
     var children: [XMLNode] {
-        if case let .node(_, _, children) = self {
+        switch self {
+        case let .node(_, _, children):
             return children
+        default:
+            return []
         }
-        return []
     }
 
     var attributes: [String: String] {
-        if case let .node(_, attributes, _) = self {
+        switch self {
+        case let .node(_, attributes, _):
             return attributes
+        default:
+            return [:]
         }
-        return [:]
     }
 
     fileprivate mutating func append(_ node: XMLNode) {

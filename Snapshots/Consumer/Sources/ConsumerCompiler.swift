@@ -1014,17 +1014,19 @@ private extension Consumer {
                 () -> _Match? { return (\(_compileSkip(consumer)) ? _Match.node(nil, []) : nil) }
                 """) + "()"
             case let .replace(consumer, replacement):
-                if case let .charset(charset) = consumer {
+                switch consumer {
+                case let .charset(charset):
                     return declare("_replaceCharacter", """
                         () -> _Match? { return (\(_compileSkipCharacter(charset)) ? _Match.token(\(escapeString(replacement)), input.index(before: index) ..< index) : nil) }
                     """) + "()"
+                default:
+                    return declare("_replace", """
+                    () -> _Match? {
+                            let startIndex = index
+                            return \(_compileSkip(consumer)) ? .token(\(escapeString(replacement)), startIndex ..< index) : nil
+                        }
+                    """) + "()"
                 }
-                return declare("_replace", """
-                () -> _Match? {
-                        let startIndex = index
-                        return \(_compileSkip(consumer)) ? .token(\(escapeString(replacement)), startIndex ..< index) : nil
-                    }
-                """) + "()"
             }
         }
 

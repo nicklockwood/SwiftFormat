@@ -2023,10 +2023,12 @@ final class AnyExpressionTests: XCTestCase {
         let expression = AnyExpression(
             Expression.parse("foo + pi"),
             pureSymbols: { symbol in
-                if case .variable("foo") = symbol {
+                switch symbol {
+                case .variable("foo"):
                     return { _ in throw AnyExpression.Error.message("Disabled") }
+                default:
+                    return nil
                 }
-                return nil
             }
         )
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
@@ -2038,10 +2040,12 @@ final class AnyExpressionTests: XCTestCase {
         let expression = AnyExpression(
             Expression.parse("foo + pi"),
             impureSymbols: { symbol in
-                if case .variable("foo") = symbol {
+                switch symbol {
+                case .variable("foo"):
                     return { _ in throw AnyExpression.Error.message("Disabled") }
+                default:
+                    return nil
                 }
-                return nil
             }
         )
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in

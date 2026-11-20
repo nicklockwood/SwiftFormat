@@ -589,10 +589,12 @@ public struct FormatString {
     /// Just the placeholder values - useful for testing
     var placeholders: [Placeholder] {
         return tokens.flatMap { (token: Token) -> [Placeholder] in
-            if case let .placeholder(placeholder) = token {
+            switch token {
+            case let .placeholder(placeholder):
                 return [placeholder]
+            default:
+                return []
             }
-            return []
         }
     }
 

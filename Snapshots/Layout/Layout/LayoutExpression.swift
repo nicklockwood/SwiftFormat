@@ -265,15 +265,17 @@ struct LayoutExpression {
             anyExpression: percentageExpression,
             type: .cgFloat,
             impureSymbols: { symbol in
-                if case .postfix("%") = symbol {
+                switch symbol {
+                case .postfix("%"):
                     return { [unowned node] anyArgs in
                         guard let value = anyArgs[0] as? Double else {
                             throw Expression.Error.message("Type mismatch")
                         }
                         return try node.doubleValue(forSymbol: prop) / 100 * value
                     }
+                default:
+                    return impureSymbols(symbol)
                 }
-                return impureSymbols(symbol)
             },
             for: node
         ) else {
@@ -300,12 +302,14 @@ struct LayoutExpression {
             percentageExpression: sizeExpression,
             for: "parent.containerSize.\(prop)", in: node,
             impureSymbols: { symbol in
-                if case .variable("auto") = symbol {
+                switch symbol {
+                case .variable("auto"):
                     return { [unowned node] _ in
                         try node.doubleValue(forSymbol: sizeProp)
                     }
+                default:
+                    return nil
                 }
-                return nil
             }
         ) else {
             return nil
@@ -331,12 +335,14 @@ struct LayoutExpression {
             percentageExpression: contentSizeExpression,
             for: "containerSize.\(prop)", in: node,
             impureSymbols: { symbol in
-                if case .variable("auto") = symbol {
+                switch symbol {
+                case .variable("auto"):
                     return { [unowned node] _ in
                         try node.doubleValue(forSymbol: sizeProp)
                     }
+                default:
+                    return nil
                 }
-                return nil
             }
         ) else {
             return nil

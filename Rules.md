@@ -151,6 +151,7 @@
 * [preferStructSwiftTestingSuites](#preferStructSwiftTestingSuites)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
+* [preferZeroArgumentOnChange](#preferZeroArgumentOnChange)
 * [privateSwiftUIDynamicProperties](#privateSwiftUIDynamicProperties)
 * [propertyTypes](#propertyTypes)
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
@@ -2799,6 +2800,33 @@ Option | Description
 +         #expect(myFeature.screens.count == 8)
 +     }
 + }
+```
+
+</details>
+<br/>
+
+## preferZeroArgumentOnChange
+
+Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  Toggle("Notifications", isOn: $isOn)
+-   .onChange(of: isOn) { _, newValue in
+-     service.update(isEnabled: newValue)
++   .onChange(of: isOn) {
++     service.update(isEnabled: isOn)
+    }
+```
+
+```diff
+  ScrollView { content }
+-   .onChange(of: store.items) { _, _ in
++   .onChange(of: store.items) {
+      scrollToBottom()
+    }
 ```
 
 </details>

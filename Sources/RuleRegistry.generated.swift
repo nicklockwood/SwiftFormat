@@ -86,6 +86,7 @@ let ruleRegistry: [String: FormatRule] = [
     "preferStructSwiftTestingSuites": .preferStructSwiftTestingSuites,
     "preferSwiftStringAPI": .preferSwiftStringAPI,
     "preferSwiftTesting": .preferSwiftTesting,
+    "preferZeroArgumentOnChange": .preferZeroArgumentOnChange,
     "privateStateVariables": .privateStateVariables,
     "privateSwiftUIDynamicProperties": .privateSwiftUIDynamicProperties,
     "propertyTypes": .propertyTypes,

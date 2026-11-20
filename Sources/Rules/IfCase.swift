@@ -11,7 +11,6 @@ import Foundation
 public extension FormatRule {
     static let ifCase = FormatRule(
         help: "Convert if case chains matching the same value to switch statements or expressions.",
-        disabledByDefault: true,
         options: ["exhaustive-only"],
         sharedOptions: ["linebreaks", "indent", "indent-case", "wrap-string-interpolation"]
     ) { formatter in

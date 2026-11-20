@@ -10,6 +10,35 @@ import XCTest
 @testable import SwiftFormat
 
 final class IfCaseTests: XCTestCase {
+    func testEnabledByDefault() throws {
+        XCTAssertTrue(FormatRules.default.contains(.ifCase))
+        let exhaustive = """
+        if case .loading = state {
+            showSpinner()
+        } else {
+            hideSpinner()
+        }
+
+        """
+        let output = """
+        switch state {
+        case .loading:
+            showSpinner()
+        default:
+            hideSpinner()
+        }
+
+        """
+        let nonExhaustive = """
+        if case .loading = state {
+            showSpinner()
+        }
+
+        """
+        XCTAssertEqual(try format(exhaustive, rules: FormatRules.default).output, output)
+        XCTAssertEqual(try format(nonExhaustive, rules: FormatRules.default).output, nonExhaustive)
+    }
+
     func testSingleIfCase() {
         let input = """
         if case let .success(value) = result {

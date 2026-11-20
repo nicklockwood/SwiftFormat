@@ -37,6 +37,14 @@ public extension FormatRule {
             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
             let isUnsafeKeyword = formatter.isUnsafeExpression(at: previousIndex)
                 || (prevToken == .identifier("unsafe") && nextToken == .keyword("in"))
+            // In Swift 6.4+ (SE-0521), `(any Foo)?` can be written as `any Foo?`
+            if formatter.options.swiftVersion >= "6.4",
+               formatter.isOptionalOpaqueOrExistentialType(in: i ... closingIndex)
+            {
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
+                return
+            }
             switch nextToken {
             case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
                  .identifier("async"), .keyword("in"):
@@ -176,17 +184,11 @@ public extension FormatRule {
                         break
                     }
                 }
-                let isOptionalOpaqueOrExistentialType = formatter.isOptionalOpaqueOrExistentialType(in: i ... closingIndex)
                 guard formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                       formatter.index(in: i + 1 ..< closingIndex, where: {
                           switch $0 {
                           case .operator(_, .infix), .identifier("any"), .identifier("some"), .identifier("each"),
                                .keyword("as"), .keyword("is"), .keyword("try"), .keyword("await"):
-                              if formatter.options.swiftVersion >= "6.4", isOptionalOpaqueOrExistentialType,
-                                 [.identifier("any"), .identifier("some")].contains($0)
-                              {
-                                  return false
-                              }
                               switch prevToken {
                               // TODO: add option to always strip parens in this case (or only for boolean operators?)
                               case .operator("=", .infix) where $0 == .operator("->", .infix):
@@ -195,9 +197,6 @@ public extension FormatRule {
                                   return true
                               default:
                                   break
-                              }
-                              if formatter.options.swiftVersion >= "6.4", isOptionalOpaqueOrExistentialType {
-                                  return false
                               }
                               switch nextToken {
                               case .operator(_, .postfix), .operator(_, .infix), .keyword("as"), .keyword("is"):
@@ -279,16 +278,51 @@ extension Formatter {
         return startIndex ... endIndex
     }
 
+    /// Whether the parens in the given range wrap an `any` / `some` type that is followed by `?` or `!`,
+    /// like `(any Foo)?`, and can be removed without changing the meaning of the type.
     func isOptionalOpaqueOrExistentialType(in range: ClosedRange<Int>) -> Bool {
-        guard next(.nonSpaceOrCommentOrLinebreak, after: range.upperBound) == .operator("?", .postfix),
+        guard token(at: range.upperBound + 1)?.isUnwrapOperator == true,
               let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound),
               [.identifier("any"), .identifier("some")].contains(tokens[firstTokenIndex]),
               let type = parseType(at: firstTokenIndex, excludeProtocolCompositions: true),
-              let lastTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound)
+              type.range.upperBound == index(of: .nonSpaceOrLinebreak, before: range.upperBound)
         else {
             return false
         }
 
-        return type.range.upperBound == lastTokenIndex
+        // Parens following an identifier or closing scope are a call or subscript, not a type,
+        // unless the identifier is a parameter modifier like `isolated (any Actor)?`.
+        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: range.lowerBound) {
+            switch tokens[prevIndex] {
+            case let .identifier(name):
+                guard ["isolated", "borrowing", "consuming", "sending", "__owned", "__shared"].contains(name) else {
+                    return false
+                }
+            case .operator(_, .postfix):
+                // The type being cast to in `as? (any Foo)?` or `as! (any Foo)?`
+                guard token(at: prevIndex - 1) == .keyword("as") else {
+                    return false
+                }
+            case .endOfScope(")"), .endOfScope("]"), .endOfScope(">"), .endOfScope("}"), .stringBody:
+                return false
+            default:
+                break
+            }
+        }
+
+        // `any Foo?.Type`, `any Foo?.self`, and `any Foo?(...)` aren't equivalent to the parenthesized form
+        var endOfType = range.upperBound + 1
+        while token(at: endOfType + 1)?.isUnwrapOperator == true {
+            endOfType += 1
+        }
+        if next(.nonSpaceOrCommentOrLinebreak, after: endOfType)?.isOperator(".") == true {
+            return false
+        }
+        switch token(at: endOfType + 1) {
+        case .startOfScope("(")?, .startOfScope("[")?:
+            return false
+        default:
+            return true
+        }
     }
 }

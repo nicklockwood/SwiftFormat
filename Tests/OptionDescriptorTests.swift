@@ -332,6 +332,21 @@ final class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try descriptor.toOptions(swiftLintDefaults, &options))
     }
 
+    func testAttributeOrder() throws {
+        let descriptor = Descriptors.attributeOrder
+        var options = FormatOptions()
+        try descriptor.toOptions("available, @MainActor, *, @Testing.Test, Testing::Suite", &options)
+        XCTAssertEqual(options.attributeOrder, ["available", "MainActor", "*", "Testing.Test", "Testing::Suite"])
+        XCTAssertEqual(descriptor.fromOptions(options), "available,MainActor,*,Testing.Test,Testing::Suite")
+        XCTAssertTrue(descriptor.validateArgument(""))
+        XCTAssertFalse(descriptor.validateArgument("Test,Test"))
+        XCTAssertFalse(descriptor.validateArgument("Test,@Test"))
+        XCTAssertFalse(descriptor.validateArgument("*,*"))
+        XCTAssertFalse(descriptor.validateArgument("@*"))
+        XCTAssertFalse(descriptor.validateArgument("@Test()"))
+        XCTAssertFalse(descriptor.validateArgument("Testing..Test"))
+    }
+
     func testVisibilityOrder() {
         let argument = "instanceLifecycle, beforeMarks, open, public, package, internal, private, fileprivate"
 

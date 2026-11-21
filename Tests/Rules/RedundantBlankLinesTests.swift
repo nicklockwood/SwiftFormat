@@ -39,15 +39,15 @@ final class RedundantBlankLinesTests: XCTestCase {
 
     func testRemovesBlankLinesBetweenSequentialAttributes() {
         let input = """
-        @objc
-
         @MainActor
+
+        @objc
 
         class Foo: NSObject {}
         """
         let output = """
-        @objc
         @MainActor
+        @objc
         class Foo: NSObject {}
         """
         testFormatting(for: input, output, rule: .redundantBlankLines)

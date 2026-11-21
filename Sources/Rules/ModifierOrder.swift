@@ -90,18 +90,7 @@ public extension FormatRule {
 extension Formatter {
     /// Swift modifier keywords, in preferred order
     var preferredModifierOrder: [String] {
-        var priorities = [String: Int]()
-        for (i, modifiers) in _FormatRules.defaultModifierOrder.enumerated() {
-            for modifier in modifiers {
-                priorities[modifier] = i
-            }
-        }
-        var order = options.modifierOrder.flatMap { _FormatRules.mapModifiers($0) ?? [] }
-        for (i, modifiers) in _FormatRules.defaultModifierOrder.enumerated() {
-            let insertionPoint = order.firstIndex(where: { modifiers.contains($0) }) ??
-                order.firstIndex(where: { (priorities[$0] ?? 0) > i }) ?? order.count
-            order.insert(contentsOf: modifiers.filter { !order.contains($0) }, at: insertionPoint)
-        }
-        return order
+        let order = options.modifierOrder.flatMap { _FormatRules.mapModifiers($0) ?? [] }
+        return _FormatRules.mergePreferredOrder(order, with: _FormatRules.defaultModifierOrder)
     }
 }

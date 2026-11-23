@@ -138,7 +138,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
-* [onChangeArguments](#onChangeArguments)
+* [onChangeParameters](#onChangeParameters)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferContains](#preferContains)
 * [preferCountWhere](#preferCountWhere)
@@ -2267,21 +2267,14 @@ Option | Description
 </details>
 <br/>
 
-## onChangeArguments
+## onChangeParameters
 
-Use the preferred number of arguments in SwiftUI `onChange(of:)` closures.
-By default, prefers the zero-argument closure when the old value is unused.
+Prefer the SwiftUI `onChange(of:)` closure with no parameters when the old value is unused.
 The new value is only replaced with the observed value when that value is a stored
 property of the enclosing type, declared in the same file.
 
-Option | Description
---- | ---
-`--on-change-arguments` | Arguments in SwiftUI onChange closures: "zero" (default)
-
 <details>
 <summary>Examples</summary>
-
-`--on-change-arguments zero` (default):
 
 ```diff
   struct SettingsView: View {

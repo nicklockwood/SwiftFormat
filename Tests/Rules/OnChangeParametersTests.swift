@@ -1,5 +1,5 @@
 //
-//  OnChangeArgumentsTests.swift
+//  OnChangeParametersTests.swift
 //  SwiftFormatTests
 //
 //  Created by Miguel Jimenez on 2026-11-20.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-final class OnChangeArgumentsTests: XCTestCase {
+final class OnChangeParametersTests: XCTestCase {
     func testRemovesUnusedArguments() {
         let input = """
         content
@@ -23,7 +23,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 scrollToBottom()
             }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testRemovesUnusedArgumentsOnSingleLine() {
@@ -33,7 +33,7 @@ final class OnChangeArgumentsTests: XCTestCase {
         let output = """
         content.onChange(of: store.items) { scrollToBottom() }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testRemovesUnusedArgumentsWithInitialParameter() {
@@ -49,7 +49,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 updateLayout()
             }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testRemovesArgumentsOnTheirOwnLine() {
@@ -66,7 +66,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 scrollToBottom()
             }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testReplacesNewValueWithStoredProperty() {
@@ -94,7 +94,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testReplacesNewValueWithStoredPropertyUsingExplicitSelf() {
@@ -126,7 +126,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments, exclude: [.redundantSelf])
+        testFormatting(for: input, output, rule: .onChangeParameters, exclude: [.redundantSelf])
     }
 
     func testReplacesNewValueWithStoredPropertyWithObservers() {
@@ -162,7 +162,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testRemovesArgumentWithSameNameAsObservedValue() {
@@ -190,7 +190,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testDoesNotReplaceMemberOrArgumentLabelWithSameName() {
@@ -218,7 +218,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testReplacesNewValueInSeparateBranches() {
@@ -256,7 +256,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testReplacesNewValueWithStoredPropertyOfExtendedType() {
@@ -296,7 +296,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .onChangeArguments)
+        testFormatting(for: input, output, rule: .onChangeParameters)
     }
 
     func testPreservesNewValueOfComputedProperty() {
@@ -316,7 +316,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesNewValueOfComputedPropertyOfExtendedType() {
@@ -340,7 +340,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesNewValueOfPropertyDeclaredElsewhere() {
@@ -359,7 +359,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesNewValueOutsideOfTypeBody() {
@@ -369,7 +369,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 service.update(isEnabled: newValue)
             }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesClosureThatUsesOldValue() {
@@ -379,7 +379,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 service.update(from: oldValue, to: newValue)
             }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesDeprecatedSingleArgumentClosure() {
@@ -392,7 +392,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 service.update(isEnabled: $0)
             }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesObservedValueThatIsNotMemberAccessChain() {
@@ -408,7 +408,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 update(title)
             }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesNewValueUsedInNestedClosure() {
@@ -426,7 +426,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesNewValueUsedAfterFirstStatement() {
@@ -443,7 +443,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesNewValueUsedAfterStatementInConditionalBody() {
@@ -462,7 +462,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesShadowedNewValue() {
@@ -481,7 +481,7 @@ final class OnChangeArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesClosureWithCaptureListOrTypes() {
@@ -497,7 +497,7 @@ final class OnChangeArgumentsTests: XCTestCase {
                 refresh()
             }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 
     func testPreservesOnChangeWithKeyPathOrOtherParameters() {
@@ -511,6 +511,6 @@ final class OnChangeArgumentsTests: XCTestCase {
             .onChange(of: isOn, perform: { _, _ in refresh() })
             .onChange(isOn) { _, _ in refresh() }
         """
-        testFormatting(for: input, rule: .onChangeArguments)
+        testFormatting(for: input, rule: .onChangeParameters)
     }
 }

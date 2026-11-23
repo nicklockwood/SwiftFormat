@@ -1552,12 +1552,6 @@ struct _Descriptors {
         help: "Convert only exhaustive if case statements:",
         keyPath: \.exhaustiveOnly
     )
-    let onChangeArguments = OptionDescriptor(
-        argumentName: "on-change-arguments",
-        displayName: "onChange Arguments",
-        help: "Arguments in SwiftUI onChange closures:",
-        keyPath: \.onChangeArguments
-    )
     let initCoderNil = OptionDescriptor(
         argumentName: "init-coder-nil",
         displayName: "Return nil in init?(coder)",

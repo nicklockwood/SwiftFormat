@@ -181,6 +181,13 @@ public enum InitTypes: String, CaseIterable {
     case inferred
 }
 
+/// Argument type for the number of arguments preferred in SwiftUI `onChange(of:)` closures
+public enum OnChangeArguments: String, CaseIterable {
+    /// Prefers the zero-argument closure when the old value is unused:
+    /// `.onChange(of: foo) { _, _ in bar() }` becomes `.onChange(of: foo) { bar() }`
+    case zero
+}
+
 /// Whether annotations are moved even when the type only appears once.
 public enum PropertyTypesMode: String, CaseIterable {
     case always
@@ -1092,6 +1099,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var conditionalAssignmentOnlyAfterNewProperties: Bool
     public var typeDelimiterSpacing: DelimiterSpacing
     public var exhaustiveOnly: Bool
+    public var onChangeArguments: OnChangeArguments
     public var initCoderNil: Bool
     public var dateFormat: DateFormat
     public var timeZone: FormatTimeZone
@@ -1279,6 +1287,7 @@ public struct FormatOptions: CustomStringConvertible {
                 conditionalAssignmentOnlyAfterNewProperties: Bool = true,
                 typeDelimiterSpacing: DelimiterSpacing = .spaceAfter,
                 exhaustiveOnly: Bool = true,
+                onChangeArguments: OnChangeArguments = .zero,
                 initCoderNil: Bool = false,
                 dateFormat: DateFormat = .system,
                 timeZone: FormatTimeZone = .system,
@@ -1454,6 +1463,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.conditionalAssignmentOnlyAfterNewProperties = conditionalAssignmentOnlyAfterNewProperties
         self.typeDelimiterSpacing = typeDelimiterSpacing
         self.exhaustiveOnly = exhaustiveOnly
+        self.onChangeArguments = onChangeArguments
         self.initCoderNil = initCoderNil
         self.dateFormat = dateFormat
         self.timeZone = timeZone

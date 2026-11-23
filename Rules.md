@@ -138,6 +138,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
+* [onChangeArguments](#onChangeArguments)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferContains](#preferContains)
 * [preferCountWhere](#preferCountWhere)
@@ -148,7 +149,6 @@
 * [preferLazyMap](#preferLazyMap)
 * [preferMinOverSorted](#preferMinOverSorted)
 * [preferNonfailableStringConversions](#preferNonfailableStringConversions)
-* [preferOnChangeZeroArgument](#preferOnChangeZeroArgument)
 * [preferStructSwiftTestingSuites](#preferStructSwiftTestingSuites)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
@@ -2267,6 +2267,48 @@ Option | Description
 </details>
 <br/>
 
+## onChangeArguments
+
+Use the preferred number of arguments in SwiftUI `onChange(of:)` closures.
+By default, prefers the zero-argument closure when the old value is unused.
+The new value is only replaced with the observed value when that value is a stored
+property of the enclosing type, declared in the same file.
+
+Option | Description
+--- | ---
+`--on-change-arguments` | Arguments in SwiftUI onChange closures: "zero" (default)
+
+<details>
+<summary>Examples</summary>
+
+`--on-change-arguments zero` (default):
+
+```diff
+  struct SettingsView: View {
+    @State private var isOn = false
+
+    var body: some View {
+      Toggle("Notifications", isOn: $isOn)
+-       .onChange(of: isOn) { _, newValue in
+-         service.update(isEnabled: newValue)
++       .onChange(of: isOn) {
++         service.update(isEnabled: isOn)
+        }
+    }
+  }
+```
+
+```diff
+  ScrollView { content }
+-   .onChange(of: store.items) { _, _ in
++   .onChange(of: store.items) {
+      scrollToBottom()
+    }
+```
+
+</details>
+<br/>
+
 ## opaqueGenericParameters
 
 Use opaque generic parameters (`some Protocol`) instead of generic parameters
@@ -2690,41 +2732,6 @@ Replace unwrapped `data(using: .utf8)` and `String(data:encoding: .utf8)` conver
 
 - guard let string = String(data: data, encoding: .utf8) else { return }
 + let string = String(decoding: data, as: UTF8.self)
-```
-
-</details>
-<br/>
-
-## preferOnChangeZeroArgument
-
-Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.
-The new value is only replaced with the observed value when that value is a stored
-property of the enclosing type, declared in the same file.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  struct SettingsView: View {
-    @State private var isOn = false
-
-    var body: some View {
-      Toggle("Notifications", isOn: $isOn)
--       .onChange(of: isOn) { _, newValue in
--         service.update(isEnabled: newValue)
-+       .onChange(of: isOn) {
-+         service.update(isEnabled: isOn)
-        }
-    }
-  }
-```
-
-```diff
-  ScrollView { content }
--   .onChange(of: store.items) { _, _ in
-+   .onChange(of: store.items) {
-      scrollToBottom()
-    }
 ```
 
 </details>

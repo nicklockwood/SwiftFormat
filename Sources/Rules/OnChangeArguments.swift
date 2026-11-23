@@ -1,5 +1,5 @@
 //
-//  PreferOnChangeZeroArgument.swift
+//  OnChangeArguments.swift
 //  SwiftFormat
 //
 //  Created by Miguel Jimenez on 2026-11-20.
@@ -9,17 +9,20 @@
 import Foundation
 
 public extension FormatRule {
-    /// Prefer the zero-argument `onChange(of:)` closure when the old value is ignored
-    static let preferOnChangeZeroArgument = FormatRule(
+    /// Use a consistent number of arguments in SwiftUI `onChange(of:)` closures
+    static let onChangeArguments = FormatRule(
         help: """
-        Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.
+        Use the preferred number of arguments in SwiftUI `onChange(of:)` closures.
+        By default, prefers the zero-argument closure when the old value is unused.
         The new value is only replaced with the observed value when that value is a stored
         property of the enclosing type, declared in the same file.
         """,
-        disabledByDefault: true
+        disabledByDefault: true,
+        options: ["on-change-arguments"]
     ) { formatter in
         formatter.forEach(.identifier("onChange")) { onChangeIndex, _ in
-            guard let onChange = formatter.parseOnChangeIgnoringOldValue(at: onChangeIndex),
+            guard formatter.options.onChangeArguments == .zero,
+                  let onChange = formatter.parseOnChangeIgnoringOldValue(at: onChangeIndex),
                   let newValueUsages = formatter.replaceableNewValueUsages(in: onChange)
             else { return }
 
@@ -36,6 +39,8 @@ public extension FormatRule {
         }
     } examples: {
         """
+        `--on-change-arguments zero` (default):
+
         ```diff
           struct SettingsView: View {
             @State private var isOn = false

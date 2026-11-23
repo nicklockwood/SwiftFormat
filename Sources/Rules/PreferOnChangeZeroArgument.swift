@@ -1,5 +1,5 @@
 //
-//  PreferZeroArgumentOnChange.swift
+//  PreferOnChangeZeroArgument.swift
 //  SwiftFormat
 //
 //  Created by Miguel Jimenez on 2026-11-20.
@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     /// Prefer the zero-argument `onChange(of:)` closure when the old value is ignored
-    static let preferZeroArgumentOnChange = FormatRule(
+    static let preferOnChangeZeroArgument = FormatRule(
         help: "Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.",
         disabledByDefault: true
     ) { formatter in

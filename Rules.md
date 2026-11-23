@@ -148,10 +148,10 @@
 * [preferLazyMap](#preferLazyMap)
 * [preferMinOverSorted](#preferMinOverSorted)
 * [preferNonfailableStringConversions](#preferNonfailableStringConversions)
+* [preferOnChangeZeroArgument](#preferOnChangeZeroArgument)
 * [preferStructSwiftTestingSuites](#preferStructSwiftTestingSuites)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
-* [preferZeroArgumentOnChange](#preferZeroArgumentOnChange)
 * [privateSwiftUIDynamicProperties](#privateSwiftUIDynamicProperties)
 * [propertyTypes](#propertyTypes)
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
@@ -2695,6 +2695,39 @@ Replace unwrapped `data(using: .utf8)` and `String(data:encoding: .utf8)` conver
 </details>
 <br/>
 
+## preferOnChangeZeroArgument
+
+Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct SettingsView: View {
+    @State private var isOn = false
+
+    var body: some View {
+      Toggle("Notifications", isOn: $isOn)
+-       .onChange(of: isOn) { _, newValue in
+-         service.update(isEnabled: newValue)
++       .onChange(of: isOn) {
++         service.update(isEnabled: isOn)
+        }
+    }
+  }
+```
+
+```diff
+  ScrollView { content }
+-   .onChange(of: store.items) { _, _ in
++   .onChange(of: store.items) {
+      scrollToBottom()
+    }
+```
+
+</details>
+<br/>
+
 ## preferStructSwiftTestingSuites
 
 Use structs for Swift Testing suites where possible.
@@ -2800,39 +2833,6 @@ Option | Description
 +         #expect(myFeature.screens.count == 8)
 +     }
 + }
-```
-
-</details>
-<br/>
-
-## preferZeroArgumentOnChange
-
-Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  struct SettingsView: View {
-    @State private var isOn = false
-
-    var body: some View {
-      Toggle("Notifications", isOn: $isOn)
--       .onChange(of: isOn) { _, newValue in
--         service.update(isEnabled: newValue)
-+       .onChange(of: isOn) {
-+         service.update(isEnabled: isOn)
-        }
-    }
-  }
-```
-
-```diff
-  ScrollView { content }
--   .onChange(of: store.items) { _, _ in
-+   .onChange(of: store.items) {
-      scrollToBottom()
-    }
 ```
 
 </details>

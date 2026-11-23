@@ -1,5 +1,5 @@
 //
-//  PreferZeroArgumentOnChangeTests.swift
+//  PreferOnChangeZeroArgumentTests.swift
 //  SwiftFormatTests
 //
 //  Created by Miguel Jimenez on 2026-11-20.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-final class PreferZeroArgumentOnChangeTests: XCTestCase {
+final class PreferOnChangeZeroArgumentTests: XCTestCase {
     func testRemovesUnusedArguments() {
         let input = """
         content
@@ -23,7 +23,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 scrollToBottom()
             }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testRemovesUnusedArgumentsOnSingleLine() {
@@ -33,7 +33,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
         let output = """
         content.onChange(of: store.items) { scrollToBottom() }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testRemovesUnusedArgumentsWithInitialParameter() {
@@ -49,7 +49,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 updateLayout()
             }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testRemovesArgumentsOnTheirOwnLine() {
@@ -66,7 +66,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 scrollToBottom()
             }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testReplacesNewValueWithStoredProperty() {
@@ -94,7 +94,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testReplacesNewValueWithStoredPropertyUsingExplicitSelf() {
@@ -126,7 +126,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange, exclude: [.redundantSelf])
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument, exclude: [.redundantSelf])
     }
 
     func testReplacesNewValueWithStoredPropertyWithObservers() {
@@ -162,7 +162,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testRemovesArgumentWithSameNameAsObservedValue() {
@@ -190,7 +190,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testDoesNotReplaceMemberOrArgumentLabelWithSameName() {
@@ -218,7 +218,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testReplacesNewValueInSeparateBranches() {
@@ -256,7 +256,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testReplacesNewValueWithStoredPropertyOfExtendedType() {
@@ -296,7 +296,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesNewValueOfComputedProperty() {
@@ -316,7 +316,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesNewValueOfComputedPropertyOfExtendedType() {
@@ -340,7 +340,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesNewValueOfPropertyDeclaredElsewhere() {
@@ -359,7 +359,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesNewValueOutsideOfTypeBody() {
@@ -369,7 +369,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 service.update(isEnabled: newValue)
             }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesClosureThatUsesOldValue() {
@@ -379,7 +379,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 service.update(from: oldValue, to: newValue)
             }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesDeprecatedSingleArgumentClosure() {
@@ -392,7 +392,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 service.update(isEnabled: $0)
             }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesObservedValueThatIsNotMemberAccessChain() {
@@ -408,7 +408,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 update(title)
             }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesNewValueUsedInNestedClosure() {
@@ -426,7 +426,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesNewValueUsedAfterFirstStatement() {
@@ -443,7 +443,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesNewValueUsedAfterStatementInConditionalBody() {
@@ -462,7 +462,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesShadowedNewValue() {
@@ -481,7 +481,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesClosureWithCaptureListOrTypes() {
@@ -497,7 +497,7 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
                 refresh()
             }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 
     func testPreservesOnChangeWithKeyPathOrOtherParameters() {
@@ -511,6 +511,6 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
             .onChange(of: isOn, perform: { _, _ in refresh() })
             .onChange(isOn) { _, _ in refresh() }
         """
-        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, rule: .preferOnChangeZeroArgument)
     }
 }

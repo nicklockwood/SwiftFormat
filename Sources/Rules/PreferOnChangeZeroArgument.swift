@@ -11,7 +11,11 @@ import Foundation
 public extension FormatRule {
     /// Prefer the zero-argument `onChange(of:)` closure when the old value is ignored
     static let preferOnChangeZeroArgument = FormatRule(
-        help: "Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.",
+        help: """
+        Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.
+        The new value is only replaced with the observed value when that value is a stored
+        property of the enclosing type, declared in the same file.
+        """,
         disabledByDefault: true
     ) { formatter in
         formatter.forEach(.identifier("onChange")) { onChangeIndex, _ in

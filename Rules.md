@@ -2698,6 +2698,8 @@ Replace unwrapped `data(using: .utf8)` and `String(data:encoding: .utf8)` conver
 ## preferOnChangeZeroArgument
 
 Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is unused.
+The new value is only replaced with the observed value when that value is a stored
+property of the enclosing type, declared in the same file.
 
 <details>
 <summary>Examples</summary>

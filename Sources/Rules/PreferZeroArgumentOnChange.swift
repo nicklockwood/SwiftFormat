@@ -33,12 +33,18 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-          Toggle("Notifications", isOn: $isOn)
-        -   .onChange(of: isOn) { _, newValue in
-        -     service.update(isEnabled: newValue)
-        +   .onChange(of: isOn) {
-        +     service.update(isEnabled: isOn)
+          struct SettingsView: View {
+            @State private var isOn = false
+
+            var body: some View {
+              Toggle("Notifications", isOn: $isOn)
+        -       .onChange(of: isOn) { _, newValue in
+        -         service.update(isEnabled: newValue)
+        +       .onChange(of: isOn) {
+        +         service.update(isEnabled: isOn)
+                }
             }
+          }
         ```
 
         ```diff
@@ -140,15 +146,10 @@ extension Formatter {
             return []
         }
 
-        // The observed value must be cheap to evaluate again, and valid anywhere the argument
-        // was used, so only support a plain member access chain like `foo` or `self.foo.bar`.
+        // The observed value is read again wherever the argument was used, so it must be a stored
+        // property. Reading a computed property again could be expensive or return a different value.
         let observedValue = tokens[onChange.observedValueRange]
-        for (offset, token) in observedValue.enumerated() {
-            guard offset.isMultiple(of: 2) ? token.isIdentifier : token.isOperator(".") else { return nil }
-        }
-        guard observedValue.count.isMultiple(of: 2) == false,
-              observedValue.first?.string.hasPrefix("$") == false
-        else { return nil }
+        guard isStoredPropertyOfEnclosingType(observedValue, at: onChange.closureStartIndex) else { return nil }
 
         // A local declaration that shadows the argument, or the root of the observed value,
         // means later references may no longer refer to the same value.
@@ -172,6 +173,73 @@ extension Formatter {
         }
 
         return usages
+    }
+
+    /// Whether the given tokens are a reference to a stored property of the type that contains
+    /// the given index, like `foo` or `self.foo`, where the property is declared in the same file.
+    /// Other values, like `foo.bar`, may be computed properties declared in another file.
+    func isStoredPropertyOfEnclosingType(_ observedValue: ArraySlice<Token>, at index: Int) -> Bool {
+        let components = observedValue.map(\.string)
+        guard components.count == 1 || (components.count == 3 && components[0] == "self" && components[1] == "."),
+              let propertyToken = observedValue.last,
+              propertyToken.isIdentifier,
+              propertyToken != .identifier("self"),
+              !propertyToken.string.hasPrefix("$")
+        else { return false }
+
+        // Find the body of the type that contains the `onChange` call
+        var scopeIndex = startOfScope(at: index)
+        while let currentScopeIndex = scopeIndex, !isStartOfTypeBody(at: currentScopeIndex) {
+            scopeIndex = startOfScope(at: currentScopeIndex)
+        }
+        guard let typeBodyStart = scopeIndex,
+              let typeBodyEnd = endOfScope(at: typeBodyStart)
+        else { return false }
+
+        var typeBodies = [typeBodyStart ... typeBodyEnd]
+
+        // The stored properties of an extended type are declared in the type itself
+        if lastSignificantKeyword(at: typeBodyStart, excluding: ["where"]) == "extension" {
+            guard let extensionIndex = indexOfLastSignificantKeyword(at: typeBodyStart, excluding: ["where"]),
+                  let typeNameIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: extensionIndex),
+                  tokens[typeNameIndex].isIdentifier,
+                  next(.nonSpaceOrCommentOrLinebreak, after: typeNameIndex)?.isOperator(".") != true
+            else { return false }
+
+            let extendedTypeBodies = tokens.indices.compactMap { keywordIndex -> ClosedRange<Int>? in
+                guard ["struct", "class", "actor", "enum"].contains(tokens[keywordIndex].string),
+                      tokens[keywordIndex].isKeyword,
+                      next(.nonSpaceOrCommentOrLinebreak, after: keywordIndex) == tokens[typeNameIndex],
+                      let bodyStart = self.index(of: .startOfScope("{"), after: keywordIndex),
+                      isStartOfTypeBody(at: bodyStart),
+                      indexOfLastSignificantKeyword(at: bodyStart, excluding: ["where"]) == keywordIndex,
+                      let bodyEnd = endOfScope(at: bodyStart)
+                else { return nil }
+                return bodyStart ... bodyEnd
+            }
+
+            guard extendedTypeBodies.count == 1 else { return false }
+            typeBodies += extendedTypeBodies
+        }
+
+        // The type must declare a stored property with this name, and no other declaration
+        // with the same name in the type can be a computed property that would shadow it.
+        var hasStoredProperty = false
+        for typeBody in typeBodies {
+            for introducerIndex in typeBody where [.keyword("let"), .keyword("var")].contains(tokens[introducerIndex]) {
+                guard let property = parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+                      property.identifier == propertyToken.string
+                else { continue }
+
+                guard isStoredProperty(atIntroducerIndex: introducerIndex) else { return false }
+
+                if startOfScope(at: introducerIndex) == typeBody.lowerBound {
+                    hasStoredProperty = true
+                }
+            }
+        }
+
+        return hasStoredProperty
     }
 
     /// Whether a complete statement in the given closure body is executed before the token at the given index

@@ -2813,12 +2813,18 @@ Prefer the zero-argument SwiftUI `onChange(of:)` closure when the old value is u
 <summary>Examples</summary>
 
 ```diff
-  Toggle("Notifications", isOn: $isOn)
--   .onChange(of: isOn) { _, newValue in
--     service.update(isEnabled: newValue)
-+   .onChange(of: isOn) {
-+     service.update(isEnabled: isOn)
+  struct SettingsView: View {
+    @State private var isOn = false
+
+    var body: some View {
+      Toggle("Notifications", isOn: $isOn)
+-       .onChange(of: isOn) { _, newValue in
+-         service.update(isEnabled: newValue)
++       .onChange(of: isOn) {
++         service.update(isEnabled: isOn)
+        }
     }
+  }
 ```
 
 ```diff

@@ -69,92 +69,307 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
         testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
     }
 
-    func testReplacesNewValueWithObservedValue() {
+    func testReplacesNewValueWithStoredProperty() {
         let input = """
-        Toggle("Notifications", isOn: $isOn)
-            .onChange(of: isOn) { _, newValue in
-                service.update(isEnabled: newValue)
+        struct ContentView: View {
+            @State private var isOn = false
+
+            var body: some View {
+                Toggle("Notifications", isOn: $isOn)
+                    .onChange(of: isOn) { _, newValue in
+                        service.update(isEnabled: newValue)
+                    }
             }
+        }
         """
         let output = """
-        Toggle("Notifications", isOn: $isOn)
-            .onChange(of: isOn) {
-                service.update(isEnabled: isOn)
+        struct ContentView: View {
+            @State private var isOn = false
+
+            var body: some View {
+                Toggle("Notifications", isOn: $isOn)
+                    .onChange(of: isOn) {
+                        service.update(isEnabled: isOn)
+                    }
             }
+        }
         """
         testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
     }
 
-    func testReplacesNewValueWithMemberAccessChain() {
+    func testReplacesNewValueWithStoredPropertyUsingExplicitSelf() {
         let input = """
-        content
-            .onChange(of: store.state.query, initial: true) { _, query in
-                if query.isEmpty, !query.hasPrefix(prefix) {
-                    reset(query: query)
-                }
+        struct ContentView: View {
+            let query: String
+
+            var body: some View {
+                content
+                    .onChange(of: self.query, initial: true) { _, query in
+                        if query.isEmpty, !query.hasPrefix(prefix) {
+                            reset(query: query)
+                        }
+                    }
             }
+        }
         """
         let output = """
-        content
-            .onChange(of: store.state.query, initial: true) {
-                if store.state.query.isEmpty, !store.state.query.hasPrefix(prefix) {
-                    reset(query: store.state.query)
-                }
+        struct ContentView: View {
+            let query: String
+
+            var body: some View {
+                content
+                    .onChange(of: self.query, initial: true) {
+                        if self.query.isEmpty, !self.query.hasPrefix(prefix) {
+                            reset(query: self.query)
+                        }
+                    }
             }
+        }
         """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange, exclude: [.redundantSelf])
     }
 
-    func testReplacesNewValueInFirstStatementOfLongerBody() {
+    func testReplacesNewValueWithStoredPropertyWithObservers() {
         let input = """
-        content
-            .onChange(of: width) { _, newWidth in
-                guard abs(containerWidth - newWidth) > 1 else { return }
-
-                updatePadding()
+        struct ContentView: View {
+            var width: CGFloat = 0 {
+                didSet { invalidate() }
             }
+
+            var body: some View {
+                content
+                    .onChange(of: width) { _, newWidth in
+                        guard abs(containerWidth - newWidth) > 1 else { return }
+
+                        updatePadding()
+                    }
+            }
+        }
         """
         let output = """
-        content
-            .onChange(of: width) {
-                guard abs(containerWidth - width) > 1 else { return }
-
-                updatePadding()
+        struct ContentView: View {
+            var width: CGFloat = 0 {
+                didSet { invalidate() }
             }
+
+            var body: some View {
+                content
+                    .onChange(of: width) {
+                        guard abs(containerWidth - width) > 1 else { return }
+
+                        updatePadding()
+                    }
+            }
+        }
         """
         testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
     }
 
     func testRemovesArgumentWithSameNameAsObservedValue() {
         let input = """
-        content
-            .onChange(of: isOn) { _, isOn in
-                service.update(isEnabled: isOn)
+        struct ContentView: View {
+            @Binding var isOn: Bool
+
+            var body: some View {
+                content
+                    .onChange(of: isOn) { _, isOn in
+                        service.update(isEnabled: isOn)
+                    }
             }
+        }
         """
         let output = """
-        content
-            .onChange(of: isOn) {
-                service.update(isEnabled: isOn)
+        struct ContentView: View {
+            @Binding var isOn: Bool
+
+            var body: some View {
+                content
+                    .onChange(of: isOn) {
+                        service.update(isEnabled: isOn)
+                    }
             }
+        }
         """
         testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
     }
 
     func testDoesNotReplaceMemberOrArgumentLabelWithSameName() {
         let input = """
-        content
-            .onChange(of: isOn) { _, value in
-                model.value.update(value: value)
+        struct ContentView: View {
+            let isOn: Bool
+
+            var body: some View {
+                content
+                    .onChange(of: isOn) { _, value in
+                        model.value.update(value: value)
+                    }
             }
+        }
         """
         let output = """
-        content
-            .onChange(of: isOn) {
-                model.value.update(value: isOn)
+        struct ContentView: View {
+            let isOn: Bool
+
+            var body: some View {
+                content
+                    .onChange(of: isOn) {
+                        model.value.update(value: isOn)
+                    }
             }
+        }
         """
         testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+    }
+
+    func testReplacesNewValueInSeparateBranches() {
+        let input = """
+        struct ContentView: View {
+            @State private var isOn = false
+
+            var body: some View {
+                content
+                    .onChange(of: isOn) { _, newValue in
+                        if newValue {
+                            log("enabled")
+                            refresh()
+                        } else {
+                            disable(newValue)
+                        }
+                    }
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            @State private var isOn = false
+
+            var body: some View {
+                content
+                    .onChange(of: isOn) {
+                        if isOn {
+                            log("enabled")
+                            refresh()
+                        } else {
+                            disable(isOn)
+                        }
+                    }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+    }
+
+    func testReplacesNewValueWithStoredPropertyOfExtendedType() {
+        let input = """
+        struct ContentView: View {
+            @State private var isOn = false
+
+            var body: some View {
+                toggle
+            }
+        }
+
+        extension ContentView {
+            var toggle: some View {
+                Toggle("Notifications", isOn: $isOn)
+                    .onChange(of: isOn) { _, newValue in
+                        service.update(isEnabled: newValue)
+                    }
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            @State private var isOn = false
+
+            var body: some View {
+                toggle
+            }
+        }
+
+        extension ContentView {
+            var toggle: some View {
+                Toggle("Notifications", isOn: $isOn)
+                    .onChange(of: isOn) {
+                        service.update(isEnabled: isOn)
+                    }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
+    }
+
+    func testPreservesNewValueOfComputedProperty() {
+        let input = """
+        struct ContentView: View {
+            let items: [Item]
+
+            var visibleItems: [Item] {
+                items.filter(\\.isVisible)
+            }
+
+            var body: some View {
+                content
+                    .onChange(of: visibleItems) { _, newItems in
+                        update(newItems)
+                    }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+    }
+
+    func testPreservesNewValueOfComputedPropertyOfExtendedType() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                toggle
+            }
+        }
+
+        extension ContentView {
+            var isOn: Bool {
+                store.isOn
+            }
+
+            var toggle: some View {
+                Toggle("Notifications", isOn: $isOn)
+                    .onChange(of: isOn) { _, newValue in
+                        service.update(isEnabled: newValue)
+                    }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+    }
+
+    func testPreservesNewValueOfPropertyDeclaredElsewhere() {
+        let input = """
+        struct ContentView: View {
+            let store: Store
+
+            var body: some View {
+                content
+                    .onChange(of: store.query) { _, query in
+                        search(query)
+                    }
+                    .onChange(of: isOn) { _, newValue in
+                        service.update(isEnabled: newValue)
+                    }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
+    }
+
+    func testPreservesNewValueOutsideOfTypeBody() {
+        let input = """
+        content
+            .onChange(of: isOn) { _, newValue in
+                service.update(isEnabled: newValue)
+            }
+        """
+        testFormatting(for: input, rule: .preferZeroArgumentOnChange)
     }
 
     func testPreservesClosureThatUsesOldValue() {
@@ -198,75 +413,73 @@ final class PreferZeroArgumentOnChangeTests: XCTestCase {
 
     func testPreservesNewValueUsedInNestedClosure() {
         let input = """
-        content
-            .onChange(of: isOn) { _, newValue in
-                Task {
-                    await service.update(isEnabled: newValue)
-                }
+        struct ContentView: View {
+            @State private var isOn = false
+
+            var body: some View {
+                content
+                    .onChange(of: isOn) { _, newValue in
+                        Task {
+                            await service.update(isEnabled: newValue)
+                        }
+                    }
             }
+        }
         """
         testFormatting(for: input, rule: .preferZeroArgumentOnChange)
     }
 
     func testPreservesNewValueUsedAfterFirstStatement() {
         let input = """
-        content
-            .onChange(of: store.query) { _, query in
-                store.reset()
-                search(query)
+        struct ContentView: View {
+            @State private var query = ""
+
+            var body: some View {
+                content
+                    .onChange(of: query) { _, query in
+                        store.reset()
+                        search(query)
+                    }
             }
+        }
         """
         testFormatting(for: input, rule: .preferZeroArgumentOnChange)
     }
 
     func testPreservesNewValueUsedAfterStatementInConditionalBody() {
         let input = """
-        content
-            .onChange(of: store.query) { _, query in
-                if !query.isEmpty {
-                    store.reset()
-                    search(query)
-                }
+        struct ContentView: View {
+            @State private var query = ""
+
+            var body: some View {
+                content
+                    .onChange(of: query) { _, query in
+                        if !query.isEmpty {
+                            store.reset()
+                            search(query)
+                        }
+                    }
             }
+        }
         """
         testFormatting(for: input, rule: .preferZeroArgumentOnChange)
     }
 
-    func testReplacesNewValueInSeparateBranches() {
-        let input = """
-        content
-            .onChange(of: isOn) { _, newValue in
-                if newValue {
-                    log("enabled")
-                    refresh()
-                } else {
-                    disable(newValue)
-                }
-            }
-        """
-        let output = """
-        content
-            .onChange(of: isOn) {
-                if isOn {
-                    log("enabled")
-                    refresh()
-                } else {
-                    disable(isOn)
-                }
-            }
-        """
-        testFormatting(for: input, output, rule: .preferZeroArgumentOnChange)
-    }
-
     func testPreservesShadowedNewValue() {
         let input = """
-        content
-            .onChange(of: selection) { _, newValue in
-                guard let newValue else { return }
+        struct ContentView: View {
+            @State private var selection: Set<Item>?
+
+            var body: some View {
+                content
+                    .onChange(of: selection) { _, newValue in
+                        guard let newValue else { return }
+                    }
+                    .onChange(of: selection) { _, newValue in
+                        if let selection = newValue.first { select(selection) }
+                    }
             }
-            .onChange(of: selection) { _, newValue in
-                if let selection = newValue.first { select(selection) }
-            }
+        }
         """
         testFormatting(for: input, rule: .preferZeroArgumentOnChange)
     }

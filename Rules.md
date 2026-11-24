@@ -138,6 +138,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
+* [onChangeParameters](#onChangeParameters)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferContains](#preferContains)
 * [preferCountWhere](#preferCountWhere)
@@ -2261,6 +2262,41 @@ Option | Description
 ```diff
 - let big = 123456.123
 + let big = 123_456.123
+```
+
+</details>
+<br/>
+
+## onChangeParameters
+
+Prefer the SwiftUI `onChange(of:)` closure with no parameters when the old value is unused.
+The new value is only replaced with the observed value when that value is a stored
+property of the enclosing type, declared in the same file.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct SettingsView: View {
+    @State private var isOn = false
+
+    var body: some View {
+      Toggle("Notifications", isOn: $isOn)
+-       .onChange(of: isOn) { _, newValue in
+-         service.update(isEnabled: newValue)
++       .onChange(of: isOn) {
++         service.update(isEnabled: isOn)
+        }
+    }
+  }
+```
+
+```diff
+  ScrollView { content }
+-   .onChange(of: store.items) { _, _ in
++   .onChange(of: store.items) {
+      scrollToBottom()
+    }
 ```
 
 </details>

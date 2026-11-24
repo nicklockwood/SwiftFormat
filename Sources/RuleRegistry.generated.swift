@@ -70,6 +70,7 @@ let ruleRegistry: [String: FormatRule] = [
     "noForceUnwrapInTests": .noForceUnwrapInTests,
     "noGuardInTests": .noGuardInTests,
     "numberFormatting": .numberFormatting,
+    "onChangeParameters": .onChangeParameters,
     "opaqueGenericParameters": .opaqueGenericParameters,
     "organizeDeclarations": .organizeDeclarations,
     "preferContains": .preferContains,

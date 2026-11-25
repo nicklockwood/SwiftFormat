@@ -613,6 +613,28 @@ extension Formatter {
         return false
     }
 
+    /// Whether the range contains a multiline ternary operator that isn't inside a nested scope
+    func hasMultilineTernary(in range: Range<Int>) -> Bool {
+        var currentIndex = range.lowerBound
+        var hasLinebreak = false
+        var hasTernary = false
+        while let index = index(in: currentIndex ..< range.upperBound, where: {
+            $0.isLinebreak || $0.isStartOfScope || $0 == .operator("?", .infix)
+        }) {
+            switch tokens[index] {
+            case .operator("?", .infix):
+                hasTernary = true
+            case .startOfScope:
+                guard let endOfNestedScope = endOfScope(at: index) else { return false }
+                currentIndex = endOfNestedScope
+            default:
+                hasLinebreak = true
+            }
+            currentIndex = max(currentIndex, index) + 1
+        }
+        return hasLinebreak && hasTernary
+    }
+
     /// Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
@@ -789,6 +811,7 @@ extension Formatter {
             // issues with an open paren being wrapped unnecessarily and sitting on its own line in
             // cases like long closure types in parens.
             let insertLinebreakAfterOpeningParen = self.index(of: .delimiter(","), after: i) != nil
+                || hasMultilineTernary(in: i + 1 ..< endOfScope)
                 || (maxWidth > 0 && lineLength(at: endOfLine(at: i)) > maxWidth)
                 || listWrapThreshold.map { lineLength(at: endOfLine(at: i)) > $0 } ?? false
 

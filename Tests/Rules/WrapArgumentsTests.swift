@@ -3811,4 +3811,29 @@ final class WrapArgumentsTests: XCTestCase {
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 100, listWrapThreshold: 200)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
+
+    func testWrapArgumentsBeforeFirstWithMultilineTernaryArgumentInChain() {
+        let input = """
+        Text("Hello")
+            .accessibilityLabel(state.isLoading
+                ? Strings.Home.loadingLabel
+                : Strings.Home.loadedLabel)
+            .onTapGesture { event in
+                store.handle(.tap(event))
+            }
+        """
+        let output = """
+        Text("Hello")
+            .accessibilityLabel(
+                state.isLoading
+                    ? Strings.Home.loadingLabel
+                    : Strings.Home.loadedLabel
+            )
+            .onTapGesture { event in
+                store.handle(.tap(event))
+            }
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, wrapTernaryOperators: .beforeOperators)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options)
+    }
 }

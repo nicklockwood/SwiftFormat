@@ -25,15 +25,17 @@ public extension FormatRule {
             let structAccessLevel = declaration.accessLevel()
 
             // Collect stored properties from the struct body
-            var storedProperties = [(name: String, type: TypeName, declaration: Declaration)]()
+            var storedProperties = [(name: String, type: TypeName, declaration: Declaration, hasImplicitNilDefault: Bool)]()
 
             for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword),
                       let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
                       let type = property.type,
-                      childDeclaration.isStoredInstanceProperty
+                      childDeclaration.isStoredInstanceProperty,
+                      // @Environment properties are NOT part of memberwise init
+                      !childDeclaration.hasModifier("@Environment")
                 else { continue }
-                storedProperties.append((name: property.identifier, type: type, declaration: childDeclaration))
+                storedProperties.append((name: property.identifier, type: type, declaration: childDeclaration, hasImplicitNilDefault: formatter.hasImplicitNilDefault(property)))
             }
 
             guard !storedProperties.isEmpty else { continue }
@@ -80,7 +82,7 @@ public extension FormatRule {
                     }
 
                     let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex)
-                    let hasDefaultValue = property?.value != nil
+                    let hasDefaultValue = property.map(formatter.hasDefaultValue) ?? false
 
                     // Private `let` with default value is NOT in memberwise init
                     if childDeclaration.keyword == "let", hasDefaultValue {
@@ -180,9 +182,10 @@ public extension FormatRule {
 
                 // Only consider properties that don't have default values for memberwise init comparison
                 // Properties with default values are optional in memberwise init
+                // Optional vars that implicitly default to nil are only compared if the init takes them as a parameter.
                 let propertiesWithoutDefaults = storedProperties.filter { prop in
-                    // Check if this stored property has a default value
                     !formatter.hasDefaultValue(propertyName: prop.name, in: structDeclaration)
+                        && (!prop.hasImplicitNilDefault || parameters.contains(where: { $0.name == prop.name }))
                 }
 
                 guard parameters.count == propertiesWithoutDefaults.count,
@@ -422,6 +425,16 @@ extension Formatter {
         return false
     }
 
+    /// Whether the property has an explicit default value, or is an optional `var` that implicitly defaults to `nil`
+    func hasDefaultValue(_ property: PropertyDeclaration) -> Bool {
+        property.value != nil || hasImplicitNilDefault(property)
+    }
+
+    /// Whether the property is an optional `var` with no explicit value, which implicitly defaults to `nil`
+    func hasImplicitNilDefault(_ property: PropertyDeclaration) -> Bool {
+        property.value == nil && tokens[property.introducerIndex] == .keyword("var") && property.type?.isOptionalType == true
+    }
+
     /// Helper function to check if a function argument has a default value
     func checkForDefaultValue(arg: Formatter.FunctionArgument) -> Bool {
         // Start searching after the internal label index
@@ -499,7 +512,7 @@ extension Formatter {
     /// Checks if a parameter matches a property, accounting for result builder closure patterns
     func parameterMatchesProperty(
         _ param: InitParameter,
-        property: (name: String, type: TypeName, declaration: Declaration)
+        property: (name: String, type: TypeName, declaration: Declaration, hasImplicitNilDefault: Bool)
     ) -> Bool {
         // Names must match
         guard param.name == property.name else { return false }

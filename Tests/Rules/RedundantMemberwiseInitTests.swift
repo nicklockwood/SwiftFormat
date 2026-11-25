@@ -1774,6 +1774,91 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtEndOfScope, .blankLinesAtStartOfScope], options: options, exclude: [.wrapPropertyBodies])
     }
 
+    func testRemoveInitWhenPrivateStateOptionalVarHasImplicitNilDefault() {
+        let input = """
+        struct Foo: View {
+            init(bar: Bar) {
+                self.bar = bar
+            }
+
+            let bar: Bar
+            @State private var height: CGFloat?
+
+            var body: some View { fatalError() }
+        }
+        """
+        let output = """
+        struct Foo: View {
+            let bar: Bar
+            @State private var height: CGFloat?
+
+            var body: some View { fatalError() }
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .conformances(["View"]))
+        testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .blankLinesAtStartOfScope], options: options, exclude: [.wrapPropertyBodies])
+    }
+
+    func testRemoveInitWhenPrivateEnvironmentPropertyHasExplicitType() {
+        let input = """
+        struct Foo: View {
+            init(bar: Bar) {
+                self.bar = bar
+            }
+
+            let bar: Bar
+            @Environment(\\.colorScheme) private var colorScheme: ColorScheme
+
+            var body: some View { fatalError() }
+        }
+        """
+        let output = """
+        struct Foo: View {
+            let bar: Bar
+            @Environment(\\.colorScheme) private var colorScheme: ColorScheme
+
+            var body: some View { fatalError() }
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .conformances(["View"]))
+        testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .blankLinesAtStartOfScope], options: options, exclude: [.wrapPropertyBodies])
+    }
+
+    func testRemoveInitWhenOptionalVarHasImplicitNilDefault() {
+        let input = """
+        struct Foo {
+            init(bar: Bar) {
+                self.bar = bar
+            }
+
+            let bar: Bar
+            var baaz: Baaz?
+        }
+        """
+        let output = """
+        struct Foo {
+            let bar: Bar
+            var baaz: Baaz?
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .blankLinesAtStartOfScope])
+    }
+
+    func testPreserveInitWhenOptionalLetHasNoDefault() {
+        let input = """
+        struct Foo {
+            init(bar: Bar) {
+                self.bar = bar
+                baaz = nil
+            }
+
+            let bar: Bar
+            let baaz: Baaz?
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
     func testRemoveInitAndPrivateACLWhenPrivateVarWithDefaultValueAndOptionEnabled() {
         // With preferSynthesizedInitForInternalStructs enabled, we CAN remove the init
         // if there's a private var with default value, and we'll also remove its private ACL

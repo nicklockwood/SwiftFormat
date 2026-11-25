@@ -3147,7 +3147,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .contentBuilder]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .contentBuilder, .redundantMemberwiseInit]
         )
     }
 

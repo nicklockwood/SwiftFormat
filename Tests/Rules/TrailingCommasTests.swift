@@ -10,6 +10,76 @@ import XCTest
 @testable import SwiftFormat
 
 final class TrailingCommasTests: XCTestCase {
+    func testTrailingCommaNotAddedToWrappedArrayType() {
+        let input = """
+        init(
+            foo: Int, bar: [
+                String: Int
+            ]
+        ) {}
+        init?<T>(bar: [
+            T
+        ]) {}
+        func foo(bar: inout [
+            String
+        ]) {}
+        subscript(bar: [
+            String
+        ]) -> Int {
+            0
+        }
+        let closure = { (bar: [
+            String
+        ]) in }
+        let isArray = foo is [
+            String
+        ]
+        let array = foo as [
+            String
+        ]
+        for foo: [
+            String
+        ] in bar {}
+        """
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.unusedArguments, .blankLinesBetweenScopes])
+    }
+
+    func testTrailingCommaNotAddedToArrayTypeInEnumCase() {
+        let input = """
+        enum Foo {
+            case foo([
+                String
+            ])
+            case bar(Int), baaz(baaz: [
+                String: Int
+            ])
+        }
+        """
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.wrapEnumCases])
+    }
+
+    func testTrailingCommaAddedToArrayInInitBodyAndDefaultValue() {
+        let input = """
+        init(foo: Foo = .init(bar: [
+            1
+        ])) {
+            baaz(foo, [
+                2
+            ])
+        }
+        """
+        let output = """
+        init(foo: Foo = .init(bar: [
+            1,
+        ])) {
+            baaz(foo, [
+                2,
+            ])
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingCommas)
+    }
+
     func testCommaAddedToSingleItem() {
         let input = """
         [

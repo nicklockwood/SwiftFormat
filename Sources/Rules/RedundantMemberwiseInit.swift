@@ -25,7 +25,7 @@ public extension FormatRule {
             let structAccessLevel = declaration.accessLevel()
 
             // Collect stored properties from the struct body
-            var storedProperties = [(name: String, type: TypeName, declaration: Declaration, hasImplicitNilDefault: Bool)]()
+            var storedProperties = [(name: String, type: TypeName, declaration: Declaration)]()
 
             for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword),
@@ -35,7 +35,7 @@ public extension FormatRule {
                       // @Environment properties are NOT part of memberwise init
                       !childDeclaration.hasModifier("@Environment")
                 else { continue }
-                storedProperties.append((name: property.identifier, type: type, declaration: childDeclaration, hasImplicitNilDefault: formatter.hasImplicitNilDefault(property)))
+                storedProperties.append((name: property.identifier, type: type, declaration: childDeclaration))
             }
 
             guard !storedProperties.isEmpty else { continue }
@@ -184,8 +184,8 @@ public extension FormatRule {
                 // Properties with default values are optional in memberwise init
                 // Optional vars that implicitly default to nil are only compared if the init takes them as a parameter.
                 let propertiesWithoutDefaults = storedProperties.filter { prop in
-                    !formatter.hasDefaultValue(propertyName: prop.name, in: structDeclaration)
-                        && (!prop.hasImplicitNilDefault || parameters.contains(where: { $0.name == prop.name }))
+                    guard let property = prop.declaration.parsePropertyDeclaration(), property.value == nil else { return false }
+                    return !formatter.hasImplicitNilDefault(property) || parameters.contains(where: { $0.name == prop.name })
                 }
 
                 guard parameters.count == propertiesWithoutDefaults.count,
@@ -412,19 +412,6 @@ extension Formatter {
         let resultBuilderAttribute: String?
     }
 
-    /// Helper function to check if a stored property has a default value
-    func hasDefaultValue(propertyName: String, in structDeclaration: TypeDeclaration) -> Bool {
-        for childDeclaration in structDeclaration.body {
-            guard ["var", "let"].contains(childDeclaration.keyword),
-                  let property = parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
-                  property.identifier == propertyName,
-                  property.value != nil
-            else { continue }
-            return true
-        }
-        return false
-    }
-
     /// Whether the property has an explicit default value, or is an optional `var` that implicitly defaults to `nil`
     func hasDefaultValue(_ property: PropertyDeclaration) -> Bool {
         property.value != nil || hasImplicitNilDefault(property)
@@ -512,7 +499,7 @@ extension Formatter {
     /// Checks if a parameter matches a property, accounting for result builder closure patterns
     func parameterMatchesProperty(
         _ param: InitParameter,
-        property: (name: String, type: TypeName, declaration: Declaration, hasImplicitNilDefault: Bool)
+        property: (name: String, type: TypeName, declaration: Declaration)
     ) -> Bool {
         // Names must match
         guard param.name == property.name else { return false }

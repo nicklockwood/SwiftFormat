@@ -96,6 +96,68 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, exclude: [.unusedArguments])
     }
 
+    func testTrailingCommaNotAddedToArrayThatCouldBeType() {
+        let input = """
+        let foo = [
+            Foo
+        ]
+        let bar = [
+            Foo.Bar: [
+                Baaz?
+            ]
+        ]
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+        let options = FormatOptions(trailingCommas: .collectionsOnly)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommaPreservedInArrayThatCouldBeType() {
+        let input = """
+        let foo = [
+            Foo,
+        ]
+        let bar = [
+            Foo: Bar,
+        ]
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+        let options = FormatOptions(trailingCommas: .collectionsOnly)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommaAddedToSingleElementArrayOfValues() {
+        let input = """
+        let foo = [
+            Foo()
+        ]
+        let bar = [
+            Foo.bar
+        ]
+        let baaz = [
+            Foo.self
+        ]
+        let quux = [
+            Foo: bar
+        ]
+        """
+        let output = """
+        let foo = [
+            Foo(),
+        ]
+        let bar = [
+            Foo.bar,
+        ]
+        let baaz = [
+            Foo.self,
+        ]
+        let quux = [
+            Foo: bar,
+        ]
+        """
+        testFormatting(for: input, output, rule: .trailingCommas)
+    }
+
     func testTrailingCommaNotAddedToArrayTypeExpression() {
         let input = """
         let type = [

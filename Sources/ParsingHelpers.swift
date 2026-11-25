@@ -358,7 +358,7 @@ extension Formatter {
                     if let scopeStart = self.index(of: .startOfScope, before: prevIndex) {
                         switch tokens[scopeStart] {
                         case .startOfScope("("):
-                            if last(.keyword, before: scopeStart) == .keyword("func") || isDeclarationParameterList(at: scopeStart) {
+                            if last(.keyword, before: scopeStart) == .keyword("func") {
                                 isType = true
                                 break
                             }
@@ -367,19 +367,17 @@ extension Formatter {
                             guard let type = scopeType(at: scopeStart) else {
                                 return nil
                             }
-                            isType = type.isType || type == .parameterList
+                            isType = type.isType
                         default:
                             break
                         }
                     }
                     if let token = last(.keyword, before: index),
-                       [.keyword("let"), .keyword("var"), .keyword("for")].contains(token)
+                       [.keyword("let"), .keyword("var")].contains(token)
                     {
                         isType = true
                     }
-                case .operator("->", _), .startOfScope("<"), .keyword("extension"), .keyword("inout"), .keyword("is"), .keyword("as"):
-                    isType = true
-                case .startOfScope("(") where isDeclarationParameterList(at: prevIndex):
+                case .operator("->", _), .startOfScope("<"), .keyword("extension"):
                     isType = true
                 case .startOfScope("["), .startOfScope("("):
                     guard let type = scopeType(at: prevIndex) else {
@@ -1736,52 +1734,6 @@ extension Formatter {
             }
         }
         return false
-    }
-
-    /// Returns true if the `(` at the specified index directly follows the name of a function, initializer,
-    /// subscript, macro or enum case in its declaration
-    func isDeclarationParameterList(at i: Int) -> Bool {
-        guard tokens[i] == .startOfScope("("),
-              var nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i)
-        else { return false }
-
-        // Skip generic parameters, e.g. `func foo<T>(`
-        if tokens[nameIndex] == .endOfScope(">") {
-            guard let startOfGenerics = startOfScope(at: nameIndex),
-                  let index = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfGenerics)
-            else { return false }
-            nameIndex = index
-        }
-
-        // Skip failable initializer operator, e.g. `init?(`
-        if tokens[nameIndex].isUnwrapOperator {
-            nameIndex -= 1
-            return token(at: nameIndex) == .keyword("init")
-        }
-
-        switch tokens[nameIndex] {
-        case .keyword("init"), .keyword("subscript"):
-            return true
-        case .identifier, .operator:
-            guard let keywordIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: nameIndex) else { return false }
-            switch tokens[keywordIndex] {
-            case .keyword("func"), .keyword("macro"):
-                return true
-            case .keyword("case"):
-                return isEnumCase(at: keywordIndex)
-            case .delimiter(","):
-                // One of multiple enum cases on the same line, e.g. `case foo, bar(`
-                guard let caseIndex = index(of: .keyword, before: keywordIndex),
-                      tokens[caseIndex] == .keyword("case"),
-                      startOfScope(at: caseIndex) == startOfScope(at: keywordIndex)
-                else { return false }
-                return isEnumCase(at: caseIndex)
-            default:
-                return false
-            }
-        default:
-            return false
-        }
     }
 
     /// Returns if the `case` keyword at the specified index is part of an enum (as opposed to `if case`)

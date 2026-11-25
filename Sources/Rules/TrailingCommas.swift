@@ -18,7 +18,14 @@ public extension FormatRule {
 
             switch formatter.scopeType(at: startOfScope) {
             case .array, .dictionary:
-                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: true, isCollection: true)
+                // An array or dictionary literal like `[Foo]` or `[Foo: Bar]` could also be a type,
+                // where trailing commas are not supported.
+                let couldBeType = formatter.parseType(at: startOfScope, excludeLowercaseIdentifiers: true) != nil
+                formatter.addOrRemoveTrailingComma(
+                    beforeEndOfScope: i,
+                    trailingCommaSupported: couldBeType ? nil : true,
+                    isCollection: true
+                )
                 return
 
             case .subscript, .captureList, .functionCall, .parameterList:
@@ -268,7 +275,7 @@ extension Formatter {
 
         case .collectionsOnly:
             if isCollection {
-                trailingCommaMode = .insert
+                trailingCommaMode = trailingCommaSupported == true ? .insert : .preserve
             } else {
                 trailingCommaMode = .remove
             }

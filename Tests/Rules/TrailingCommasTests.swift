@@ -58,6 +58,56 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas, exclude: [.wrapEnumCases])
     }
 
+    func testTrailingCommaAddedToDefaultValueOfArrayParameter() {
+        let input = """
+        func foo(bar: [String] = [
+            "value"
+        ], baaz: [
+            String: Int
+        ] = [
+            "value": 1
+        ]) {}
+        init(bar: Set<String> = [
+            "value"
+        ]) {}
+        enum Foo {
+            case foo(bar: [String] = [
+                "value"
+            ])
+        }
+        """
+        let output = """
+        func foo(bar: [String] = [
+            "value",
+        ], baaz: [
+            String: Int
+        ] = [
+            "value": 1,
+        ]) {}
+        init(bar: Set<String> = [
+            "value",
+        ]) {}
+        enum Foo {
+            case foo(bar: [String] = [
+                "value",
+            ])
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingCommas, exclude: [.unusedArguments])
+    }
+
+    func testTrailingCommaNotAddedToArrayTypeExpression() {
+        let input = """
+        let type = [
+            String
+        ].self
+        foo([
+            String
+        ].self)
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+    }
+
     func testTrailingCommaAddedToArrayInInitBodyAndDefaultValue() {
         let input = """
         init(foo: Foo = .init(bar: [

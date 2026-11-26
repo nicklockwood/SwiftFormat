@@ -613,17 +613,6 @@ extension Formatter {
         return false
     }
 
-    /// Whether the range contains a linebreak that isn't inside a nested scope
-    func hasLinebreakOutsideNestedScopes(in range: Range<Int>) -> Bool {
-        var currentIndex = range.lowerBound
-        while let index = index(in: currentIndex ..< range.upperBound, where: { $0.isLinebreak || $0.isStartOfScope }) {
-            guard tokens[index].isStartOfScope else { return true }
-            guard let endOfNestedScope = endOfScope(at: index) else { return false }
-            currentIndex = endOfNestedScope + 1
-        }
-        return false
-    }
-
     /// Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
@@ -796,11 +785,12 @@ extension Formatter {
             }
 
             // If the closing paren is on the same line, and there's only a single item in the list,
-            // don't insert an opening paren (unless we're over the line width limit). This prevents
-            // issues with an open paren being wrapped unnecessarily and sitting on its own line in
-            // cases like long closure types in parens.
+            // don't insert an opening paren (unless we're over the line width limit, or partial
+            // wrapping is disabled and the list spans multiple lines). This prevents issues with an
+            // open paren being wrapped unnecessarily and sitting on its own line in cases like long
+            // closure types in parens.
             let insertLinebreakAfterOpeningParen = self.index(of: .delimiter(","), after: i) != nil
-                || (isFunctionCall(at: i) && hasLinebreakOutsideNestedScopes(in: i + 1 ..< endOfScope))
+                || (!options.allowPartialWrapping && !onSameLine(i, endOfScope))
                 || (maxWidth > 0 && lineLength(at: endOfLine(at: i)) > maxWidth)
                 || listWrapThreshold.map { lineLength(at: endOfLine(at: i)) > $0 } ?? false
 

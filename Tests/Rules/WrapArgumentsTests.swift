@@ -3674,7 +3674,19 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false))
     }
 
-    func testWrapArgumentsBeforeFirstWrapsSingleMultilineArgument() {
+    func testWrapArgumentsBeforeFirstDoesntWrapClosingParenIfFirstArgumentNotWrapped() {
+        let input = """
+        return .tuple(string
+            .split { $0.isNewline }
+            .map { .string("\\($0)") })
+        """
+
+        testFormatting(for: input, rule: .wrapArguments, options: FormatOptions(
+            wrapArguments: .beforeFirst, closingParenPosition: .balanced, maxWidth: 1000
+        ))
+    }
+
+    func testWrapArgumentsBeforeFirstWrapsSingleMultilineArgumentWithoutPartialWrapping() {
         let input = """
         return .tuple(string
             .split { $0.isNewline }
@@ -3689,7 +3701,7 @@ final class WrapArgumentsTests: XCTestCase {
         """
 
         testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: FormatOptions(
-            wrapArguments: .beforeFirst, closingParenPosition: .balanced, maxWidth: 1000
+            wrapArguments: .beforeFirst, closingParenPosition: .balanced, maxWidth: 1000, allowPartialWrapping: false
         ))
     }
 
@@ -3819,7 +3831,18 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
-    func testWrapArgumentsBeforeFirstWithMultilineTernaryArgumentInChain() {
+    func testWrapArgumentsBeforeFirstPreservesSingleMultilineTernaryArgumentByDefault() {
+        let input = """
+        Text("Hello")
+            .accessibilityLabel(state.isLoading
+                ? Strings.Home.loadingLabel
+                : Strings.Home.loadedLabel)
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, wrapTernaryOperators: .beforeOperators)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapArgumentsBeforeFirstWithMultilineTernaryArgumentInChainWithoutPartialWrapping() {
         let input = """
         Text("Hello")
             .accessibilityLabel(state.isLoading
@@ -3840,7 +3863,43 @@ final class WrapArgumentsTests: XCTestCase {
                 store.handle(.tap(event))
             }
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, wrapTernaryOperators: .beforeOperators)
+        let options = FormatOptions(wrapArguments: .beforeFirst, wrapTernaryOperators: .beforeOperators, allowPartialWrapping: false)
         testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options)
+    }
+
+    func testWrapParametersBeforeFirstWrapsSingleMultilineParameterWithoutPartialWrapping() {
+        let input = """
+        func foo(bar: Bar = .default
+            .with(baz)) {
+            print(bar)
+        }
+        """
+        let output = """
+        func foo(
+            bar: Bar = .default
+                .with(baz)
+        ) {
+            print(bar)
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, allowPartialWrapping: false)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options)
+    }
+
+    func testWrapCollectionsBeforeFirstWrapsSingleMultilineElementWithoutPartialWrapping() {
+        let input = """
+        let foo = [bar
+            .baz()
+            .quux()]
+        """
+        let output = """
+        let foo = [
+            bar
+                .baz()
+                .quux(),
+        ]
+        """
+        let options = FormatOptions(wrapCollections: .beforeFirst, allowPartialWrapping: false)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .trailingCommas], options: options)
     }
 }

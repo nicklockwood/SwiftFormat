@@ -896,7 +896,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
     func testPreservesGenericConstrainedOnlyByAssociatedTypeEquality() {
         let input = """
         struct Binder<Value> {
-            func bind<P>(_ key: Key<P>) -> Value where P.Value == Value {
+            func bind<P>(_: Key<P>) -> Value where P.Value == Value {
                 fatalError()
             }
         }

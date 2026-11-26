@@ -9,11 +9,48 @@
 import Foundation
 
 public extension FormatRule {
-    /// Prefer `contains` over equivalent patterns using `filter`, `first`, or `range(of:)`.
+    /// Prefer `contains` over equivalent patterns using `count(where:)`, `filter`, `first`, or `range(of:)`.
     static let preferContains = FormatRule(
-        help: "Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(of:) != nil`.",
+        help: "Prefer `contains` over `count(where:) > 0`, `count(where:) == 0`, `filter(_:).isEmpty`, `first(where:) != nil`, and `range(of:) != nil`.",
         disabledByDefault: true
     ) { formatter in
+        // MARK: - count(where:) > 0 / == 0 → contains(where:) / !contains(where:)
+
+        formatter.forEach(.identifier("count")) { countIndex, _ in
+            guard let (dotIndex, _, endOfCall) = formatter.parsePredicateMemberCall(at: countIndex),
+                  let comparison = formatter.parseTrailingComparison(after: endOfCall)
+            else { return }
+
+            let negate: Bool
+            switch (comparison.operator, formatter.tokens[comparison.operandIndex]) {
+            case (">", .number("0", .integer)): negate = false // count(where:) > 0  ->  contains(where:)
+            case ("==", .number("0", .integer)): negate = true // count(where:) == 0  -> !contains(where:)
+            default: return
+            }
+
+            // Find the start of the receiver expression, used to insert a negating `!`. Bails on
+            // optional chaining / force-unwrap in the receiver (`foo?.count(where:) == 0` is `false`
+            // when `foo` is nil, whereas `!foo?.contains(where:)` doesn't produce a plain `Bool`),
+            // leading-dot implicit members, and prefix operators.
+            guard let receiverStart = formatter.startOfMemberCallReceiver(endingAt: dotIndex),
+                  formatter.isStandaloneComparison(from: receiverStart, to: comparison.operandIndex)
+            else { return }
+
+            // Rewrite right-to-left so earlier indices stay valid.
+
+            // 1. Drop the trailing comparison: ` > 0` / ` == 0`.
+            formatter.removeTokens(in: (endOfCall + 1) ... comparison.operandIndex)
+
+            // 2. Rename `count` → `contains`. The argument is reused as-is, so both the
+            //    `(where: ...)` and trailing-closure forms keep their original syntax.
+            formatter.replaceToken(at: countIndex, with: .identifier("contains"))
+
+            // 3. Negate the receiver expression for the `== 0` case.
+            if negate {
+                formatter.insert(.operator("!", .prefix), at: receiverStart)
+            }
+        }
+
         // MARK: - filter(_:).isEmpty → !contains(where:)
 
         formatter.forEach(.identifier("filter")) { filterIndex, _ in
@@ -144,53 +181,21 @@ public extension FormatRule {
 
         for accessor in ["first", "firstIndex"] {
             formatter.forEach(.identifier(accessor)) { accessorIndex, _ in
-                // Require a member call: something `.first(...)` / `.firstIndex(...)`.
-                guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: accessorIndex),
-                      formatter.tokens[dotIndex] == .operator(".", .infix),
-                      let scopeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: accessorIndex)
-                else { return }
-
-                // Parse the call arguments with the shared helper, which handles both the
-                // `first(where: { ... })` paren form and the trailing-closure `first { ... }` form.
-                // Each must be a single argument equivalent to `contains(where:)`: a `where:`-labeled
-                // paren argument, or the unlabeled trailing closure. A non-`where:` paren label (e.g.
-                // `firstIndex(of:)`), extra arguments, or the bare `.first` property don't apply.
-                guard let args = formatter.parseFunctionCallArguments(after: accessorIndex),
-                      args.count == 1
+                // A non-`where:` paren label (e.g. `firstIndex(of:)`), extra arguments, or the bare
+                // `.first` property don't apply.
+                guard let (dotIndex, scopeIndex, endOfCall) = formatter.parsePredicateMemberCall(at: accessorIndex),
+                      let comparison = formatter.parseTrailingComparison(after: endOfCall)
                 else { return }
 
                 let isTrailingClosure = formatter.tokens[scopeIndex] == .startOfScope("{")
-                if isTrailingClosure {
-                    guard args[0].label == nil else { return }
-                } else {
-                    guard args[0].label == "where" else { return }
-                }
-
-                // End of the call expression: the closure's `}` for the trailing-closure form,
-                // otherwise the closing paren.
-                let endOfCall: Int
-                if isTrailingClosure {
-                    endOfCall = args[0].valueRange.upperBound
-                } else {
-                    guard let closeParenIndex = formatter.endOfScope(at: scopeIndex) else { return }
-                    endOfCall = closeParenIndex
-                }
-
-                // Require a trailing `!= nil` or `== nil` comparison.
-                guard let operatorIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfCall),
-                      let nilIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: operatorIndex),
-                      formatter.tokens[nilIndex] == .identifier("nil")
-                else { return }
+                let nilIndex = comparison.operandIndex
 
                 let negate: Bool
-                switch formatter.tokens[operatorIndex] {
-                case .operator("!=", .infix): negate = false // first(where:) != nil  ->  contains(where:)
-                case .operator("==", .infix): negate = true // first(where:) == nil  -> !contains(where:)
+                switch (comparison.operator, formatter.tokens[nilIndex]) {
+                case ("!=", .identifier("nil")): negate = false // first(where:) != nil  ->  contains(where:)
+                case ("==", .identifier("nil")): negate = true // first(where:) == nil  -> !contains(where:)
                 default: return
                 }
-
-                // Bail rather than silently delete a comment in the trailing comparison span.
-                guard !formatter.tokens[endOfCall ... nilIndex].contains(where: \.isComment) else { return }
 
                 // Find the start of the receiver expression. This serves two purposes:
                 //  - it locates where a negating `!` is inserted for the `== nil` case, and
@@ -199,7 +204,9 @@ public extension FormatRule {
                 //    `foo?.contains(where:)` is `Bool?` rather than the `Bool` the nil comparison
                 //    produces (and `foo?.first(where:) != nil` is `false`, not `nil`, when `foo` is
                 //    nil). It also bails on leading-dot implicit members and prefix operators.
-                guard let receiverStart = formatter.startOfMemberCallReceiver(endingAt: dotIndex) else { return }
+                guard let receiverStart = formatter.startOfMemberCallReceiver(endingAt: dotIndex),
+                      formatter.isStandaloneComparison(from: receiverStart, to: nilIndex)
+                else { return }
 
                 // For the trailing-closure form we move the closure into `(where: ...)`, which means
                 // collapsing any whitespace between the accessor and its `{`. Bail rather than
@@ -263,28 +270,26 @@ public extension FormatRule {
             let argStartIndex = args[0].valueRange.lowerBound
 
             // Require a trailing `!= nil` or `== nil` comparison.
-            guard let operatorIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeParenIndex),
-                  let nilIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: operatorIndex),
-                  formatter.tokens[nilIndex] == .identifier("nil")
-            else { return }
+            guard let comparison = formatter.parseTrailingComparison(after: closeParenIndex) else { return }
+            let nilIndex = comparison.operandIndex
 
             let negate: Bool
-            switch formatter.tokens[operatorIndex] {
-            case .operator("!=", .infix): negate = false // range(of:) != nil  ->  contains(_:)
-            case .operator("==", .infix): negate = true // range(of:) == nil  -> !contains(_:)
+            switch (comparison.operator, formatter.tokens[nilIndex]) {
+            case ("!=", .identifier("nil")): negate = false // range(of:) != nil  ->  contains(_:)
+            case ("==", .identifier("nil")): negate = true // range(of:) == nil  -> !contains(_:)
             default: return
             }
 
-            // Bail rather than silently delete any comment in the spans we rewrite.
-            guard !formatter.tokens[(rangeIndex + 1) ... argStartIndex].contains(where: \.isComment),
-                  !formatter.tokens[closeParenIndex ... nilIndex].contains(where: \.isComment)
-            else { return }
+            // Bail rather than silently delete a comment before the `of:` argument.
+            guard !formatter.tokens[(rangeIndex + 1) ... argStartIndex].contains(where: \.isComment) else { return }
 
             // Find the start of the receiver expression (the value `.range` is called on),
             // so a negated rewrite can insert `!` before the whole expression. Returns nil if
             // the receiver uses optional chaining (`foo?.range(of:)` yields `Range?`, so the
             // comparison can't be rewritten to a plain `Bool` `contains`).
-            guard let receiverStart = formatter.startOfMemberCallReceiver(endingAt: dotIndex) else { return }
+            guard let receiverStart = formatter.startOfMemberCallReceiver(endingAt: dotIndex),
+                  formatter.isStandaloneComparison(from: receiverStart, to: nilIndex)
+            else { return }
 
             // Rewrite right-to-left so earlier indices stay valid.
 
@@ -306,6 +311,16 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
+        - if messages.count(where: { $0.isUnread }) == 0 {
+        + if !messages.contains(where: { $0.isUnread }) {
+        ```
+
+        ```diff
+        - let hasNegative = numbers.count { $0 < 0 } > 0
+        + let hasNegative = numbers.contains { $0 < 0 }
+        ```
+
+        ```diff
         - if messages.filter({ $0.isUnread }).isEmpty {
         + if !messages.contains(where: { $0.isUnread }) {
         ```
@@ -320,5 +335,54 @@ public extension FormatRule {
         + if text.contains("needle") {
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Parses a `.accessor(where: { ... })` or trailing-closure `.accessor { ... }` member call
+    /// taking a single predicate, as accepted by `contains(where:)`. Returns the index of the `.`
+    /// before the accessor, the `(` or `{` that starts the call, and the last token of the call.
+    func parsePredicateMemberCall(at accessorIndex: Int) -> (dotIndex: Int, scopeIndex: Int, endOfCall: Int)? {
+        guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: accessorIndex),
+              tokens[dotIndex] == .operator(".", .infix),
+              let scopeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: accessorIndex),
+              let args = parseFunctionCallArguments(after: accessorIndex),
+              args.count == 1
+        else { return nil }
+
+        if tokens[scopeIndex] == .startOfScope("{") {
+            guard args[0].label == nil else { return nil }
+            return (dotIndex, scopeIndex, args[0].valueRange.upperBound)
+        }
+
+        guard args[0].label == "where", let closeParenIndex = endOfScope(at: scopeIndex) else { return nil }
+        return (dotIndex, scopeIndex, closeParenIndex)
+    }
+
+    /// Parses an infix comparison `<operator> <operand>` immediately following `endOfCall`, where
+    /// the operand is a single token. Returns nil if a comment would be lost by removing it.
+    func parseTrailingComparison(after endOfCall: Int) -> (operator: String, operandIndex: Int)? {
+        guard let operatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfCall),
+              case let .operator(op, .infix) = tokens[operatorIndex],
+              let operandIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: operatorIndex),
+              !tokens[endOfCall ... operandIndex].contains(where: \.isComment)
+        else { return nil }
+        return (op, operandIndex)
+    }
+
+    /// Whether the comparison spanning `startIndex ... endIndex` is a complete operand, i.e. it
+    /// isn't adjacent to an infix operator that binds more tightly than comparison operators
+    /// (e.g. `a + xs.count(where: p) > 0` or `xs.count(where: p) > 0 + offset`).
+    func isStandaloneComparison(from startIndex: Int, to endIndex: Int) -> Bool {
+        let looserOperators: Set = ["&&", "||", "?", ":", "="]
+        for neighbor in [
+            index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
+            index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex),
+        ] {
+            if let neighbor, case let .operator(op, .infix) = tokens[neighbor], !looserOperators.contains(op) {
+                return false
+            }
+        }
+        return true
     }
 }

@@ -11,6 +11,206 @@ import XCTest
 @testable import SwiftFormat
 
 final class PreferContainsTests: XCTestCase {
+    // MARK: - count(where:) > 0 / == 0
+
+    func testConvertCountWhereGreaterThanZeroToContains() {
+        let input = """
+        let hasNegative = numbers.count(where: { $0 < 0 }) > 0
+        """
+
+        let output = """
+        let hasNegative = numbers.contains(where: { $0 < 0 })
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testConvertCountWhereEqualZeroToNegatedContains() {
+        let input = """
+        let allRead = messages.count(where: { $0.isUnread }) == 0
+        """
+
+        let output = """
+        let allRead = !messages.contains(where: { $0.isUnread })
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testConvertTrailingClosureCountGreaterThanZero() {
+        let input = """
+        let hasNegative = numbers.count { $0 < 0 } > 0
+        """
+
+        let output = """
+        let hasNegative = numbers.contains { $0 < 0 }
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testConvertTrailingClosureCountEqualZero() {
+        let input = """
+        let noNegative = numbers.count { $0 < 0 } == 0
+        """
+
+        let output = """
+        let noNegative = !numbers.contains { $0 < 0 }
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testConvertTrailingClosureCountPreservesCommentBeforeBrace() {
+        let input = """
+        let hasNegative = numbers.count /* any */ { $0 < 0 } > 0
+        """
+
+        let output = """
+        let hasNegative = numbers.contains /* any */ { $0 < 0 }
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testConvertCountWhereInIfCondition() {
+        let input = """
+        if numbers.count(where: { $0 < 0 }) > 0 {
+            print("negative")
+        }
+        """
+
+        let output = """
+        if numbers.contains(where: { $0 < 0 }) {
+            print("negative")
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testConvertCountWhereEqualZeroWithChainedReceiver() {
+        let input = """
+        let empty = model.items.values.count(where: { $0.isActive }) == 0
+        """
+
+        let output = """
+        let empty = !model.items.values.contains(where: { $0.isActive })
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testCountWhereNegationInCompoundBooleanOnlyNegatesReceiver() {
+        let input = """
+        let result = foo && numbers.count(where: { $0 < 0 }) == 0
+        """
+
+        let output = """
+        let result = foo && !numbers.contains(where: { $0 < 0 })
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testConvertCountWhereFollowedByLogicalOperator() {
+        let input = """
+        let result = numbers.count(where: { $0 < 0 }) > 0 || foo
+        """
+
+        let output = """
+        let result = numbers.contains(where: { $0 < 0 }) || foo
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testPreservesCountProperty() {
+        let input = """
+        let hasItems = numbers.count > 0
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testPreservesCountWhereComparedToNonZero() {
+        let input = """
+        let a = numbers.count(where: { $0 < 0 }) > 1
+        let b = numbers.count(where: { $0 < 0 }) == 2
+        let c = numbers.count(where: { $0 < 0 }) >= 0
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testPreservesCountWhereWithHigherPrecedenceOperatorAfterZero() {
+        let input = """
+        let result = numbers.count(where: { $0 < 0 }) > 0 + offset
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testPreservesCountWhereWithHigherPrecedenceOperatorBeforeReceiver() {
+        let input = """
+        let a = offset + numbers.count(where: { $0 < 0 }) > 0
+        let b = lhs.count(where: { $0 < 0 }) + rhs.count(where: { $0 < 0 }) == 0
+        let c = base ?? numbers.count(where: { $0 < 0 }) > 0
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testConvertCountWhereInTernary() {
+        let input = """
+        let label = numbers.count(where: { $0 < 0 }) == 0 ? "none" : "some"
+        """
+
+        let output = """
+        let label = !numbers.contains(where: { $0 < 0 }) ? "none" : "some"
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
+    func testPreservesCountWithOtherLabel() {
+        let input = """
+        let result = items.count(of: item) > 0
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testPreservesOptionalChainedReceiverCount() {
+        let input = """
+        let empty = model?.numbers.count(where: { $0 < 0 }) == 0
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testPreservesCommentInCountComparison() {
+        let input = """
+        let hasNegative = numbers.count(where: { $0 < 0 }) /* any */ > 0
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testCountNegationInsertedAtOwnStatementNotPriorStatement() {
+        let input = """
+        perform { work() }
+        numbers.count(where: { $0 < 0 }) == 0
+        """
+
+        let output = """
+        perform { work() }
+        !numbers.contains(where: { $0 < 0 })
+        """
+
+        testFormatting(for: input, output, rule: .preferContains)
+    }
+
     // MARK: - filter(_:).isEmpty
 
     func testConvertFilterIsEmptyToNegatedContains() {
@@ -399,6 +599,14 @@ final class PreferContainsTests: XCTestCase {
         testFormatting(for: input, rule: .preferContains)
     }
 
+    func testPreservesFirstWhereWithHigherPrecedenceOperatorBeforeReceiver() {
+        let input = """
+        let exists = fallback ?? numbers.first(where: { $0 < 0 }) != nil
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
     func testPreservesFirstIndexOf() {
         let input = """
         let exists = numbers.firstIndex(of: 5) != nil
@@ -565,6 +773,14 @@ final class PreferContainsTests: XCTestCase {
     func testPreservesRangeComparedToOtherValue() {
         let input = """
         text.range(of: "needle") != other
+        """
+
+        testFormatting(for: input, rule: .preferContains)
+    }
+
+    func testPreservesRangeWithHigherPrecedenceOperatorBeforeReceiver() {
+        let input = """
+        let found = fallback ?? text.range(of: "needle") != nil
         """
 
         testFormatting(for: input, rule: .preferContains)

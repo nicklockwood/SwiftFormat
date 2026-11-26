@@ -2482,10 +2482,20 @@ Without this declaration, only functions will be reordered, while properties wil
 
 ## preferContains
 
-Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(of:) != nil`.
+Prefer `contains` over `count(where:) > 0`, `count(where:) == 0`, `filter(_:).isEmpty`, `first(where:) != nil`, and `range(of:) != nil`.
 
 <details>
 <summary>Examples</summary>
+
+```diff
+- if messages.count(where: { $0.isUnread }) == 0 {
++ if !messages.contains(where: { $0.isUnread }) {
+```
+
+```diff
+- let hasNegative = numbers.count { $0 < 0 } > 0
++ let hasNegative = numbers.contains { $0 < 0 }
+```
 
 ```diff
 - if messages.filter({ $0.isUnread }).isEmpty {

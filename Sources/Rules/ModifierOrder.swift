@@ -25,7 +25,7 @@ public extension FormatRule {
             var previousIndex = lastIndex
             loop: while let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lastIndex) {
                 switch formatter.tokens[index] {
-                case .operator(_, .prefix), .operator(_, .infix), .keyword("case"):
+                case .operator(_, .prefix), .operator(_, .infix), .keyword("case"), .keyword("var"), .keyword("let"):
                     // Last modifier was invalid
                     lastModifier = nil
                     lastIndex = previousIndex

@@ -892,4 +892,16 @@ final class OpaqueGenericParametersTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
     }
+
+    func testPreservesGenericConstrainedOnlyByAssociatedTypeEquality() {
+        let input = """
+        struct Binder<Value> {
+            func bind<P>(_: Key<P>) -> Value where P.Value == Value {
+                fatalError()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+    }
 }

@@ -2577,6 +2577,12 @@ extension Formatter {
             }
 
             if constraints.isEmpty {
+                // Constraints on an associated type (e.g. `T.Value == Foo`) don't
+                // constrain `T` itself to `Foo`, and can't be expressed without a protocol
+                if concreteTypes.contains(where: { $0.typeName.contains(".") }) {
+                    return nil
+                }
+
                 // If we have no constraints but exactly one concrete type (e.g. `== String`)
                 // then we can just substitute for that type. This sort of generic same-type
                 // requirement (`func foo<T>(_ t: T) where T == Foo`) is actually no longer

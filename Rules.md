@@ -7,6 +7,7 @@
 * [anyObjectProtocol](#anyObjectProtocol)
 * [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
+* [attributeOrder](#attributeOrder)
 * [blankLineAfterImports](#blankLineAfterImports)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
@@ -340,6 +341,49 @@ and `precondition(false, ...)` to `preconditionFailure(...)`.
 - precondition(false, "message")
 + preconditionFailure("message")
 ```
+
+</details>
+<br/>
+
+## attributeOrder
+
+Use consistent ordering for declaration attributes.
+
+Option | Description
+--- | ---
+`--attribute-order` | Comma-delimited attribute names in preferred order, with optional @. Use * for all unlisted attributes
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- @objc
+- @discardableResult
+- @available(iOS 15, *)
++ @available(iOS 15, *)
++ @discardableResult
++ @objc
+  func update() -> Bool { true }
+```
+
+The default order is:
+`available`, `backDeployed`, `main`, `propertyWrapper`, `resultBuilder`, `dynamicCallable`, `dynamicMemberLookup`, `frozen`, `inlinable`, `usableFromInline`, `discardableResult`, `warn_unqualified_access`, `preconcurrency`, `MainActor`, `objcMembers`, `nonobjc`, `objc`, `IBDesignable`, `IBInspectable`, `IBAction`, `IBSegueAction`, `IBOutlet`, `NSManaged`, `NSCopying`, `GKInspectable`.
+
+Use `--attribute-order available,MainActor,Test` to set a preferred order.
+The `@` prefix is optional, and qualified names must match exactly.
+
+Use `--attribute-order MainActor,*` to put `@MainActor` before all other attributes,
+or `--attribute-order *,MainActor` to put it after them. The `*` matches every
+unlisted attribute, including built-in attributes, macros, and property wrappers.
+Attributes matched by `*` keep their relative order.
+
+Without `*`, omitted defaults are inserted as with `--modifier-order`. Attributes
+outside the resulting order act as boundaries, so other attributes cannot move
+across them. Comments also prevent reordering. Repeated attributes retain their
+relative order.
+
+Arguments move with their attribute and don't affect ordering. Existing spacing between
+attributes is preserved; use `wrapAttributes` to configure their placement.
 
 </details>
 <br/>

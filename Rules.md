@@ -157,6 +157,7 @@
 * [redundantExtendedLifetime](#redundantExtendedLifetime)
 * [redundantSendable](#redundantSendable)
 * [redundantSwiftUIViewMainActor](#redundantSwiftUIViewMainActor)
+* [reflowComments](#reflowComments)
 * [residualPrint](#residualPrint)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
@@ -4019,6 +4020,39 @@ Option | Description
     // returns nothing
   }
 ```
+
+</details>
+<br/>
+
+## reflowComments
+
+Join the wrapped lines of each paragraph in a comment into a single line.
+
+Option | Description
+--- | ---
+`--reflow-comments` | Comment kinds to reflow (default: `line,block,doc`)
+
+<details>
+<summary>Examples</summary>
+
+`--reflow-comments` chooses which comments are reflowed: `line` (`//`), `block` (`/* */` and `/** */`)
+and `doc` (`///`). Paragraphs, lists, tables, headings, fenced code blocks and comment directives such as
+`MARK:` or `TODO:` keep their line breaks.
+
+```diff
+- /// Returns the number of
+- /// items in the list.
+- ///
+- /// - Parameter filter: Only
+- ///   items matching this
+- ///   filter are counted.
++ /// Returns the number of items in the list.
++ ///
++ /// - Parameter filter: Only items matching this filter are counted.
+  func count(matching filter: Filter) -> Int
+```
+
+Combine with `wrapSingleLineComments` and `--max-width` to rewrap `//` and `///` comments to the new width.
 
 </details>
 <br/>

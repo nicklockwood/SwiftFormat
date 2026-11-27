@@ -1538,6 +1538,18 @@ struct _Descriptors {
             }
         }
     )
+    let reflowComments = OptionDescriptor(
+        argumentName: "reflow-comments",
+        displayName: "Reflow Comments",
+        help: "Comment kinds to reflow (default: `line,block,doc`)",
+        keyPath: \.reflowComments,
+        validate: { type in
+            let types = ["line", "block", "doc"]
+            guard types.contains(type) else {
+                throw FormatError.invalidOption(type, for: "reflow-comments", with: types)
+            }
+        }
+    )
     let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
         argumentName: "conditional-assignment",
         displayName: "Apply conditionalAssignment rule",

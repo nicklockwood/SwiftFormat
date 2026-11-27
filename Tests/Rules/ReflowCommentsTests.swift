@@ -636,4 +636,15 @@ final class ReflowCommentsTests: XCTestCase {
         let options = FormatOptions(maxWidth: 60)
         testFormatting(for: input, rules: [.reflowComments, .wrap], options: options, exclude: [.indent])
     }
+
+    func testReflowCommentsOptionAcceptsCommentKinds() {
+        var options = FormatOptions()
+        XCTAssertNoThrow(try Descriptors.reflowComments.toOptions("line,block,doc", &options))
+        XCTAssertEqual(options.reflowComments, ["line", "block", "doc"])
+    }
+
+    func testReflowCommentsOptionRejectsUnknownKind() {
+        var options = FormatOptions()
+        XCTAssertThrowsError(try Descriptors.reflowComments.toOptions("line,lines", &options))
+    }
 }

@@ -613,6 +613,65 @@ extension Formatter {
         return false
     }
 
+    /// Whether the single element in the given argument list or collection spans multiple lines
+    /// and needs to be wrapped onto its own line for the closing paren or bracket to be balanced.
+    /// Elements are left as-is if the last scope opened on the first line closes on the same line
+    /// as the closing paren, like `foo(bar(` / `))` or `foo({` / `})`.
+    func shouldWrapSingleMultilineElement(startOfScope i: Int, endOfScope: Int) -> Bool {
+        switch tokens[i] {
+        case .startOfScope("("):
+            let mode = isParameterList(at: i) && options.wrapParameters != .default
+                ? options.wrapParameters : options.wrapArguments
+            let closingParenPosition = isFunctionCall(at: i) && options.callSiteClosingParenPosition != .default
+                ? options.callSiteClosingParenPosition : options.closingParenPosition
+            guard mode == .beforeFirst, closingParenPosition == .balanced else { return false }
+        case .startOfScope("["):
+            guard options.wrapCollections == .beforeFirst else { return false }
+        default:
+            return false
+        }
+
+        guard !onSameLine(i, endOfScope),
+              index(of: .delimiter(","), in: i + 1 ..< endOfScope) == nil
+        else { return false }
+
+        // Find the last scope opened on the first line
+        guard let lastTokenOnLine = index(of: .nonSpaceOrComment, before: endOfLine(at: i)),
+              let lastScopeOnLine = lastIndex(of: .startOfScope, in: i + 1 ..< lastTokenOnLine + 1),
+              let endOfLastScopeOnLine = self.endOfScope(at: lastScopeOnLine)
+        else { return true }
+
+        // Multiline strings only balance the closing paren if their contents aren't indented
+        if tokens[lastScopeOnLine] == .startOfScope("\"\"\""), options.indentStrings {
+            return true
+        }
+
+        guard onSameLine(endOfLastScopeOnLine, endOfScope) else { return true }
+
+        // If the last scope on the first line will itself be wrapped, its closing paren
+        // will begin the closing line, like `foo(bar(baaz` / `.quux))` becoming `foo(bar(` / `))`
+        let startOfClosingLine: Int
+        if shouldWrapSingleMultilineElement(startOfScope: lastScopeOnLine, endOfScope: endOfLastScopeOnLine) {
+            startOfClosingLine = endOfLastScopeOnLine
+        } else {
+            startOfClosingLine = startOfLine(at: endOfScope)
+        }
+
+        // A chained call after the closing paren is only kept at the same indent as the call
+        // if the closing line consists solely of closing scopes, like `}))` but not `}.bar())`
+        if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
+           tokens[nextIndex] == .operator(".", .infix),
+           !onSameLine(endOfScope, nextIndex),
+           tokens[startOfClosingLine ..< endOfScope].contains(where: {
+               !$0.isSpaceOrComment && !$0.isEndOfScope
+           })
+        {
+            return true
+        }
+
+        return false
+    }
+
     /// Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
@@ -785,12 +844,11 @@ extension Formatter {
             }
 
             // If the closing paren is on the same line, and there's only a single item in the list,
-            // don't insert an opening paren (unless we're over the line width limit, or partial
-            // wrapping is disabled and the list spans multiple lines). This prevents issues with an
-            // open paren being wrapped unnecessarily and sitting on its own line in cases like long
-            // closure types in parens.
+            // don't insert an opening paren (unless we're over the line width limit). This prevents
+            // issues with an open paren being wrapped unnecessarily and sitting on its own line in
+            // cases like long closure types in parens.
             let insertLinebreakAfterOpeningParen = self.index(of: .delimiter(","), after: i) != nil
-                || (!options.allowPartialWrapping && !onSameLine(i, endOfScope))
+                || shouldWrapSingleMultilineElement(startOfScope: i, endOfScope: endOfScope)
                 || (maxWidth > 0 && lineLength(at: endOfLine(at: i)) > maxWidth)
                 || listWrapThreshold.map { lineLength(at: endOfLine(at: i)) > $0 } ?? false
 
@@ -1064,7 +1122,11 @@ extension Formatter {
             }
 
             if completePartialWrapping,
-               let firstLinebreakIndex = index(of: .linebreak, in: i + 1 ..< endOfScope)
+               shouldWrapSingleMultilineElement(startOfScope: i, endOfScope: endOfScope)
+            {
+                wrapArgumentsBeforeFirst(startOfScope: i, endOfScope: endOfScope, allowGrouping: false)
+            } else if completePartialWrapping,
+                      let firstLinebreakIndex = index(of: .linebreak, in: i + 1 ..< endOfScope)
             {
                 switch mode {
                 case .beforeFirst:

@@ -1089,6 +1089,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var forWhere: ForWhereMode
     public var docComments: DocCommentMode
     public var excludedDeclarationTypes: Set<String>
+    public var reflowComments: Set<String>
     public var conditionalAssignmentOnlyAfterNewProperties: Bool
     public var typeDelimiterSpacing: DelimiterSpacing
     public var exhaustiveOnly: Bool
@@ -1276,6 +1277,7 @@ public struct FormatOptions: CustomStringConvertible {
                 forWhere: ForWhereMode = .always,
                 docComments: DocCommentMode = .beforeDeclarations,
                 excludedDeclarationTypes: Set<String> = [],
+                reflowComments: Set<String> = ["line", "block", "doc"],
                 conditionalAssignmentOnlyAfterNewProperties: Bool = true,
                 typeDelimiterSpacing: DelimiterSpacing = .spaceAfter,
                 exhaustiveOnly: Bool = true,
@@ -1451,6 +1453,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.forWhere = forWhere
         self.docComments = docComments
         self.excludedDeclarationTypes = excludedDeclarationTypes
+        self.reflowComments = reflowComments
         self.conditionalAssignmentOnlyAfterNewProperties = conditionalAssignmentOnlyAfterNewProperties
         self.typeDelimiterSpacing = typeDelimiterSpacing
         self.exhaustiveOnly = exhaustiveOnly

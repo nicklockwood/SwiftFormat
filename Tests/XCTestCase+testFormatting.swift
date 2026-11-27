@@ -82,6 +82,7 @@ extension XCTestCase {
             .extensionAccessControl,
             .markTypes,
             .blockComments,
+            .reflowComments,
             .unusedDeclarations,
             .preferFinalClasses,
             .preferStructSwiftTestingSuites,

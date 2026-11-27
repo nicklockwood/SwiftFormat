@@ -131,6 +131,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantVariable": .redundantVariable,
     "redundantViewBuilder": .redundantViewBuilder,
     "redundantVoidReturnType": .redundantVoidReturnType,
+    "reflowComments": .reflowComments,
     "repeatedGuard": .repeatedGuard,
     "residualPrint": .residualPrint,
     "semicolons": .semicolons,

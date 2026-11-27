@@ -1185,7 +1185,8 @@ extension Formatter {
             wrapConditionSeparators(after: index, endToken: endOfConditionsToken)
 
             // Line breaks inside a clause do not make the conditions themselves wrapped.
-            guard let endIndex = self.index(of: endOfConditionsToken, after: index),
+            // The edits below shift tokens, so endIndex must be kept in step with them.
+            guard var endIndex = self.index(of: endOfConditionsToken, after: index),
                   let nextTokenIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
                   conditionsAreWrapped(after: index, before: endIndex)
             else { return }
@@ -1198,6 +1199,7 @@ extension Formatter {
                 // is on the same line as the control flow keyword
                 if onSameLine(index, nextTokenIndex) {
                     insertLinebreak(at: index + 1)
+                    endIndex += 1
                 }
                 // Re-indent lines
                 let keywordIndent = currentIndentForLine(at: index)
@@ -1205,9 +1207,9 @@ extension Formatter {
                 let indent = keywordIndent + options.indent
                 while let index = linebreakIndex, index < endIndex {
                     if self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex {
-                        insertSpace(keywordIndent, at: index + 1)
+                        endIndex += insertSpace(keywordIndent, at: index + 1)
                     } else {
-                        insertSpace(indent, at: index + 1)
+                        endIndex += insertSpace(indent, at: index + 1)
                     }
                     linebreakIndex = self.index(of: .linebreak, after: index)
                 }
@@ -1218,18 +1220,19 @@ extension Formatter {
                    let linebreakIndex = self.index(of: .linebreak, in: index ..< nextTokenIndex)
                 {
                     removeToken(at: linebreakIndex)
+                    endIndex -= 1
                 }
                 // Make sure there is exactly one space after control flow keyword
-                insertSpace(" ", at: index + 1)
+                endIndex += insertSpace(" ", at: index + 1)
                 // Re-indent lines
                 let keywordIndent = currentIndentForLine(at: index)
                 var lastIndex = index + 1
                 let indent = spaceEquivalentToTokens(from: startOfLine(at: index), upTo: index) + indent
                 while let index = self.index(of: .linebreak, after: lastIndex), index < endIndex {
                     if self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex {
-                        insertSpace(keywordIndent, at: index + 1)
+                        endIndex += insertSpace(keywordIndent, at: index + 1)
                     } else {
-                        insertSpace(indent, at: index + 1)
+                        endIndex += insertSpace(indent, at: index + 1)
                     }
                     lastIndex = index
                 }

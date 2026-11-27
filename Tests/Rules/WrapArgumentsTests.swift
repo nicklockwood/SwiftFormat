@@ -3558,6 +3558,97 @@ final class WrapArgumentsTests: XCTestCase {
         )
     }
 
+    func testWrapConditionsAfterFirstGuardElseAfterMultilineCondition() {
+        let input = """
+        func foo() {
+            guard
+                let value = validated(
+                    token,
+                    limit: 64
+                )
+            else {
+                return
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            guard let value = validated(
+                token,
+                limit: 64
+            )
+            else {
+                return
+            }
+        }
+        """
+        testFormatting(
+            for: input, output, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .afterFirst)
+        )
+    }
+
+    func testWrapConditionsAfterFirstIfBraceAfterMultilineCondition() {
+        let input = """
+        func foo() {
+            if
+                let value = validated(
+                    token,
+                    limit: 64
+                )
+            {
+                print(value)
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            if let value = validated(
+                token,
+                limit: 64
+            )
+            {
+                print(value)
+            }
+        }
+        """
+        testFormatting(
+            for: input, output, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .afterFirst),
+            exclude: [.braces]
+        )
+    }
+
+    func testWrapConditionsAfterFirstGuardElseAfterConditionsOnOneLine() {
+        let input = """
+        func foo() {
+            guard
+                isEnabled, let value = validated(
+                    token,
+                    limit: 64
+                )
+            else {
+                return
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            guard isEnabled, let value = validated(
+                token,
+                limit: 64
+            )
+            else {
+                return
+            }
+        }
+        """
+        testFormatting(
+            for: input, output, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .afterFirst)
+        )
+    }
+
     func testWrapPartiallyWrappedFunctionCall() {
         let input = """
         func foo(

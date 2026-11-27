@@ -5429,13 +5429,7 @@ extension Formatter {
 
     /// Returns the opening brace of the for loop body, skipping closures in the sequence expression.
     func startOfForLoopBody(after index: Int) -> Int? {
-        guard let startOfBody = self.index(of: .startOfScope("{"), after: index) else {
-            return nil
-        }
-        if isStartOfClosure(at: startOfBody), let endOfClosure = endOfScope(at: startOfBody) {
-            return startOfForLoopBody(after: endOfClosure)
-        }
-        return startOfBody
+        startOfConditionalBranchBody(after: index)
     }
 }
 
@@ -6340,5 +6334,87 @@ extension Formatter {
             type: propertyType,
             value: propertyValue
         )
+    }
+}
+
+extension Formatter {
+    /// The complete range of a control flow statement, including any branches or label.
+    func controlFlowStatementRange(at index: Int) -> ClosedRange<Int>? {
+        let keyword = tokens[index].string
+        guard !isConditionalAssignment(at: index) else { return nil }
+
+        let previous = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
+        var start = index
+        if let previous, tokens[previous] == .delimiter(":"),
+           let label = self.index(of: .nonSpaceOrCommentOrLinebreak, before: previous),
+           isLabel(at: label)
+        {
+            start = label
+        }
+        if let previous {
+            // An else-if branch and the condition of a repeat-while belong to the preceding statement.
+            if tokens[previous] == .keyword("else") {
+                return nil
+            }
+            if keyword == "while", tokens[previous] == .endOfScope("}"),
+               let openBrace = startOfScope(at: previous),
+               last(.nonSpaceOrCommentOrLinebreak, before: openBrace) == .keyword("repeat")
+            {
+                return nil
+            }
+            if start == index,
+               [.keyword("return"), .keyword("throw")].contains(tokens[previous])
+               || !isEndOfStatement(at: previous) && !tokens[previous].isStartOfScope
+            {
+                return nil
+            }
+        }
+
+        let end: Int
+        if keyword == "if" {
+            guard let lastBranch = ifStatementBranches(at: index).last else { return nil }
+            end = lastBranch.endOfBranch
+        } else {
+            let bodyStart: Int?
+            if keyword == "guard" {
+                bodyStart = self.index(of: .keyword("else"), after: index)
+                    .flatMap { self.index(of: .startOfScope("{"), after: $0) }
+            } else {
+                bodyStart = startOfConditionalBranchBody(after: index)
+            }
+            guard let bodyStart, var bodyEnd = endOfScope(at: bodyStart) else { return nil }
+
+            if keyword == "do" {
+                while let catchIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: bodyEnd),
+                      tokens[catchIndex] == .keyword("catch"),
+                      let catchBody = startOfConditionalBranchBody(after: catchIndex),
+                      let catchEnd = endOfScope(at: catchBody)
+                {
+                    bodyEnd = catchEnd
+                }
+            } else if keyword == "repeat" {
+                guard let whileIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: bodyEnd),
+                      tokens[whileIndex] == .keyword("while"),
+                      let conditionStart = self.index(of: .nonSpaceOrCommentOrLinebreak, after: whileIndex),
+                      let condition = parseExpressionRange(startingAt: conditionStart)
+                else { return nil }
+                bodyEnd = condition.upperBound
+            }
+            end = bodyEnd
+        }
+        return start ... end
+    }
+
+    func blankLineBoundary(afterStatementAt index: Int) -> (linebreak: Int, next: Int)? {
+        guard let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+              isStartOfStatement(at: next),
+              !tokens[next].isEndOfScope,
+              ![.keyword("else"), .keyword("catch"), .keyword("#else"), .keyword("#elseif"), .startOfScope("#if")].contains(tokens[next]),
+              let linebreak = self.index(of: .nonSpaceOrComment, after: index),
+              tokens[linebreak].isLinebreak,
+              let nextContent = self.index(of: .nonSpaceOrLinebreak, after: linebreak),
+              self.index(of: .linebreak, in: linebreak + 1 ..< nextContent) == nil
+        else { return nil }
+        return (linebreak, next)
     }
 }

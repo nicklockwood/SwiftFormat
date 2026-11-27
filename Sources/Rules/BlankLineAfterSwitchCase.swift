@@ -16,7 +16,7 @@ public extension FormatRule {
         `--blank-line-after-switch-case never`.
         """,
         disabledByDefault: true,
-        orderAfter: [.redundantBreak],
+        orderAfter: [.blankLineSpacing, .redundantBreak],
         options: ["blank-line-after-switch-case"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in

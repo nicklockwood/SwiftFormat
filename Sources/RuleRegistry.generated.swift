@@ -17,6 +17,7 @@ let ruleRegistry: [String: FormatRule] = [
     "assertionFailures": .assertionFailures,
     "blankLineAfterImports": .blankLineAfterImports,
     "blankLineAfterSwitchCase": .blankLineAfterSwitchCase,
+    "blankLineSpacing": .blankLineSpacing,
     "blankLinesAfterGuardStatements": .blankLinesAfterGuardStatements,
     "blankLinesAroundMark": .blankLinesAroundMark,
     "blankLinesAroundMultilineStatements": .blankLinesAroundMultilineStatements,

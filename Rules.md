@@ -126,6 +126,7 @@
 * [acronyms](#acronyms)
 * [alignAssignments](#alignAssignments)
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
+* [blankLineSpacing](#blankLineSpacing)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blankLinesAroundMultilineStatements](#blankLinesAroundMultilineStatements)
 * [blankLinesBeforeComments](#blankLinesBeforeComments)
@@ -411,6 +412,33 @@ Option | Description
 -
   case .handleIncomingEnergyBlast:
       energyShields.engage()
+  }
+```
+
+</details>
+<br/>
+
+## blankLineSpacing
+
+Configure blank lines after selected control flow constructs and between switch cases.
+The `guard` and `case` selections use `--line-between-guards` and `--blank-line-after-switch-case`, respectively.
+
+Option | Description
+--- | ---
+`--blank-lines-after` | Comma-delimited list of constructs: guard, if, switch, case, do-catch, for
+
+<details>
+<summary>Examples</summary>
+
+`--blank-lines-after if`
+
+```diff
+  if shouldStop {
+      return
+  }
++
+  guard let value else {
+      return
   }
 ```
 

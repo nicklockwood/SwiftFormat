@@ -6339,7 +6339,9 @@ extension Formatter {
 
 extension Formatter {
     /// The complete range of a control flow statement, including any branches or label.
-    func controlFlowStatementRange(at index: Int) -> ClosedRange<Int>? {
+    func controlFlowStatementRange(at index: Int, allowingHeaderContinuations: Bool = false,
+                                   requiringCatch: Bool = false) -> ClosedRange<Int>?
+    {
         let keyword = tokens[index].string
         guard !isConditionalAssignment(at: index) else { return nil }
 
@@ -6362,8 +6364,10 @@ extension Formatter {
             {
                 return nil
             }
+            let checksExpressionPrefix = !allowingHeaderContinuations || keyword == "if" || keyword == "switch"
             if start == index,
-               [.keyword("return"), .keyword("throw")].contains(tokens[previous])
+               checksExpressionPrefix && [.keyword("return"), .keyword("throw")].contains(tokens[previous])
+               || allowingHeaderContinuations && checksExpressionPrefix && isUnsafeExpression(at: previous)
                || !isEndOfStatement(at: previous) && !tokens[previous].isStartOfScope
             {
                 return nil
@@ -6372,7 +6376,7 @@ extension Formatter {
 
         let end: Int
         if keyword == "if" {
-            guard let lastBranch = ifStatementBranches(at: index).last else { return nil }
+            guard let lastBranch = ifStatementBranches(at: index, allowingHeaderContinuations: allowingHeaderContinuations).last else { return nil }
             end = lastBranch.endOfBranch
         } else {
             let bodyStart: Int?
@@ -6380,17 +6384,21 @@ extension Formatter {
                 bodyStart = self.index(of: .keyword("else"), after: index)
                     .flatMap { self.index(of: .startOfScope("{"), after: $0) }
             } else {
-                bodyStart = startOfConditionalBranchBody(after: index)
+                bodyStart = startOfConditionalBranchBody(after: index, allowingHeaderContinuations: allowingHeaderContinuations)
             }
             guard let bodyStart, var bodyEnd = endOfScope(at: bodyStart) else { return nil }
 
             if keyword == "do" {
+                let doEnd = bodyEnd
                 while let catchIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: bodyEnd),
                       tokens[catchIndex] == .keyword("catch"),
-                      let catchBody = startOfConditionalBranchBody(after: catchIndex),
+                      let catchBody = startOfConditionalBranchBody(after: catchIndex, allowingHeaderContinuations: allowingHeaderContinuations),
                       let catchEnd = endOfScope(at: catchBody)
                 {
                     bodyEnd = catchEnd
+                }
+                if requiringCatch, bodyEnd == doEnd {
+                    return nil
                 }
             } else if keyword == "repeat" {
                 guard let whileIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: bodyEnd),
@@ -6446,8 +6454,8 @@ extension Formatter {
         leaveOrSetLinebreaksInIndexes(indexesBetween, linebreaksCount: linebreaks)
     }
 
-    func applyBlankLinesAfterSwitchCases(at switchIndex: Int, spacing: BlankLineAfterSwitchCase) {
-        guard let switchCases = switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
+    func applyBlankLinesAfterSwitchCases(at switchIndex: Int, spacing: BlankLineAfterSwitchCase, bodyStart: Int? = nil) {
+        guard let switchCases = switchStatementBranchesWithSpacingInfo(at: switchIndex, bodyStart: bodyStart) else { return }
 
         for switchCase in switchCases.reversed() {
             if spacing == .never || switchCase.isLastCase {

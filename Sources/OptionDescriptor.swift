@@ -1649,6 +1649,17 @@ struct _Descriptors {
         help: "Insert line After switch cases:",
         keyPath: \.blankLineAfterSwitchCase
     )
+    let blankLinesAfter = OptionDescriptor(
+        argumentName: "blank-lines-after",
+        displayName: "Blank Lines After",
+        help: "Comma-delimited list of constructs: guard, if, switch, case, do-catch, for",
+        keyPath: \.blankLinesAfter,
+        validate: { value in
+            guard ["guard", "if", "switch", "case", "do-catch", "for"].contains(value) else {
+                throw FormatError.options("Unknown construct '\(value)' for --blank-lines-after")
+            }
+        }
+    )
     let redundantThrows = OptionDescriptor(
         argumentName: "redundant-throws",
         displayName: "Redundant Throws",

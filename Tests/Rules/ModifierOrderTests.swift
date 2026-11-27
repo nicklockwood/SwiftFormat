@@ -154,6 +154,42 @@ final class ModifierOrderTests: XCTestCase {
         testFormatting(for: input, rule: .modifierOrder)
     }
 
+    func testPropertyNamesAreNotModifiersOfNextDeclaration() {
+        for name in ["open", "final", "lazy", "mutating", "nonisolated"] {
+            let input = """
+            public struct Door {
+                @Wrapper var \(name)
+                public init() {}
+            }
+            """
+            testFormatting(for: input, rule: .modifierOrder)
+        }
+    }
+
+    func testModifiersAfterPropertyNameAreStillOrdered() {
+        let input = """
+        public struct Door {
+            @Wrapper var /* comment */ open
+            static public var count = 0
+        }
+        """
+        let output = """
+        public struct Door {
+            @Wrapper var /* comment */ open
+            public static var count = 0
+        }
+        """
+        testFormatting(for: input, output, rule: .modifierOrder)
+    }
+
+    func testIncompleteLetNamedOpenIsNotAModifier() {
+        let input = """
+        let open
+        public func close() {}
+        """
+        testFormatting(for: input, rule: .modifierOrder, options: FormatOptions(fragment: true))
+    }
+
     func testAsyncFunctionBeforeNonisolatedVar() {
         let input = """
         protocol Test: Actor {

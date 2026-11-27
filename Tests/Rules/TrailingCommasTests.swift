@@ -10,6 +10,188 @@ import XCTest
 @testable import SwiftFormat
 
 final class TrailingCommasTests: XCTestCase {
+    func testTrailingCommaNotAddedToWrappedArrayType() {
+        let input = """
+        init(
+            foo: Int, bar: [
+                String: Int
+            ]
+        ) {}
+        init?<T>(bar: [
+            T
+        ]) {}
+        func foo(bar: inout [
+            String
+        ]) {}
+        subscript(bar: [
+            String
+        ]) -> Int {
+            0
+        }
+        let closure = { (bar: [
+            String
+        ]) in }
+        let isArray = foo is [
+            String
+        ]
+        let array = foo as [
+            String
+        ]
+        for foo: [
+            String
+        ] in bar {}
+        """
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.unusedArguments, .blankLinesBetweenScopes])
+    }
+
+    func testTrailingCommaNotAddedToArrayTypeInEnumCase() {
+        let input = """
+        enum Foo {
+            case foo([
+                String
+            ])
+            case bar(Int), baaz(baaz: [
+                String: Int
+            ])
+        }
+        """
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.wrapEnumCases])
+    }
+
+    func testTrailingCommaAddedToDefaultValueOfArrayParameter() {
+        let input = """
+        func foo(bar: [String] = [
+            "value"
+        ], baaz: [
+            String: Int
+        ] = [
+            "value": 1
+        ]) {}
+        init(bar: Set<String> = [
+            "value"
+        ]) {}
+        enum Foo {
+            case foo(bar: [String] = [
+                "value"
+            ])
+        }
+        """
+        let output = """
+        func foo(bar: [String] = [
+            "value",
+        ], baaz: [
+            String: Int
+        ] = [
+            "value": 1,
+        ]) {}
+        init(bar: Set<String> = [
+            "value",
+        ]) {}
+        enum Foo {
+            case foo(bar: [String] = [
+                "value",
+            ])
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingCommas, exclude: [.unusedArguments])
+    }
+
+    func testTrailingCommaNotAddedToArrayThatCouldBeType() {
+        let input = """
+        let foo = [
+            Foo
+        ]
+        let bar = [
+            Foo.Bar: [
+                Baaz?
+            ]
+        ]
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+        let options = FormatOptions(trailingCommas: .collectionsOnly)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommaPreservedInArrayThatCouldBeType() {
+        let input = """
+        let foo = [
+            Foo,
+        ]
+        let bar = [
+            Foo: Bar,
+        ]
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+        let options = FormatOptions(trailingCommas: .collectionsOnly)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommaAddedToSingleElementArrayOfValues() {
+        let input = """
+        let foo = [
+            Foo()
+        ]
+        let bar = [
+            Foo.bar
+        ]
+        let baaz = [
+            Foo.self
+        ]
+        let quux = [
+            Foo: bar
+        ]
+        """
+        let output = """
+        let foo = [
+            Foo(),
+        ]
+        let bar = [
+            Foo.bar,
+        ]
+        let baaz = [
+            Foo.self,
+        ]
+        let quux = [
+            Foo: bar,
+        ]
+        """
+        testFormatting(for: input, output, rule: .trailingCommas)
+    }
+
+    func testTrailingCommaNotAddedToArrayTypeExpression() {
+        let input = """
+        let type = [
+            String
+        ].self
+        foo([
+            String
+        ].self)
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+    }
+
+    func testTrailingCommaAddedToArrayInInitBodyAndDefaultValue() {
+        let input = """
+        init(foo: Foo = .init(bar: [
+            1
+        ])) {
+            baaz(foo, [
+                2
+            ])
+        }
+        """
+        let output = """
+        init(foo: Foo = .init(bar: [
+            1,
+        ])) {
+            baaz(foo, [
+                2,
+            ])
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingCommas)
+    }
+
     func testCommaAddedToSingleItem() {
         let input = """
         [

@@ -638,15 +638,18 @@ extension Formatter {
         // Find the last scope opened on the first line
         guard let lastTokenOnLine = index(of: .nonSpaceOrComment, before: endOfLine(at: i)),
               let lastScopeOnLine = lastIndex(of: .startOfScope, in: i + 1 ..< lastTokenOnLine + 1),
-              let endOfLastScopeOnLine = self.endOfScope(at: lastScopeOnLine)
-        else { return true }
+              let endOfLastScopeOnLine = self.endOfScope(at: lastScopeOnLine),
+              onSameLine(endOfLastScopeOnLine, endOfScope) else { return true }
 
-        // Multiline strings only balance the closing paren if their contents aren't indented
+        guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
+              tokens[nextIndex] == .operator(".", .infix)
+        else { return false }
+
+        // An indented multiline string doesn't balance the closing paren, so wrap it
+        // if the call is followed by a chained call
         if tokens[lastScopeOnLine] == .startOfScope("\"\"\""), options.indentStrings {
             return true
         }
-
-        guard onSameLine(endOfLastScopeOnLine, endOfScope) else { return true }
 
         // If the last scope on the first line will itself be wrapped, its closing paren
         // will begin the closing line, like `foo(bar(baaz` / `.quux))` becoming `foo(bar(` / `))`
@@ -657,19 +660,12 @@ extension Formatter {
             startOfClosingLine = startOfLine(at: endOfScope)
         }
 
-        // A chained call after the closing paren is only kept at the same indent as the call
-        // if the closing line consists solely of closing scopes, like `}))` but not `}.bar())`
-        if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
-           tokens[nextIndex] == .operator(".", .infix),
-           !onSameLine(endOfScope, nextIndex),
-           tokens[startOfClosingLine ..< endOfScope].contains(where: {
-               !$0.isSpaceOrComment && !$0.isEndOfScope
-           })
-        {
-            return true
-        }
-
-        return false
+        // A chained call on the line after the closing paren is only kept at the same indent as
+        // the call if the closing line consists solely of closing scopes, like `}))` but not `}.bar())`
+        return !onSameLine(endOfScope, nextIndex)
+            && tokens[startOfClosingLine ..< endOfScope].contains(where: {
+                !$0.isSpaceOrComment && !$0.isEndOfScope
+            })
     }
 
     /// Shared wrap implementation

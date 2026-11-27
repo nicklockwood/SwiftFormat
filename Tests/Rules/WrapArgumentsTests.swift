@@ -3863,11 +3863,16 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options)
     }
 
-    func testWrapArgumentsBeforeFirstWrapsSingleMultilineStringWithIndentStrings() {
+    func testWrapArgumentsBeforeFirstWrapsSingleMultilineStringFollowedByChainWithIndentStrings() {
         let input = #"""
         foo.bar.baaz("""
             abc
             """)
+        .quux()
+
+        foo.bar.baaz("""
+            abc
+            """).quux()
         """#
         let output = #"""
         foo.bar.baaz(
@@ -3875,9 +3880,27 @@ final class WrapArgumentsTests: XCTestCase {
             abc
             """
         )
+        .quux()
+
+        foo.bar.baaz(
+            """
+            abc
+            """
+        ).quux()
         """#
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced, indentStrings: true)
-        testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options,
+                       exclude: [.wrapMultilineFunctionChains])
+    }
+
+    func testWrapArgumentsBeforeFirstDoesntWrapSingleMultilineStringWithIndentStrings() {
+        let input = #"""
+        foo.bar.baaz("""
+            abc
+            """)
+        """#
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced, indentStrings: true)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapArgumentsBeforeFirstDoesntWrapSingleMultilineStringWithoutIndentStrings() {
@@ -3891,28 +3914,49 @@ final class WrapArgumentsTests: XCTestCase {
     }
 
     func testWrapCollectionsBeforeFirstWrapsSingleMultilineElement() {
-        let input = #"""
+        let input = """
         let foo = [bar
             .baz()
             .quux()]
-        let bar = ["""
-            abc
-            """]
-        """#
-        let output = #"""
+        """
+        let output = """
         let foo = [
             bar
                 .baz()
                 .quux(),
         ]
+        """
+        let options = FormatOptions(wrapCollections: .beforeFirst)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .trailingCommas], options: options)
+    }
+
+    func testWrapCollectionsBeforeFirstWrapsSingleMultilineStringFollowedByChainWithIndentStrings() {
+        let input = #"""
+        let bar = ["""
+            abc
+            """]
+        .joined()
+        """#
+        let output = #"""
         let bar = [
             """
             abc
             """,
         ]
+        .joined()
         """#
         let options = FormatOptions(wrapCollections: .beforeFirst, indentStrings: true)
         testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .trailingCommas], options: options)
+    }
+
+    func testWrapCollectionsBeforeFirstDoesntWrapSingleMultilineStringWithIndentStrings() {
+        let input = #"""
+        let bar = ["""
+            abc
+            """]
+        """#
+        let options = FormatOptions(wrapCollections: .beforeFirst, indentStrings: true)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapCollectionsBeforeFirstDoesntWrapBalancedSingleElement() {
@@ -4112,6 +4156,80 @@ final class WrapArgumentsTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced)
         testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options,
                        exclude: [.wrapMultilineFunctionChains])
+    }
+
+    func testWrapArgumentsBeforeFirstDoesntWrapBalancedSingleArgumentFollowedByMultipleChainedCalls() {
+        let input = """
+        functionName(bar(baaz(
+            bar()
+        ))).a()
+
+        functionName(bar(baaz(
+            bar()
+        ))).a()
+            .b()
+
+        functionName(bar(baaz(
+            bar()
+        )))
+        .a()
+        .b()
+
+        functionName(bar(baaz(
+            bar()
+        ))).a().b()
+            .c()
+            .d()
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced)
+        testFormatting(for: input, rule: .wrapArguments, options: options,
+                       exclude: [.wrapMultilineFunctionChains])
+    }
+
+    func testWrapArgumentsBeforeFirstWithWrapMultilineFunctionChains() {
+        let input = """
+        functionName(bar(baaz(
+            bar()
+        ))).a()
+            .b()
+
+        functionName(bar(baaz(
+            bar()
+        ))).a().b()
+            .c()
+            .d()
+
+        functionName(bar(baaz(
+            bar()
+        ).x)).a()
+            .b()
+        """
+        let output = """
+        functionName(bar(baaz(
+            bar()
+        )))
+        .a()
+        .b()
+
+        functionName(bar(baaz(
+            bar()
+        )))
+        .a()
+        .b()
+        .c()
+        .d()
+
+        functionName(
+            bar(baaz(
+                bar()
+            ).x)
+        )
+        .a()
+        .b()
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent, .wrapMultilineFunctionChains],
+                       options: options)
     }
 
     func testWrapArgumentsBeforeFirstDoesntWrapSingleMultilineArgumentWithSameLineClosingParen() {

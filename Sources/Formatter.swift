@@ -136,6 +136,7 @@ public final class Formatter: NSObject {
     {
         self.tokens = tokens
         self.options = options
+        scheduledRules = options.enabledRules
         self.trackChanges = trackChanges
         self.range = range
         self.logger = logger
@@ -151,6 +152,7 @@ public final class Formatter: NSObject {
 
     // MARK: enablement
 
+    private let scheduledRules: Set<String>
     private var disabled = false
     private var ruleDisabled = false
     private var tempOptions: FormatOptions?
@@ -166,6 +168,11 @@ public final class Formatter: NSObject {
             return false
         }
         return true
+    }
+
+    func isScheduledRuleEnabled(_ rule: FormatRule, at index: Int) -> Bool {
+        scheduledRules.contains(rule.name) && range?.contains(index) != false &&
+            !isDisabledByDirectives(at: index, for: rule, updatingOptions: false)
     }
 
     private struct Directive {
@@ -290,9 +297,11 @@ public final class Formatter: NSObject {
 
     /// Update `isEnabled` based on directives around the specified index
     func updateEnablement(at index: Int) {
-        if directives.isEmpty {
-            return
-        }
+        disabled = isDisabledByDirectives(at: index, for: currentRule, updatingOptions: true)
+    }
+
+    private func isDisabledByDirectives(at index: Int, for rule: FormatRule?, updatingOptions: Bool) -> Bool {
+        guard !directives.isEmpty else { return false }
 
         let physicalLine: Int
         if case let .linebreak(_, line) = tokens[index] {
@@ -311,7 +320,7 @@ public final class Formatter: NSObject {
             if case .options = directive.type {
                 return true
             }
-            return directive.applies(to: currentRule)
+            return directive.applies(to: rule)
         }
 
         let enablementIndex: Int
@@ -352,12 +361,12 @@ public final class Formatter: NSObject {
             if directive.line > line || (directive.line == line && directive.index > tokenIndex) {
                 break
             }
-            if let tempOptions {
+            if updatingOptions, let tempOptions {
                 options = tempOptions
                 self.tempOptions = nil
             }
             switch directive.type {
-            case .enable where directive.applies(to: currentRule):
+            case .enable where directive.applies(to: rule):
                 if directive.toggle {
                     disabledCount -= 1
                 } else if directive.line == line {
@@ -365,7 +374,7 @@ public final class Formatter: NSObject {
                 } else {
                     disabledNext = 0
                 }
-            case .disable where directive.applies(to: currentRule):
+            case .disable where directive.applies(to: rule):
                 if directive.toggle {
                     disabledCount += 1
                 } else if directive.line == line {
@@ -373,7 +382,7 @@ public final class Formatter: NSObject {
                 } else {
                     disabledNext = 0
                 }
-            case let .options(options):
+            case let .options(options) where updatingOptions:
                 if !directive.toggle {
                     if directive.line != line {
                         continue
@@ -381,11 +390,11 @@ public final class Formatter: NSObject {
                     tempOptions = self.options
                 }
                 self.options = options
-            case .disable, .enable:
+            case .disable, .enable, .options:
                 continue
             }
         }
-        disabled = disabledCount + disabledNext > 0
+        return disabledCount + disabledNext > 0
     }
 
     // MARK: change tracking

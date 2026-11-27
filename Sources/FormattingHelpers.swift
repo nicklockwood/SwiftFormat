@@ -1942,14 +1942,14 @@ extension Formatter {
 
     /// Finds all of the branch bodies in an if statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
-    func ifStatementBranches(at ifIndex: Int) -> [ConditionalBranch] {
+    func ifStatementBranches(at ifIndex: Int, allowingHeaderContinuations: Bool = false) -> [ConditionalBranch] {
         assert(tokens[ifIndex] == .keyword("if"))
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
         var nextConditionalBranchIndex: Int? = ifIndex
 
         while let conditionalBranchIndex = nextConditionalBranchIndex,
               conditionalBranchIndex == ifIndex || tokens[conditionalBranchIndex] == .keyword("else"),
-              let startOfBody = startOfConditionalBranchBody(after: conditionalBranchIndex),
+              let startOfBody = startOfConditionalBranchBody(after: conditionalBranchIndex, allowingHeaderContinuations: allowingHeaderContinuations),
               let endOfBody = endOfScope(at: startOfBody)
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
@@ -1966,25 +1966,57 @@ extension Formatter {
     }
 
     /// Returns the `startOfScope("{")` token index for this conditional branch
-    func startOfConditionalBranchBody(after index: Int) -> Int? {
+    func startOfConditionalBranchBody(after index: Int, allowingHeaderContinuations: Bool = false) -> Int? {
         guard let startOfBody = self.index(of: .startOfScope("{"), after: index) else { return nil }
 
-        // If we find a closure, skip over it.
-        if isStartOfClosure(at: startOfBody),
-           let endOfClosure = endOfScope(at: startOfBody)
-        {
-            return startOfConditionalBranchBody(after: endOfClosure)
+        if allowingHeaderContinuations {
+            switch tokens[index] {
+            case .keyword("do"):
+                return startOfBody
+            case .keyword("else") where next(.nonSpaceOrCommentOrLinebreak, after: index) != .keyword("if"):
+                return startOfBody
+            case .keyword("catch") where self.index(of: .keyword("where"), in: index + 1 ..< startOfBody) == nil:
+                return startOfBody
+            default:
+                break
+            }
+            if next(.nonSpaceOrCommentOrLinebreak, after: startOfBody)?.isSwitchCaseOrDefault == true {
+                return startOfBody
+            }
         }
 
-        return startOfBody
+        // A header continuation also disambiguates a body that follows a trailing closure.
+        guard allowingHeaderContinuations || isStartOfClosure(at: startOfBody),
+              let endOfClosure = endOfScope(at: startOfBody),
+              !allowingHeaderContinuations || headerContinuesAfterClosure(at: endOfClosure)
+        else { return startOfBody }
+
+        return startOfConditionalBranchBody(after: endOfClosure, allowingHeaderContinuations: allowingHeaderContinuations)
+    }
+
+    private func headerContinuesAfterClosure(at end: Int) -> Bool {
+        guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: end) else { return false }
+        switch tokens[nextIndex] {
+        case .operator(_, .infix), .operator(_, .postfix), .delimiter(","),
+             .keyword("where"), .keyword("as"), .keyword("is"):
+            return true
+        case .startOfScope("{"):
+            // A following immediately invoked closure can be a separate statement.
+            guard let closingBrace = endOfScope(at: nextIndex) else { return false }
+            return next(.nonSpaceOrComment, after: closingBrace) != .startOfScope("(")
+        case .startOfScope("("), .startOfScope("["):
+            return isSubscriptOrFunctionCall(at: nextIndex)
+        default:
+            return false
+        }
     }
 
     /// Finds all of the branch bodies in a switch statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch,
     /// including branches that are inside `#if` conditional compilation blocks.
-    func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch]? {
+    func switchStatementBranches(at switchIndex: Int, bodyStart: Int? = nil) -> [ConditionalBranch]? {
         assert(tokens[switchIndex] == .keyword("switch"))
-        guard let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
+        guard let startOfSwitchScope = bodyStart ?? index(of: .startOfScope("{"), after: switchIndex),
               let endOfSwitchScope = endOfScope(at: startOfSwitchScope)
         else { return nil }
 
@@ -2227,8 +2259,8 @@ extension Formatter {
 
     /// Finds all of the branch bodies in a switch statement, and derives additional information
     /// about the structure of each branch / case.
-    func switchStatementBranchesWithSpacingInfo(at switchIndex: Int) -> [SwitchStatementBranchWithSpacingInfo]? {
-        guard let switchStatementBranches = switchStatementBranches(at: switchIndex) else { return nil }
+    func switchStatementBranchesWithSpacingInfo(at switchIndex: Int, bodyStart: Int? = nil) -> [SwitchStatementBranchWithSpacingInfo]? {
+        guard let switchStatementBranches = switchStatementBranches(at: switchIndex, bodyStart: bodyStart) else { return nil }
 
         return switchStatementBranches.enumerated().compactMap { caseIndex, switchCase -> SwitchStatementBranchWithSpacingInfo? in
             // Cases that end at a `#else` or `#elseif` boundary are in mutually-exclusive

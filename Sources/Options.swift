@@ -1104,6 +1104,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preferFileMacro: Bool
     public var lineBetweenConsecutiveGuards: Bool
     public var blankLineAfterSwitchCase: BlankLineAfterSwitchCase
+    public var blankLinesAfter: Set<String>
     public var redundantThrows: RedundantEffectMode
     public var redundantAsync: RedundantEffectMode
     public var allowPartialWrapping: Bool
@@ -1298,6 +1299,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preferFileMacro: Bool = true,
                 lineBetweenConsecutiveGuards: Bool = false,
                 blankLineAfterSwitchCase: BlankLineAfterSwitchCase = .multilineOnly,
+                blankLinesAfter: Set<String> = [],
                 redundantThrows: RedundantEffectMode = .testsOnly,
                 redundantAsync: RedundantEffectMode = .testsOnly,
                 allowPartialWrapping: Bool = true,
@@ -1466,6 +1468,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preferFileMacro = preferFileMacro
         self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
         self.blankLineAfterSwitchCase = blankLineAfterSwitchCase
+        self.blankLinesAfter = blankLinesAfter
         self.redundantThrows = redundantThrows
         self.redundantAsync = redundantAsync
         self.allowPartialWrapping = allowPartialWrapping

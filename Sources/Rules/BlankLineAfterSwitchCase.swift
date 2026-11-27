@@ -20,37 +20,7 @@ public extension FormatRule {
         options: ["blank-line-after-switch-case"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
-            guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
-
-            let shouldAlwaysInsertBlankLineAfterSwitchCase = formatter.options.blankLineAfterSwitchCase == .always
-            let shouldNeverInsertBlankLineAfterSwitchCase = formatter.options.blankLineAfterSwitchCase == .never
-            for switchCase in switchCases.reversed() {
-                // With the `never` option, blank lines are removed from after every switch case.
-                if shouldNeverInsertBlankLineAfterSwitchCase {
-                    if switchCase.isFollowedByBlankLine {
-                        switchCase.removeTrailingBlankLine(using: formatter)
-                    }
-                    continue
-                }
-
-                // Any switch statement should be followed by a blank line, depending on the
-                // `blankLineAfterSwitchCase` option.
-                // (excluding the last case, which is followed by a closing brace).
-                if shouldAlwaysInsertBlankLineAfterSwitchCase || switchCase.spansMultipleLines,
-                   !switchCase.isLastCase,
-                   !switchCase.isFollowedByBlankLine
-                {
-                    switchCase.insertTrailingBlankLine(using: formatter)
-                }
-
-                // The last case should never be followed by a blank line, since it's
-                // already followed by a closing brace.
-                if switchCase.isLastCase,
-                   switchCase.isFollowedByBlankLine
-                {
-                    switchCase.removeTrailingBlankLine(using: formatter)
-                }
-            }
+            formatter.applyBlankLinesAfterSwitchCases(at: switchIndex, spacing: formatter.options.blankLineAfterSwitchCase)
         }
     } examples: {
         #"""

@@ -6417,4 +6417,48 @@ extension Formatter {
         else { return nil }
         return (linebreak, next)
     }
+
+    func applyBlankLineAfterGuard(at guardIndex: Int, betweenGuards: Bool) {
+        guard var elseIndex = index(of: .keyword("else"), after: guardIndex) else {
+            return
+        }
+        if !isGuardElse(at: elseIndex) {
+            guard let nextIndex = index(of: .keyword("else"), after: elseIndex) else {
+                return
+            }
+            elseIndex = nextIndex
+        }
+        guard let startOfGuardScope = index(of: .startOfScope("{"), after: elseIndex),
+              let endOfGuardScope = endOfScope(at: startOfGuardScope),
+              let nextNonSpaceAndNonLinebreakIndex = index(of: .nonSpaceOrLinebreak, after: endOfGuardScope)
+        else {
+            return
+        }
+
+        let nextToken = tokens[nextNonSpaceAndNonLinebreakIndex]
+        if nextToken == .endOfScope("}") || nextToken.isOperator {
+            // Do not add space in this cases
+            return
+        }
+
+        let linebreaks = betweenGuards || nextToken != .keyword("guard") ? 2 : 1
+        let indexesBetween = Set(endOfGuardScope + 1 ..< nextNonSpaceAndNonLinebreakIndex)
+        leaveOrSetLinebreaksInIndexes(indexesBetween, linebreaksCount: linebreaks)
+    }
+
+    func applyBlankLinesAfterSwitchCases(at switchIndex: Int, spacing: BlankLineAfterSwitchCase) {
+        guard let switchCases = switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
+
+        for switchCase in switchCases.reversed() {
+            if spacing == .never || switchCase.isLastCase {
+                if switchCase.isFollowedByBlankLine {
+                    switchCase.removeTrailingBlankLine(using: self)
+                }
+            } else if !switchCase.isFollowedByBlankLine,
+                      spacing == .always || switchCase.spansMultipleLines
+            {
+                switchCase.insertTrailingBlankLine(using: self)
+            }
+        }
+    }
 }
